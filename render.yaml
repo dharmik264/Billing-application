@@ -1,0 +1,27 @@
+databases:
+  - name: billing-db
+    databaseName: billing_app
+    user: billing_user
+
+services:
+  - type: web
+    name: billing-backend
+    env: python
+    rootDir: backend
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn restaurant_pos.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: billing-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "*"
+      - key: DEBUG
+        value: "False"
