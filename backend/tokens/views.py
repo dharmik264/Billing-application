@@ -69,6 +69,9 @@ class CreateTokenView(APIView):
             customer_name = data.get('customer_name', ''),
             customer_phone= data.get('customer_phone', ''),
             note          = data.get('note', ''),
+            payment_mode  = data.get('payment_mode', 'CASH'),
+            is_paid       = True if data.get('payment_mode') else data.get('is_paid', False),
+            status        = 'completed' if data.get('payment_mode') else 'open',
         )
 
         for item_data in data['items']:

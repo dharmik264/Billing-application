@@ -45,12 +45,13 @@ class ShopSerializer(serializers.ModelSerializer):
     paymentModesConfig = serializers.CharField(source='payment_modes_config', required=False)
     alternatePhone = serializers.CharField(source='alternate_phone', required=False, allow_blank=True)
     billSettings = serializers.JSONField(source='bill_settings', required=False)
+    upiId = serializers.CharField(source='upi_id', required=False, allow_blank=True)
 
     class Meta:
         model  = Shop
         fields = ['id', 'name', 'tagline', 'address', 'phone', 'alternatePhone', 'email', 'gstin', 'fssai', 
                   'logoUrl', 'qrUrl', 'paymentModesConfig', 'opening_time', 'closing_time', 
-                  'table_count', 'upi_id', 'billSettings', 'created_at', 'updated_at']
+                  'table_count', 'upiId', 'billSettings', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def to_representation(self, instance):

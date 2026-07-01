@@ -7,7 +7,7 @@ This document captures the current operating state and context of the project.
 See: `.planning/PROJECT.md` (updated 2026-06-13)
 
 **Core value:** High-performance offline-first token generation and billing.
-**Current focus:** Phase 3: Offline Resiliency & Bypass Mode
+**Current focus:** Phase 6 complete. Ready for new milestone or features.
 
 ## Current Status
 
@@ -24,3 +24,9 @@ See: `.planning/PROJECT.md` (updated 2026-06-13)
 
 - Set `Duration timeout = const Duration(seconds: 0)` in `RestaurantApi` to explicitly block waiting for network requests, providing a 0-second instant fallback.
 - Allowed `shop_setup_screen.dart` to navigate forward if `saveShop` fails, generating an orange warning snackbar instead of blocking the user setup flow.
+
+## Accumulated Context
+
+### Roadmap Evolution
+- Phase 6 added: Generate Dynamic UPI QR Code on Bill with Fixed Non-Editable Amount
+

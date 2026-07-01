@@ -39,6 +39,8 @@ class CreateTokenSerializer(serializers.Serializer):
     customer_name  = serializers.CharField(max_length=100, required=False, allow_blank=True)
     customer_phone = serializers.CharField(max_length=15, required=False, allow_blank=True)
     note           = serializers.CharField(required=False, allow_blank=True)
+    payment_mode   = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    is_paid        = serializers.BooleanField(required=False, default=False)
     items          = serializers.ListField(
         child=serializers.DictField(), min_length=1
     )

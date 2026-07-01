@@ -185,6 +185,14 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       return;
     }
 
+    final phone = _customerPhoneController.text.trim();
+    if (phone.isNotEmpty && !RegExp(r'^\d{10}$').hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
     try {
       final billNum = await BillCounter.nextBillNumber();
@@ -201,6 +209,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           code: c.product.code,
           quantity: c.quantity,
           rate: c.product.price,
+          id: c.product.id,
         )).toList(),
       );
 
@@ -237,6 +246,42 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: _textPrimary),
+        actions: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // On small screens, show the cart action
+              if (MediaQuery.of(context).size.width < 800) {
+                return ValueListenableBuilder<int>(
+                  valueListenable: _cartTrigger,
+                  builder: (context, _, __) {
+                    int totalItems = _billItems.fold(0, (sum, item) => sum + item.quantity);
+                    if (totalItems == 0) return const SizedBox.shrink();
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.shopping_cart_outlined),
+                          onPressed: _openCartPage,
+                        ),
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle),
+                            child: Text('$totalItems', style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -253,21 +298,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           return _buildProductsSection();
         },
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: LayoutBuilder(
-        builder: (context, constraints) {
-          final isTablet = constraints.maxWidth >= 800;
-          if (!isTablet && _billItems.isNotEmpty) {
-            return ValueListenableBuilder<int>(
-              valueListenable: _cartTrigger,
-              builder: (context, _, __) {
-                return _buildFloatingCart();
-              },
-            );
-          }
-          return const SizedBox.shrink();
-        },
-      ),
+      // Floating action button removed in favor of AppBar Cart button
+
     );
   }
 
@@ -465,86 +497,26 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   }
 
 
-  Widget _buildFloatingCart() {
-    int totalItems = _billItems.fold(0, (sum, item) => sum + item.quantity);
-    return Padding(
-      padding: const EdgeInsets.only(left: 16, right: 16, bottom: 80),
-      child: ElevatedButton(
-        onPressed: _showCartBottomSheet,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF4F46E5),
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 8,
+  void _openCartPage() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => Scaffold(
+        appBar: AppBar(
+          title: Text('Current Bill', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _textPrimary, fontSize: 18)),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: _textPrimary),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-                const SizedBox(width: 8),
-                Text('$totalItems Items', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-              ],
-            ),
-            Row(
-              children: [
-                Text('₹', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
-                const SizedBox(width: 8),
-                const Icon(Icons.chevron_right_rounded, color: Colors.white),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showCartBottomSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return ValueListenableBuilder<int>(
+        backgroundColor: _panelBackground,
+        body: ValueListenableBuilder<int>(
           valueListenable: _cartTrigger,
           builder: (context, _, __) {
-            return DraggableScrollableSheet(
-              initialChildSize: 0.8,
-              minChildSize: 0.5,
-              maxChildSize: 0.95,
-              builder: (_, scrollController) {
-                return Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  child: Column(
-                    children: [
-                      Center(
-                        child: Container(
-                          margin: const EdgeInsets.only(top: 12, bottom: 8),
-                          height: 4,
-                          width: 40,
-                          decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2)),
-                        ),
-                      ),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          controller: scrollController,
-                          child: _buildCartSection(isTablet: false),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
+            return _buildCartSection(isTablet: true);
           },
-        );
-      },
-    );
+        ),
+      ),
+    ));
   }
+
 
   Widget _buildCartSection({required bool isTablet}) {
     return Container(

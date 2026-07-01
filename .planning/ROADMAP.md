@@ -7,3 +7,13 @@ This document tracks the high-level phases of the Restaurant POS Billing Applica
 
 ## Next Milestone (v2.0)
 *Run `@[/gsd-new-milestone]` to begin planning the next version.*
+
+### Phase 6: Generate Dynamic UPI QR Code on Bill with Fixed Non-Editable Amount
+
+**Goal:** Implement a dynamic UPI QR code generator that takes the Shop's UPI ID and the Bill's Total Amount, and renders/prints a UPI URI QR code on the receipt.
+**Requirements**: REQ-06-01
+**Depends on:** Phase 5
+**Plans:** 1 plans (Executed)
+
+Plans:
+- [ ] 06-01-PLAN.md (Execution Plan)

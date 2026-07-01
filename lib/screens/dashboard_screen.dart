@@ -53,7 +53,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDashboardData();
+    _loadDashboardData(forceRefresh: true);
   }
 
   Future<void> refreshData() async {
@@ -131,7 +131,7 @@ class DashboardScreenState extends State<DashboardScreen> {
               backgroundColor: const Color(0xFFF8FAFC),
               elevation: 0,
               flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                titlePadding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
                 title: Row(
                   children: [
                     Container(
@@ -262,7 +262,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                               .fadeIn()
                               .slideX(begin: 0.05, delay: (index * 50).ms);
                         },
-                        childCount: _recentTokens.length > 4 ? 4 : _recentTokens.length,
+                        childCount: _recentTokens.length > 3 ? 3 : _recentTokens.length,
                       ),
                     ),
             ),
@@ -338,13 +338,13 @@ class DashboardScreenState extends State<DashboardScreen> {
       physics: const BouncingScrollPhysics(),
       child: Row(
         children: [
-          _statCard("Today's Sales", '\u20B9${_totalSales.toStringAsFixed(2)}', Icons.trending_up_rounded, const Color(0xFF4F46E5)),
-          const SizedBox(width: 12),
+          _statCard("Today's Sales", '\u20B9${_totalSales.toStringAsFixed(0)}', Icons.trending_up_rounded, const Color(0xFF4F46E5)),
+          const SizedBox(width: 10),
           _statCard('Tokens', _tokenCount.toString(), Icons.receipt_long_rounded, const Color(0xFF10B981)),
-          const SizedBox(width: 12),
-          _statCard('Online Sales', '\u20B9${_onlineSales.toStringAsFixed(2)}', Icons.language_rounded, const Color(0xFFF59E0B)),
-          const SizedBox(width: 12),
-          _statCard('Cash Sales', '\u20B9${_cashSales.toStringAsFixed(2)}', Icons.payments_rounded, const Color(0xFFEC4899)),
+          const SizedBox(width: 10),
+          _statCard('Online Sales', '\u20B9${_onlineSales.toStringAsFixed(0)}', Icons.language_rounded, const Color(0xFFF59E0B)),
+          const SizedBox(width: 10),
+          _statCard('Cash Sales', '\u20B9${_cashSales.toStringAsFixed(0)}', Icons.payments_rounded, const Color(0xFFEC4899)),
         ],
       ),
     );
@@ -352,16 +352,16 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Widget _statCard(String title, String value, IconData icon, Color color) {
     return Container(
-      width: 140,
-      padding: const EdgeInsets.all(16),
+      width: 110,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F172A).withValues(alpha: 0.02),
-            blurRadius: 10,
+            blurRadius: 8,
             offset: const Offset(0, 4),
           )
         ],
@@ -370,30 +370,40 @@ class DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: color, size: 20),
+            child: Icon(icon, color: color, size: 16),
           ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              color: const Color(0xFF64748B),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          const SizedBox(height: 10),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              title,
+              maxLines: 1,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF64748B),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              color: const Color(0xFF0F172A),
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF0F172A),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
             ),
           ),
         ],

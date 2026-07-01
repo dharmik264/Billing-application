@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,12 +20,12 @@ class ShopSetupScreen extends StatefulWidget {
 }
 
 class _ShopSetupScreenState extends State<ShopSetupScreen> {
-  static const Color _panelBackground = Color(0xFFF5F6FA);
-  static const Color _primary = Color(0xFF2563EB);
-  static const Color _textPrimary = Color(0xFF1F2937);
-  static const Color _textSecondary = Color(0xFF6B7280);
-  static const Color _border = Color(0xFFDDDDDD);
-  static const Color _softBorder = Color(0xFFEEEEEE);
+  static const Color _panelBackground = Color(0xFFF8FAFC);
+  static const Color _primary = Color(0xFF4F46E5);
+  static const Color _textPrimary = Color(0xFF0F172A);
+  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _border = Color(0xFFE2E8F0);
+  static const Color _softBorder = Color(0xFFF1F5F9);
   static const double _panelWidth = 360;
 
   final TextEditingController _shopNameController =
@@ -89,6 +90,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     _thankYouMessageController.addListener(_refreshPreview);
     _customFooterNoteController.addListener(_refreshPreview);
     _termsAndConditionsController.addListener(_refreshPreview);
+    _upiIdController.addListener(_refreshPreview);
     _loadExistingShop();
   }
 
@@ -109,7 +111,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     _addressController.dispose();
     _gstinController.dispose();
     _emailController.dispose();
-    _upiIdController.dispose();
+    _upiIdController
+      ..removeListener(_refreshPreview)
+      ..dispose();
     _thankYouMessageController.dispose();
     _customFooterNoteController
       ..removeListener(_refreshPreview)
@@ -247,13 +251,13 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                         ),
                         if (_isLoading) ...[
                           const SizedBox(height: 16),
-                          const Text('Loading shop details...',
-                              style: TextStyle(color: _textSecondary)),
+                          Text('Loading shop details...',
+                              style: GoogleFonts.inter(color: _textSecondary)),
                         ],
                         if (_saving) ...[
                           const SizedBox(height: 16),
-                          const Text('Saving changes...',
-                              style: TextStyle(color: _textSecondary)),
+                          Text('Saving changes...',
+                              style: GoogleFonts.inter(color: _textSecondary)),
                         ],
                       ],
                     ),
@@ -267,13 +271,15 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   }
 
   Widget _buildPanel() {
-    return Container(
+    return Material(
+      color: _panelBackground,
+      borderRadius: BorderRadius.circular(28),
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: _panelBackground,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+          borderRadius: BorderRadius.circular(28),
+        ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -328,6 +334,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
           ),
         ],
       ),
+     ),
     );
   }
 
@@ -358,9 +365,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'Shop Setup',
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 17,
               fontWeight: FontWeight.w500,
               color: _textPrimary,
@@ -467,7 +474,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                 children: [
                   Text(
                     _logoBytes != null ? 'Logo selected ✓' : 'No logo uploaded',
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: _logoBytes != null
@@ -476,9 +483,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Tap to pick from gallery.\nAppears on every bill slip.',
-                    style: TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)),
+                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFFAAAAAA)),
                   ),
                 ],
               ),
@@ -509,7 +516,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: Color(0xFFBBBBBB)),
+          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFFBBBBBB)),
           textAlign: TextAlign.center,
         ),
       ],
@@ -591,7 +598,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                     _qrBytes != null
                         ? 'QR Code selected ✓'
                         : 'No QR Code uploaded',
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: _qrBytes != null
@@ -600,9 +607,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Tap to pick your payment QR code.\nAppears on every bill slip.',
-                    style: TextStyle(fontSize: 11, color: Color(0xFFAAAAAA)),
+                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFFAAAAAA)),
                   ),
                 ],
               ),
@@ -634,10 +641,10 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
             controller: controller,
             enabled: !_saving,
             maxLines: 1,
-            style: const TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF1F2937),
+              color: const Color(0xFF1F2937),
             ),
             decoration: const InputDecoration(
               border: InputBorder.none,
@@ -709,7 +716,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
             Expanded(
               child: Text(
                 mode,
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
                   color: selected ? const Color(0xFF1E40AF) : _textSecondary,
@@ -737,7 +744,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
         alignment: Alignment.centerLeft,
         child: Text(
           title,
-          style: const TextStyle(
+          style: GoogleFonts.inter(
               fontSize: 15, fontWeight: FontWeight.w600, color: _primary),
         ),
       ),
@@ -747,7 +754,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   Widget _buildToggle(String title, String key) {
     return SwitchListTile(
       title: Text(title,
-          style: const TextStyle(fontSize: 13, color: _textPrimary)),
+          style: GoogleFonts.inter(fontSize: 13, color: _textPrimary)),
       value: _billSettings[key] ?? true,
       onChanged: _saving
           ? null
@@ -762,8 +769,8 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
 
   Widget _buildBillSettingsPanel() {
     return ExpansionTile(
-      title: const Text('Bill Customization Settings',
-          style: TextStyle(fontWeight: FontWeight.w600, color: _textPrimary)),
+      title: Text('Bill Customization Settings',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: _textPrimary)),
       childrenPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       tilePadding: EdgeInsets.zero,
       children: [
@@ -826,12 +833,12 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                 color: const Color(0xFFFEF3C7),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Text(
+              child: Text(
                 'Live Preview',
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF92400E),
+                  color: const Color(0xFF92400E),
                 ),
               ),
             ),
@@ -907,14 +914,14 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                   color: Colors.white,
                 ),
               )
-            : const Row(
+            : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Save & Continue',
                       style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 17),
+                          GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500)),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward, size: 17),
                 ],
               ),
       ),
@@ -922,18 +929,18 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   }
 
   Widget _buildFooterNote() {
-    return const Text.rich(
+    return Text.rich(
       TextSpan(
         text: 'You can change these settings anytime from ',
         children: [
           TextSpan(
             text: 'Account Settings',
-            style: TextStyle(color: _textPrimary, fontWeight: FontWeight.w700),
+            style: GoogleFonts.inter(color: _textPrimary, fontWeight: FontWeight.w700),
           ),
         ],
       ),
       textAlign: TextAlign.center,
-      style: TextStyle(fontSize: 12, color: _textSecondary),
+      style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
     );
   }
 
@@ -942,7 +949,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
+        style: GoogleFonts.inter(
           fontSize: 11,
           fontWeight: FontWeight.w500,
           color: _textSecondary,
@@ -1011,6 +1018,24 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   Future<void> _saveAndContinue() async {
     if (_shopNameController.text.trim().isEmpty) {
       _showSnackBar('Please enter shop name');
+      return;
+    }
+
+    final phone = _phoneController.text.trim();
+    if (phone.isNotEmpty && !RegExp(r'^\d{10}$').hasMatch(phone)) {
+      _showSnackBar('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    final email = _emailController.text.trim();
+    if (email.isNotEmpty && !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      _showSnackBar('Please enter a valid email address');
+      return;
+    }
+    
+    final gstin = _gstinController.text.trim();
+    if (gstin.isNotEmpty && !RegExp(r'^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$').hasMatch(gstin)) {
+      _showSnackBar('Please enter a valid GSTIN');
       return;
     }
 
@@ -1163,13 +1188,13 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                                 color: Colors.white, size: 40),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Bill Template Saved\nSuccessfully',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F2937),
+                              color: const Color(0xFF1F2937),
                             ),
                           ),
                         ],

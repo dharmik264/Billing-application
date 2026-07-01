@@ -8,6 +8,8 @@ class PdfReceiptService {
   static Future<Uint8List> generateReceipt(ApiToken token, {bool isThermal = true}) async {
     final pdf = pw.Document();
 
+    final shop = await RestaurantApi.instance.fetchShop();
+
     final pageFormat = isThermal
         ? PdfPageFormat.roll80
         : PdfPageFormat.a4;
@@ -97,6 +99,24 @@ class PdfReceiptService {
                   pw.Text(token.grandTotal.toStringAsFixed(2), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
                 ],
               ),
+              pw.SizedBox(height: 20),
+              if (shop.upiId != null && shop.upiId!.isNotEmpty)
+                pw.Center(
+                  child: pw.Column(
+                    children: [
+                      pw.Text('Scan to Pay', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                      pw.SizedBox(height: 5),
+                      pw.BarcodeWidget(
+                        barcode: pw.Barcode.qrCode(),
+                        data: 'upi://pay?pa=${shop.upiId}&pn=${Uri.encodeComponent(shop.name)}&am=${token.grandTotal.toStringAsFixed(2)}&cu=INR',
+                        width: 100,
+                        height: 100,
+                      ),
+                      pw.SizedBox(height: 5),
+                      pw.Text(shop.upiId!, style: const pw.TextStyle(fontSize: 10)),
+                    ]
+                  )
+                ),
               pw.SizedBox(height: 20),
               pw.Center(
                 child: pw.Text('Thank you for your visit!', style: const pw.TextStyle(fontSize: 12)),

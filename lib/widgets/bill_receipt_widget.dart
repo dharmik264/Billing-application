@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../services/restaurant_api.dart';
 
@@ -423,7 +424,23 @@ class BillReceiptWidget extends StatelessWidget {
               const SizedBox(height: 8),
             ],
             const SizedBox(height: 8),
-            if (finalQr != null || networkQr != null) ...[
+            if (upiIdStr != null && upiIdStr.isNotEmpty) ...[
+              QrImageView(
+                data: 'upi://pay?pa=$upiIdStr&pn=${Uri.encodeComponent(shopName)}&am=${(items.isEmpty ? subtotal : grandTotal).toStringAsFixed(2)}&cu=INR',
+                version: QrVersions.auto,
+                size: 64.0,
+              ),
+              if (template.showUpiId) ...[
+                const SizedBox(height: 4),
+                Text(upiIdStr,
+                    style: const TextStyle(fontSize: 9, color: textPrimary)),
+              ],
+              const SizedBox(height: 4),
+              const Text('Scan to Pay',
+                  style: TextStyle(fontSize: 10, color: muted)),
+              const SizedBox(height: 10),
+            ]
+            else if (finalQr != null || networkQr != null) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: finalQr != null
@@ -436,11 +453,6 @@ class BillReceiptWidget extends StatelessWidget {
                         fit: BoxFit.cover,
                         errorBuilder: (c, e, s) => const SizedBox()),
               ),
-              if (template.showUpiId && upiIdStr?.isNotEmpty == true) ...[
-                const SizedBox(height: 4),
-                Text(upiIdStr!,
-                    style: const TextStyle(fontSize: 9, color: textPrimary)),
-              ],
               const SizedBox(height: 4),
               const Text('Scan to Pay',
                   style: TextStyle(fontSize: 10, color: muted)),

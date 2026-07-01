@@ -57,8 +57,25 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await RestaurantApi.instance.requestOtp(mobile);
-    } catch (_) {
+      final devOtp = await RestaurantApi.instance.requestOtp(mobile);
+      if (devOtp != null && devOtp.isNotEmpty && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('DEV OTP: $devOtp'),
+            duration: const Duration(seconds: 10),
+            backgroundColor: Colors.blue,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       // Temporary frontend mode continues even when the backend is offline.
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -111,7 +128,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Connection failed. Server offline or ADB reverse needed.'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
             backgroundColor: Colors.red,
           ),
         );
@@ -191,17 +208,27 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     });
 
     try {
-      await RestaurantApi.instance.requestOtp(mobile);
+      final devOtp = await RestaurantApi.instance.requestOtp(mobile);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP resent to your mobile number')),
-        );
+        if (devOtp != null && devOtp.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('DEV OTP: $devOtp'),
+              duration: const Duration(seconds: 10),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('OTP resent to your mobile number')),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Connection failed. Server offline or ADB reverse needed.'),
+            content: Text(e.toString().replaceAll('Exception: ', '')),
             backgroundColor: Colors.red,
           ),
         );

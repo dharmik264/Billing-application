@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
 
@@ -543,13 +544,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     if (_isPrinting) return;
     setState(() => _isPrinting = true);
     
-    final isConnected = await PrinterService.instance.bluetooth.isConnected;
-    if (isConnected != true) {
-      if (mounted) setState(() => _isPrinting = false);
-      _showSnackBar('First off all connect your printer');
-      return;
-    }
-    
     if (widget.onSaveBill != null && _savedToken == null) {
       try {
         _savedToken = await widget.onSaveBill!();
@@ -564,6 +558,27 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         return;
       }
     }
+    
+    bool? isConnected = false;
+    if (kIsWeb) {
+      isConnected = false;
+    } else {
+      try {
+        isConnected = await PrinterService.instance.bluetooth.isConnected
+            .timeout(const Duration(seconds: 2));
+      } catch (e) {
+        debugPrint('Bluetooth check error: $e');
+      }
+    }
+    
+    if (isConnected != true) {
+      if (mounted) setState(() => _isPrinting = false);
+      _showSnackBar('Printer is not connected. Bill saved successfully!');
+      _showPrintSuccessAnimationAndPrint();
+      return;
+    }
+    
+
     
     // Use savedToken or mock a token for printing if not saving
     final tokenToPrint = _savedToken ?? ApiToken(
@@ -592,7 +607,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     try {
       if (_shopData != null && _billTemplate != null) {
         await PrinterService.instance
-            .printReceipt(tokenToPrint, _shopData!, _billTemplate!);
+            .printReceipt(tokenToPrint, _shopData!, _billTemplate!)
+            .timeout(const Duration(seconds: 5));
         _showSnackBar('Receipt sent to thermal printer');
       }
     } catch (e) {
@@ -605,7 +621,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     _showPrintSuccessAnimationAndPrint();
   }
 
-  void _showPrintSuccessAnimationAndPrint() {
+  void _showPrintSuccessAnimationAndPrint() async {
     final overlay = Overlay.of(context);
     late OverlayEntry overlayEntry;
 
@@ -672,7 +688,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
     overlay.insert(overlayEntry);
 
-    // Removed artificial delay
+    // Added artificial delay to allow user to see the animation
+    await Future.delayed(const Duration(milliseconds: 1500));
+    
     if (!mounted) return;
     overlayEntry.remove();
 
@@ -721,7 +739,18 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
     // Hardware Printing Call
     try {
-      final isConnected = await PrinterService.instance.bluetooth.isConnected;
+      bool? isConnected = false;
+      if (kIsWeb) {
+        isConnected = false;
+      } else {
+        try {
+          isConnected = await PrinterService.instance.bluetooth.isConnected
+              .timeout(const Duration(seconds: 2));
+        } catch (e) {
+          debugPrint('Bluetooth check error: $e');
+        }
+      }
+
       if (isConnected != true) {
         if (mounted) setState(() => _isPrinting = false);
         _showSnackBar('First off all connect your printer');

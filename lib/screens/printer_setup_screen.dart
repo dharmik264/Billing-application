@@ -90,13 +90,15 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   }
 
   Widget _buildPanel() {
-    return Container(
+    return Material(
+      color: _panelBackground,
+      borderRadius: BorderRadius.circular(28),
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: _panelBackground,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFFE0E0E0)),
+          borderRadius: BorderRadius.circular(28),
+        ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -129,6 +131,7 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
           ),
         ],
       ),
+     ),
     );
   }
 

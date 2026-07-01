@@ -20,7 +20,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
   static const Color _orange = Color(0xFFEA580C);
   static const Color _green = Color(0xFF16A34A);
   String _selectedCategory = 'All Items';
-  bool _showOnlyActive = false;
+  final bool _showOnlyActive = false;
 
   final TextEditingController _searchController = TextEditingController();
   final List<_MenuItem> _items = [];
@@ -53,7 +53,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                 _buildSearch(),
                 _buildCategoryTabs(),
                 Expanded(child: _buildItemList()),
-                _buildAddItemButton(),
               ],
             ),
             if (_isProcessing)
@@ -77,56 +76,43 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(bottom: BorderSide(color: _softBorder, width: 0.5)),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Flexible(
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    'Item Management',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: _textPrimary,
-                    ),
-                  ),
-                ),
-              ],
+          const Expanded(
+            child: Text(
+              'Item Management',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: _textPrimary,
+              ),
             ),
           ),
-          IconButton(
-            tooltip: 'Refresh Menu',
-            onPressed: () => _loadItemsFromDatabase(forceRefresh: true),
-            icon: const Icon(Icons.sync, size: 20, color: Color(0xFF555555)),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-            splashRadius: 18,
-          ),
-          IconButton(
-            tooltip: 'Filter active items',
-            onPressed: () {
-              setState(() => _showOnlyActive = !_showOnlyActive);
-              _showSnackBar(
-                _showOnlyActive ? 'Showing active items' : 'Showing all items',
-              );
-            },
-            icon: Icon(
-              Icons.tune,
-              size: 20,
-              color: _showOnlyActive ? _orange : const Color(0xFF555555),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: _isProcessing ? null : _addItem,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _orange,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-            splashRadius: 18,
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text(
+              'Add Item',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),
@@ -491,44 +477,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       ),
     );
   }
-
-  // ── Add Item button (always visible) ──────────────────────
-
-  Widget _buildAddItemButton() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 10),
-      child: SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _orange,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          onPressed: _isProcessing ? null : _addItem,
-          icon: _isProcessing
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Icon(Icons.add, size: 20),
-          label: Text(
-            _isProcessing ? 'Processing...' : 'Add Item',
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          ),
-        ),
-      ),
-    );
-  }
-
 
   // ── Filtering ──────────────────────────────────────────────
 

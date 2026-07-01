@@ -89,9 +89,12 @@ class RestaurantApi {
 
   // ── Auth ────────────────────────────────────────────────────
 
-  Future<bool> requestOtp(String mobile) async {
+  Future<String?> requestOtp(String mobile) async {
     final response = await _post('auth/send-otp/', {'phone': mobile});
-    return response.containsKey('message');
+    if (response.containsKey('otp')) {
+      return response['otp'].toString();
+    }
+    return null;
   }
 
   Future<bool> verifyOtp(String mobile, String otp) async {

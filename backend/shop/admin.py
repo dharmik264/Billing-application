@@ -10,3 +10,8 @@ class ShopAdmin(admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(owner=request.user)
+
+    def has_add_permission(self, request):
+        if request.user.is_superuser:
+            return True
+        return False

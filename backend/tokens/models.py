@@ -51,8 +51,7 @@ class Token(models.Model):
     def get_next_token_number(cls, shop):
         if not shop:
             raise ValueError("Shop is required")
-        today = timezone.localdate()
-        last  = cls.objects.filter(shop=shop, date=today).order_by('-token_number').first()
+        last  = cls.objects.filter(shop=shop).order_by('-token_number').first()
         return (last.token_number + 1) if last else 1
 
     def calculate_totals(self):
