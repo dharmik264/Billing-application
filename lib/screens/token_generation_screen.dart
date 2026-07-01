@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/restaurant_api.dart';
 import '../utils/bill_counter.dart';
@@ -225,6 +226,26 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
 
       await RestaurantApi.instance.createToken(apiToken);
       
+      if (phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
+        final message = Uri.encodeComponent(
+          'Thank you for visiting ${RestaurantApi.instance.shopData?.name ?? "our shop"}!\n'
+          'Your Bill Number is $billNum.\n'
+          'Total Amount: ₹${_grandTotal.toStringAsFixed(2)}\n'
+          'Have a great day!'
+        );
+        final url = Uri.parse('whatsapp://send?phone=+91$phone&text=$message');
+        try {
+          if (await canLaunchUrl(url)) {
+            await launchUrl(url, mode: LaunchMode.externalApplication);
+          } else {
+            final webUrl = Uri.parse('https://wa.me/91$phone?text=$message');
+            if (await canLaunchUrl(webUrl)) {
+              await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+            }
+          }
+        } catch (_) {}
+      }
+
       if (mounted) {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (_) => PrintPreviewScreen(
@@ -539,13 +560,42 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: _softBorder))),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Current Bill', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: _textPrimary)),
-                InkWell(
-                  onTap: _clearCart,
-                  child: Text('Clear', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _danger)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Current Bill', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: _textPrimary)),
+                    InkWell(
+                      onTap: _clearCart,
+                      child: Text('Clear', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _danger)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _customerPhoneController,
+                  keyboardType: TextInputType.phone,
+                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+                  decoration: InputDecoration(
+                    hintText: 'Customer Mobile Number',
+                    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+                    prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF94A3B8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF4F46E5)),
+                    ),
+                  ),
                 ),
               ],
             ),
