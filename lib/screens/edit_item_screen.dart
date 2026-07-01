@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -38,7 +39,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
   static const Color _orange = Color(0xFFEA580C);
   static const double _panelWidth = 360;
 
-  static const List<String> _categories = [
+  List<String> _categories = [
     'Burgers',
     'Beverages',
     'Sides',
@@ -65,6 +66,21 @@ class _EditItemScreenState extends State<EditItemScreen> {
     _category = widget.initialCategory;
     _availableOnline = widget.initialOnline;
     _activeStatus = widget.initialActive;
+    _loadCustomCategories();
+  }
+
+  Future<void> _loadCustomCategories() async {
+    final prefs = await SharedPreferences.getInstance();
+    final custom = prefs.getStringList('custom_categories') ?? [];
+    if (mounted) {
+      setState(() {
+        final combined = {'Burgers', 'Beverages', 'Sides', 'Desserts', ...custom};
+        if (!combined.contains(_category) && _category.isNotEmpty) {
+          combined.add(_category);
+        }
+        _categories = combined.toList()..sort();
+      });
+    }
   }
 
   @override

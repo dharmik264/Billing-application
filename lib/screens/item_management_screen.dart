@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/restaurant_api.dart';
 import 'edit_item_screen.dart';
 import '../widgets/skeleton_loader.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ItemManagementScreen extends StatefulWidget {
   const ItemManagementScreen({super.key});
@@ -93,6 +94,26 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                 fontWeight: FontWeight.bold,
                 color: _textPrimary,
               ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            onPressed: _isProcessing ? null : _addCategory,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: _textPrimary,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              minimumSize: const Size(0, 32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: const BorderSide(color: Color(0xFFDDDDDD)),
+              ),
+            ),
+            icon: const Icon(Icons.category, size: 16),
+            label: const Text(
+              'Add Category',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ),
           const SizedBox(width: 8),
@@ -496,6 +517,57 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
   }
 
   // ── Actions ────────────────────────────────────────────────
+
+  Future<void> _addCategory() async {
+    final controller = TextEditingController();
+    final newCategory = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: 'Category Name (e.g. Pizza)',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            isDense: true,
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: _textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.of(context).pop(controller.text.trim());
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _orange,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    if (newCategory != null && newCategory.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      final customCategories = prefs.getStringList('custom_categories') ?? [];
+      if (!customCategories.contains(newCategory)) {
+        customCategories.add(newCategory);
+        await prefs.setStringList('custom_categories', customCategories);
+        _showSnackBar('Category "$newCategory" added! It will now appear when adding new items.');
+        setState(() {});
+      } else {
+        _showSnackBar('Category already exists');
+      }
+    }
+  }
 
   Future<void> _addItem() async {
     final nextNumber = 9000 + _items.length + 1;
