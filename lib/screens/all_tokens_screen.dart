@@ -298,9 +298,11 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     if (newMode != null && newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
       try {
         await RestaurantApi.instance.updateTokenPaymentMode(token.id, newMode);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment mode updated successfully!')));
         _loadTokens();
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
       }
     }

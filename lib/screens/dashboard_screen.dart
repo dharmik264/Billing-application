@@ -570,9 +570,11 @@ class DashboardScreenState extends State<DashboardScreen> {
     if (newMode != null && newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
       try {
         await RestaurantApi.instance.updateTokenPaymentMode(token.rawToken.id, newMode);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment mode updated successfully!')));
         refreshData();
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
       }
     }
