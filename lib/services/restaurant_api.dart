@@ -19,8 +19,8 @@ class RestaurantApi {
                 : (!kIsWeb && Platform.isAndroid
                       // 10.0.2.2 works for Android Emulator, but physical devices need the PC's local IP.
                       // Updated back to 127.0.0.1 since we are using 'adb reverse tcp:8000 tcp:8000' over USB
-                      ? 'http://127.0.0.1:8000/api'
-                    : 'http://127.0.0.1:8000/api')),
+                      ? 'https://billing-application-wdss.onrender.com/api'
+                    : 'https://billing-application-wdss.onrender.com/api')),
         _timeout = timeout;
 
   static final RestaurantApi instance = RestaurantApi(timeout: const Duration(seconds: 15));
