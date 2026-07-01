@@ -396,7 +396,20 @@ class BillReceiptWidget extends StatelessWidget {
               const SizedBox(height: 3),
             ],
             if (template.showTax) ...[
-              _receiptTotalRow('Tax (GST 5%)', _money(tax), size: 11),
+              Builder(
+                builder: (context) {
+                  final billSettings = shopData?.billSettings ?? {};
+                  final taxPercentValue = billSettings['tax_percent'] ?? 0.0;
+                  double taxPercent = 0.0;
+                  if (taxPercentValue is num) {
+                    taxPercent = taxPercentValue.toDouble();
+                  } else if (taxPercentValue is String) {
+                    taxPercent = double.tryParse(taxPercentValue) ?? 0.0;
+                  }
+                  final label = taxPercent > 0 ? 'Tax (GST ${taxPercent.toStringAsFixed(0)}%)' : 'Tax (GST)';
+                  return _receiptTotalRow(label, _money(tax), size: 11);
+                },
+              ),
               const SizedBox(height: 3),
             ],
             if (template.showRoundOff) ...[

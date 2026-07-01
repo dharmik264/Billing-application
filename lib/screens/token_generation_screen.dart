@@ -139,7 +139,17 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
 
   double get _subtotal => _billItems.fold(0.0, (sum, item) => sum + item.total);
   
-  double get _taxAmount => 0.0; // Tax is not calculated per token here if no tax config exists
+  double get _taxAmount {
+    final billSettings = RestaurantApi.instance.shopData?.billSettings ?? {};
+    final taxPercentValue = billSettings['tax_percent'] ?? 0.0;
+    double taxPercent = 0.0;
+    if (taxPercentValue is num) {
+      taxPercent = taxPercentValue.toDouble();
+    } else if (taxPercentValue is String) {
+      taxPercent = double.tryParse(taxPercentValue) ?? 0.0;
+    }
+    return (_subtotal * taxPercent) / 100.0;
+  }
 
   double get _grandTotal => _subtotal + _taxAmount;
 
