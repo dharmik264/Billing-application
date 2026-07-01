@@ -69,6 +69,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         builder: (context) => PrintPreviewScreen(
           tokenNumber: token.tokenNumber,
           billNumber: token.billNumber,
+          customerPhone: token.customerPhone,
           paymentMode: token.paymentMode,
           items: token.items.map((e) => ApiTokenItemDraft(
             id: e.id,

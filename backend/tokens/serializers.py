@@ -63,7 +63,7 @@ class TokenListSerializer(serializers.ModelSerializer):
         model  = Token
         fields = [
             'id', 'token_number', 'bill_number', 'date', 'order_type', 'table_number',
-            'customer_name', 'status', 'total', 'is_paid', 'payment_mode',
+            'customer_name', 'customer_phone', 'status', 'total', 'is_paid', 'payment_mode',
             'item_count', 'created_at', 'items'
         ]
 
