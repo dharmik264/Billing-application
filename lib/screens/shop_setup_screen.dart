@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/restaurant_api.dart';
 import '../widgets/bill_receipt_widget.dart';
-import 'dashboard_screen.dart';
+import 'main_screen.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
@@ -1214,7 +1214,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     // Navigate instantly without delay
     overlayEntry.remove();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const DashboardScreen()),
+      MaterialPageRoute(builder: (context) => const MainScreen()),
     );
   }
 
