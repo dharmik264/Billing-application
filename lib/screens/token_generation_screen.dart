@@ -251,6 +251,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           builder: (_) => PrintPreviewScreen(
             tokenNumber: tokenNum,
             billNumber: billNum,
+            customerPhone: phone.isNotEmpty ? phone : null,
             paymentMode: _paymentMode,
             items: apiToken.items,
             subtotal: _subtotal,

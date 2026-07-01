@@ -269,19 +269,18 @@ class BillReceiptWidget extends StatelessWidget {
               ),
               const SizedBox(height: 4),
             ],
-            if (template.showCustomerDetails &&
-                (customerName != null || customerPhone != null)) ...[
+            if ((customerName != null && customerName!.isNotEmpty) || (customerPhone != null && customerPhone!.isNotEmpty)) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (customerName != null)
+                  if (customerName != null && customerName!.isNotEmpty)
                     Expanded(
                       child: Text('Customer: $customerName', style: baseStyle),
                     ),
-                  if (customerPhone != null)
+                  if (customerPhone != null && customerPhone!.isNotEmpty)
                     Expanded(
-                      child: Text(customerPhone!,
-                          textAlign: TextAlign.right, style: baseStyle),
+                      child: Text('Ph: $customerPhone',
+                          textAlign: (customerName != null && customerName!.isNotEmpty) ? TextAlign.right : TextAlign.left, style: baseStyle),
                     ),
                 ],
               ),
@@ -289,8 +288,7 @@ class BillReceiptWidget extends StatelessWidget {
             ],
             if (template.showInvoiceNumber ||
                 template.showDateTime ||
-                (template.showCustomerDetails &&
-                    (customerName != null || customerPhone != null))) ...[
+                ((customerName != null && customerName!.isNotEmpty) || (customerPhone != null && customerPhone!.isNotEmpty))) ...[
               const SizedBox(height: 4),
               const Divider(color: border, height: 1),
               const SizedBox(height: 8),
