@@ -665,7 +665,11 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   children: [
                     Expanded(
                       child: InkWell(
-                        onTap: () { setState(() => _paymentMode = 'CASH'); _cartTrigger.value++; },
+                        onTap: _billItems.isEmpty || _isSaving ? null : () {
+                          setState(() => _paymentMode = 'CASH');
+                          _cartTrigger.value++;
+                          _saveBill();
+                        },
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -675,14 +679,20 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                             border: Border.all(color: _paymentMode == 'CASH' ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
                           ),
                           alignment: Alignment.center,
-                          child: Text('CASH', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _paymentMode == 'CASH' ? const Color(0xFF10B981) : const Color(0xFF64748B))),
+                          child: _isSaving && _paymentMode == 'CASH'
+                              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Color(0xFF10B981), strokeWidth: 2))
+                              : Text('CASH', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _paymentMode == 'CASH' ? const Color(0xFF10B981) : const Color(0xFF64748B))),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: InkWell(
-                        onTap: () { setState(() => _paymentMode = 'ONLINE'); _cartTrigger.value++; },
+                        onTap: _billItems.isEmpty || _isSaving ? null : () {
+                          setState(() => _paymentMode = 'ONLINE');
+                          _cartTrigger.value++;
+                          _saveBill();
+                        },
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -692,27 +702,13 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                             border: Border.all(color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0)),
                           ),
                           alignment: Alignment.center,
-                          child: Text('ONLINE', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5) : const Color(0xFF64748B))),
+                          child: _isSaving && _paymentMode == 'ONLINE'
+                              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Color(0xFF4F46E5), strokeWidth: 2))
+                              : Text('ONLINE', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5) : const Color(0xFF64748B))),
                         ),
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _billItems.isEmpty || _isSaving ? null : _saveBill,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4F46E5),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      elevation: 0,
-                    ),
-                    child: _isSaving
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : Text('Save Bill', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
-                  ),
                 ),
               ],
             ),
