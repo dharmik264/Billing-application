@@ -661,6 +661,7 @@ class ApiSummaryReport {
     required this.onlineTotal,
     required this.totalBills,
     required this.monthlySales,
+    required this.lastBillNumber,
   });
 
   factory ApiSummaryReport.fromJson(Map<String, dynamic> json) {
@@ -684,6 +685,7 @@ class ApiSummaryReport {
           _toDouble(byPayment['upi'] ?? json['upi'] ?? json['onlineTotal']),
       totalBills: int.tryParse(json['total_bills']?.toString() ?? '') ?? 0,
       monthlySales: _toDouble(json['monthly_sales']),
+      lastBillNumber: json['last_bill_number']?.toString() ?? "0",
     );
   }
 
@@ -693,6 +695,7 @@ class ApiSummaryReport {
   final double onlineTotal;
   final int totalBills;
   final double monthlySales;
+  final String lastBillNumber;
 }
 
 class ApiUser {

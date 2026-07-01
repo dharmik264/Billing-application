@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from django.db import transaction
+from django.db import transaction, models
 
 from menu.models import MenuItem
 from .models import Token, TokenItem
@@ -225,6 +225,8 @@ class TodaySummaryView(APIView):
         
         # All time
         total_bills = Token.objects.filter(shop=shop).exclude(status='cancelled').count()
+        last_bill = Token.objects.filter(shop=shop).exclude(bill_number='').order_by('-created_at').first()
+        last_bill_number = last_bill.bill_number if last_bill else "0"
         
         # Monthly
         start_of_month = today.replace(day=1)
@@ -240,6 +242,7 @@ class TodaySummaryView(APIView):
             'date':          str(today),
             'total_tokens':  tokens.count(), # Today tokens
             'total_bills':   total_bills,    # All time bills
+            'last_bill_number': last_bill_number,
             'monthly_sales': monthly_sales,  # Monthly sales
             'paid_tokens':   paid.count(),
             'open_tokens':   tokens.filter(status__in=['open', 'preparing']).count(),

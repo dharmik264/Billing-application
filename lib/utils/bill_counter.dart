@@ -16,11 +16,13 @@ class BillCounter {
       final prefs = await SharedPreferences.getInstance();
 
       final currentLocalBills = prefs.getInt(_billCountKey) ?? 0;
-      if (summary.totalBills == 0) {
+      final apiLastBillInt = int.tryParse(summary.lastBillNumber.replaceAll(RegExp(r'[^0-9]'), '')) ?? summary.totalBills;
+      
+      if (apiLastBillInt == 0 && summary.totalBills == 0) {
         await prefs.setInt(_billCountKey, 0);
         await prefs.setInt(_tokenCountKey, 0);
-      } else if (summary.totalBills > currentLocalBills) {
-        await prefs.setInt(_billCountKey, summary.totalBills);
+      } else if (apiLastBillInt > currentLocalBills) {
+        await prefs.setInt(_billCountKey, apiLastBillInt);
       }
     } catch (_) {
       // Offline or backend unavailable, continue with local counts
