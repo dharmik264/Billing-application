@@ -226,25 +226,25 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
 
       await RestaurantApi.instance.createToken(apiToken);
       
-      if (phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
-        final message = Uri.encodeComponent(
-          'Thank you for visiting ${RestaurantApi.instance.shopData?.name ?? "our shop"}!\n'
-          'Your Bill Number is $billNum.\n'
-          'Total Amount: ₹${_grandTotal.toStringAsFixed(2)}\n'
-          'Have a great day!'
-        );
-        final url = Uri.parse('whatsapp://send?phone=+91$phone&text=$message');
-        try {
-          if (await canLaunchUrl(url)) {
-            await launchUrl(url, mode: LaunchMode.externalApplication);
-          } else {
-            final webUrl = Uri.parse('https://wa.me/91$phone?text=$message');
-            if (await canLaunchUrl(webUrl)) {
-              await launchUrl(webUrl, mode: LaunchMode.externalApplication);
-            }
-          }
-        } catch (_) {}
-      }
+      // if (phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
+      //   final message = Uri.encodeComponent(
+      //     'Thank you for visiting ${RestaurantApi.instance.shopData?.name ?? "our shop"}!\n'
+      //     'Your Bill Number is $billNum.\n'
+      //     'Total Amount: ₹${_grandTotal.toStringAsFixed(2)}\n'
+      //     'Have a great day!'
+      //   );
+      //   final url = Uri.parse('whatsapp://send?phone=+91$phone&text=$message');
+      //   try {
+      //     if (await canLaunchUrl(url)) {
+      //       await launchUrl(url, mode: LaunchMode.externalApplication);
+      //     } else {
+      //       final webUrl = Uri.parse('https://wa.me/91$phone?text=$message');
+      //       if (await canLaunchUrl(webUrl)) {
+      //         await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      //       }
+      //     }
+      //   } catch (_) {}
+      // }
 
       if (mounted) {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
