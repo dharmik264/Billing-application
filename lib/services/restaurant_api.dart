@@ -156,22 +156,26 @@ class RestaurantApi {
     final data = await _postMultipart('menu/items/', {
       ...item.toJson(),
     });
+    _cachedItems = null;
     return ApiItem.fromJson(data);
   }
 
   Future<ApiItem> updateItem(String id, ApiItemDraft item) async {
     final data = await _putMultipart('menu/items/$id/', item.toJson());
+    _cachedItems = null;
     return ApiItem.fromJson(data);
   }
 
   Future<ApiItem> updateItemStatus(String id, {required bool active}) async {
     final data =
         await _patch('menu/items/$id/toggle/', {'is_available': active});
+    _cachedItems = null;
     return ApiItem.fromJson(data);
   }
 
   Future<void> deleteItem(String id) async {
     await _delete('menu/items/$id/');
+    _cachedItems = null;
   }
 
   // ── Tokens ───────────────────────────────────────────────────
