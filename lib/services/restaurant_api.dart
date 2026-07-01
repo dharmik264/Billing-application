@@ -23,7 +23,7 @@ class RestaurantApi {
                     : 'https://billing-application-wdss.onrender.com/api')),
         _timeout = timeout;
 
-  static final RestaurantApi instance = RestaurantApi(timeout: const Duration(seconds: 15));
+  static final RestaurantApi instance = RestaurantApi(timeout: const Duration(seconds: 60));
   static const String defaultShopId = 'a1b2c3d4-0000-0000-0000-000000000001';
 
   final http.Client _client;
