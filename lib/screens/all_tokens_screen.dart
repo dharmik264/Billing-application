@@ -226,14 +226,40 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(_formatTime(token.createdAt), style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1), 
-                          borderRadius: BorderRadius.circular(6)
-                        ),
-                        child: Text(statusText, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor)),
-                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () => _changePaymentMode(token),
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE2E8F0),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    token.paymentMode.isNotEmpty ? token.paymentMode.toUpperCase() : 'CASH',
+                                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.edit, size: 10, color: Color(0xFF475569)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.1), 
+                              borderRadius: BorderRadius.circular(6)
+                            ),
+                            child: Text(statusText, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor)),
+                          ),
+                        ]
+                      )
                     ],
                   ),
                 ],
@@ -244,5 +270,38 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       ),
     );
   }
-}
 
+  Future<void> _changePaymentMode(ApiToken token) async {
+    final newMode = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Change Payment Mode', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: Text('Cash', style: GoogleFonts.inter()),
+              leading: const Icon(Icons.payments_outlined, color: Color(0xFF10B981)),
+              onTap: () => Navigator.pop(context, 'CASH'),
+            ),
+            ListTile(
+              title: Text('Online / UPI', style: GoogleFonts.inter()),
+              leading: const Icon(Icons.qr_code_2, color: Color(0xFF4F46E5)),
+              onTap: () => Navigator.pop(context, 'ONLINE'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (newMode != null && newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
+      try {
+        await RestaurantApi.instance.updateTokenPaymentMode(token.id, newMode);
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment mode updated successfully!')));
+        _loadTokens();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+      }
+    }
+  }
+}

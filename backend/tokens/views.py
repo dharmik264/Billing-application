@@ -94,7 +94,7 @@ class CreateTokenView(APIView):
         return Response(TokenSerializer(token).data, status=status.HTTP_201_CREATED)
 
 
-class TokenDetailView(generics.RetrieveAPIView):
+class TokenDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class   = TokenSerializer
     def get_queryset(self):

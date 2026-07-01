@@ -213,6 +213,17 @@ class RestaurantApi {
     });
   }
 
+  Future<void> updateTokenPaymentMode(String id, String paymentMode) async {
+    final response = await _client.patch(
+      Uri.parse('$baseUrl/tokens/$id/'),
+      headers: await _headers(),
+      body: jsonEncode({'payment_mode': paymentMode}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update payment mode: ${response.body}');
+    }
+  }
+
   Future<void> cancelToken(String id) async {
     await _patch('tokens/$id/cancel/', {});
   }
