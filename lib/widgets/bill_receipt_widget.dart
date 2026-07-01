@@ -419,7 +419,7 @@ class BillReceiptWidget extends StatelessWidget {
             if (template.showGrandTotal) ...[
               const SizedBox(height: 4),
               _receiptTotalRow(
-                  'Total Amount', _money(items.isEmpty ? subtotal : grandTotal),
+                  'Total Amount', _money(grandTotal > 0 ? grandTotal : subtotal),
                   bold: true, size: 13),
               const SizedBox(height: 8),
             ],
@@ -439,7 +439,7 @@ class BillReceiptWidget extends StatelessWidget {
             const SizedBox(height: 8),
             if (upiIdStr != null && upiIdStr.isNotEmpty) ...[
               QrImageView(
-                data: 'upi://pay?pa=$upiIdStr&pn=${Uri.encodeComponent(shopName)}&am=${(items.isEmpty ? subtotal : grandTotal).toStringAsFixed(2)}&cu=INR',
+                data: 'upi://pay?pa=$upiIdStr&pn=${Uri.encodeComponent(shopName)}&am=${(grandTotal > 0 ? grandTotal : subtotal).toStringAsFixed(2)}&cu=INR',
                 version: QrVersions.auto,
                 size: 64.0,
               ),
@@ -449,8 +449,8 @@ class BillReceiptWidget extends StatelessWidget {
                     style: const TextStyle(fontSize: 9, color: textPrimary)),
               ],
               const SizedBox(height: 4),
-              const Text('Scan to Pay',
-                  style: TextStyle(fontSize: 10, color: muted)),
+              Text('Scan to Pay ${_money(grandTotal > 0 ? grandTotal : subtotal)}',
+                  style: const TextStyle(fontSize: 10, color: textPrimary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
             ]
             else if (finalQr != null || networkQr != null) ...[
@@ -467,8 +467,8 @@ class BillReceiptWidget extends StatelessWidget {
                         errorBuilder: (c, e, s) => const SizedBox()),
               ),
               const SizedBox(height: 4),
-              const Text('Scan to Pay',
-                  style: TextStyle(fontSize: 10, color: muted)),
+              Text('Scan to Pay ${_money(grandTotal > 0 ? grandTotal : subtotal)}',
+                  style: const TextStyle(fontSize: 10, color: textPrimary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
             ],
             if (template.footerMessage.isNotEmpty) ...[
