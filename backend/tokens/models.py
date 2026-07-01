@@ -55,15 +55,22 @@ class Token(models.Model):
         return (last.token_number + 1) if last else 1
 
     def calculate_totals(self):
-        from core.models import AppSettings
-        settings = AppSettings.get_settings(self.shop)
         from decimal import Decimal
         self.subtotal = Decimal(str(sum(item.subtotal for item in self.items.all())))
-        if settings.gst_enabled:
-            self.gst_amount = self.subtotal * Decimal(str(settings.gst_percentage)) / Decimal('100')
+        
+        tax_percent = Decimal('0')
+        if self.shop and isinstance(self.shop.bill_settings, dict):
+            try:
+                tax_percent = Decimal(str(self.shop.bill_settings.get('tax_percent', 0.0)))
+            except (ValueError, TypeError, AttributeError):
+                pass
+                
+        if tax_percent > 0:
+            self.gst_amount = self.subtotal * tax_percent / Decimal('100')
         else:
             self.gst_amount = Decimal('0')
-        self.service_charge = self.subtotal * Decimal(str(settings.service_charge)) / Decimal('100')
+            
+        self.service_charge = Decimal('0')
         self.total = self.subtotal + self.gst_amount + self.service_charge - Decimal(str(self.discount))
         self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total'])
 
