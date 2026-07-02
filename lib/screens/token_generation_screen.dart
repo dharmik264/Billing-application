@@ -254,17 +254,15 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       //   final url = Uri.parse('whatsapp://send?phone=+91$phone&text=$message');
       //   try {
       //     if (await canLaunchUrl(url)) {
-      //       await launchUrl(url, mode: LaunchMode.externalApplication);
-      //     } else {
-      //       final webUrl = Uri.parse('https://wa.me/91$phone?text=$message');
-      //       if (await canLaunchUrl(webUrl)) {
-      //         await launchUrl(webUrl, mode: LaunchMode.externalApplication);
-      //       }
       //     }
       //   } catch (_) {}
       // }
 
       if (mounted) {
+        final currentSubtotal = _subtotal;
+        final currentTax = _taxAmount;
+        final currentGrandTotal = _grandTotal;
+        _clearCart();
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (_) => PrintPreviewScreen(
             tokenNumber: tokenNum,
@@ -272,9 +270,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             customerPhone: phone.isNotEmpty ? phone : null,
             paymentMode: _paymentMode,
             items: apiToken.items,
-            subtotal: _subtotal,
-            tax: _taxAmount,
-            grandTotal: _grandTotal,
+            subtotal: currentSubtotal,
+            tax: currentTax,
+            grandTotal: currentGrandTotal,
           ),
         ));
       }
