@@ -227,40 +227,45 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(_formatTime(token.createdAt), style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          GestureDetector(
-                            onTap: () => _changePaymentMode(token),
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 6),
+                      Expanded(
+                        child: Wrap(
+                          alignment: WrapAlignment.end,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () => _changePaymentMode(token),
+                              child: Container(
+                                margin: const EdgeInsets.only(right: 4, bottom: 2, top: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE2E8F0),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      token.paymentMode.isNotEmpty ? token.paymentMode.toUpperCase() : 'CASH',
+                                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.edit, size: 10, color: Color(0xFF475569)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 2, top: 2),
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE2E8F0),
-                                borderRadius: BorderRadius.circular(6),
+                                color: statusColor.withValues(alpha: 0.1), 
+                                borderRadius: BorderRadius.circular(6)
                               ),
-                              child: Row(
-                                children: [
-                                  Text(
-                                    token.paymentMode.isNotEmpty ? token.paymentMode.toUpperCase() : 'CASH',
-                                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Icon(Icons.edit, size: 10, color: Color(0xFF475569)),
-                                ],
-                              ),
+                              child: Text(statusText, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor)),
                             ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.1), 
-                              borderRadius: BorderRadius.circular(6)
-                            ),
-                            child: Text(statusText, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor)),
-                          ),
-                        ]
-                      )
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ],

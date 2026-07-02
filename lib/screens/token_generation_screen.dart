@@ -337,13 +337,16 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             builder: (context, _, __) {
               int totalItems = _billItems.fold(0, (sum, item) => sum + item.quantity);
               if (totalItems == 0) return const SizedBox.shrink();
-              return FloatingActionButton.extended(
-                backgroundColor: const Color(0xFF4F46E5),
-                onPressed: _openCartPage,
-                icon: const Icon(Icons.receipt_long, color: Colors.white),
-                label: Text(
-                  'View Bill ($totalItems)', 
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white)
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 72.0),
+                child: FloatingActionButton.extended(
+                  backgroundColor: const Color(0xFF4F46E5),
+                  onPressed: _openCartPage,
+                  icon: const Icon(Icons.receipt_long, color: Colors.white),
+                  label: Text(
+                    'View Bill ($totalItems)', 
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white)
+                  ),
                 ),
               );
             },
