@@ -11,6 +11,8 @@ import 'settings_screen.dart';
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
+  static final ValueNotifier<bool> hideNavbar = ValueNotifier(false);
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -149,34 +151,41 @@ class _MainScreenState extends State<MainScreen> {
           duration: const Duration(milliseconds: 300),
           child: _screens[_currentIndex],
         ),
-        Positioned(
-          left: 24,
-          right: 24,
-          bottom: 24,
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(32),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-                  blurRadius: 30,
-                  offset: const Offset(0, 10),
-                )
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _mobileNavItem(0, Icons.home_rounded, Icons.home_outlined),
-                _mobileNavItem(1, Icons.receipt_long_rounded, Icons.receipt_long_outlined),
-                _mobileNavItem(2, Icons.inventory_2_rounded, Icons.inventory_2_outlined),
-                _mobileNavItem(3, Icons.bar_chart_rounded, Icons.bar_chart_outlined),
-                _mobileNavItem(4, Icons.settings_rounded, Icons.settings_outlined),
-              ],
-            ),
-          ).animate().slideY(begin: 1, duration: 600.ms, curve: Curves.easeOutQuart),
+        ValueListenableBuilder<bool>(
+          valueListenable: MainScreen.hideNavbar,
+          builder: (context, hide, child) {
+            return AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              left: 24,
+              right: 24,
+              bottom: hide ? -100 : 24,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                      blurRadius: 30,
+                      offset: const Offset(0, 10),
+                    )
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _mobileNavItem(0, Icons.home_rounded, Icons.home_outlined),
+                    _mobileNavItem(1, Icons.receipt_long_rounded, Icons.receipt_long_outlined),
+                    _mobileNavItem(2, Icons.inventory_2_rounded, Icons.inventory_2_outlined),
+                    _mobileNavItem(3, Icons.bar_chart_rounded, Icons.bar_chart_outlined),
+                    _mobileNavItem(4, Icons.settings_rounded, Icons.settings_outlined),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

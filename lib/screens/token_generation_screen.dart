@@ -7,6 +7,7 @@ import '../services/restaurant_api.dart';
 import '../utils/bill_counter.dart';
 
 import 'print_preview_screen.dart';
+import 'main_screen.dart';
 
 class _TokenProduct {
   final ApiItem rawItem;
@@ -78,6 +79,24 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     super.initState();
     _loadInitialData();
     _searchController.addListener(() => setState(() {}));
+    _cartTrigger.addListener(_onCartChanged);
+  }
+
+  void _onCartChanged() {
+    int totalItems = _billItems.fold(0, (sum, item) => sum + item.quantity);
+    MainScreen.hideNavbar.value = totalItems > 0;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _customerNameController.dispose();
+    _customerPhoneController.dispose();
+    _receivedAmountController.dispose();
+    _cartTrigger.removeListener(_onCartChanged);
+    _cartTrigger.dispose();
+    MainScreen.hideNavbar.value = false;
+    super.dispose();
   }
 
   Future<void> _loadInitialData() async {
