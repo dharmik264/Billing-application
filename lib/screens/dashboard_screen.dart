@@ -429,6 +429,7 @@ class DashboardScreenState extends State<DashboardScreen> {
             tokenNumber: token.tokenNumber,
             billNumber: token.rawToken.billNumber,
             customerPhone: token.rawToken.customerPhone,
+            paymentMode: token.paymentMode,
             items: token.rawToken.items.map((i) => ApiTokenItemDraft(
               name: i.name,
               code: i.code,
