@@ -173,7 +173,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   double get _grandTotal => _subtotal + _taxAmount;
 
   void _addProduct(_TokenProduct product) {
-    _cartTrigger.value++;
     setState(() {
       final existing = _billItems.indexWhere((i) => i.product.id == product.id);
       if (existing >= 0) {
@@ -182,20 +181,20 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         _billItems.add(_CartItem(product: product));
       }
     });
+    _cartTrigger.value++;
   }
 
   void _updateQuantity(int index, int delta) {
-    _cartTrigger.value++;
     setState(() {
       _billItems[index].quantity += delta;
       if (_billItems[index].quantity <= 0) {
         _billItems.removeAt(index);
       }
     });
+    _cartTrigger.value++;
   }
 
   void _clearCart() {
-    _cartTrigger.value++;
     setState(() {
       _billItems.clear();
       _customerNameController.clear();
@@ -203,6 +202,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       _receivedAmountController.clear();
       _paymentMode = 'CASH';
     });
+    _cartTrigger.value++;
   }
 
   Future<void> _saveBill() async {
