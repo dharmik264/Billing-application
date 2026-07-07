@@ -3,18 +3,21 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../widgets/platform_growth_chart.dart';
+import '../services/restaurant_api.dart';
 
-// ── Demo Data Models ──────────────────────────────────────────
+// ── Models ──────────────────────────────────────────
 
 class _ShopRequest {
+  final int userId;
   final String name;
   final String location;
   final String plan;
-  final String status; // PENDING or ACTIVE
+  final String status; // pending or trial
   final IconData icon;
   final Color iconBg;
 
   const _ShopRequest({
+    required this.userId,
     required this.name,
     required this.location,
     required this.plan,
@@ -59,25 +62,45 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
 
   late List<_ShopRequest> _shopRequests;
   late List<_Transaction> _transactions;
+  bool _isLoadingRequests = true;
 
   @override
   void initState() {
     super.initState();
-    _shopRequests = [
-      const _ShopRequest(name: 'Urban Roast Café', location: 'London, UK', plan: 'Pro Plan', status: 'PENDING', icon: Icons.coffee, iconBg: Color(0xFFFFF7ED)),
-      const _ShopRequest(name: 'Spice Garden', location: 'Mumbai, IN', plan: 'Enterprise', status: 'PENDING', icon: Icons.restaurant, iconBg: Color(0xFFF0FDF4)),
-      const _ShopRequest(name: 'Bella Pasta', location: 'Rome, IT', plan: 'Pro Plan', status: 'ACTIVE', icon: Icons.local_dining, iconBg: Color(0xFFEFF6FF)),
-    ];
+    _shopRequests = [];
     _transactions = const [
       _Transaction(title: 'Subscription Renewal', meta: 'TXN_9402 • 2 mins ago', amount: '+\$49.00', iconColor: Color(0xFF10B981), icon: Icons.autorenew_rounded),
       _Transaction(title: 'API Credits Top-up', meta: 'TXN_9401 • 15 mins ago', amount: '+\$120.50', iconColor: Color(0xFF3B82F6), icon: Icons.bolt_rounded),
       _Transaction(title: 'New Plan Purchase', meta: 'TXN_9400 • 1 hr ago', amount: '+\$299.00', iconColor: Color(0xFF8B5CF6), icon: Icons.shopping_cart_rounded),
       _Transaction(title: 'Subscription Renewal', meta: 'TXN_9399 • 3 hrs ago', amount: '+\$49.00', iconColor: Color(0xFFF59E0B), icon: Icons.autorenew_rounded),
     ];
+    _fetchRequests();
+  }
+
+  Future<void> _fetchRequests() async {
+    setState(() => _isLoadingRequests = true);
+    try {
+      final requests = await RestaurantApi.instance.fetchShopRequests();
+      setState(() {
+        _shopRequests = requests.map((req) => _ShopRequest(
+          userId: req['id'],
+          name: req['shop_name'] ?? 'Unknown Shop',
+          location: req['phone'] ?? 'Unknown Phone',
+          plan: 'Pending Approval',
+          status: req['account_status'],
+          icon: Icons.storefront,
+          iconBg: const Color(0xFFFFF7ED),
+        )).toList();
+        _isLoadingRequests = false;
+      });
+    } catch (e) {
+      setState(() => _isLoadingRequests = false);
+      _showSnack('Failed to load requests: $e');
+    }
   }
 
   void refreshData() {
-    // Placeholder for future API integration
+    _fetchRequests();
   }
 
   @override
@@ -333,13 +356,26 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        ...List.generate(_shopRequests.length, (i) => _shopRequestCard(_shopRequests[i], i)),
+        if (_isLoadingRequests)
+          const Center(child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ))
+        else if (_shopRequests.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Center(
+              child: Text('No pending shop requests.', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 13)),
+            ),
+          )
+        else
+          ...List.generate(_shopRequests.length, (i) => _shopRequestCard(_shopRequests[i], i)),
       ],
     );
   }
 
   Widget _shopRequestCard(_ShopRequest req, int index) {
-    final isPending = req.status == 'PENDING';
+    final isPending = req.status == 'pending' || req.status == 'trial';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -370,14 +406,24 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _actionBtn('Approve', const Color(0xFF10B981), () {
-                  setState(() { _shopRequests[index] = _ShopRequest(name: req.name, location: req.location, plan: req.plan, status: 'ACTIVE', icon: req.icon, iconBg: req.iconBg); });
-                  _showSnack('${req.name} approved!');
+                _actionBtn('Approve', const Color(0xFF10B981), () async {
+                  try {
+                    await RestaurantApi.instance.approveShopRequest(req.userId.toString(), 'Pro Plan');
+                    setState(() { _shopRequests.removeAt(index); });
+                    _showSnack('${req.name} approved!');
+                  } catch (e) {
+                    _showSnack('Failed to approve: $e');
+                  }
                 }),
                 const SizedBox(width: 6),
-                _actionBtn('Decline', const Color(0xFFEF4444), () {
-                  setState(() { _shopRequests.removeAt(index); });
-                  _showSnack('${req.name} declined');
+                _actionBtn('Decline', const Color(0xFFEF4444), () async {
+                  try {
+                    await RestaurantApi.instance.declineShopRequest(req.userId.toString());
+                    setState(() { _shopRequests.removeAt(index); });
+                    _showSnack('${req.name} declined');
+                  } catch (e) {
+                    _showSnack('Failed to decline: $e');
+                  }
                 }),
               ],
             )

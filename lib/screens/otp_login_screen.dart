@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../services/restaurant_api.dart';
 import 'shop_setup_screen.dart';
 import 'dashboard_screen.dart';
 import 'super_admin_main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'registration_screen.dart';
 
 class OTPLoginScreen extends StatefulWidget {
-  const OTPLoginScreen({Key? key}) : super(key: key);
+  final bool prefilledPhone;
+  const OTPLoginScreen({Key? key, this.prefilledPhone = false}) : super(key: key);
 
   @override
   State<OTPLoginScreen> createState() => _OTPLoginScreenState();
@@ -32,6 +35,20 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     _mobileController = TextEditingController();
     _otpControllers = List.generate(4, (_) => TextEditingController());
     _otpFocusNodes = List.generate(4, (_) => FocusNode());
+    _checkPrefilledPhone();
+  }
+
+  Future<void> _checkPrefilledPhone() async {
+    if (widget.prefilledPhone) {
+      final prefs = await SharedPreferences.getInstance();
+      final phone = prefs.getString('loginPhone');
+      if (phone != null && phone.isNotEmpty) {
+        setState(() {
+          _mobileController.text = phone;
+          _showOTPSection = true; // Show OTP fields directly
+        });
+      }
+    }
   }
 
   @override
@@ -110,7 +127,27 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await RestaurantApi.instance.verifyOtp(mobile, otp);
+      final responseMap = await RestaurantApi.instance.verifyOtp(mobile, otp);
+      
+      // Store user details in prefs
+      final prefs = await SharedPreferences.getInstance();
+      if (responseMap.containsKey('user')) {
+         final userMap = responseMap['user'];
+         await prefs.setString('account_status', userMap['account_status'] ?? '');
+         await prefs.setString('trial_end', userMap['trial_end'] ?? '');
+         
+         if (userMap['account_status'] == 'trial') {
+           if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(
+                 content: Text('Welcome! You are in the 7-day free trial period.'),
+                 backgroundColor: Colors.blue,
+               ),
+             );
+           }
+         }
+      }
+
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -418,7 +455,31 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'New user? ',
+                      style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(builder: (context) => const RegistrationScreen()),
+                        );
+                      },
+                      child: Text(
+                        'Register here',
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF4F46E5),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
                     // Mobile Number Input Section
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),

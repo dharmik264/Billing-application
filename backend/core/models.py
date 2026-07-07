@@ -4,6 +4,14 @@ from django.utils import timezone
 import random, string
 
 
+ACCOUNT_STATUS_CHOICES = [
+    ('pending', 'Pending Approval'),
+    ('trial', 'Trial Period'),
+    ('approved', 'Approved'),
+    ('rejected', 'Rejected'),
+    ('expired', 'Trial Expired'),
+]
+
 class UserManager(BaseUserManager):
     def create_user(self, phone, **extra_fields):
         if not phone:
@@ -24,11 +32,18 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    phone      = models.CharField(max_length=15, unique=True)
-    name       = models.CharField(max_length=100, blank=True)
-    is_active  = models.BooleanField(default=True)
-    is_staff   = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    phone          = models.CharField(max_length=15, unique=True)
+    name           = models.CharField(max_length=100, blank=True)
+    email          = models.EmailField(blank=True)
+    shop_name      = models.CharField(max_length=200, blank=True)
+    account_status = models.CharField(max_length=20, choices=ACCOUNT_STATUS_CHOICES, default='pending')
+    trial_start    = models.DateTimeField(null=True, blank=True)
+    trial_end      = models.DateTimeField(null=True, blank=True)
+    approved_plan  = models.CharField(max_length=50, blank=True)
+    approved_at    = models.DateTimeField(null=True, blank=True)
+    is_active      = models.BooleanField(default=True)
+    is_staff       = models.BooleanField(default=False)
+    created_at     = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD  = 'phone'
     REQUIRED_FIELDS = []
@@ -36,6 +51,23 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.phone
+
+    @property
+    def is_trial_active(self):
+        if self.account_status != 'trial' or not self.trial_end:
+            return False
+        return timezone.now() <= self.trial_end
+
+    @property
+    def can_login(self):
+        """User can login if approved, or in active trial"""
+        if self.phone == '9999999999':  # Super Admin bypass
+            return True
+        if self.account_status == 'approved':
+            return True
+        if self.account_status == 'trial' and self.is_trial_active:
+            return True
+        return False
 
 
 class OTP(models.Model):

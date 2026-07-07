@@ -4,10 +4,54 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
+from datetime import timedelta
 
 from .models import User, OTP, AppSettings
-from .serializers import SendOTPSerializer, VerifyOTPSerializer, UserSerializer, AppSettingsSerializer
+from .serializers import SendOTPSerializer, VerifyOTPSerializer, UserSerializer, AppSettingsSerializer, RegisterSerializer
+from shop.models import Shop
 
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        phone = serializer.validated_data['phone']
+        name = serializer.validated_data['name']
+        email = serializer.validated_data.get('email', '')
+        shop_name = serializer.validated_data['shop_name']
+        
+        if User.objects.filter(phone=phone).exists():
+            return Response({'error': 'Phone number already registered'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        now = timezone.now()
+        trial_end = now + timedelta(days=7)
+        user = User.objects.create(
+            phone=phone,
+            name=name,
+            email=email,
+            shop_name=shop_name,
+            account_status='trial',
+            trial_start=now,
+            trial_end=trial_end
+        )
+        user.set_unusable_password()
+        
+        Shop.objects.create(owner=user, name=shop_name, email=email, phone=phone)
+        
+        code = OTP.generate_code()
+        OTP.objects.create(phone=phone, code=code)
+        
+        print(f"DEVELOPMENT OTP FOR {phone}: {code}")
+        print("="*45 + "\n")
+        
+        response_data = {'message': 'Registration successful, OTP sent', 'phone': phone}
+        if __import__('django.conf', fromlist=['settings']).settings.DEBUG:
+            response_data['otp'] = code
+            
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 class SendOTPView(APIView):
     permission_classes = [AllowAny]
@@ -54,11 +98,16 @@ class VerifyOTPView(APIView):
         except OTP.DoesNotExist:
             return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
 
-        user, created = User.objects.get_or_create(phone=phone)
+        try:
+            user = User.objects.get(phone=phone)
+        except User.DoesNotExist:
+            return Response({'error': 'Please register first'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.can_login:
+            return Response({'error': 'Trial expired or account not approved'}, status=status.HTTP_403_FORBIDDEN)
         
-        # Grant admin panel access and set password as mobile number
+        # Grant admin panel access
         user.is_staff = True
-        user.set_password(phone)
         user.save()
         
         refresh = RefreshToken.for_user(user)
@@ -67,7 +116,6 @@ class VerifyOTPView(APIView):
             'access':  str(refresh.access_token),
             'refresh': str(refresh),
             'user':    UserSerializer(user).data,
-            'is_new_user': created,
         }, status=status.HTTP_200_OK)
 
 
@@ -100,3 +148,43 @@ class AppSettingsView(generics.RetrieveUpdateAPIView):
         from shop.models import Shop
         shop = Shop.get_shop(self.request.user)
         return AppSettings.get_settings(shop)
+
+
+class ShopRequestsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_superuser:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        users = User.objects.filter(account_status__in=['pending', 'trial']).order_by('-created_at')
+        return Response(UserSerializer(users, many=True).data, status=status.HTTP_200_OK)
+
+
+class ShopRequestActionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        if not request.user.is_superuser:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+            
+        action = request.data.get('action') # 'approve' or 'decline'
+        plan = request.data.get('plan', '')
+        
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        if action == 'approve':
+            user.account_status = 'approved'
+            user.approved_plan = plan
+            user.approved_at = timezone.now()
+            user.save()
+            return Response({'message': 'Shop approved successfully'}, status=status.HTTP_200_OK)
+        elif action == 'decline':
+            user.account_status = 'rejected'
+            user.save()
+            return Response({'message': 'Shop request declined'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)

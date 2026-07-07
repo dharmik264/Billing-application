@@ -5,12 +5,14 @@ from .models import User, OTP, AppSettings
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display  = ['phone', 'name', 'is_active', 'is_staff', 'created_at']
-    search_fields = ['phone', 'name']
+    list_display  = ['phone', 'name', 'account_status', 'shop_name', 'is_active', 'is_staff', 'created_at']
+    search_fields = ['phone', 'name', 'shop_name', 'email']
+    list_filter   = ['account_status', 'is_active', 'is_staff']
     ordering      = ['-created_at']
     fieldsets = (
         (None,            {'fields': ('phone', 'password')}),
-        ('Personal info', {'fields': ('name',)}),
+        ('Personal info', {'fields': ('name', 'email', 'shop_name')}),
+        ('Status',        {'fields': ('account_status', 'trial_start', 'trial_end', 'approved_plan', 'approved_at')}),
         ('Permissions',   {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (

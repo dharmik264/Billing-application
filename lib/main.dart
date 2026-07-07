@@ -83,6 +83,23 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
+      // Check Trial Expiry
+      if (isLoggedIn) {
+        final status = prefs.getString('account_status');
+        if (status == 'trial') {
+          final trialEndStr = prefs.getString('trial_end');
+          if (trialEndStr != null && trialEndStr.isNotEmpty) {
+            final trialEnd = DateTime.tryParse(trialEndStr);
+            if (trialEnd != null && DateTime.now().isAfter(trialEnd)) {
+              isLoggedIn = false;
+              await prefs.setBool('isLoggedIn', false);
+              // In a real app, clear token from secure storage here
+              debugPrint('Trial expired. Logging out.');
+            }
+          }
+        }
+      }
+
       if (!mounted) return;
 
       // Super Admin auto-login routing

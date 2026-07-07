@@ -97,16 +97,51 @@ class RestaurantApi {
     return null;
   }
 
-  Future<bool> verifyOtp(String mobile, String otp) async {
+  Future<Map<String, dynamic>> verifyOtp(String mobile, String otp) async {
     final response = await _post('auth/verify-otp/', {
       'phone': mobile,
       'code': otp,
     });
     if (response.containsKey('access') && response.containsKey('refresh')) {
       await saveTokens(response['access'], response['refresh']);
-      return true;
+      // Return the full response to allow checking status in UI
+      return response;
     }
-    return false;
+    return response;
+  }
+
+  Future<Map<String, dynamic>> registerUser({
+    required String name,
+    required String phone,
+    required String shopName,
+    String? email,
+  }) async {
+    return await _post('auth/register/', {
+      'name': name,
+      'phone': phone,
+      'shop_name': shopName,
+      'email': email ?? '',
+    });
+  }
+
+  // ── Super Admin ─────────────────────────────────────────────
+
+  Future<List<Map<String, dynamic>>> fetchShopRequests() async {
+    final response = await _get('auth/shop-requests/');
+    return List<Map<String, dynamic>>.from(response as List);
+  }
+
+  Future<void> approveShopRequest(String userId, String plan) async {
+    await _post('auth/shop-requests/$userId/action/', {
+      'action': 'approve',
+      'plan': plan,
+    });
+  }
+
+  Future<void> declineShopRequest(String userId) async {
+    await _post('auth/shop-requests/$userId/action/', {
+      'action': 'decline',
+    });
   }
 
   // ── Shop ────────────────────────────────────────────────────
