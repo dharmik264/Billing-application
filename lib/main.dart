@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/otp_login_screen.dart';
 import 'screens/shop_setup_screen.dart';
 import 'screens/main_screen.dart';
+import 'screens/super_admin_main_screen.dart';
 import 'services/restaurant_api.dart';
 import 'utils/bill_counter.dart';
 
@@ -83,6 +84,13 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       if (!mounted) return;
+
+      // Super Admin auto-login routing
+      final loginPhone = prefs.getString('loginPhone') ?? '';
+      if (isLoggedIn && loginPhone == '9999999999') {
+        _navigateTo(const SuperAdminMainScreen());
+        return;
+      }
 
       // Routing Management Logic
       if (!isLoggedIn) {

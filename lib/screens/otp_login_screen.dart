@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../services/restaurant_api.dart';
 import 'shop_setup_screen.dart';
 import 'dashboard_screen.dart';
+import 'super_admin_main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OTPLoginScreen extends StatefulWidget {
@@ -152,9 +153,22 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     );
 
     final prefs = await SharedPreferences.getInstance();
+    final loginPhone = _mobileController.text.replaceAll(RegExp(r'[^\d]'), '');
     await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('loginPhone', _mobileController.text.replaceAll(RegExp(r'[^\d]'), ''));
+    await prefs.setString('loginPhone', loginPhone);
     await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
+
+    // Super Admin routing
+    if (loginPhone == '9999999999') {
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const SuperAdminMainScreen()),
+          (route) => false,
+        );
+      }
+      return;
+    }
+
     bool isSetupComplete = prefs.getBool('isSetupComplete') ?? false;
     try {
       final shop = await RestaurantApi.instance.fetchShop(forceRefresh: true);

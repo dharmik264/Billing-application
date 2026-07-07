@@ -1,0 +1,533 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
+import '../widgets/platform_growth_chart.dart';
+
+// ── Demo Data Models ──────────────────────────────────────────
+
+class _ShopRequest {
+  final String name;
+  final String location;
+  final String plan;
+  final String status; // PENDING or ACTIVE
+  final IconData icon;
+  final Color iconBg;
+
+  const _ShopRequest({
+    required this.name,
+    required this.location,
+    required this.plan,
+    required this.status,
+    required this.icon,
+    required this.iconBg,
+  });
+}
+
+class _Transaction {
+  final String title;
+  final String meta;
+  final String amount;
+  final Color iconColor;
+  final IconData icon;
+
+  const _Transaction({
+    required this.title,
+    required this.meta,
+    required this.amount,
+    required this.iconColor,
+    required this.icon,
+  });
+}
+
+// ── Dashboard Screen ──────────────────────────────────────────
+
+class SuperAdminDashboardScreen extends StatefulWidget {
+  const SuperAdminDashboardScreen({super.key});
+
+  @override
+  State<SuperAdminDashboardScreen> createState() => SuperAdminDashboardScreenState();
+}
+
+class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
+  // Demo data
+  final String _totalRevenue = '\$42,850';
+  final String _activeSubs = '1,240';
+  final double _growthPercent = 12.5;
+  final List<double> _weeklyData = [8, 14, 10, 22, 18, 26, 24];
+  final List<String> _weekLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  late List<_ShopRequest> _shopRequests;
+  late List<_Transaction> _transactions;
+
+  @override
+  void initState() {
+    super.initState();
+    _shopRequests = [
+      const _ShopRequest(name: 'Urban Roast Café', location: 'London, UK', plan: 'Pro Plan', status: 'PENDING', icon: Icons.coffee, iconBg: Color(0xFFFFF7ED)),
+      const _ShopRequest(name: 'Spice Garden', location: 'Mumbai, IN', plan: 'Enterprise', status: 'PENDING', icon: Icons.restaurant, iconBg: Color(0xFFF0FDF4)),
+      const _ShopRequest(name: 'Bella Pasta', location: 'Rome, IT', plan: 'Pro Plan', status: 'ACTIVE', icon: Icons.local_dining, iconBg: Color(0xFFEFF6FF)),
+    ];
+    _transactions = const [
+      _Transaction(title: 'Subscription Renewal', meta: 'TXN_9402 • 2 mins ago', amount: '+\$49.00', iconColor: Color(0xFF10B981), icon: Icons.autorenew_rounded),
+      _Transaction(title: 'API Credits Top-up', meta: 'TXN_9401 • 15 mins ago', amount: '+\$120.50', iconColor: Color(0xFF3B82F6), icon: Icons.bolt_rounded),
+      _Transaction(title: 'New Plan Purchase', meta: 'TXN_9400 • 1 hr ago', amount: '+\$299.00', iconColor: Color(0xFF8B5CF6), icon: Icons.shopping_cart_rounded),
+      _Transaction(title: 'Subscription Renewal', meta: 'TXN_9399 • 3 hrs ago', amount: '+\$49.00', iconColor: Color(0xFFF59E0B), icon: Icons.autorenew_rounded),
+    ];
+  }
+
+  void refreshData() {
+    // Placeholder for future API integration
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          _buildHeader(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  _buildStatCards().animate().fadeIn().slideY(begin: 0.1),
+                  const SizedBox(height: 24),
+                  _buildGrowthChart().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
+                  const SizedBox(height: 24),
+                  _buildCoreManagement().animate().fadeIn().slideY(begin: 0.1, delay: 200.ms),
+                  const SizedBox(height: 24),
+                  _buildShopRequests().animate().fadeIn().slideY(begin: 0.1, delay: 300.ms),
+                  const SizedBox(height: 24),
+                  _buildSystemHealth().animate().fadeIn().slideY(begin: 0.1, delay: 400.ms),
+                  const SizedBox(height: 24),
+                  _buildRecentTransactions().animate().fadeIn().slideY(begin: 0.1, delay: 500.ms),
+                  const SizedBox(height: 120),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── 1. Header ──────────────────────────────────────────────
+
+  SliverAppBar _buildHeader() {
+    return SliverAppBar(
+      expandedHeight: 120.0,
+      floating: false,
+      pinned: true,
+      backgroundColor: const Color(0xFFF8FAFC),
+      elevation: 0,
+      automaticallyImplyLeading: false,
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
+        title: Row(
+          children: [
+            Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)]),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3)),
+                ],
+              ),
+              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Super Admin', style: GoogleFonts.inter(color: const Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 16)),
+                  Row(
+                    children: [
+                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle)),
+                      const SizedBox(width: 4),
+                      Text('SYSTEM ACTIVE', style: GoogleFonts.inter(color: const Color(0xFF10B981), fontWeight: FontWeight.w600, fontSize: 9, letterSpacing: 0.5)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _showSnack('Settings'),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE2E8F0))),
+                child: const Icon(Icons.settings_rounded, size: 18, color: Color(0xFF64748B)),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _showSnack('Profile'),
+              child: Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFF06B6D4), Color(0xFF3B82F6)]),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.person_rounded, size: 20, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── 2. Stat Cards ──────────────────────────────────────────
+
+  Widget _buildStatCards() {
+    return Row(
+      children: [
+        Expanded(child: _bigStatCard('Total Revenue', _totalRevenue, Icons.trending_up_rounded, const Color(0xFF4F46E5), const Color(0xFF6366F1))),
+        const SizedBox(width: 12),
+        Expanded(child: _bigStatCard('Active Subs', _activeSubs, Icons.people_rounded, const Color(0xFF10B981), const Color(0xFF34D399))),
+      ],
+    );
+  }
+
+  Widget _bigStatCard(String title, String value, IconData icon, Color c1, Color c2) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [c1, c2], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: c1.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
+            child: Icon(icon, color: Colors.white, size: 20),
+          ),
+          const SizedBox(height: 14),
+          Text(value, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 22, letterSpacing: -0.5)),
+          const SizedBox(height: 4),
+          Text(title, style: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w500, fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  // ── 3. Platform Growth Chart ───────────────────────────────
+
+  Widget _buildGrowthChart() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('PLATFORM GROWTH', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(8)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.arrow_upward_rounded, size: 12, color: Color(0xFF10B981)),
+                    const SizedBox(width: 2),
+                    Text('+$_growthPercent%', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          PlatformGrowthChart(dataPoints: _weeklyData, labels: _weekLabels, height: 160),
+        ],
+      ),
+    );
+  }
+
+  // ── 4. Core Management ─────────────────────────────────────
+
+  Widget _buildCoreManagement() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('CORE MANAGEMENT', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.5,
+          children: [
+            _mgmtCard(Icons.bolt_rounded, 'User Roles', 'Manage permissions', const Color(0xFFFFF7ED), const Color(0xFFF59E0B)),
+            _mgmtCard(Icons.pie_chart_rounded, 'Shop Approvals', '12 Pending stores', const Color(0xFFF0FDF4), const Color(0xFF10B981)),
+            _mgmtCard(Icons.history_rounded, 'Plan Settings', 'Edit pricing tiers', const Color(0xFFEFF6FF), const Color(0xFF3B82F6)),
+            _mgmtCard(Icons.print_rounded, 'App Config', 'Maintenance & global', const Color(0xFFF5F3FF), const Color(0xFF8B5CF6)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _mgmtCard(IconData icon, String title, String subtitle, Color bgColor, Color iconColor) {
+    return GestureDetector(
+      onTap: () => _showSnack(title),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 4))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+            const SizedBox(height: 10),
+            Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+            const SizedBox(height: 2),
+            Text(subtitle, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B))),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── 5. Shop Requests ───────────────────────────────────────
+
+  Widget _buildShopRequests() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('SHOP REQUESTS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
+            GestureDetector(
+              onTap: () => _showSnack('View All Shop Requests'),
+              child: Text('View All', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...List.generate(_shopRequests.length, (i) => _shopRequestCard(_shopRequests[i], i)),
+      ],
+    );
+  }
+
+  Widget _shopRequestCard(_ShopRequest req, int index) {
+    final isPending = req.status == 'PENDING';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(color: req.iconBg, borderRadius: BorderRadius.circular(12)),
+            child: Icon(req.icon, color: const Color(0xFF64748B), size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(req.name, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+                const SizedBox(height: 3),
+                Text('${req.location} • ${req.plan}', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B))),
+              ],
+            ),
+          ),
+          if (isPending)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _actionBtn('Approve', const Color(0xFF10B981), () {
+                  setState(() { _shopRequests[index] = _ShopRequest(name: req.name, location: req.location, plan: req.plan, status: 'ACTIVE', icon: req.icon, iconBg: req.iconBg); });
+                  _showSnack('${req.name} approved!');
+                }),
+                const SizedBox(width: 6),
+                _actionBtn('Decline', const Color(0xFFEF4444), () {
+                  setState(() { _shopRequests.removeAt(index); });
+                  _showSnack('${req.name} declined');
+                }),
+              ],
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle, size: 12, color: Color(0xFF10B981)),
+                  const SizedBox(width: 4),
+                  Text('ACTIVE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionBtn(String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+      ),
+    );
+  }
+
+  // ── 6. System Health ───────────────────────────────────────
+
+  Widget _buildSystemHealth() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(colors: [Color(0xFF3B82F6), Color(0xFF2563EB)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: const Color(0xFF3B82F6).withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 6))],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('System Health', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                const SizedBox(height: 4),
+                Text('99.9% Uptime across all shards', style: GoogleFonts.inter(fontSize: 12, color: Colors.white.withValues(alpha: 0.85))),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.event_rounded, size: 13, color: Colors.white70),
+                      const SizedBox(width: 4),
+                      Text('MAINTENANCE MODE', style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w600, color: Colors.white70, letterSpacing: 0.3)),
+                      const SizedBox(width: 6),
+                      Text('Next: Oct 30, 2025', style: GoogleFonts.inter(fontSize: 9, color: Colors.white54)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () => _showSnack('Schedule Maintenance'),
+            child: Container(
+              width: 40, height: 40,
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── 7. Recent Transactions ─────────────────────────────────
+
+  Widget _buildRecentTransactions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('RECENT TRANSACTIONS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Column(
+            children: List.generate(_transactions.length, (i) {
+              final tx = _transactions[i];
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 38, height: 38,
+                          decoration: BoxDecoration(color: tx.iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                          child: Icon(tx.icon, color: tx.iconColor, size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(tx.title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+                              const SizedBox(height: 2),
+                              Text(tx.meta, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8))),
+                            ],
+                          ),
+                        ),
+                        Text(tx.amount, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
+                      ],
+                    ),
+                  ),
+                  if (i < _transactions.length - 1)
+                    const Divider(height: 0.5, thickness: 0.5, color: Color(0xFFF0F0F0), indent: 64),
+                ],
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Helpers ────────────────────────────────────────────────
+
+  void _showSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(
+        content: Text(msg, style: GoogleFonts.inter()),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
+  }
+}
