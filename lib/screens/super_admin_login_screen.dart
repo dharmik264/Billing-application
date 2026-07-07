@@ -266,6 +266,7 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                ),
                 ],
               ],
             ),
