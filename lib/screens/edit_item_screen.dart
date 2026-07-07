@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import '../utils/app_constants.dart';
 
 class EditItemScreen extends StatefulWidget {
   const EditItemScreen({
@@ -30,13 +33,12 @@ class EditItemScreen extends StatefulWidget {
 }
 
 class _EditItemScreenState extends State<EditItemScreen> {
-  static const Color _panelBackground = Color(0xFFF5F6FA);
-  static const Color _textPrimary = Color(0xFF1F2937);
-  static const Color _textSecondary = Color(0xFF6B7280);
-  static const Color _muted = Color(0xFFBBBBBB);
-  static const Color _border = Color(0xFFDDDDDD);
-  static const Color _softBorder = Color(0xFFEEEEEE);
-  static const Color _orange = Color(0xFFEA580C);
+  static const Color _panelBackground = AppColors.slate50;
+  static const Color _primary = AppColors.indigo600;
+  static const Color _textPrimary = AppColors.slate900;
+  static const Color _textSecondary = AppColors.slate500;
+  static const Color _border = AppColors.slate200;
+  static const Color _softBorder = AppColors.slate100;
   static const double _panelWidth = 360;
 
   List<String> _categories = [
@@ -119,7 +121,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                   color: Colors.black.withValues(alpha: 0.05),
                   child: const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(_orange),
+                      valueColor: AlwaysStoppedAnimation<Color>(_primary),
                     ),
                   ),
                 ),
@@ -131,49 +133,86 @@ class _EditItemScreenState extends State<EditItemScreen> {
   }
 
   Widget _buildPanel() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildHeader(),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              _buildCard(
+                'Visuals & Branding',
+                icon: Icons.image_outlined,
+                [
+                  _buildImageSection(),
+                ],
+              ),
+              _buildCard(
+                'Item Details',
+                icon: Icons.fastfood_outlined,
+                [
+                  _buildItemName(),
+                  const SizedBox(height: 16),
+                  _buildCodeAndRate(),
+                  const SizedBox(height: 16),
+                  _buildCategorySelector(),
+                ],
+              ),
+              _buildCard(
+                'Preferences',
+                icon: Icons.tune_outlined,
+                [
+                  _buildSwitchPanel(),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildButtons(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard(String title, List<Widget> children, {IconData? icon}) {
     return Container(
-      clipBehavior: Clip.antiAlias,
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _panelBackground,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _border),
+        boxShadow: [
+          BoxShadow(
+            color: _textPrimary.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              children: [
-                _buildImageSection(),
-                const SizedBox(height: 14),
-                _buildItemName(),
-                const SizedBox(height: 12),
-                _buildCodeAndRate(),
-                const SizedBox(height: 12),
-                _buildCategorySelector(),
-                const SizedBox(height: 14),
-                _buildSwitchPanel(),
-                const SizedBox(height: 20),
-                _buildButtons(),
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 20, color: _primary),
+                const SizedBox(width: 8),
               ],
-            ),
+              Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary)),
+            ],
           ),
+          const SizedBox(height: 20),
+          ...children,
         ],
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: _softBorder, width: 0.5),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -181,32 +220,29 @@ class _EditItemScreenState extends State<EditItemScreen> {
             child: Row(
               children: [
                 InkWell(
-                  borderRadius: BorderRadius.circular(50),
+                  borderRadius: BorderRadius.circular(12),
                   onTap: _cancel,
                   child: Container(
-                    width: 32,
-                    height: 32,
+                    width: 40,
+                    height: 40,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF0F0F0),
-                      shape: BoxShape.circle,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _border),
                     ),
-                    child: const Icon(
-                      Icons.close,
-                      size: 16,
-                      color: Color(0xFF555555),
-                    ),
+                    child: Icon(Icons.close_rounded, size: 20, color: _textPrimary),
                   ),
                 ),
-                const SizedBox(width: 10),
-                const Flexible(
+                const SizedBox(width: 16),
+                Flexible(
                   child: Text(
-                    'Add New Item',
+                    widget.initialName != null && widget.initialName!.isNotEmpty ? 'Edit Item' : 'Add New Item',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w500,
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
                       color: _textPrimary,
                     ),
                   ),
@@ -215,17 +251,17 @@ class _EditItemScreenState extends State<EditItemScreen> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFFEF3C7),
+              color: const Color(0xFFEEF2FF), // light indigo
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text(
+            child: Text(
               'Draft',
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF92400E),
+                fontWeight: FontWeight.w600,
+                color: _primary,
               ),
             ),
           ),
@@ -279,24 +315,24 @@ class _EditItemScreenState extends State<EditItemScreen> {
     String? helper,
     Uint8List? imageBytes,
   }) {
-    final orangeCard = selectedStyle || selected;
+    final active = selectedStyle || selected;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
-        height: 80,
+        height: 100,
         decoration: BoxDecoration(
-          color: orangeCard ? const Color(0xFFFFF7ED) : _panelBackground,
-          borderRadius: BorderRadius.circular(12),
+          color: active ? _primary.withValues(alpha: 0.05) : _panelBackground,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: orangeCard ? const Color(0xFFFED7AA) : _border,
-            width: orangeCard ? 0.5 : 1.5,
+            color: active ? _primary.withValues(alpha: 0.3) : _border,
+            width: active ? 1.5 : 1.0,
           ),
         ),
         child: imageBytes != null && selected
             ? ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 child: Image.memory(
                   imageBytes,
                   width: double.infinity,
@@ -308,25 +344,23 @@ class _EditItemScreenState extends State<EditItemScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(icon,
-                      size: selectedStyle ? 20 : 22,
-                      color: orangeCard ? _orange : _muted),
-                  const SizedBox(height: 4),
+                      size: 28,
+                      color: active ? _primary : _textSecondary),
+                  const SizedBox(height: 8),
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: selectedStyle ? 12 : 11,
-                      fontWeight:
-                          selectedStyle ? FontWeight.w500 : FontWeight.w400,
-                      color: orangeCard ? _orange : _muted,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: active ? _primary : _textSecondary,
                     ),
                   ),
                   if (helper != null) ...[
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       helper,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontSize: 10, color: Color(0xFFAAAAAA)),
+                      style: GoogleFonts.inter(fontSize: 11, color: _textSecondary),
                     ),
                   ],
                 ],
@@ -345,13 +379,13 @@ class _EditItemScreenState extends State<EditItemScreen> {
           child: TextField(
             controller: _nameController,
             maxLines: 1,
-            style: const TextStyle(fontSize: 14, color: _textPrimary),
-            decoration: const InputDecoration(
+            style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
+            decoration: InputDecoration(
               hintText: 'e.g. Double Cheese Truffle Burger',
-              hintStyle: TextStyle(fontSize: 14, color: _muted),
+              hintStyle: GoogleFonts.inter(fontSize: 15, color: _textSecondary.withValues(alpha: 0.5)),
               border: InputBorder.none,
               isDense: true,
-              contentPadding: EdgeInsets.zero,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ),
@@ -376,16 +410,16 @@ class _EditItemScreenState extends State<EditItemScreen> {
                   children: [
                     Text(
                       widget.initialCode,
-                      style: const TextStyle(fontSize: 14, color: _textPrimary),
+                      style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
                     ),
-                    const Icon(Icons.lock_outline, size: 14, color: _muted),
+                    const Icon(Icons.lock_outline, size: 16, color: _textSecondary),
                   ],
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,13 +437,13 @@ class _EditItemScreenState extends State<EditItemScreen> {
                         RegExp(r'^\d*\.?\d{0,2}')),
                   ],
                   maxLines: 1,
-                  style: const TextStyle(fontSize: 14, color: _textPrimary),
-                  decoration: const InputDecoration(
+                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
+                  decoration: InputDecoration(
                     hintText: '0.00',
-                    hintStyle: TextStyle(fontSize: 14, color: _muted),
+                    hintStyle: GoogleFonts.inter(fontSize: 15, color: _textSecondary.withValues(alpha: 0.5)),
                     border: InputBorder.none,
                     isDense: true,
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
                 ),
               ),
@@ -427,7 +461,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
         _label('Category'),
         const SizedBox(height: 6),
         InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           onTap: _pickCategory,
           child: _inputShell(
             child: Row(
@@ -435,12 +469,12 @@ class _EditItemScreenState extends State<EditItemScreen> {
               children: [
                 Text(
                   _category,
-                  style: const TextStyle(fontSize: 14, color: _textPrimary),
+                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
                 ),
                 const Icon(
                   Icons.keyboard_arrow_down,
-                  size: 16,
-                  color: Color(0xFFAAAAAA),
+                  size: 20,
+                  color: _textSecondary,
                 ),
               ],
             ),
@@ -451,36 +485,28 @@ class _EditItemScreenState extends State<EditItemScreen> {
   }
 
   Widget _buildSwitchPanel() {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _softBorder, width: 0.5),
-      ),
-      child: Column(
-        children: [
-          _settingsRow(
-            icon: Icons.public,
-            iconBackground: const Color(0xFFEFF6FF),
-            iconColor: const Color(0xFF2563EB),
-            title: 'Available Online',
-            subtitle: 'Show this item on your website',
-            value: _availableOnline,
-            onTap: () => setState(() => _availableOnline = !_availableOnline),
-          ),
-          const Divider(height: 0.5, thickness: 0.5, color: Color(0xFFF0F0F0)),
-          _settingsRow(
-            icon: Icons.check_circle_outline,
-            iconBackground: const Color(0xFFF0FDF4),
-            iconColor: const Color(0xFF16A34A),
-            title: 'Active Status',
-            subtitle: "Set to 'Out of Stock' if disabled",
-            value: _activeStatus,
-            onTap: () => setState(() => _activeStatus = !_activeStatus),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        _settingsRow(
+          icon: Icons.public,
+          iconBackground: const Color(0xFFEFF6FF),
+          iconColor: const Color(0xFF2563EB),
+          title: 'Available Online',
+          subtitle: 'Show this item on your website',
+          value: _availableOnline,
+          onTap: () => setState(() => _availableOnline = !_availableOnline),
+        ),
+        const SizedBox(height: 16),
+        _settingsRow(
+          icon: Icons.check_circle_outline,
+          iconBackground: const Color(0xFFF0FDF4),
+          iconColor: const Color(0xFF16A34A),
+          title: 'Active Status',
+          subtitle: "Set to 'Out of Stock' if disabled",
+          value: _activeStatus,
+          onTap: () => setState(() => _activeStatus = !_activeStatus),
+        ),
+      ],
     );
   }
 
@@ -494,22 +520,28 @@ class _EditItemScreenState extends State<EditItemScreen> {
     required VoidCallback onTap,
   }) {
     return InkWell(
+      borderRadius: BorderRadius.circular(16),
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _border),
+        ),
         child: Row(
           children: [
             Container(
-              width: 32,
-              height: 32,
+              width: 36,
+              height: 36,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: iconBackground,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 16, color: iconColor),
+              child: Icon(icon, size: 20, color: iconColor),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,23 +550,23 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                       color: _textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 1),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11, color: _textSecondary),
+                    style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 12),
             _switch(value),
           ],
         ),
@@ -545,17 +577,17 @@ class _EditItemScreenState extends State<EditItemScreen> {
   Widget _switch(bool value) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
-      width: 42,
-      height: 24,
+      width: 44,
+      height: 26,
       padding: const EdgeInsets.all(3),
       alignment: value ? Alignment.centerRight : Alignment.centerLeft,
       decoration: BoxDecoration(
-        color: value ? _orange : const Color(0xFFDDDDDD),
-        borderRadius: BorderRadius.circular(12),
+        color: value ? _primary : _border,
+        borderRadius: BorderRadius.circular(13),
       ),
       child: Container(
-        width: 18,
-        height: 18,
+        width: 20,
+        height: 20,
         decoration: const BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
@@ -565,65 +597,64 @@ class _EditItemScreenState extends State<EditItemScreen> {
   }
 
   Widget _buildButtons() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Row(
-        children: [
-          Expanded(
-            child: SizedBox(
-              height: 46,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _textSecondary,
-                  side: const BorderSide(color: _border, width: 0.5),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: _cancel,
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                ),
+    return Row(
+      children: [
+        Expanded(
+          flex: 1,
+          child: SizedBox(
+            height: 56,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: _border, width: 1.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
+              onPressed: _cancel,
+              child: Text('Cancel', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _textSecondary)),
             ),
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: SizedBox(
-              height: 46,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _orange,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: Container(
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.indigo600, Color(0xFF4338CA)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.indigo600.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
-                onPressed: _save,
-                child: const FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.save_outlined, size: 16),
-                      SizedBox(width: 6),
-                      Text(
-                        'Save Item',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
+              ],
+            ),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              onPressed: _isSaving ? null : _save,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.white,
                       ),
-                    ],
-                  ),
-                ),
-              ),
+                    )
+                  : Text('Save Item', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -632,12 +663,18 @@ class _EditItemScreenState extends State<EditItemScreen> {
     Color background = Colors.white,
   }) {
     return Container(
-      height: 43,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border, width: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _border),
+        boxShadow: [
+          if (background == Colors.white)
+            BoxShadow(
+              color: _textPrimary.withValues(alpha: 0.01),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            )
+        ],
       ),
       child: child,
     );
@@ -648,9 +685,9 @@ class _EditItemScreenState extends State<EditItemScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
+        style: GoogleFonts.inter(
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: _textSecondary,
           letterSpacing: 0.5,
         ),
@@ -700,7 +737,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                   ListTile(
                     title: Text(category),
                     trailing: category == _category
-                        ? const Icon(Icons.check, color: _orange)
+                        ? const Icon(Icons.check, color: _primary)
                         : null,
                     onTap: () => Navigator.of(context).pop(category),
                   ),
