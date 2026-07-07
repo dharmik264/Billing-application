@@ -423,526 +423,297 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Container(
-          width: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFF0F4FF), Color(0xFFFAF5FF)],
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-            child: Center(
-              child: Container(
-                width: 360,
-                decoration: BoxDecoration(
-                  color: const Color(0xFAFFFFFF),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 20,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: const Color(0xFFE0E0E0),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Top half (Pastel Indigo Background)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.45,
+            child: Container(
+              color: const Color(0xFFEEF2FF),
+              child: SafeArea(
+                child: Stack(
                   children: [
-                    // Back Button
+                    // Back Button (If OTP shown)
                     if (_showOTPSection)
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Align(
-                          alignment: Alignment.topLeft,
+                      Positioned(
+                        top: 16,
+                        left: 16,
+                        child: InkWell(
+                          onTap: _resetForm,
+                          borderRadius: BorderRadius.circular(12),
                           child: Container(
-                            width: 34,
-                            height: 34,
+                            padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xCCFFFFFF),
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                color: const Color(0xFFDDDDDD),
-                                width: 0.5,
-                              ),
+                              color: Colors.white.withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: IconButton(
-                              icon: const Icon(Icons.arrow_back),
-                              iconSize: 17,
-                              color: const Color(0xFF555555),
-                              onPressed: _resetForm,
-                              padding: EdgeInsets.zero,
+                            child: const Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xFF0F172A)),
+                          ),
+                        ),
+                      ),
+                    
+                    // Dev Mode Toggle (If not OTP)
+                    if (!_showOTPSection)
+                      Positioned(
+                        top: 8,
+                        right: 16,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
+                            Switch(
+                              value: _isDevMode,
+                              activeTrackColor: const Color(0xFF4F46E5),
+                              onChanged: (val) {
+                                setState(() => _isDevMode = val);
+                                if (val && _devUsers.isEmpty) {
+                                  _fetchDevUsers();
+                                }
+                              },
                             ),
-                          ),
-                        ),
-                      )
-                    else
-                      Padding(
-                        padding: const EdgeInsets.only(right: 16, top: 8),
-                        child: Align(
-                          alignment: Alignment.topRight,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.deepPurple)),
-                              Switch(
-                                value: _isDevMode,
-                                activeThumbColor: Colors.deepPurple,
-                                onChanged: (val) {
-                                  setState(() => _isDevMode = val);
-                                  if (val && _devUsers.isEmpty) {
-                                    _fetchDevUsers();
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
-                    // Header Icon
-                    Container(
-                      width: 70,
-                      height: 70,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF7ED),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(
-                            Icons.storefront,
-                            size: 34,
-                            color: Color(0xFFEA580C),
-                          ),
-                          Positioned(
-                            top: 8,
-                            right: 8,
-                            child: Container(
-                              width: 10,
-                              height: 10,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF16A34A),
-                                borderRadius: BorderRadius.circular(50),
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    // Title
-                    const Text(
-                      'Login with Mobile Number',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF1F2937),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 4),
-                    // Subtitle
-                    const Text(
-                      'Enter your details to continue',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF6B7280),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'New user? ',
-                      style: GoogleFonts.inter(color: const Color(0xFF64748B)),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (context) => const RegistrationScreen()),
-                        );
-                      },
-                      child: Text(
-                        'Register here',
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF4F46E5),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Super Admin? ',
-                      style: GoogleFonts.inter(color: const Color(0xFF64748B)),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        if (_isDevMode) {
-                          _devSuperAdminBypass();
-                        } else {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()),
-                          );
-                        }
-                      },
-                      child: Text(
-                        'Login here',
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFF4F46E5),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                if (_isDevMode)
-                  _buildDevUserList()
-                else ...[
-                    // Mobile Number Input Section
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+
+                    // Storefront Illustration
+                    Center(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            'MOBILE NUMBER',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF6B7280),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
                           Container(
-                            height: 48,
+                            padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFFDDDDDD),
-                                width: 0.5,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                      border: Border(
-                                        right: BorderSide(
-                                          color: Color(0xFFEEEEEE),
-                                          width: 1,
-                                        ),
-                                      ),
-                                    ),
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: const Text(
-                                      '+91 ▾',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Color(0xFF555555),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _mobileController,
-                                    keyboardType: TextInputType.phone,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                      LengthLimitingTextInputFormatter(10),
-                                    ],
-                                    decoration: const InputDecoration(
-                                      hintText: '98450 12345',
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                          EdgeInsets.symmetric(vertical: 12),
-                                    ),
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      color: Color(0xFF1F2937),
-                                    ),
-                                  ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                                  blurRadius: 30,
+                                  spreadRadius: 5,
+                                  offset: const Offset(0, 10),
                                 ),
                               ],
                             ),
+                            child: const Icon(Icons.storefront_rounded, size: 64, color: Color(0xFF4F46E5)),
                           ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    // Send OTP Button
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2563EB),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          onPressed: _isLoading ? null : _sendOTP,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.send, size: 17),
-                                    SizedBox(width: 8),
-                                    Text(
-                                      'Send OTP',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    // OTP Section
-                    if (_showOTPSection) ...[
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Column(
-                          children: [
-                            // OTP Header
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'ENTER 4-DIGIT OTP',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: Color(0xFF6B7280),
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: _isResendCooldown ? null : _resendOTP,
-                                  child: Text(
-                                    _isResendCooldown
-                                        ? 'Resend in ${_resendCountdown}s'
-                                        : 'Resend OTP',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: _isResendCooldown
-                                          ? const Color(0xFFBBBBBB)
-                                          : const Color(0xFF2563EB),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            // OTP Input Fields
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _buildOTPField(0),
-                                const SizedBox(width: 10),
-                                _buildOTPField(1),
-                                const SizedBox(width: 10),
-                                _buildOTPField(2),
-                                const SizedBox(width: 10),
-                                _buildOTPField(3),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            // Error Message
-                            if (_hasError)
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 9,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFEF2F2),
-                                  border: Border.all(
-                                    color: const Color(0xFFFECACA),
-                                    width: 0.5,
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.error,
-                                      size: 16,
-                                      color: Color(0xFFDC2626),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Wrong OTP. $_attemptsRemaining attempts remaining.',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF991B1B),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            const SizedBox(height: 14),
-                            // Verify OTP Button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 48,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF16A34A),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  elevation: 0,
-                                ),
-                                onPressed: (_attemptsRemaining > 0 && !_isLoading)
-                                    ? _verifyOTP
-                                    : null,
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2,
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.shield_outlined,
-                                            size: 17,
-                                            color: _attemptsRemaining > 0
-                                                ? Colors.white
-                                                : Colors.grey,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Verify OTP & Login',
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.w500,
-                                              color: _attemptsRemaining > 0
-                                                  ? Colors.white
-                                                  : Colors.grey,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (_showOTPSection) const SizedBox(height: 14),
-                    // Security Info
-                    if (!_showOTPSection)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.lock_outline,
-                              size: 14,
-                              color: Color(0xFFAAAAAA),
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              'Secure login using OTP',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 20),
-                    // Footer Links
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Terms of Service',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
-                            Text(
-                              ' · ',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFFCCCCCC),
-                              ),
-                            ),
-                            Text(
-                              'Privacy Policy',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
           ),
-        ),
+          
+          // Bottom half (White Card)
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.4,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(36),
+                  topRight: Radius.circular(36),
+                ),
+                boxShadow: [
+                  BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(36),
+                  topRight: Radius.circular(36),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(32, 40, 32, 24),
+                  child: _isDevMode && !_showOTPSection 
+                      ? _buildDevUserList() 
+                      : (_showOTPSection ? _buildOTPForm() : _buildPhoneForm()),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildPhoneForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Welcome Back!',
+          style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Enter your mobile number to securely login to your account.',
+          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B), height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                child: Text('+91', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+              ),
+              Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
+              Expanded(
+                child: TextField(
+                  controller: _mobileController,
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
+                  ],
+                  style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A), letterSpacing: 1.5),
+                  decoration: InputDecoration(
+                    hintText: 'Enter Phone Number',
+                    hintStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8), letterSpacing: 0),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('New user? ', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const RegistrationScreen()));
+              },
+              child: Text('Register here', style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Super Admin? ', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            GestureDetector(
+              onTap: () {
+                if (_isDevMode) {
+                  _devSuperAdminBypass();
+                } else {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
+                }
+              },
+              child: Text('Login here', style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _sendOTP,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4F46E5),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            elevation: 4,
+            shadowColor: const Color(0xFF4F46E5).withValues(alpha: 0.5),
+          ),
+          child: _isLoading
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : Text('Send OTP', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOTPForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Verify OTP',
+          style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'We\'ve sent a verification code to\n+91 ${_mobileController.text}',
+          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B), height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _buildOTPField(0),
+            _buildOTPField(1),
+            _buildOTPField(2),
+            _buildOTPField(3),
+          ],
+        ),
+        const SizedBox(height: 24),
+        if (_hasError)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(16)),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, size: 18, color: Color(0xFFDC2626)),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Wrong OTP. $_attemptsRemaining attempts remaining.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF991B1B)))),
+              ],
+            ),
+          ),
+        if (_hasError) const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Didn\'t receive the code? ', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            GestureDetector(
+              onTap: _isResendCooldown ? null : _resendOTP,
+              child: Text(
+                _isResendCooldown ? 'Resend in ${_resendCountdown}s' : 'Resend OTP',
+                style: GoogleFonts.inter(
+                  color: _isResendCooldown ? const Color(0xFF94A3B8) : const Color(0xFF4F46E5),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        ElevatedButton(
+          onPressed: (_attemptsRemaining > 0 && !_isLoading) ? _verifyOTP : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF10B981),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            elevation: 4,
+            shadowColor: const Color(0xFF10B981).withValues(alpha: 0.5),
+          ),
+          child: _isLoading
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : Text('Verify & Login', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+        ),
+      ],
     );
   }
 
