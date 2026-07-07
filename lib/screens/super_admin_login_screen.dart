@@ -175,9 +175,9 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                 const SizedBox(height: 32),
                 
                 if (_isDevMode)
-                  _buildDevSuperAdminList()
-                else ...[
-                  // Login ID
+                  _buildDevSuperAdminList(),
+                
+                // Login ID
                 Text(
                   'LOGIN ID',
                   style: GoogleFonts.inter(
@@ -204,46 +204,58 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Password
-                Text(
-                  'PASSWORD',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF64748B),
-                    letterSpacing: 0.5,
+                if (!_isDevMode) ...[
+                  // Password
+                  Text(
+                    'PASSWORD',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    hintText: 'Enter password',
-                    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
-                    prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF94A3B8)),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                        color: const Color(0xFF94A3B8),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: InputDecoration(
+                      hintText: 'Enter password',
+                      hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
+                      prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF94A3B8)),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                        onPressed: () {
+                          setState(() => _obscurePassword = !_obscurePassword);
+                        },
                       ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-                    filled: true,
-                    fillColor: const Color(0xFFF8FAFC),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
-                ),
+                ],
                 const SizedBox(height: 32),
 
                 // Login Button
                 ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
+                  onPressed: _isLoading ? null : () {
+                    if (_isDevMode) {
+                      if (_idController.text.trim().isNotEmpty) {
+                        _devSuperAdminLogin(_idController.text.trim());
+                      } else {
+                        _showSnack('Please enter Admin ID or select from the list');
+                      }
+                    } else {
+                      _login();
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4F46E5),
                     foregroundColor: Colors.white,
@@ -267,7 +279,6 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                           ),
                         ),
                 ),
-                ],
               ],
             ),
           ),
