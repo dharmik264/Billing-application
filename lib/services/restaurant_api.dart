@@ -138,8 +138,7 @@ class RestaurantApi {
   // ── Super Admin ─────────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> fetchShopRequests() async {
-    final response = await _get('auth/shop-requests/');
-    return List<Map<String, dynamic>>.from(response as List);
+    return await _getPaginatedList('auth/shop-requests/');
   }
 
   Future<void> approveShopRequest(String userId, String plan) async {
