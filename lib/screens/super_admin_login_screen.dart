@@ -140,7 +140,7 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                       Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.deepPurple)),
                       Switch(
                         value: _isDevMode,
-                        activeColor: Colors.deepPurple,
+                        activeThumbColor: Colors.deepPurple,
                         onChanged: (val) {
                           setState(() => _isDevMode = val);
                           if (val && _devSuperAdmins.isEmpty) {

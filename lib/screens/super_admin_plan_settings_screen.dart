@@ -240,7 +240,7 @@ class _PlanFormState extends State<_PlanForm> {
   bool _isActive = true;
   bool _isPopular = false;
   
-  Map<String, bool> _features = {
+  final Map<String, bool> _features = {
     'billing_access': true,
     'inventory_access': false,
     'reports_access': false,

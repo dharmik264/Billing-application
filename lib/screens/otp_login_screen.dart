@@ -487,7 +487,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                               Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.deepPurple)),
                               Switch(
                                 value: _isDevMode,
-                                activeColor: Colors.deepPurple,
+                                activeThumbColor: Colors.deepPurple,
                                 onChanged: (val) {
                                   setState(() => _isDevMode = val);
                                   if (val && _devUsers.isEmpty) {

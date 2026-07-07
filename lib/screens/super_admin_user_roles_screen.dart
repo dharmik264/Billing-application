@@ -157,7 +157,7 @@ class _SuperAdminUserRolesScreenState extends State<SuperAdminUserRolesScreen> {
                                   title: Text(e.value, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
                                   trailing: Switch(
                                     value: currentToggles[e.key] ?? false,
-                                    activeColor: Colors.white,
+                                    activeThumbColor: Colors.white,
                                     activeTrackColor: const Color(0xFF4F46E5),
                                     onChanged: (val) {
                                       setModalState(() {
