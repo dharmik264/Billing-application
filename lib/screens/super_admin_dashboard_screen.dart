@@ -6,6 +6,7 @@ import '../widgets/platform_growth_chart.dart';
 import '../services/restaurant_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'otp_login_screen.dart';
+import 'super_admin_shop_requests_screen.dart';
 
 // ── Models ──────────────────────────────────────────
 
@@ -400,7 +401,11 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
           children: [
             Text('SHOP REQUESTS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
             GestureDetector(
-              onTap: () => _showSnack('View All Shop Requests'),
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const SuperAdminShopRequestsScreen(),
+                )).then((_) => _fetchRequests());
+              },
               child: Text('View All', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
             ),
           ],
@@ -419,7 +424,10 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
             ),
           )
         else
-          ...List.generate(_shopRequests.length, (i) => _shopRequestCard(_shopRequests[i], i)),
+          ...List.generate(
+            _shopRequests.length > 3 ? 3 : _shopRequests.length,
+            (i) => _shopRequestCard(_shopRequests[i], i),
+          ),
       ],
     );
   }

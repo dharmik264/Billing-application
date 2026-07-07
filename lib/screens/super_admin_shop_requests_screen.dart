@@ -1,0 +1,163 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../services/restaurant_api.dart';
+
+class SuperAdminShopRequestsScreen extends StatefulWidget {
+  const SuperAdminShopRequestsScreen({super.key});
+
+  @override
+  State<SuperAdminShopRequestsScreen> createState() => _SuperAdminShopRequestsScreenState();
+}
+
+class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScreen> {
+  List<Map<String, dynamic>> _requests = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRequests();
+  }
+
+  Future<void> _fetchRequests() async {
+    try {
+      final requests = await RestaurantApi.instance.fetchShopRequests();
+      if (mounted) {
+        setState(() {
+          _requests = requests;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load requests: $e')),
+        );
+      }
+    }
+  }
+
+  void _showSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: Text('All Shop Requests', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 18, color: const Color(0xFF0F172A))),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _requests.isEmpty
+              ? Center(child: Text('No shop requests found.', style: GoogleFonts.inter(color: const Color(0xFF64748B))))
+              : RefreshIndicator(
+                  onRefresh: _fetchRequests,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: _requests.length,
+                    itemBuilder: (context, index) {
+                      return _buildRequestCard(_requests[index], index);
+                    },
+                  ),
+                ),
+    );
+  }
+
+  Widget _buildRequestCard(Map<String, dynamic> req, int index) {
+    final status = req['account_status'];
+    final isPending = status == 'pending' || status == 'trial';
+    final name = req['shop_name'] ?? 'Unknown Shop';
+    final location = req['phone'] ?? 'Unknown Phone';
+    final userId = req['id'];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(color: const Color(0xFFFFF7ED), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.storefront, color: Color(0xFF64748B), size: 22),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+                const SizedBox(height: 3),
+                Text('$location • Pending Approval', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B))),
+              ],
+            ),
+          ),
+          if (isPending)
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                _actionBtn('Approve', const Color(0xFF10B981), () async {
+                  try {
+                    await RestaurantApi.instance.approveShopRequest(userId.toString(), 'Pro Plan');
+                    setState(() { _requests.removeAt(index); });
+                    _showSnack('$name approved!');
+                  } catch (e) {
+                    _showSnack('Failed to approve: $e');
+                  }
+                }),
+                _actionBtn('Decline', const Color(0xFFEF4444), () async {
+                  try {
+                    await RestaurantApi.instance.declineShopRequest(userId.toString());
+                    setState(() { _requests.removeAt(index); });
+                    _showSnack('$name declined');
+                  } catch (e) {
+                    _showSnack('Failed to decline: $e');
+                  }
+                }),
+              ],
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(8)),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.check_circle, size: 12, color: Color(0xFF10B981)),
+                  const SizedBox(width: 4),
+                  Text('ACTIVE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _actionBtn(String label, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+      ),
+    );
+  }
+}
