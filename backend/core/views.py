@@ -275,3 +275,32 @@ class SuperAdminLoginView(APIView):
             }, status=status.HTTP_200_OK)
             
         return Response({'error': 'Invalid admin credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class SuperAdminUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff and not request.user.phone == '9999999999':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+        
+        users = User.objects.all().order_by('-created_at')
+        return Response(UserSerializer(users, many=True).data, status=status.HTTP_200_OK)
+
+
+class SuperAdminUpdatePermissionsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        if not request.user.is_staff and not request.user.phone == '9999999999':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+            
+        permissions = request.data.get('permissions', {})
+        
+        try:
+            user = User.objects.get(id=user_id)
+            user.permissions = permissions
+            user.save()
+            return Response({'message': 'Permissions updated successfully'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+

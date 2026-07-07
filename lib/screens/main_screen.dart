@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dashboard_screen.dart';
 import 'token_generation_screen.dart';
@@ -20,18 +22,47 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey<DashboardScreenState>();
 
-  late final List<Widget> _screens;
+  bool _isLoading = true;
+  List<Widget> _screens = [];
+  List<Map<String, dynamic>> _navItems = [];
 
   @override
   void initState() {
     super.initState();
-    _screens = [
-      DashboardScreen(key: _dashboardKey),
-      const TokenGenerationScreen(),
-      const ItemManagementScreen(),
-      const AnalyticsReportsScreen(),
-      const SettingsScreen(),
-    ];
+    _loadPermissions();
+  }
+
+  Future<void> _loadPermissions() async {
+    final prefs = await SharedPreferences.getInstance();
+    final permString = prefs.getString('permissions');
+    Map<String, dynamic> perms = {};
+    if (permString != null && permString.isNotEmpty) {
+      perms = jsonDecode(permString);
+    }
+
+    _screens.add(DashboardScreen(key: _dashboardKey));
+    _navItems.add({'icon': Icons.home_rounded, 'inactive': Icons.home_outlined, 'label': 'Home'});
+
+    if (perms['billing'] ?? true) {
+      _screens.add(const TokenGenerationScreen());
+      _navItems.add({'icon': Icons.receipt_long_rounded, 'inactive': Icons.receipt_long_outlined, 'label': 'Token'});
+    }
+    if (perms['inventory'] ?? true) {
+      _screens.add(const ItemManagementScreen());
+      _navItems.add({'icon': Icons.inventory_2_rounded, 'inactive': Icons.inventory_2_outlined, 'label': 'Items'});
+    }
+    if (perms['reports'] ?? true) {
+      _screens.add(const AnalyticsReportsScreen());
+      _navItems.add({'icon': Icons.bar_chart_rounded, 'inactive': Icons.bar_chart_outlined, 'label': 'Analytics'});
+    }
+    
+    // Always show settings
+    _screens.add(const SettingsScreen());
+    _navItems.add({'icon': Icons.settings_rounded, 'inactive': Icons.settings_outlined, 'label': 'Settings'});
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   void _onTabTapped(int index) {
@@ -45,6 +76,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC), // Slate 50 background
       body: LayoutBuilder(
@@ -79,15 +112,12 @@ class _MainScreenState extends State<MainScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _desktopNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home'),
-              const SizedBox(height: 16),
-              _desktopNavItem(1, Icons.receipt_long_rounded, Icons.receipt_long_outlined, 'Token'),
-              const SizedBox(height: 16),
-              _desktopNavItem(2, Icons.inventory_2_rounded, Icons.inventory_2_outlined, 'Items'),
-              const SizedBox(height: 16),
-              _desktopNavItem(3, Icons.bar_chart_rounded, Icons.bar_chart_outlined, 'Analytics'),
-              const SizedBox(height: 16),
-              _desktopNavItem(4, Icons.settings_rounded, Icons.settings_outlined, 'Settings'),
+              ...List.generate(_navItems.length, (i) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: _desktopNavItem(i, _navItems[i]['icon'], _navItems[i]['inactive'], _navItems[i]['label']),
+                );
+              }),
             ],
           ),
         ),
@@ -175,11 +205,9 @@ class _MainScreenState extends State<MainScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _mobileNavItem(0, Icons.home_rounded, Icons.home_outlined),
-                    _mobileNavItem(1, Icons.receipt_long_rounded, Icons.receipt_long_outlined),
-                    _mobileNavItem(2, Icons.inventory_2_rounded, Icons.inventory_2_outlined),
-                    _mobileNavItem(3, Icons.bar_chart_rounded, Icons.bar_chart_outlined),
-                    _mobileNavItem(4, Icons.settings_rounded, Icons.settings_outlined),
+                    ...List.generate(_navItems.length, (i) {
+                      return _mobileNavItem(i, _navItems[i]['icon'], _navItems[i]['inactive']);
+                    }),
                   ],
                 ),
               ),

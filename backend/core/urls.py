@@ -3,7 +3,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     SendOTPView, VerifyOTPView, ProfileView, AppSettingsView, LogoutView,
     RegisterView, ShopRequestsView, ShopRequestActionView, SuperAdminStatsView,
-    SuperAdminLoginView
+    SuperAdminLoginView, SuperAdminUsersView, SuperAdminUpdatePermissionsView
 )
 
 urlpatterns = [
@@ -18,4 +18,6 @@ urlpatterns = [
     path('shop-requests/<int:user_id>/action/', ShopRequestActionView.as_view(), name='shop-request-action'),
     path('super-admin/stats/', SuperAdminStatsView.as_view(), name='super-admin-stats'),
     path('super-admin/login/', SuperAdminLoginView.as_view(), name='super-admin-login'),
+    path('super-admin/users/', SuperAdminUsersView.as_view(), name='super-admin-users'),
+    path('super-admin/users/<int:user_id>/permissions/', SuperAdminUpdatePermissionsView.as_view(), name='super-admin-update-permissions'),
 ]

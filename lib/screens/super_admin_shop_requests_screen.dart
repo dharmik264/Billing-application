@@ -13,6 +13,9 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
   List<Map<String, dynamic>> _requests = [];
   bool _isLoading = true;
 
+  int _approvedCount = 0;
+  int _pendingCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -21,10 +24,12 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
 
   Future<void> _fetchRequests() async {
     try {
-      final requests = await RestaurantApi.instance.fetchShopRequests();
+      final users = await RestaurantApi.instance.fetchSuperAdminUsers();
       if (mounted) {
         setState(() {
-          _requests = requests;
+          _requests = users;
+          _approvedCount = users.where((u) => u['account_status'] == 'approved').length;
+          _pendingCount = users.where((u) => u['account_status'] == 'pending' || u['account_status'] == 'trial').length;
           _isLoading = false;
         });
       }
@@ -55,18 +60,59 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _requests.isEmpty
-              ? Center(child: Text('No shop requests found.', style: GoogleFonts.inter(color: const Color(0xFF64748B))))
-              : RefreshIndicator(
-                  onRefresh: _fetchRequests,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: _requests.length,
-                    itemBuilder: (context, index) {
-                      return _buildRequestCard(_requests[index], index);
-                    },
+          : RefreshIndicator(
+              onRefresh: _fetchRequests,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        children: [
+                          Expanded(child: _statBox('Pending Requests', _pendingCount.toString(), const Color(0xFFF59E0B))),
+                          const SizedBox(width: 16),
+                          Expanded(child: _statBox('Approved Shops', _approvedCount.toString(), const Color(0xFF10B981))),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  _requests.isEmpty
+                      ? SliverFillRemaining(
+                          child: Center(child: Text('No shop requests found.', style: GoogleFonts.inter(color: const Color(0xFF64748B)))),
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) => _buildRequestCard(_requests[index], index),
+                              childCount: _requests.length,
+                            ),
+                          ),
+                        ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _statBox(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 4))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(value, style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A))),
+          const SizedBox(height: 4),
+          Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
+        ],
+      ),
     );
   }
 

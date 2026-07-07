@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -136,6 +138,10 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
          final userMap = responseMap['user'];
          await prefs.setString('account_status', userMap['account_status'] ?? '');
          await prefs.setString('trial_end', userMap['trial_end'] ?? '');
+         
+         if (userMap.containsKey('permissions') && userMap['permissions'] != null) {
+           await prefs.setString('permissions', jsonEncode(userMap['permissions']));
+         }
          
          if (userMap['account_status'] == 'trial') {
            if (mounted) {

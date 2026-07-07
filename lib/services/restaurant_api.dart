@@ -141,6 +141,16 @@ class RestaurantApi {
     return await _getPaginatedList('auth/shop-requests/');
   }
 
+  Future<List<Map<String, dynamic>>> fetchSuperAdminUsers() async {
+    return await _getPaginatedList('auth/super-admin/users/');
+  }
+
+  Future<void> updateUserPermissions(String userId, Map<String, bool> permissions) async {
+    await _post('auth/super-admin/users/$userId/permissions/', {
+      'permissions': permissions,
+    });
+  }
+
   Future<void> approveShopRequest(String userId, String plan) async {
     await _post('auth/shop-requests/$userId/action/', {
       'action': 'approve',

@@ -43,6 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     approved_at    = models.DateTimeField(null=True, blank=True)
     is_active      = models.BooleanField(default=True)
     is_staff       = models.BooleanField(default=False)
+    permissions    = models.JSONField(default=dict, blank=True)
     created_at     = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD  = 'phone'

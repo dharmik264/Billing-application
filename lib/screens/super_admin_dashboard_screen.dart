@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import '../widgets/platform_growth_chart.dart';
 import '../services/restaurant_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'otp_login_screen.dart';
 import 'super_admin_shop_requests_screen.dart';
+import 'super_admin_user_roles_screen.dart';
 
 // ── Models ──────────────────────────────────────────
 
@@ -30,22 +30,6 @@ class _ShopRequest {
   });
 }
 
-class _Transaction {
-  final String title;
-  final String meta;
-  final String amount;
-  final Color iconColor;
-  final IconData icon;
-
-  const _Transaction({
-    required this.title,
-    required this.meta,
-    required this.amount,
-    required this.iconColor,
-    required this.icon,
-  });
-}
-
 // ── Dashboard Screen ──────────────────────────────────────────
 
 class SuperAdminDashboardScreen extends StatefulWidget {
@@ -58,19 +42,14 @@ class SuperAdminDashboardScreen extends StatefulWidget {
 class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
   String _totalRevenue = '₹0';
   String _activeSubs = '0';
-  final double _growthPercent = 0.0;
-  List<double> _weeklyData = [0, 0, 0, 0, 0, 0, 0];
-  List<String> _weekLabels = ['-', '-', '-', '-', '-', '-', '-'];
 
   late List<_ShopRequest> _shopRequests;
-  late List<_Transaction> _transactions;
   bool _isLoadingRequests = true;
 
   @override
   void initState() {
     super.initState();
     _shopRequests = [];
-    _transactions = [];
     _fetchRequests();
     _fetchStats();
   }
@@ -82,23 +61,6 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
         setState(() {
           _totalRevenue = '₹${stats['total_revenue']}';
           _activeSubs = stats['active_shops'].toString();
-          
-          List<dynamic> wData = stats['weekly_data'] ?? [];
-          List<dynamic> wLabels = stats['week_labels'] ?? [];
-          
-          if (wData.isNotEmpty && wLabels.isNotEmpty) {
-             _weeklyData = wData.map((e) => (e as num).toDouble()).toList();
-             _weekLabels = wLabels.map((e) => e.toString()).toList();
-          }
-
-          List<dynamic> txns = stats['transactions'] ?? [];
-          _transactions = txns.map((t) => _Transaction(
-            title: t['title'],
-            meta: t['meta'],
-            amount: t['amount'],
-            iconColor: t['status'] == 'completed' ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
-            icon: Icons.receipt_long_rounded,
-          )).toList();
         });
       }
     } catch (e) {
@@ -170,15 +132,11 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
                     const SizedBox(height: 8),
                     _buildStatCards().animate().fadeIn().slideY(begin: 0.1),
                     const SizedBox(height: 24),
-                    _buildGrowthChart().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
+                    _buildCoreManagement().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
                     const SizedBox(height: 24),
-                    _buildCoreManagement().animate().fadeIn().slideY(begin: 0.1, delay: 200.ms),
+                    _buildShopRequests().animate().fadeIn().slideY(begin: 0.1, delay: 200.ms),
                     const SizedBox(height: 24),
-                    _buildShopRequests().animate().fadeIn().slideY(begin: 0.1, delay: 300.ms),
-                    const SizedBox(height: 24),
-                    _buildSystemHealth().animate().fadeIn().slideY(begin: 0.1, delay: 400.ms),
-                    const SizedBox(height: 24),
-                    _buildRecentTransactions().animate().fadeIn().slideY(begin: 0.1, delay: 500.ms),
+                    _buildSystemHealth().animate().fadeIn().slideY(begin: 0.1, delay: 300.ms),
                     const SizedBox(height: 120),
                   ],
                 ),
@@ -295,44 +253,6 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
     );
   }
 
-  // ── 3. Platform Growth Chart ───────────────────────────────
-
-  Widget _buildGrowthChart() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('PLATFORM GROWTH', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(8)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.arrow_upward_rounded, size: 12, color: Color(0xFF10B981)),
-                    const SizedBox(width: 2),
-                    Text('+$_growthPercent%', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          PlatformGrowthChart(dataPoints: _weeklyData, labels: _weekLabels, height: 160),
-        ],
-      ),
-    );
-  }
 
   // ── 4. Core Management ─────────────────────────────────────
 
@@ -350,19 +270,23 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
           mainAxisSpacing: 12,
           childAspectRatio: 1.5,
           children: [
-            _mgmtCard(Icons.bolt_rounded, 'User Roles', 'Manage permissions', const Color(0xFFFFF7ED), const Color(0xFFF59E0B)),
-            _mgmtCard(Icons.pie_chart_rounded, 'Shop Approvals', '12 Pending stores', const Color(0xFFF0FDF4), const Color(0xFF10B981)),
-            _mgmtCard(Icons.history_rounded, 'Plan Settings', 'Edit pricing tiers', const Color(0xFFEFF6FF), const Color(0xFF3B82F6)),
-            _mgmtCard(Icons.print_rounded, 'App Config', 'Maintenance & global', const Color(0xFFF5F3FF), const Color(0xFF8B5CF6)),
+            _mgmtCard(Icons.bolt_rounded, 'User Roles', 'Manage permissions', const Color(0xFFFFF7ED), const Color(0xFFF59E0B), () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SuperAdminUserRolesScreen()));
+            }),
+            _mgmtCard(Icons.pie_chart_rounded, 'Shop Approvals', 'View all requests', const Color(0xFFF0FDF4), const Color(0xFF10B981), () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SuperAdminShopRequestsScreen()));
+            }),
+            _mgmtCard(Icons.history_rounded, 'Plan Settings', 'Edit pricing tiers', const Color(0xFFEFF6FF), const Color(0xFF3B82F6), null),
+            _mgmtCard(Icons.print_rounded, 'App Config', 'Maintenance & global', const Color(0xFFF5F3FF), const Color(0xFF8B5CF6), null),
           ],
         ),
       ],
     );
   }
 
-  Widget _mgmtCard(IconData icon, String title, String subtitle, Color bgColor, Color iconColor) {
+  Widget _mgmtCard(IconData icon, String title, String subtitle, Color bgColor, Color iconColor, VoidCallback? onTap) {
     return GestureDetector(
-      onTap: () => _showSnack(title),
+      onTap: onTap ?? () => _showSnack(title),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -569,59 +493,7 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
     );
   }
 
-  // ── 7. Recent Transactions ─────────────────────────────────
 
-  Widget _buildRecentTransactions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('RECENT TRANSACTIONS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Column(
-            children: List.generate(_transactions.length, (i) {
-              final tx = _transactions[i];
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38, height: 38,
-                          decoration: BoxDecoration(color: tx.iconColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                          child: Icon(tx.icon, color: tx.iconColor, size: 18),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(tx.title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
-                              const SizedBox(height: 2),
-                              Text(tx.meta, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8))),
-                            ],
-                          ),
-                        ),
-                        Text(tx.amount, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
-                      ],
-                    ),
-                  ),
-                  if (i < _transactions.length - 1)
-                    const Divider(height: 0.5, thickness: 0.5, color: Color(0xFFF0F0F0), indent: 64),
-                ],
-              );
-            }),
-          ),
-        ),
-      ],
-    );
-  }
 
   // ── Helpers ────────────────────────────────────────────────
 
