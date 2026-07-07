@@ -2,7 +2,8 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     SendOTPView, VerifyOTPView, ProfileView, AppSettingsView, LogoutView,
-    RegisterView, ShopRequestsView, ShopRequestActionView, SuperAdminStatsView
+    RegisterView, ShopRequestsView, ShopRequestActionView, SuperAdminStatsView,
+    SuperAdminLoginView
 )
 
 urlpatterns = [
@@ -16,4 +17,5 @@ urlpatterns = [
     path('shop-requests/', ShopRequestsView.as_view(), name='shop-requests'),
     path('shop-requests/<int:user_id>/action/', ShopRequestActionView.as_view(), name='shop-request-action'),
     path('super-admin/stats/', SuperAdminStatsView.as_view(), name='super-admin-stats'),
+    path('super-admin/login/', SuperAdminLoginView.as_view(), name='super-admin-login'),
 ]

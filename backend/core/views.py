@@ -239,3 +239,39 @@ class SuperAdminStatsView(APIView):
             'week_labels': week_labels,
             'transactions': transactions
         }, status=status.HTTP_200_OK)
+
+
+class SuperAdminLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if username == 'admin' and password == 'admin':
+            # Get or create the '9999999999' super admin account
+            user, created = User.objects.get_or_create(
+                phone='9999999999',
+                defaults={
+                    'name': 'Super Admin',
+                    'is_staff': True,
+                    'is_superuser': True,
+                    'account_status': 'approved'
+                }
+            )
+            
+            # Ensure it always has privileges
+            if not user.is_staff or not user.is_superuser:
+                user.is_staff = True
+                user.is_superuser = True
+                user.save()
+            
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': UserSerializer(user).data,
+            }, status=status.HTTP_200_OK)
+            
+        return Response({'error': 'Invalid admin credentials'}, status=status.HTTP_401_UNAUTHORIZED)

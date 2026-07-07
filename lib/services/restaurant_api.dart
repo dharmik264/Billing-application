@@ -110,6 +110,17 @@ class RestaurantApi {
     return response;
   }
 
+  Future<Map<String, dynamic>> superAdminLogin(String username, String password) async {
+    final response = await _post('auth/super-admin/login/', {
+      'username': username,
+      'password': password,
+    });
+    if (response.containsKey('access') && response.containsKey('refresh')) {
+      await saveTokens(response['access'], response['refresh']);
+    }
+    return response;
+  }
+
   Future<Map<String, dynamic>> registerUser({
     required String name,
     required String phone,

@@ -8,6 +8,7 @@ import 'dashboard_screen.dart';
 import 'super_admin_main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'registration_screen.dart';
+import 'super_admin_login_screen.dart';
 
 class OTPLoginScreen extends StatefulWidget {
   final bool prefilledPhone;
@@ -471,6 +472,30 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                       },
                       child: Text(
                         'Register here',
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF4F46E5),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Super Admin? ',
+                      style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()),
+                        );
+                      },
+                      child: Text(
+                        'Login here',
                         style: GoogleFonts.inter(
                           color: const Color(0xFF4F46E5),
                           fontWeight: FontWeight.w600,
