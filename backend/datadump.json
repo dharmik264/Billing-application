@@ -1,0 +1,1 @@
+[{"model": "core.user", "pk": 1, "fields": {"password": "pbkdf2_sha256$1200000$f8w6rNkirNQNnJv2QFaW2Y$uumJeMmWgTwVJJyEW/Ga+/biCrBBpD8n9V2Yv1CAsgw=", "last_login": null, "is_superuser": true, "phone": "6351559728", "name": "", "is_active": true, "is_staff": true, "created_at": "2026-07-01T19:20:32.899Z", "groups": [], "user_permissions": []}}]

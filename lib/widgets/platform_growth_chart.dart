@@ -66,7 +66,7 @@ class _GrowthChartPainter extends CustomPainter {
     final chartHeight = size.height - bottomPadding - topPadding;
 
     final maxVal = dataPoints.reduce(max);
-    final minVal = 0.0;
+    const minVal = 0.0;
     final range = maxVal - minVal == 0 ? 1.0 : maxVal - minVal;
 
     // Draw horizontal grid lines
@@ -95,8 +95,7 @@ class _GrowthChartPainter extends CustomPainter {
           ),
         ),
         textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
+      )..layout();
       textPainter.paint(
         canvas,
         Offset(leftPadding - textPainter.width - 6, y - textPainter.height / 2),
@@ -113,8 +112,7 @@ class _GrowthChartPainter extends CustomPainter {
     }
 
     // Build smooth path using cubic Bézier
-    final path = Path();
-    path.moveTo(points[0].dx, points[0].dy);
+    final path = Path()..moveTo(points[0].dx, points[0].dy);
 
     for (int i = 0; i < points.length - 1; i++) {
       final p0 = i > 0 ? points[i - 1] : points[i];
@@ -131,10 +129,10 @@ class _GrowthChartPainter extends CustomPainter {
     }
 
     // Draw gradient fill
-    final fillPath = Path.from(path);
-    fillPath.lineTo(points.last.dx, topPadding + chartHeight);
-    fillPath.lineTo(points.first.dx, topPadding + chartHeight);
-    fillPath.close();
+    final fillPath = Path.from(path)
+      ..lineTo(points.last.dx, topPadding + chartHeight)
+      ..lineTo(points.first.dx, topPadding + chartHeight)
+      ..close();
 
     final gradient = LinearGradient(
       begin: Alignment.topCenter,
@@ -160,16 +158,9 @@ class _GrowthChartPainter extends CustomPainter {
 
     // Draw data point dots
     for (final point in points) {
-      canvas.drawCircle(
-        point,
-        3.5,
-        Paint()..color = Colors.white,
-      );
-      canvas.drawCircle(
-        point,
-        2.5,
-        Paint()..color = lineColor,
-      );
+      canvas
+        ..drawCircle(point, 3.5, Paint()..color = Colors.white)
+        ..drawCircle(point, 2.5, Paint()..color = lineColor);
     }
 
     // X-axis labels
@@ -184,8 +175,7 @@ class _GrowthChartPainter extends CustomPainter {
           ),
         ),
         textDirection: TextDirection.ltr,
-      );
-      textPainter.layout();
+      )..layout();
       textPainter.paint(
         canvas,
         Offset(points[i].dx - textPainter.width / 2, size.height - bottomPadding + 8),

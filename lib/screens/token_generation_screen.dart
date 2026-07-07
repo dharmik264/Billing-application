@@ -93,8 +93,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     _customerNameController.dispose();
     _customerPhoneController.dispose();
     _receivedAmountController.dispose();
-    _cartTrigger.removeListener(_onCartChanged);
-    _cartTrigger.dispose();
+    _cartTrigger
+      ..removeListener(_onCartChanged)
+      ..dispose();
     MainScreen.hideNavbar.value = false;
     super.dispose();
   }
