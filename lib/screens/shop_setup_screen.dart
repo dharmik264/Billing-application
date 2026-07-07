@@ -71,6 +71,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   // Payment mode: 'Cash' | 'Online / UPI' | 'Both'
   String _selectedPaymentMode = 'Both';
 
+  int _currentStep = 1;
   Uint8List? _logoBytes;
   Uint8List? _qrBytes;
   bool _saving = false;
@@ -272,6 +273,61 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   }
 
   Widget _buildPanel() {
+    Widget stepContent;
+    switch (_currentStep) {
+      case 1:
+        stepContent = _buildCard(
+          'Branding & Visuals',
+          icon: Icons.brush_rounded,
+          [
+            _buildLogoUpload(),
+            const SizedBox(height: 16),
+            _buildQrUpload(),
+          ],
+        );
+        break;
+      case 2:
+        stepContent = _buildCard(
+          'Core Details',
+          icon: Icons.storefront_rounded,
+          [
+            _buildTextField(label: 'Shop Name', controller: _shopNameController),
+            const SizedBox(height: 16),
+            _buildTextField(label: 'Tagline', controller: _taglineController),
+            const SizedBox(height: 16),
+            _buildTextField(label: 'Mobile Number', controller: _phoneController),
+            const SizedBox(height: 16),
+            _buildTextField(label: 'Alternate Mobile Number', controller: _alternatePhoneController),
+          ],
+        );
+        break;
+      case 3:
+        stepContent = _buildCard(
+          'Registration & Contact',
+          icon: Icons.assignment_rounded,
+          [
+            _buildTextField(label: 'Shop Address', controller: _addressController),
+            const SizedBox(height: 16),
+            _buildTextField(label: 'GST Number', controller: _gstinController),
+            const SizedBox(height: 16),
+            _buildTextField(label: 'Email Address', controller: _emailController),
+            const SizedBox(height: 16),
+            _buildTextField(label: 'UPI ID (For Payments)', controller: _upiIdController),
+          ],
+        );
+        break;
+      case 4:
+      default:
+        stepContent = _buildCard(
+          'Payment Preferences',
+          icon: Icons.payments_rounded,
+          [
+            _buildPaymentModes(),
+          ],
+        );
+        break;
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -281,45 +337,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              _buildCard(
-                'Branding & Visuals',
-                icon: Icons.brush_rounded,
-                [
-                  _buildLogoUpload(),
-                  const SizedBox(height: 16),
-                  _buildQrUpload(),
-                ],
-              ),
-              _buildCard(
-                'Shop Information',
-                icon: Icons.storefront_rounded,
-                [
-                  _buildTextField(label: 'Shop Name', controller: _shopNameController),
-                  const SizedBox(height: 16),
-                  _buildTextField(label: 'Tagline', controller: _taglineController),
-                  const SizedBox(height: 16),
-                  _buildTextField(label: 'Mobile Number', controller: _phoneController),
-                  const SizedBox(height: 16),
-                  _buildTextField(label: 'Alternate Mobile Number', controller: _alternatePhoneController),
-                  const SizedBox(height: 16),
-                  _buildTextField(label: 'Shop Address', controller: _addressController),
-                  const SizedBox(height: 16),
-                  _buildTextField(label: 'GST Number', controller: _gstinController),
-                  const SizedBox(height: 16),
-                  _buildTextField(label: 'Email Address', controller: _emailController),
-                  const SizedBox(height: 16),
-                  _buildTextField(label: 'UPI ID (For Payments)', controller: _upiIdController),
-                ],
-              ),
-              _buildCard(
-                'Payment Settings',
-                icon: Icons.payments_rounded,
-                [
-                  _buildPaymentModes(),
-                ],
-              ),
+              stepContent,
               const SizedBox(height: 24),
-              _buildSaveButton(),
+              _buildBottomNav(),
               const SizedBox(height: 16),
               _buildFooterNote(),
             ],
@@ -397,7 +417,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                   ),
                 ),
                 Text(
-                  'Set up your business identity',
+                  'Step $_currentStep of 4',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -421,11 +441,13 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       ),
       child: Row(
         children: [
-          _progressBar(active: true),
+          _progressBar(active: _currentStep >= 1),
           const SizedBox(width: 6),
-          _progressBar(active: true),
+          _progressBar(active: _currentStep >= 2),
           const SizedBox(width: 6),
-          _progressBar(),
+          _progressBar(active: _currentStep >= 3),
+          const SizedBox(width: 6),
+          _progressBar(active: _currentStep >= 4),
         ],
       ),
     );
@@ -861,6 +883,51 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
 
   // ── Save button ────────────────────────────────────────────
 
+  Widget _buildBottomNav() {
+    if (_currentStep == 4) {
+      return _buildSaveButton();
+    }
+    
+    return Row(
+      children: [
+        if (_currentStep > 1) ...[
+          Expanded(
+            flex: 1,
+            child: SizedBox(
+              height: 56,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: _border, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: () => setState(() => _currentStep--),
+                child: Text('Back', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _textSecondary)),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+        Expanded(
+          flex: 2,
+          child: SizedBox(
+            height: 56,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _primary,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+              onPressed: () {
+                setState(() => _currentStep++);
+              },
+              child: Text('Next Step', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildSaveButton() {
     return Container(
       width: double.infinity,
@@ -996,6 +1063,10 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   }
 
   void _handleBack() {
+    if (_currentStep > 1) {
+      setState(() => _currentStep--);
+      return;
+    }
     if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
       return;
