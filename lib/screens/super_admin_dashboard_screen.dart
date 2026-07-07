@@ -4,6 +4,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../widgets/platform_growth_chart.dart';
 import '../services/restaurant_api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'otp_login_screen.dart';
 
 // ── Models ──────────────────────────────────────────
 
@@ -103,6 +105,21 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
     _fetchRequests();
   }
 
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', false);
+    await prefs.remove('loginPhone');
+    await prefs.remove('access_token');
+    await prefs.remove('refresh_token');
+    
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const OTPLoginScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -182,11 +199,11 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () => _showSnack('Settings'),
+              onTap: _logout,
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE2E8F0))),
-                child: const Icon(Icons.settings_rounded, size: 18, color: Color(0xFF64748B)),
+                child: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFEF4444)),
               ),
             ),
             const SizedBox(width: 8),
