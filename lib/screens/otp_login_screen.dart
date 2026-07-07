@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/restaurant_api.dart';
 import 'shop_setup_screen.dart';
-import 'dashboard_screen.dart';
+import 'main_screen.dart';
 import 'super_admin_main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'registration_screen.dart';
@@ -82,7 +82,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       }
     } catch (e) {
@@ -304,7 +304,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     if (mounted) {
       if (isSetupComplete) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(builder: (context) => const MainScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(
