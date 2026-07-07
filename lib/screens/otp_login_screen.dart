@@ -55,7 +55,13 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load dev users: $e')));
+        String errMsg = e.toString();
+        if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup')) {
+          errMsg = 'Unable to connect to server. Please check your internet connection.';
+        } else {
+          errMsg = 'Failed to load dev users.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg), backgroundColor: Colors.red));
       }
     } finally {
       if (mounted) setState(() => _isLoadingDevUsers = false);

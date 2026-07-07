@@ -29,7 +29,13 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
         _devSuperAdmins = users.where((u) => u['is_superuser'] == true).toList();
       });
     } catch (e) {
-      _showSnack('Failed to load dev super admins: $e');
+      String errMsg = e.toString();
+      if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup')) {
+        errMsg = 'Unable to connect to server. Please check your internet connection.';
+      } else {
+        errMsg = 'Failed to load dev super admins.';
+      }
+      _showSnack(errMsg);
     } finally {
       if (mounted) setState(() => _isLoadingDevUsers = false);
     }
