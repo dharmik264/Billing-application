@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../services/restaurant_api.dart';
+import '../utils/app_constants.dart';
+import '../widgets/stat_card.dart';
 
 class SuperAdminShopRequestsScreen extends StatefulWidget {
   const SuperAdminShopRequestsScreen({super.key});
@@ -70,9 +73,9 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
                       padding: const EdgeInsets.all(20),
                       child: Row(
                         children: [
-                          Expanded(child: _statBox('Pending Requests', _pendingCount.toString(), const Color(0xFFF59E0B))),
+                          Expanded(child: StatCard(title: 'Pending Requests', value: _pendingCount.toString(), color: AppColors.amber500, compact: true)),
                           const SizedBox(width: 16),
-                          Expanded(child: _statBox('Approved Shops', _approvedCount.toString(), const Color(0xFF10B981))),
+                          Expanded(child: StatCard(title: 'Approved Shops', value: _approvedCount.toString(), color: AppColors.emerald500, compact: true)),
                         ],
                       ),
                     ),
@@ -85,7 +88,7 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
-                              (context, index) => _buildRequestCard(_requests[index], index),
+                              (context, index) => _buildRequestCard(_requests[index], index).animate().fadeIn(delay: (50 * index).ms).slideY(begin: 0.2),
                               childCount: _requests.length,
                             ),
                           ),
@@ -96,25 +99,7 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
     );
   }
 
-  Widget _statBox(String label, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 4))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value, style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A))),
-          const SizedBox(height: 4),
-          Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildRequestCard(Map<String, dynamic> req, int index) {
     final status = req['account_status'];

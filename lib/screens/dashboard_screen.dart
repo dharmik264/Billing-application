@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/restaurant_api.dart';
+import '../utils/app_constants.dart';
+import '../widgets/stat_card.dart';
 import 'printer_setup_screen.dart';
 import 'token_generation_screen.dart';
 import 'print_preview_screen.dart';
@@ -338,74 +340,13 @@ class DashboardScreenState extends State<DashboardScreen> {
       physics: const BouncingScrollPhysics(),
       child: Row(
         children: [
-          _statCard("Today's Sales", '\u20B9${_totalSales.toStringAsFixed(0)}', Icons.trending_up_rounded, const Color(0xFF4F46E5)),
+          StatCard(title: "Today's Sales", value: '\u20B9${_totalSales.toStringAsFixed(0)}', icon: Icons.trending_up_rounded, color: AppColors.indigo600),
           const SizedBox(width: 10),
-          _statCard('Tokens', _tokenCount.toString(), Icons.receipt_long_rounded, const Color(0xFF10B981)),
+          StatCard(title: 'Tokens', value: _tokenCount.toString(), icon: Icons.receipt_long_rounded, color: AppColors.emerald500),
           const SizedBox(width: 10),
-          _statCard('Online Sales', '\u20B9${_onlineSales.toStringAsFixed(0)}', Icons.language_rounded, const Color(0xFFF59E0B)),
+          StatCard(title: 'Online Sales', value: '\u20B9${_onlineSales.toStringAsFixed(0)}', icon: Icons.language_rounded, color: AppColors.amber500),
           const SizedBox(width: 10),
-          _statCard('Cash Sales', '\u20B9${_cashSales.toStringAsFixed(0)}', Icons.payments_rounded, const Color(0xFFEC4899)),
-        ],
-      ),
-    );
-  }
-
-  Widget _statCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      width: 110,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 16),
-          ),
-          const SizedBox(height: 10),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              title,
-              maxLines: 1,
-              style: GoogleFonts.inter(
-                color: const Color(0xFF64748B),
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: GoogleFonts.inter(
-                color: const Color(0xFF0F172A),
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ),
+          StatCard(title: 'Cash Sales', value: '\u20B9${_cashSales.toStringAsFixed(0)}', icon: Icons.payments_rounded, color: const Color(0xFFEC4899)),
         ],
       ),
     );

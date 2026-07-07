@@ -32,6 +32,19 @@ class AppColors {
 
   // Status indicator
   static const Color online = Color(0xFF16A34A); // Green
+
+  // Modern UI Colors (Tailwind-inspired)
+  static const Color slate900 = Color(0xFF0F172A); // Darkest text/headings
+  static const Color slate500 = Color(0xFF64748B); // Muted text
+  static const Color slate400 = Color(0xFF94A3B8); // Light text/icons
+  static const Color slate200 = Color(0xFFE2E8F0); // Borders
+  static const Color slate100 = Color(0xFFF1F5F9); // Light backgrounds
+  static const Color slate50 = Color(0xFFF8FAFC); // Lighter backgrounds
+
+  static const Color indigo600 = Color(0xFF4F46E5); // Modern Primary
+  static const Color emerald500 = Color(0xFF10B981); // Modern Success
+  static const Color amber500 = Color(0xFFF59E0B); // Modern Warning
+  static const Color red500 = Color(0xFFEF4444); // Modern Error
 }
 
 /// App-wide text style constants

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/restaurant_api.dart';
 import 'print_preview_screen.dart';
@@ -145,7 +145,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         itemCount: _tokens.length,
         itemBuilder: (context, index) {
           final token = _tokens[index];
-          return _buildTokenCard(token);
+          return _buildTokenCard(token).animate().fadeIn(delay: (50 * index).ms).slideX(begin: 0.1);
         },
       ),
     );
