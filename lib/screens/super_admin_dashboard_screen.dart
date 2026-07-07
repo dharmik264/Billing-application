@@ -453,8 +453,9 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
             ),
           ),
           if (isPending)
-            Row(
-              mainAxisSize: MainAxisSize.min,
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
               children: [
                 _actionBtn('Approve', const Color(0xFF10B981), () async {
                   try {

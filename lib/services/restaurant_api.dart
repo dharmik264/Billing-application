@@ -156,7 +156,7 @@ class RestaurantApi {
   }
 
   Future<Map<String, dynamic>> fetchSuperAdminStats() async {
-    final response = await _get('super-admin/stats/');
+    final response = await _get('auth/super-admin/stats/');
     return response;
   }
 
