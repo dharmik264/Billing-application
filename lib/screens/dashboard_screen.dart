@@ -120,216 +120,253 @@ class DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: RefreshIndicator(
-        onRefresh: refreshData,
-        color: const Color(0xFF4F46E5),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 120.0,
-              floating: false,
-              pinned: true,
-              backgroundColor: const Color(0xFFF8FAFC),
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                titlePadding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
-                title: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: _shopLogoBytes != null
-                          ? Image.memory(_shopLogoBytes!, fit: BoxFit.cover)
-                          : const Icon(Icons.storefront_rounded, color: Color(0xFF4F46E5), size: 24),
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: refreshData,
+            color: const Color(0xFF4F46E5),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: 140.0,
+                  floating: false,
+                  pinned: true,
+                  backgroundColor: const Color(0xFFEEF2FF),
+                  elevation: 0,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
                     ),
-                    const SizedBox(width: 12),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                  flexibleSpace: FlexibleSpaceBar(
+                    titlePadding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                    title: Row(
                       children: [
-                        Text(
-                          _shopName,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF0F172A),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              )
+                            ],
                           ),
+                          clipBehavior: Clip.antiAlias,
+                          child: _shopLogoBytes != null
+                              ? Image.memory(_shopLogoBytes!, fit: BoxFit.cover)
+                              : const Icon(Icons.storefront_rounded, color: Color(0xFF4F46E5), size: 24),
                         ),
-                        Row(
+                        const SizedBox(width: 12),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF10B981),
-                                shape: BoxShape.circle,
+                            Text(
+                              _shopName,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF0F172A),
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'System Online',
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF64748B),
-                                fontWeight: FontWeight.w500,
-                                fontSize: 10,
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF10B981),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'System Online',
+                                  style: GoogleFonts.inter(
+                                    color: const Color(0xFF64748B),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _isLoading && _recentTokens.isEmpty
-                  ? const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildQuickActions().animate().fadeIn().slideY(begin: 0.1),
-                        const SizedBox(height: 24),
-                        _buildStatCards().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
-                        const SizedBox(height: 24),
-                        Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Recent Tokens',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF0F172A),
+                SliverToBoxAdapter(
+                  child: _isLoading && _recentTokens.isEmpty
+                      ? const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 24),
+                            _buildStatCards().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
+                            const SizedBox(height: 32),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Recent Tokens',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w800,
+                                      color: const Color(0xFF0F172A),
+                                    ),
                                   ),
-                                ),
-                                InkWell(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const AllTokensScreen()),
-                                    );
-                                  },
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    child: Text(
-                                      'View All',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF4F46E5), // Indigo
+                                  InkWell(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const AllTokensScreen()),
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(20),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      child: Text(
+                                        'View All',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700,
+                                          color: const Color(0xFF4F46E5),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 220),
+                  sliver: _recentTokens.isEmpty && !_isLoading
+                      ? SliverToBoxAdapter(
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 40),
+                              child: Text(
+                                'No recent tokens found',
+                                style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 16, fontWeight: FontWeight.w500),
+                              ),
                             ),
                           ),
-                        const SizedBox(height: 12),
-                      ],
-                    ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-              sliver: _recentTokens.isEmpty && !_isLoading
-                  ? SliverToBoxAdapter(
-                      child: Center(
-                        child: Text(
-                          'No recent tokens',
-                          style: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
+                        )
+                      : SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              return _buildTokenCard(_recentTokens[index])
+                                  .animate()
+                                  .fadeIn()
+                                  .slideX(begin: 0.05, delay: (index * 50).ms);
+                            },
+                            childCount: _recentTokens.length > 3 ? 3 : _recentTokens.length,
+                          ),
                         ),
-                      ),
-                    )
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          return _buildTokenCard(_recentTokens[index])
-                              .animate()
-                              .fadeIn()
-                              .slideX(begin: 0.05, delay: (index * 50).ms);
-                        },
-                        childCount: _recentTokens.length > 3 ? 3 : _recentTokens.length,
-                      ),
-                    ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFFF8FAFC).withValues(alpha: 0.0),
+                    const Color(0xFFF8FAFC).withValues(alpha: 0.9),
+                    const Color(0xFFF8FAFC),
+                  ],
+                  stops: const [0.0, 0.4, 1.0],
+                ),
+              ),
+              child: _buildQuickActions(),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildQuickActions() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TokenGenerationScreen()));
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF6366F1)]),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    )
-                  ],
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.add_circle_outline, color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Create New Token',
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrinterSetupScreen())),
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TokenGenerationScreen()));
+            },
             child: Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
+                color: const Color(0xFF4F46E5),
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  )
+                ],
               ),
-              child: const Icon(Icons.print_rounded, color: Color(0xFF64748B), size: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.add_circle_outline, color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Create New Token',
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 16),
+        GestureDetector(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrinterSetupScreen())),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                )
+              ],
+            ),
+            child: const Icon(Icons.print_rounded, color: Color(0xFF4F46E5), size: 24),
+          ),
+        ),
+      ],
     );
   }
 
