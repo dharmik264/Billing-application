@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/restaurant_api.dart';
 import '../widgets/bill_receipt_widget.dart';
+import '../utils/app_constants.dart';
 import 'main_screen.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -20,12 +21,12 @@ class ShopSetupScreen extends StatefulWidget {
 }
 
 class _ShopSetupScreenState extends State<ShopSetupScreen> {
-  static const Color _panelBackground = Color(0xFFF8FAFC);
-  static const Color _primary = Color(0xFF4F46E5);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _border = Color(0xFFE2E8F0);
-  static const Color _softBorder = Color(0xFFF1F5F9);
+  static const Color _panelBackground = AppColors.slate50;
+  static const Color _primary = AppColors.indigo600;
+  static const Color _textPrimary = AppColors.slate900;
+  static const Color _textSecondary = AppColors.slate500;
+  static const Color _border = AppColors.slate200;
+  static const Color _softBorder = AppColors.slate100;
   static const double _panelWidth = 360;
 
   final TextEditingController _shopNameController =
@@ -898,34 +899,54 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   // ── Save button ────────────────────────────────────────────
 
   Widget _buildSaveButton() {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 52,
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.indigo600, Color(0xFF4338CA)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.indigo600.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _primary,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           elevation: 0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
         onPressed: _saving ? null : _saveAndContinue,
         child: _saving
             ? const SizedBox(
-                width: 20,
-                height: 20,
+                width: 24,
+                height: 24,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
+                  strokeWidth: 2.5,
                   color: Colors.white,
                 ),
               )
-            : Row(
+            : Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Save & Continue',
-                      style:
-                          GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500)),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, size: 17),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Save Shop Configuration',
+                          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                    ],
+                  ),
+                  Text('Proceed to Dashboard', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w400, color: Colors.white.withValues(alpha: 0.8))),
                 ],
               ),
       ),
