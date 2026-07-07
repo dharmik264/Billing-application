@@ -17,6 +17,41 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  bool _isDevMode = false;
+  List<dynamic> _devSuperAdmins = [];
+  bool _isLoadingDevUsers = false;
+
+  Future<void> _fetchDevUsers() async {
+    setState(() => _isLoadingDevUsers = true);
+    try {
+      final users = await RestaurantApi.instance.fetchDevUsers();
+      setState(() {
+        _devSuperAdmins = users.where((u) => u['is_superuser'] == true).toList();
+      });
+    } catch (e) {
+      _showSnack('Failed to load dev super admins: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingDevUsers = false);
+    }
+  }
+
+  Future<void> _devSuperAdminLogin(String phone) async {
+    setState(() => _isLoading = true);
+    try {
+      await RestaurantApi.instance.devLogin(phone);
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const SuperAdminDashboardScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      _showSnack('Dev Super Admin Login failed: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _login() async {
     if (_idController.text.trim().isEmpty || _passwordController.text.trim().isEmpty) {
       _showSnack('Please enter both ID and Password');
@@ -97,6 +132,25 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.deepPurple)),
+                      Switch(
+                        value: _isDevMode,
+                        activeColor: Colors.deepPurple,
+                        onChanged: (val) {
+                          setState(() => _isDevMode = val);
+                          if (val && _devSuperAdmins.isEmpty) {
+                            _fetchDevUsers();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
                 const Icon(Icons.admin_panel_settings_rounded, size: 56, color: Color(0xFF4F46E5)),
                 const SizedBox(height: 16),
                 Text(
@@ -120,7 +174,10 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                 ),
                 const SizedBox(height: 32),
                 
-                // Login ID
+                if (_isDevMode)
+                  _buildDevSuperAdminList()
+                else ...[
+                  // Login ID
                 Text(
                   'LOGIN ID',
                   style: GoogleFonts.inter(
@@ -209,11 +266,52 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                ),
+                ],
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDevSuperAdminList() {
+    if (_isLoadingDevUsers) {
+      return const Padding(
+        padding: EdgeInsets.all(24.0),
+        child: Center(child: CircularProgressIndicator(color: Colors.deepPurple)),
+      );
+    }
+    if (_devSuperAdmins.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24.0),
+        child: Center(child: Text('No active super admins found')),
+      );
+    }
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 250),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemCount: _devSuperAdmins.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final u = _devSuperAdmins[index];
+          return ListTile(
+            leading: const CircleAvatar(
+              backgroundColor: Colors.deepPurple,
+              child: Icon(Icons.admin_panel_settings, color: Colors.white, size: 20),
+            ),
+            title: Text(u['name'] ?? 'Super Admin', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+            subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+            trailing: const Icon(Icons.login, size: 18, color: Color(0xFF94A3B8)),
+            onTap: () => _devSuperAdminLogin(u['phone']),
+          );
+        },
       ),
     );
   }

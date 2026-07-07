@@ -32,6 +32,10 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
   bool _isResendCooldown = false;
   int _resendCountdown = 0;
 
+  bool _isDevMode = false;
+  List<dynamic> _devUsers = [];
+  bool _isLoadingDevUsers = false;
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +43,74 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     _otpControllers = List.generate(4, (_) => TextEditingController());
     _otpFocusNodes = List.generate(4, (_) => FocusNode());
     _checkPrefilledPhone();
+  }
+
+  Future<void> _fetchDevUsers() async {
+    setState(() => _isLoadingDevUsers = true);
+    try {
+      final users = await RestaurantApi.instance.fetchDevUsers();
+      setState(() {
+        // Exclude super admins from shop owner login list
+        _devUsers = users.where((u) => u['is_superuser'] != true).toList();
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to load dev users: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingDevUsers = false);
+    }
+  }
+
+  Future<void> _performDevLogin(String phone) async {
+    setState(() => _isLoading = true);
+    try {
+      final responseMap = await RestaurantApi.instance.devLogin(phone);
+      final prefs = await SharedPreferences.getInstance();
+      if (responseMap.containsKey('user')) {
+         final userMap = responseMap['user'];
+         await prefs.setString('account_status', userMap['account_status'] ?? '');
+         await prefs.setString('trial_end', userMap['trial_end'] ?? '');
+      }
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Dev Login failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _devSuperAdminBypass() async {
+    setState(() => _isLoading = true);
+    try {
+      final users = await RestaurantApi.instance.fetchDevUsers();
+      final superAdmins = users.where((u) => u['is_superuser'] == true).toList();
+      if (superAdmins.isEmpty) throw Exception('No Super Admin found');
+      
+      await RestaurantApi.instance.devLogin(superAdmins.first['phone']);
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SuperAdminMainScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Super Admin Bypass failed: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _checkPrefilledPhone() async {
@@ -405,7 +477,28 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                         ),
                       )
                     else
-                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16, top: 8),
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.deepPurple)),
+                              Switch(
+                                value: _isDevMode,
+                                activeColor: Colors.deepPurple,
+                                onChanged: (val) {
+                                  setState(() => _isDevMode = val);
+                                  if (val && _devUsers.isEmpty) {
+                                    _fetchDevUsers();
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     // Header Icon
                     Container(
                       width: 70,
@@ -496,9 +589,13 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()),
-                        );
+                        if (_isDevMode) {
+                          _devSuperAdminBypass();
+                        } else {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()),
+                          );
+                        }
                       },
                       child: Text(
                         'Login here',
@@ -511,6 +608,9 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
+                if (_isDevMode)
+                  _buildDevUserList()
+                else ...[
                     // Mobile Number Input Section
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -792,8 +892,10 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                               ),
                             ),
                           ],
+                          ],
                         ),
                       ),
+                    ],
                     const SizedBox(height: 20),
                     // Footer Links
                     const Padding(
@@ -835,6 +937,48 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildDevUserList() {
+    if (_isLoadingDevUsers) {
+      return const Padding(
+        padding: EdgeInsets.all(24.0),
+        child: CircularProgressIndicator(color: Colors.deepPurple),
+      );
+    }
+    if (_devUsers.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24.0),
+        child: Text('No active users found'),
+      );
+    }
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 350),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemCount: _devUsers.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final u = _devUsers[index];
+          return ListTile(
+            leading: const CircleAvatar(
+              backgroundColor: Colors.deepPurple,
+              child: Icon(Icons.person, color: Colors.white, size: 20),
+            ),
+            title: Text(u['name'] ?? 'User', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+            subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+            trailing: const Icon(Icons.login, size: 18, color: Color(0xFF94A3B8)),
+            onTap: () => _performDevLogin(u['phone']),
+          );
+        },
       ),
     );
   }

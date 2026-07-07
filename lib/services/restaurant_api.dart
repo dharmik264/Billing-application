@@ -135,6 +135,19 @@ class RestaurantApi {
     });
   }
 
+  // ── Developer Mode ──────────────────────────────────────────
+  Future<List<dynamic>> fetchDevUsers() async {
+    return await _getPaginatedList('auth/dev/users/');
+  }
+
+  Future<Map<String, dynamic>> devLogin(String phone) async {
+    final response = await _post('auth/dev/login/', {'phone': phone});
+    if (response.containsKey('access') && response.containsKey('refresh')) {
+      await saveTokens(response['access'], response['refresh']);
+    }
+    return response;
+  }
+
   // ── Super Admin ─────────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> fetchShopRequests() async {

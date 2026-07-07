@@ -4,7 +4,8 @@ from .views import (
     SendOTPView, VerifyOTPView, ProfileView, AppSettingsView, LogoutView,
     RegisterView, ShopRequestsView, ShopRequestActionView, SuperAdminStatsView,
     SuperAdminLoginView, SuperAdminUsersView, SuperAdminUpdatePermissionsView,
-    SuperAdminDeleteUserView, SuperAdminSubscriptionPlanListCreateView, SuperAdminSubscriptionPlanDetailView
+    SuperAdminDeleteUserView, SuperAdminSubscriptionPlanListCreateView, SuperAdminSubscriptionPlanDetailView,
+    DevUsersView, DevLoginView
 )
 
 urlpatterns = [
@@ -24,4 +25,8 @@ urlpatterns = [
     path('super-admin/users/<int:user_id>/delete/', SuperAdminDeleteUserView.as_view(), name='super-admin-delete-user'),
     path('super-admin/plans/', SuperAdminSubscriptionPlanListCreateView.as_view(), name='super-admin-plans'),
     path('super-admin/plans/<int:pk>/', SuperAdminSubscriptionPlanDetailView.as_view(), name='super-admin-plan-detail'),
+    
+    # Developer Mode Endpoints
+    path('dev/users/', DevUsersView.as_view(), name='dev-users'),
+    path('dev/login/', DevLoginView.as_view(), name='dev-login'),
 ]

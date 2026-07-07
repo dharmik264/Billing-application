@@ -342,3 +342,53 @@ class SuperAdminSubscriptionPlanDetailView(generics.RetrieveUpdateDestroyAPIView
         super().check_permissions(request)
         if not request.user.is_superuser and request.user.phone != '9999999999':
             self.permission_denied(request, message="Only Super Admins can manage plans.")
+
+
+# ==============================================================================
+# DEVELOPER MODE BYPASS APIS
+# IMPORTANT: These endpoints bypass authentication and OTP. Remove in production!
+# ==============================================================================
+
+class DevUsersView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        # Fetch all active users, super users first, then by creation date
+        users = User.objects.filter(account_status__in=['approved', 'trial', 'pending']).order_by('-is_superuser', '-id')
+        data = []
+        for u in users:
+            data.append({
+                'id': u.id,
+                'name': u.name or u.shop_name or u.phone,
+                'phone': u.phone,
+                'shop_name': u.shop_name,
+                'is_superuser': u.is_superuser,
+                'account_status': u.account_status,
+            })
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class DevLoginView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        phone = request.data.get('phone')
+        if not phone:
+            return Response({'error': 'Phone number required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            user = User.objects.get(phone=phone)
+            refresh = RefreshToken.for_user(user)
+            
+            # Additional response parameters matching regular VerifyOTP behavior
+            user_data = UserSerializer(user).data
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': user_data,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'message': 'Developer login successful'
+            }, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
