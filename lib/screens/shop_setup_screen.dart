@@ -318,8 +318,6 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                   _buildPaymentModes(),
                 ],
               ),
-
-              _buildBillPreview(),
               const SizedBox(height: 24),
               _buildSaveButton(),
               const SizedBox(height: 16),
