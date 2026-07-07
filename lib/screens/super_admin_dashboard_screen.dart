@@ -55,12 +55,11 @@ class SuperAdminDashboardScreen extends StatefulWidget {
 }
 
 class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
-  // Demo data
-  final String _totalRevenue = '\$42,850';
-  final String _activeSubs = '1,240';
-  final double _growthPercent = 12.5;
-  final List<double> _weeklyData = [8, 14, 10, 22, 18, 26, 24];
-  final List<String> _weekLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  String _totalRevenue = '₹0';
+  String _activeSubs = '0';
+  final double _growthPercent = 0.0;
+  List<double> _weeklyData = [0, 0, 0, 0, 0, 0, 0];
+  List<String> _weekLabels = ['-', '-', '-', '-', '-', '-', '-'];
 
   late List<_ShopRequest> _shopRequests;
   late List<_Transaction> _transactions;
@@ -70,13 +69,40 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
   void initState() {
     super.initState();
     _shopRequests = [];
-    _transactions = const [
-      _Transaction(title: 'Subscription Renewal', meta: 'TXN_9402 • 2 mins ago', amount: '+\$49.00', iconColor: Color(0xFF10B981), icon: Icons.autorenew_rounded),
-      _Transaction(title: 'API Credits Top-up', meta: 'TXN_9401 • 15 mins ago', amount: '+\$120.50', iconColor: Color(0xFF3B82F6), icon: Icons.bolt_rounded),
-      _Transaction(title: 'New Plan Purchase', meta: 'TXN_9400 • 1 hr ago', amount: '+\$299.00', iconColor: Color(0xFF8B5CF6), icon: Icons.shopping_cart_rounded),
-      _Transaction(title: 'Subscription Renewal', meta: 'TXN_9399 • 3 hrs ago', amount: '+\$49.00', iconColor: Color(0xFFF59E0B), icon: Icons.autorenew_rounded),
-    ];
+    _transactions = [];
     _fetchRequests();
+    _fetchStats();
+  }
+
+  Future<void> _fetchStats() async {
+    try {
+      final stats = await RestaurantApi.instance.fetchSuperAdminStats();
+      if (mounted) {
+        setState(() {
+          _totalRevenue = '₹${stats['total_revenue']}';
+          _activeSubs = stats['active_shops'].toString();
+          
+          List<dynamic> wData = stats['weekly_data'] ?? [];
+          List<dynamic> wLabels = stats['week_labels'] ?? [];
+          
+          if (wData.isNotEmpty && wLabels.isNotEmpty) {
+             _weeklyData = wData.map((e) => (e as num).toDouble()).toList();
+             _weekLabels = wLabels.map((e) => e.toString()).toList();
+          }
+
+          List<dynamic> txns = stats['transactions'] ?? [];
+          _transactions = txns.map((t) => _Transaction(
+            title: t['title'],
+            meta: t['meta'],
+            amount: t['amount'],
+            iconColor: t['status'] == 'completed' ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
+            icon: Icons.receipt_long_rounded,
+          )).toList();
+        });
+      }
+    } catch (e) {
+      // Ignore stats fetch error for now
+    }
   }
 
   Future<void> _fetchRequests() async {
@@ -103,6 +129,7 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
 
   void refreshData() {
     _fetchRequests();
+    _fetchStats();
   }
 
   Future<void> _logout() async {

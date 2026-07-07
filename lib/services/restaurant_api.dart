@@ -144,6 +144,11 @@ class RestaurantApi {
     });
   }
 
+  Future<Map<String, dynamic>> fetchSuperAdminStats() async {
+    final response = await _get('super-admin/stats/');
+    return response;
+  }
+
   // ── Shop ────────────────────────────────────────────────────
 
   Future<ApiShopData> fetchShop({String shopId = defaultShopId, bool forceRefresh = false}) async {

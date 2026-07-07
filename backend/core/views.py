@@ -5,10 +5,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models import Sum
 
 from .models import User, OTP, AppSettings
 from .serializers import SendOTPSerializer, VerifyOTPSerializer, UserSerializer, AppSettingsSerializer, RegisterSerializer
 from shop.models import Shop
+from tokens.models import Token
 
 
 class RegisterView(APIView):
@@ -188,3 +190,52 @@ class ShopRequestActionView(APIView):
             return Response({'message': 'Shop request declined'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SuperAdminStatsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not request.user.is_staff and not request.user.phone == '9999999999':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+
+        # 1. Total Revenue (sum of all completed/paid tokens)
+        total_revenue = Token.objects.filter(is_paid=True).aggregate(Sum('total'))['total__sum'] or 0
+
+        # 2. Active Shops
+        active_shops = User.objects.filter(account_status='approved').count()
+        trial_shops = User.objects.filter(account_status='trial').count()
+
+        # 3. Weekly Data (Last 7 days revenue)
+        today = timezone.localdate()
+        weekly_data = []
+        week_labels = []
+        for i in range(6, -1, -1):
+            day = today - timedelta(days=i)
+            day_sum = Token.objects.filter(date=day, is_paid=True).aggregate(Sum('total'))['total__sum'] or 0
+            weekly_data.append(float(day_sum))
+            week_labels.append(day.strftime('%a'))
+
+        # 4. Recent Transactions (Top 5 latest tokens)
+        recent_tokens = Token.objects.all().order_by('-created_at')[:5]
+        transactions = []
+        for t in recent_tokens:
+            shop_name = t.shop.name if t.shop else "Unknown Shop"
+            minutes_ago = int((timezone.now() - t.created_at).total_seconds() / 60)
+            time_str = f"{minutes_ago} mins ago" if minutes_ago < 60 else f"{minutes_ago // 60} hrs ago"
+            
+            transactions.append({
+                'title': f'Token #{t.token_number} - {shop_name}',
+                'meta': f'{t.bill_number} • {time_str}',
+                'amount': f'+₹{t.total}',
+                'status': 'completed' if t.is_paid else 'pending'
+            })
+
+        return Response({
+            'total_revenue': float(total_revenue),
+            'active_shops': active_shops,
+            'trial_shops': trial_shops,
+            'weekly_data': weekly_data,
+            'week_labels': week_labels,
+            'transactions': transactions
+        }, status=status.HTTP_200_OK)
