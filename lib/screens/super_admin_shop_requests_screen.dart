@@ -189,6 +189,12 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
                 ],
               ),
             ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 20),
+            padding: const EdgeInsets.only(left: 8),
+            constraints: const BoxConstraints(),
+            onPressed: () => _confirmDeleteUser(req, index),
+          ),
         ],
       ),
       ),
@@ -207,6 +213,48 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
         ),
         child: Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
       ),
+    );
+  }
+
+  void _confirmDeleteUser(Map<String, dynamic> req, int index) {
+    final userId = req['id'];
+    final name = req['shop_name'] ?? req['name'] ?? 'this profile';
+    
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Delete Profile?', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18)),
+          content: Text('Are you sure you want to permanently delete $name? This will erase all their shop data and bills.', 
+            style: GoogleFonts.inter(color: const Color(0xFF475569), fontSize: 14)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFEF4444),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await RestaurantApi.instance.deleteSuperAdminUser(userId.toString());
+                  setState(() {
+                    _requests.removeAt(index);
+                  });
+                  _showSnack('Profile deleted successfully');
+                } catch (e) {
+                  _showSnack('Failed to delete: $e');
+                }
+              },
+              child: Text('Delete', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600)),
+            ),
+          ],
+        );
+      },
     );
   }
 
