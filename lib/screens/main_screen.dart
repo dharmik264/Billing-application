@@ -186,34 +186,106 @@ class _MainScreenState extends State<MainScreen> {
             return AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
-              left: 24,
-              right: 24,
-              bottom: hide ? -100 : 24,
+              left: 16,
+              right: 16,
+              bottom: hide ? -140 : 24,
+              child: _buildUnifiedNavbar(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnifiedNavbar() {
+    List<Map<String, dynamic>> regularNavs = [];
+    int tokenIndex = -1;
+    for (int i = 0; i < _navItems.length; i++) {
+      if (_navItems[i]['label'] == 'Token') {
+        tokenIndex = i;
+      } else {
+        regularNavs.add({'index': i, ..._navItems[i]});
+      }
+    }
+    int half = (regularNavs.length / 2).ceil();
+    List<Map<String, dynamic>> leftNavs = regularNavs.sublist(0, half);
+    List<Map<String, dynamic>> rightNavs = regularNavs.sublist(half);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
+      children: [
+        Container(
+          height: 72,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(36),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: leftNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'])).toList(),
+              ),
+              const SizedBox(width: 80), // Space for center FAB
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: rightNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'])).toList(),
+              ),
+            ],
+          ),
+        ),
+        
+        if (tokenIndex != -1)
+          Positioned(
+            top: -24,
+            child: GestureDetector(
+              onTap: () => _onTabTapped(tokenIndex),
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-                      blurRadius: 30,
-                      offset: const Offset(0, 10),
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
                     )
                   ],
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    ...List.generate(_navItems.length, (i) {
-                      return _mobileNavItem(i, _navItems[i]['icon'], _navItems[i]['inactive']);
-                    }),
+                    const Icon(Icons.add_circle_outline, color: Colors.white, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      'New Token',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
                   ],
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          ),
       ],
     );
   }
@@ -226,13 +298,14 @@ class _MainScreenState extends State<MainScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
+          color: isSelected ? const Color(0xFF4F46E5).withValues(alpha: 0.1) : Colors.transparent,
           shape: BoxShape.circle,
         ),
         child: Icon(
           isSelected ? activeIcon : inactiveIcon,
-          color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+          color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
           size: 26,
         ),
       ),

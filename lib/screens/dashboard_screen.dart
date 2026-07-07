@@ -164,40 +164,60 @@ class DashboardScreenState extends State<DashboardScreen> {
                               : const Icon(Icons.storefront_rounded, color: Color(0xFF4F46E5), size: 24),
                         ),
                         const SizedBox(width: 12),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _shopName,
-                              style: GoogleFonts.inter(
-                                color: const Color(0xFF0F172A),
-                                fontWeight: FontWeight.w800,
-                                fontSize: 18,
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _shopName,
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFF0F172A),
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 18,
+                                ),
                               ),
-                            ),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF10B981),
-                                    shape: BoxShape.circle,
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF10B981),
+                                      shape: BoxShape.circle,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'System Online',
-                                  style: GoogleFonts.inter(
-                                    color: const Color(0xFF64748B),
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 11,
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'System Online',
+                                    style: GoogleFonts.inter(
+                                      color: const Color(0xFF64748B),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                    ),
                                   ),
-                                ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrinterSetupScreen())),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
                               ],
                             ),
-                          ],
+                            child: const Icon(Icons.print_rounded, color: Color(0xFF4F46E5), size: 16),
+                          ),
                         ),
                       ],
                     ),
@@ -253,7 +273,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                         ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 220),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
                   sliver: _recentTokens.isEmpty && !_isLoading
                       ? SliverToBoxAdapter(
                           child: Center(
@@ -281,92 +301,8 @@ class DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 100),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFFF8FAFC).withValues(alpha: 0.0),
-                    const Color(0xFFF8FAFC).withValues(alpha: 0.9),
-                    const Color(0xFFF8FAFC),
-                  ],
-                  stops: const [0.0, 0.4, 1.0],
-                ),
-              ),
-              child: _buildQuickActions(),
-            ),
-          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildQuickActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const TokenGenerationScreen()));
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4F46E5),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  )
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.add_circle_outline, color: Colors.white, size: 24),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Create New Token',
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        GestureDetector(
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrinterSetupScreen())),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                )
-              ],
-            ),
-            child: const Icon(Icons.print_rounded, color: Color(0xFF4F46E5), size: 24),
-          ),
-        ),
-      ],
     );
   }
 
