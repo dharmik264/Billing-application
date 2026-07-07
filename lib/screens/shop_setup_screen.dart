@@ -318,13 +318,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                   _buildPaymentModes(),
                 ],
               ),
-              _buildCard(
-                'Bill Configuration',
-                icon: Icons.receipt_long_rounded,
-                [
-                  _buildBillSettingsPanel(),
-                ],
-              ),
+
               _buildBillPreview(),
               const SizedBox(height: 24),
               _buildSaveButton(),
