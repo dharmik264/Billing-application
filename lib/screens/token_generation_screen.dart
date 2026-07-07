@@ -230,8 +230,24 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       return;
     }
 
+    final name = _customerNameController.text.trim();
     final phone = _customerPhoneController.text.trim();
-    if (phone.isNotEmpty && !RegExp(r'^\d{10}$').hasMatch(phone)) {
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Customer Name is required')),
+      );
+      return;
+    }
+
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Customer Mobile Number is required')),
+      );
+      return;
+    }
+
+    if (!RegExp(r'^\d{10}$').hasMatch(phone)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
       );
@@ -631,11 +647,34 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                 ),
                 const SizedBox(height: 12),
                 TextField(
+                  controller: _customerNameController,
+                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+                  decoration: InputDecoration(
+                    hintText: 'Customer Name (Required)',
+                    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+                    prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF94A3B8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xFF4F46E5)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
                   controller: _customerPhoneController,
                   keyboardType: TextInputType.phone,
                   style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
-                    hintText: 'Customer Mobile Number',
+                    hintText: 'Customer Mobile (Required)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF94A3B8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
