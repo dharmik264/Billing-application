@@ -8,6 +8,7 @@ import '../utils/bill_counter.dart';
 
 import 'print_preview_screen.dart';
 import 'main_screen.dart';
+import 'edit_item_screen.dart';
 
 class _TokenProduct {
   final ApiItem rawItem;
@@ -136,6 +137,20 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           _categories = ['All', ...categorySet.toList()..sort()];
           _isLoading = false;
         });
+
+        if (products.isEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) async {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No items found. Please add an item first.'))
+            );
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const EditItemScreen(initialCode: 'C-9001'),
+              ),
+            );
+            _loadInitialData();
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
