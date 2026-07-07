@@ -155,6 +155,23 @@ class RestaurantApi {
     await _delete('auth/super-admin/users/$userId/delete/');
   }
 
+  // Super Admin Plans
+  Future<List<dynamic>> fetchPlans() async {
+    return await _getPaginatedList('auth/super-admin/plans/');
+  }
+
+  Future<Map<String, dynamic>> createPlan(Map<String, dynamic> data) async {
+    return await _post('auth/super-admin/plans/', data);
+  }
+
+  Future<Map<String, dynamic>> updatePlan(String planId, Map<String, dynamic> data) async {
+    return await _put('auth/super-admin/plans/$planId/', data);
+  }
+
+  Future<void> deletePlan(String planId) async {
+    await _delete('auth/super-admin/plans/$planId/');
+  }
+
   Future<void> approveShopRequest(String userId, String plan) async {
     await _post('auth/shop-requests/$userId/action/', {
       'action': 'approve',
@@ -353,6 +370,18 @@ class RestaurantApi {
       String path, Map<String, dynamic> body) async {
     final response = await _client
         .post(
+          _uri(path),
+          headers: _headers(),
+          body: jsonEncode(body),
+        )
+        .timeout(_timeout);
+    return _decodeMap(response);
+  }
+
+  Future<Map<String, dynamic>> _put(
+      String path, Map<String, dynamic> body) async {
+    final response = await _client
+        .put(
           _uri(path),
           headers: _headers(),
           body: jsonEncode(body),

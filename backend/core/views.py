@@ -7,8 +7,8 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Sum
 
-from .models import User, OTP, AppSettings
-from .serializers import SendOTPSerializer, VerifyOTPSerializer, UserSerializer, AppSettingsSerializer, RegisterSerializer
+from .models import User, OTP, AppSettings, SubscriptionPlan
+from .serializers import SendOTPSerializer, VerifyOTPSerializer, UserSerializer, AppSettingsSerializer, RegisterSerializer, SubscriptionPlanSerializer
 from shop.models import Shop
 from tokens.models import Token
 
@@ -320,3 +320,25 @@ class SuperAdminDeleteUserView(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SuperAdminSubscriptionPlanListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = SubscriptionPlan.objects.all()
+    serializer_class = SubscriptionPlanSerializer
+
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        if not request.user.is_superuser and request.user.phone != '9999999999':
+            self.permission_denied(request, message="Only Super Admins can manage plans.")
+
+
+class SuperAdminSubscriptionPlanDetailView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = SubscriptionPlan.objects.all()
+    serializer_class = SubscriptionPlanSerializer
+
+    def check_permissions(self, request):
+        super().check_permissions(request)
+        if not request.user.is_superuser and request.user.phone != '9999999999':
+            self.permission_denied(request, message="Only Super Admins can manage plans.")

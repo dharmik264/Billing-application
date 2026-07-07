@@ -4,7 +4,7 @@ from .views import (
     SendOTPView, VerifyOTPView, ProfileView, AppSettingsView, LogoutView,
     RegisterView, ShopRequestsView, ShopRequestActionView, SuperAdminStatsView,
     SuperAdminLoginView, SuperAdminUsersView, SuperAdminUpdatePermissionsView,
-    SuperAdminDeleteUserView
+    SuperAdminDeleteUserView, SuperAdminSubscriptionPlanListCreateView, SuperAdminSubscriptionPlanDetailView
 )
 
 urlpatterns = [
@@ -22,4 +22,6 @@ urlpatterns = [
     path('super-admin/users/', SuperAdminUsersView.as_view(), name='super-admin-users'),
     path('super-admin/users/<int:user_id>/permissions/', SuperAdminUpdatePermissionsView.as_view(), name='super-admin-update-permissions'),
     path('super-admin/users/<int:user_id>/delete/', SuperAdminDeleteUserView.as_view(), name='super-admin-delete-user'),
+    path('super-admin/plans/', SuperAdminSubscriptionPlanListCreateView.as_view(), name='super-admin-plans'),
+    path('super-admin/plans/<int:pk>/', SuperAdminSubscriptionPlanDetailView.as_view(), name='super-admin-plan-detail'),
 ]

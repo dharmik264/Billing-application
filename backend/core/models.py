@@ -119,3 +119,33 @@ class AppSettings(models.Model):
             raise ValueError("Shop is required")
         obj, _ = cls.objects.get_or_create(shop=shop)
         return obj
+
+
+class SubscriptionPlan(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    price_monthly = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    price_yearly = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    # Usage limits
+    max_users = models.IntegerField(default=1) # 1 for individual, e.g. 5 for pro
+    max_tables = models.IntegerField(default=0) # 0 for no limit or unlimited, depending on logic
+    max_invoices_per_month = models.IntegerField(default=-1) # -1 for unlimited
+    
+    # JSON features linked to permissions system (billing, inventory, reports, tax, staff)
+    features = models.JSONField(default=dict, blank=True)
+    
+    # Flags
+    is_active = models.BooleanField(default=True)
+    is_popular = models.BooleanField(default=False)
+    trial_days = models.IntegerField(default=0)
+    display_order = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['display_order', 'id']
+
+    def __str__(self):
+        return self.name

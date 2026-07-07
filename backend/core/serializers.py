@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User, OTP, AppSettings
+from .models import User, OTP, AppSettings, SubscriptionPlan
 
 
 class SendOTPSerializer(serializers.Serializer):
@@ -61,5 +61,12 @@ class UserSerializer(serializers.ModelSerializer):
 class AppSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model  = AppSettings
+        fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class SubscriptionPlanSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SubscriptionPlan
         fields = '__all__'
         read_only_fields = ['id', 'created_at', 'updated_at']
