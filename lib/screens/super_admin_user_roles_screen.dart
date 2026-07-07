@@ -80,20 +80,48 @@ class _SuperAdminUserRolesScreenState extends State<SuperAdminUserRolesScreen> {
                   child: ListView(
                     controller: controller,
                     children: [
-                      Text('User Details & Roles', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 4),
-                      Text(user['shop_name'] ?? user['name'], style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
-                      const SizedBox(height: 20),
+                      Center(
+                        child: Container(
+                          width: 40, height: 4,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(2)),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 50, height: 50,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(Icons.manage_accounts, color: Color(0xFF4F46E5), size: 28),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(user['shop_name'] ?? user['name'], style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A))),
+                                const SizedBox(height: 2),
+                                Text(user['phone'] ?? 'No Phone', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
                       
                       // Shop Details Section
-                      Text('SHOP SETUP DETAILS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF94A3B8), letterSpacing: 0.5)),
+                      Text('SHOP SETUP DETAILS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF94A3B8), letterSpacing: 1.0)),
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
                         ),
                         child: Column(
                           children: [
@@ -104,63 +132,87 @@ class _SuperAdminUserRolesScreenState extends State<SuperAdminUserRolesScreen> {
                             _buildDetailRow('GSTIN', shopSetup?['gstin']),
                             _buildDetailRow('FSSAI', shopSetup?['fssai']),
                             _buildDetailRow('UPI ID', shopSetup?['upi_id']),
-                            _buildDetailRow('Payment Modes', shopSetup?['payment_modes_config']),
+                            _buildDetailRow('Payments', shopSetup?['payment_modes_config']),
                           ],
                         ),
                       ),
                       const SizedBox(height: 24),
 
                       // Permissions Section
-                      Text('MANAGE PERMISSIONS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF94A3B8), letterSpacing: 0.5)),
+                      Text('MANAGE PERMISSIONS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF94A3B8), letterSpacing: 1.0)),
                       const SizedBox(height: 12),
-                      ..._availablePermissions.entries.map((e) {
-                        return SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(e.value, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500)),
-                          value: currentToggles[e.key] ?? false,
-                          activeTrackColor: const Color(0xFF4F46E5),
-                          onChanged: (val) {
-                            setModalState(() {
-                              currentToggles[e.key] = val;
-                            });
-                          },
-                        );
-                      }),
-                      const SizedBox(height: 20),
-                      
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF4F46E5),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          onPressed: () async {
-                            Navigator.pop(context);
-                            await _updatePermissions(user['id'].toString(), currentToggles);
-                          },
-                          child: Text('Save Permissions', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [BoxShadow(color: const Color(0xFF0F172A).withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                        ),
+                        child: Column(
+                          children: _availablePermissions.entries.map((e) {
+                            return Column(
+                              children: [
+                                ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                  title: Text(e.value, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+                                  trailing: Switch(
+                                    value: currentToggles[e.key] ?? false,
+                                    activeColor: Colors.white,
+                                    activeTrackColor: const Color(0xFF4F46E5),
+                                    onChanged: (val) {
+                                      setModalState(() {
+                                        currentToggles[e.key] = val;
+                                      });
+                                    },
+                                  ),
+                                ),
+                                if (e.key != _availablePermissions.keys.last)
+                                  const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                              ],
+                            );
+                          }).toList(),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 30),
                       
-                      // Delete Profile Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFFEF4444),
-                            side: const BorderSide(color: Color(0xFFEF4444)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 50,
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFFEF4444),
+                                  side: const BorderSide(color: Color(0xFFEF4444)),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _confirmDelete(user);
+                                },
+                                child: Text('Delete', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600)),
+                              ),
+                            ),
                           ),
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _confirmDelete(user);
-                          },
-                          child: Text('Delete Profile', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600)),
-                        ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: SizedBox(
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF4F46E5),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  await _updatePermissions(user['id'].toString(), currentToggles);
+                                },
+                                child: Text('Save Changes', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 30),
                     ],
