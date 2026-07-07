@@ -272,106 +272,147 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   }
 
   Widget _buildPanel() {
-    return Material(
-      color: _panelBackground,
-      borderRadius: BorderRadius.circular(28),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFE0E0E0)),
-          borderRadius: BorderRadius.circular(28),
-        ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildHeader(),
-          _buildProgress(),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              children: [
-                _buildLogoUpload(),
-                const SizedBox(height: 14),
-                _buildQrUpload(),
-                const SizedBox(height: 14),
-                _buildSectionTitle('Shop Information'),
-                _buildTextField(
-                    label: 'Shop Name', controller: _shopNameController),
-                const SizedBox(height: 12),
-                _buildTextField(
-                    label: 'Tagline', controller: _taglineController),
-                const SizedBox(height: 12),
-                _buildTextField(
-                    label: 'Mobile Number', controller: _phoneController),
-                const SizedBox(height: 12),
-                _buildTextField(
-                    label: 'Alternate Mobile Number',
-                    controller: _alternatePhoneController),
-                const SizedBox(height: 12),
-                _buildTextField(
-                    label: 'Shop Address', controller: _addressController),
-                const SizedBox(height: 12),
-                _buildTextField(
-                    label: 'GST Number', controller: _gstinController),
-                const SizedBox(height: 12),
-                _buildTextField(
-                    label: 'Email Address', controller: _emailController),
-                const SizedBox(height: 12),
-                _buildTextField(
-                    label: 'UPI ID (For Payments)',
-                    controller: _upiIdController),
-                const SizedBox(height: 14),
-                _buildPaymentModes(),
-                const SizedBox(height: 14),
-                _buildBillSettingsPanel(),
-                const SizedBox(height: 14),
-                _buildBillPreview(),
-                const SizedBox(height: 14),
-                _buildSaveButton(),
-                const SizedBox(height: 10),
-                _buildFooterNote(),
-              ],
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildHeader(),
+        _buildProgress(),
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              _buildCard(
+                'Branding & Visuals',
+                icon: Icons.brush_rounded,
+                [
+                  _buildLogoUpload(),
+                  const SizedBox(height: 16),
+                  _buildQrUpload(),
+                ],
+              ),
+              _buildCard(
+                'Shop Information',
+                icon: Icons.storefront_rounded,
+                [
+                  _buildTextField(label: 'Shop Name', controller: _shopNameController),
+                  const SizedBox(height: 16),
+                  _buildTextField(label: 'Tagline', controller: _taglineController),
+                  const SizedBox(height: 16),
+                  _buildTextField(label: 'Mobile Number', controller: _phoneController),
+                  const SizedBox(height: 16),
+                  _buildTextField(label: 'Alternate Mobile Number', controller: _alternatePhoneController),
+                  const SizedBox(height: 16),
+                  _buildTextField(label: 'Shop Address', controller: _addressController),
+                  const SizedBox(height: 16),
+                  _buildTextField(label: 'GST Number', controller: _gstinController),
+                  const SizedBox(height: 16),
+                  _buildTextField(label: 'Email Address', controller: _emailController),
+                  const SizedBox(height: 16),
+                  _buildTextField(label: 'UPI ID (For Payments)', controller: _upiIdController),
+                ],
+              ),
+              _buildCard(
+                'Payment Settings',
+                icon: Icons.payments_rounded,
+                [
+                  _buildPaymentModes(),
+                ],
+              ),
+              _buildCard(
+                'Bill Configuration',
+                icon: Icons.receipt_long_rounded,
+                [
+                  _buildBillSettingsPanel(),
+                ],
+              ),
+              _buildBillPreview(),
+              const SizedBox(height: 24),
+              _buildSaveButton(),
+              const SizedBox(height: 16),
+              _buildFooterNote(),
+            ],
           ),
-        ],
-      ),
-     ),
+        ),
+      ],
     );
   }
 
-  // ── Header ─────────────────────────────────────────────────
-
-  Widget _buildHeader() {
+  Widget _buildCard(String title, List<Widget> children, {IconData? icon}) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-      decoration: const BoxDecoration(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: _softBorder, width: 0.5)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _border),
+        boxShadow: [
+          BoxShadow(
+            color: _textPrimary.withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 20, color: _primary),
+                const SizedBox(width: 8),
+              ],
+              Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ...children,
+        ],
+      ),
+    );
+  }
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
       child: Row(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(50),
+            borderRadius: BorderRadius.circular(12),
             onTap: _handleBack,
             child: Container(
-              width: 32,
-              height: 32,
+              width: 40,
+              height: 40,
               alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xFFF0F0F0),
-                shape: BoxShape.circle,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _border),
               ),
-              child: const Icon(Icons.arrow_back,
-                  size: 16, color: Color(0xFF555555)),
+              child: Icon(Icons.arrow_back_rounded, size: 20, color: _textPrimary),
             ),
           ),
-          const SizedBox(width: 12),
-          Text(
-            'Shop Setup',
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
-              color: _textPrimary,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Shop Configuration',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: _textPrimary,
+                  ),
+                ),
+                Text(
+                  'Set up your business identity',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: _textSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -417,110 +458,68 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _fieldLabel('Shop Logo'),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: _saving ? null : _pickLogo,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      color: _logoBytes != null
-                          ? Colors.transparent
-                          : _panelBackground,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _logoBytes != null ? _primary : _border,
-                        width: 1.5,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: _logoBytes != null
-                        ? _buildLogoImage()
-                        : _uploadPlaceholder(
-                            icon: Icons.camera_alt_outlined,
-                            label: 'UPLOAD LOGO',
-                          ),
-                  ),
-                  Positioned(
-                    right: -8,
-                    bottom: -8,
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: _primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _logoBytes != null ? Icons.edit : Icons.add,
-                        size: 13,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
+        const SizedBox(height: 12),
+        InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _saving ? null : _pickLogo,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _logoBytes != null ? Colors.transparent : _panelBackground,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _logoBytes != null ? _primary : _border,
+                width: 1.5,
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _logoBytes != null ? 'Logo selected ✓' : 'No logo uploaded',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: _logoBytes != null
-                          ? const Color(0xFF16A34A)
-                          : _textSecondary,
-                    ),
+            child: Row(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _border),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Tap to pick from gallery.\nAppears on every bill slip.',
-                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFFAAAAAA)),
+                  clipBehavior: Clip.antiAlias,
+                  child: _logoBytes != null
+                      ? _buildLogoImage()
+                      : const Icon(Icons.camera_alt_outlined, color: _textSecondary, size: 28),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _logoBytes != null ? 'Logo Selected' : 'Upload your logo',
+                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _logoBytes != null ? _primary : _textPrimary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'This will appear on all your printed bills.',
+                        style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const Icon(Icons.upload_file_rounded, color: _textSecondary),
+              ],
             ),
-          ],
+          ),
         ),
       ],
     );
   }
 
   Widget _buildLogoImage() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Image.memory(
-        _logoBytes!,
-        fit: BoxFit.cover,
-        width: 90,
-        height: 90,
-      ),
-    );
-  }
-
-  Widget _uploadPlaceholder({required IconData icon, required String label}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(icon, size: 24, color: const Color(0xFFBBBBBB)),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFFBBBBBB)),
-          textAlign: TextAlign.center,
-        ),
-      ],
+    return Image.memory(
+      _logoBytes!,
+      fit: BoxFit.cover,
+      width: 72,
+      height: 72,
     );
   }
 
@@ -531,91 +530,57 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _fieldLabel('Payment QR Code'),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(18),
-              onTap: _saving ? null : _pickQr,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      color: _qrBytes != null
-                          ? Colors.transparent
-                          : _panelBackground,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _qrBytes != null ? _primary : _border,
-                        width: 1.5,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: _qrBytes != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(14),
-                            child: Image.memory(
-                              _qrBytes!,
-                              fit: BoxFit.cover,
-                              width: 90,
-                              height: 90,
-                            ),
-                          )
-                        : _uploadPlaceholder(
-                            icon: Icons.qr_code_2,
-                            label: 'UPLOAD QR',
-                          ),
-                  ),
-                  Positioned(
-                    right: -8,
-                    bottom: -8,
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      alignment: Alignment.center,
-                      decoration: const BoxDecoration(
-                        color: _primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        _qrBytes != null ? Icons.edit : Icons.add,
-                        size: 13,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ],
+        const SizedBox(height: 12),
+        InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: _saving ? null : _pickQr,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: _qrBytes != null ? Colors.transparent : _panelBackground,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _qrBytes != null ? _primary : _border,
+                width: 1.5,
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _qrBytes != null
-                        ? 'QR Code selected ✓'
-                        : 'No QR Code uploaded',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: _qrBytes != null
-                          ? const Color(0xFF16A34A)
-                          : _textSecondary,
-                    ),
+            child: Row(
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: _border),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Tap to pick your payment QR code.\nAppears on every bill slip.',
-                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFFAAAAAA)),
+                  clipBehavior: Clip.antiAlias,
+                  child: _qrBytes != null
+                      ? Image.memory(_qrBytes!, fit: BoxFit.cover, width: 72, height: 72)
+                      : const Icon(Icons.qr_code_2_rounded, color: _textSecondary, size: 28),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _qrBytes != null ? 'QR Code Selected' : 'Upload UPI QR',
+                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _qrBytes != null ? _primary : _textPrimary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Customers can scan this to pay you directly.',
+                        style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const Icon(Icons.upload_file_rounded, color: _textSecondary),
+              ],
             ),
-          ],
+          ),
         ),
       ],
     );
@@ -631,12 +596,19 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _fieldLabel(label),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _border),
+            boxShadow: [
+              BoxShadow(
+                color: _textPrimary.withValues(alpha: 0.01),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              )
+            ]
           ),
           child: TextField(
             controller: controller,
@@ -645,13 +617,12 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
             style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: const Color(0xFF1F2937),
+              color: _textPrimary,
             ),
             decoration: const InputDecoration(
               border: InputBorder.none,
               isDense: true,
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
           ),
         ),
