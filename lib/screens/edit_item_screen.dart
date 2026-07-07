@@ -38,8 +38,6 @@ class _EditItemScreenState extends State<EditItemScreen> {
   static const Color _textPrimary = AppColors.slate900;
   static const Color _textSecondary = AppColors.slate500;
   static const Color _border = AppColors.slate200;
-  static const Color _softBorder = AppColors.slate100;
-  static const double _panelWidth = 360;
 
   List<String> _categories = [
     'Burgers',
@@ -53,7 +51,6 @@ class _EditItemScreenState extends State<EditItemScreen> {
   late String _category;
   late bool _availableOnline;
   late bool _activeStatus;
-  String _imageSource = '';
   Uint8List? _imageBytes;
 
   @override
@@ -97,114 +94,82 @@ class _EditItemScreenState extends State<EditItemScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Stack(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final width = math.min(_panelWidth, constraints.maxWidth);
-
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: width,
-                      child: _buildPanel(),
-                    ),
-                  ),
-                );
-              },
-            ),
-            if (_isSaving)
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(_primary),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPanel() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _buildHeader(),
-        Padding(
-          padding: const EdgeInsets.all(20),
+        child: DefaultTabController(
+          length: 2,
           child: Column(
             children: [
-              _buildCard(
-                'Visuals & Branding',
-                icon: Icons.image_outlined,
-                [
-                  _buildImageSection(),
-                ],
+              _buildHeader(),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _panelBackground,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: TabBar(
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  indicator: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  labelColor: _primary,
+                  unselectedLabelColor: _textSecondary,
+                  labelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+                  tabs: const [
+                    Tab(text: 'Basic Info'),
+                    Tab(text: 'Settings'),
+                  ],
+                ),
               ),
-              _buildCard(
-                'Item Details',
-                icon: Icons.fastfood_outlined,
-                [
-                  _buildItemName(),
-                  const SizedBox(height: 16),
-                  _buildCodeAndRate(),
-                  const SizedBox(height: 16),
-                  _buildCategorySelector(),
-                ],
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    _buildBasicInfoTab(),
+                    _buildSettingsTab(),
+                  ],
+                ),
               ),
-              _buildCard(
-                'Preferences',
-                icon: Icons.tune_outlined,
-                [
-                  _buildSwitchPanel(),
-                ],
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: _buildButtons(),
               ),
-              const SizedBox(height: 24),
-              _buildButtons(),
             ],
           ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget _buildCard(String title, List<Widget> children, {IconData? icon}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _border),
-        boxShadow: [
-          BoxShadow(
-            color: _textPrimary.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
+  Widget _buildBasicInfoTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Column(
+        children: [
+          _buildCompactImageSection(),
+          const SizedBox(height: 16),
+          _buildItemName(),
+          const SizedBox(height: 12),
+          _buildCodeAndRate(),
+          const SizedBox(height: 12),
+          _buildCategorySelector(),
         ],
       ),
+    );
+  }
+
+  Widget _buildSettingsTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 20, color: _primary),
-                const SizedBox(width: 8),
-              ],
-              Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary)),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ...children,
+          _buildSwitchPanel(),
         ],
       ),
     );
@@ -270,102 +235,88 @@ class _EditItemScreenState extends State<EditItemScreen> {
     );
   }
 
-  Widget _buildImageSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _label('Item Image'),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _imageChoice(
-                label: 'Gallery',
-                icon: Icons.photo_outlined,
-                selected: _imageSource == 'Gallery',
-                selectedStyle: false,
-                imageBytes: _imageSource == 'Gallery' ? _imageBytes : null,
-                onTap: () => _selectImage('Gallery'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _imageChoice(
-                label: 'Take Photo',
-                icon: Icons.camera_alt_outlined,
-                selected: _imageSource == 'Take Photo',
-                selectedStyle: true,
-                helper: 'Max 5MB',
-                imageBytes: _imageSource == 'Take Photo' ? _imageBytes : null,
-                onTap: () => _selectImage('Take Photo'),
-              ),
-            ),
-          ],
+  Widget _buildCompactImageSection() {
+    return Center(
+      child: GestureDetector(
+        onTap: () => _showImagePickerSheet(),
+        child: Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: _panelBackground,
+            shape: BoxShape.circle,
+            border: Border.all(color: _border, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: _textPrimary.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ],
+          ),
+          child: _imageBytes != null
+              ? ClipOval(
+                  child: Image.memory(
+                    _imageBytes!,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.add_a_photo_outlined, size: 24, color: _primary),
+                  ],
+                ),
         ),
-      ],
+      ),
     );
   }
 
-  Widget _imageChoice({
-    required String label,
-    required IconData icon,
-    required bool selected,
-    required bool selectedStyle,
-    required VoidCallback onTap,
-    String? helper,
-    Uint8List? imageBytes,
-  }) {
-    final active = selectedStyle || selected;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        height: 100,
-        decoration: BoxDecoration(
-          color: active ? _primary.withValues(alpha: 0.05) : _panelBackground,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: active ? _primary.withValues(alpha: 0.3) : _border,
-            width: active ? 1.5 : 1.0,
-          ),
-        ),
-        child: imageBytes != null && selected
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.memory(
-                  imageBytes,
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon,
-                      size: 28,
-                      color: active ? _primary : _textSecondary),
-                  const SizedBox(height: 8),
-                  Text(
-                    label,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: active ? _primary : _textSecondary,
-                    ),
-                  ),
-                  if (helper != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      helper,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(fontSize: 11, color: _textSecondary),
-                    ),
-                  ],
-                ],
-              ),
+  void _showImagePickerSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: _panelBackground, borderRadius: BorderRadius.circular(10)),
+                    child: Icon(Icons.camera_alt_outlined, color: _primary),
+                  ),
+                  title: Text('Take Photo', style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: _textPrimary)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _selectImage('Take Photo');
+                  },
+                ),
+                ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: _panelBackground, borderRadius: BorderRadius.circular(10)),
+                    child: Icon(Icons.photo_library_outlined, color: _primary),
+                  ),
+                  title: Text('Choose from Gallery', style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: _textPrimary)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _selectImage('Gallery');
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -709,7 +660,6 @@ class _EditItemScreenState extends State<EditItemScreen> {
       if (image != null) {
         final bytes = await image.readAsBytes();
         setState(() {
-          _imageSource = source;
           _imageBytes = bytes;
         });
         _showSnackBar('Image selected successfully');
