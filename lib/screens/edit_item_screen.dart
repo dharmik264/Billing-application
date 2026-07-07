@@ -107,6 +107,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: TabBar(
+                  dividerColor: Colors.transparent,
                   indicatorSize: TabBarIndicatorSize.tab,
                   indicator: BoxDecoration(
                     color: Colors.white,
@@ -356,15 +357,18 @@ class _EditItemScreenState extends State<EditItemScreen> {
               const SizedBox(height: 6),
               _inputShell(
                 background: _panelBackground,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      widget.initialCode,
-                      style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
-                    ),
-                    const Icon(Icons.lock_outline, size: 16, color: _textSecondary),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        widget.initialCode,
+                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
+                      ),
+                      const Icon(Icons.lock_outline, size: 16, color: _textSecondary),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -415,19 +419,22 @@ class _EditItemScreenState extends State<EditItemScreen> {
           borderRadius: BorderRadius.circular(12),
           onTap: _pickCategory,
           child: _inputShell(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _category,
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
-                ),
-                const Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 20,
-                  color: _textSecondary,
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _category,
+                    style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: _textSecondary,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
