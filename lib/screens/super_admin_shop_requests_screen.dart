@@ -123,7 +123,9 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
     final location = req['phone'] ?? 'Unknown Phone';
     final userId = req['id'];
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _showShopDetails(req),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -189,6 +191,7 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
             ),
         ],
       ),
+      ),
     );
   }
 
@@ -203,6 +206,93 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
           border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Text(label, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+      ),
+    );
+  }
+
+  void _showShopDetails(Map<String, dynamic> req) {
+    Map<String, dynamic>? shopSetup = req['shop_setup'];
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Shop Setup Details', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text(req['shop_name'] ?? req['name'], style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
+                const SizedBox(height: 20),
+                
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDetailRow('Address', shopSetup?['address']),
+                      _buildDetailRow('Phone', shopSetup?['phone']),
+                      _buildDetailRow('Alt Phone', shopSetup?['alternate_phone']),
+                      _buildDetailRow('Email', shopSetup?['email']),
+                      _buildDetailRow('GSTIN', shopSetup?['gstin']),
+                      _buildDetailRow('FSSAI', shopSetup?['fssai']),
+                      _buildDetailRow('UPI ID', shopSetup?['upi_id']),
+                      _buildDetailRow('Payment Modes', shopSetup?['payment_modes_config']),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 45,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text('Close', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String? value) {
+    final displayValue = (value == null || value.trim().isEmpty) ? 'Not Provided' : value;
+    final isMissing = displayValue == 'Not Provided';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(label, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+          ),
+          Expanded(
+            child: Text(
+              displayValue,
+              style: GoogleFonts.inter(
+                fontSize: 13, 
+                fontWeight: isMissing ? FontWeight.w400 : FontWeight.w600,
+                color: isMissing ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
+                fontStyle: isMissing ? FontStyle.italic : FontStyle.normal,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

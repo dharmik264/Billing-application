@@ -151,6 +151,10 @@ class RestaurantApi {
     });
   }
 
+  Future<void> deleteSuperAdminUser(String userId) async {
+    await _delete('auth/super-admin/users/$userId/delete/');
+  }
+
   Future<void> approveShopRequest(String userId, String plan) async {
     await _post('auth/shop-requests/$userId/action/', {
       'action': 'approve',

@@ -304,3 +304,19 @@ class SuperAdminUpdatePermissionsView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
+
+class SuperAdminDeleteUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, user_id):
+        if not request.user.is_staff and not request.user.phone == '9999999999':
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+            
+        try:
+            user = User.objects.get(id=user_id)
+            user.delete() # This will cascade delete associated Shop, Bills, etc.
+            return Response({'message': 'User and associated data deleted successfully'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

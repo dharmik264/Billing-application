@@ -31,11 +31,31 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    shop_setup = serializers.SerializerMethodField()
+
     class Meta:
         model  = User
         fields = ['id', 'phone', 'name', 'email', 'shop_name', 
-                  'account_status', 'trial_end', 'approved_plan', 'permissions', 'created_at']
+                  'account_status', 'trial_end', 'approved_plan', 'permissions', 'created_at', 'shop_setup']
         read_only_fields = ['id', 'created_at']
+
+    def get_shop_setup(self, obj):
+        try:
+            shop = obj.shop
+            if shop:
+                return {
+                    'address': shop.address,
+                    'phone': shop.phone,
+                    'alternate_phone': shop.alternate_phone,
+                    'email': shop.email,
+                    'gstin': shop.gstin,
+                    'fssai': shop.fssai,
+                    'upi_id': shop.upi_id,
+                    'payment_modes_config': shop.payment_modes_config
+                }
+        except Exception:
+            pass
+        return None
 
 
 class AppSettingsSerializer(serializers.ModelSerializer):
