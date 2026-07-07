@@ -151,34 +151,40 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          _buildHeader(),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  _buildStatCards().animate().fadeIn().slideY(begin: 0.1),
-                  const SizedBox(height: 24),
-                  _buildGrowthChart().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
-                  const SizedBox(height: 24),
-                  _buildCoreManagement().animate().fadeIn().slideY(begin: 0.1, delay: 200.ms),
-                  const SizedBox(height: 24),
-                  _buildShopRequests().animate().fadeIn().slideY(begin: 0.1, delay: 300.ms),
-                  const SizedBox(height: 24),
-                  _buildSystemHealth().animate().fadeIn().slideY(begin: 0.1, delay: 400.ms),
-                  const SizedBox(height: 24),
-                  _buildRecentTransactions().animate().fadeIn().slideY(begin: 0.1, delay: 500.ms),
-                  const SizedBox(height: 120),
-                ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          refreshData();
+        },
+        color: const Color(0xFF4F46E5),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+          slivers: [
+            _buildHeader(),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    _buildStatCards().animate().fadeIn().slideY(begin: 0.1),
+                    const SizedBox(height: 24),
+                    _buildGrowthChart().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
+                    const SizedBox(height: 24),
+                    _buildCoreManagement().animate().fadeIn().slideY(begin: 0.1, delay: 200.ms),
+                    const SizedBox(height: 24),
+                    _buildShopRequests().animate().fadeIn().slideY(begin: 0.1, delay: 300.ms),
+                    const SizedBox(height: 24),
+                    _buildSystemHealth().animate().fadeIn().slideY(begin: 0.1, delay: 400.ms),
+                    const SizedBox(height: 24),
+                    _buildRecentTransactions().animate().fadeIn().slideY(begin: 0.1, delay: 500.ms),
+                    const SizedBox(height: 120),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
