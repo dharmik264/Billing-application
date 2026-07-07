@@ -23,8 +23,8 @@ class _MainScreenState extends State<MainScreen> {
   final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey<DashboardScreenState>();
 
   bool _isLoading = true;
-  List<Widget> _screens = [];
-  List<Map<String, dynamic>> _navItems = [];
+  final List<Widget> _screens = [];
+  final List<Map<String, dynamic>> _navItems = [];
 
   @override
   void initState() {

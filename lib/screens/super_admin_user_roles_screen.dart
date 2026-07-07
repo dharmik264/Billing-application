@@ -79,7 +79,7 @@ class _SuperAdminUserRolesScreenState extends State<SuperAdminUserRolesScreen> {
                     return SwitchListTile(
                       title: Text(e.value, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500)),
                       value: currentToggles[e.key] ?? false,
-                      activeColor: const Color(0xFF4F46E5),
+                      activeTrackColor: const Color(0xFF4F46E5),
                       onChanged: (val) {
                         setModalState(() {
                           currentToggles[e.key] = val;
@@ -116,11 +116,13 @@ class _SuperAdminUserRolesScreenState extends State<SuperAdminUserRolesScreen> {
   Future<void> _updatePermissions(String userId, Map<String, bool> permissions) async {
     try {
       await RestaurantApi.instance.updateUserPermissions(userId, permissions);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Permissions updated successfully')),
       );
       _fetchUsers(); // Refresh
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update: $e')),
       );
