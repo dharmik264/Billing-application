@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../services/restaurant_api.dart';
 import '../utils/pdf_export.dart';
@@ -11,10 +12,10 @@ class AnalyticsReportsScreen extends StatefulWidget {
 }
 
 class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
-  static const Color _panelBackground = Color(0xFFF5F6FA);
-  static const Color _textPrimary = Color(0xFF1F2937);
-  static const Color _textSecondary = Color(0xFF6B7280);
-  static const Color _softBorder = Color(0xFFEEEEEE);
+  static const Color _panelBackground = Color(0xFFF8FAFC);
+  static const Color _textPrimary = Color(0xFF0F172A);
+  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _softBorder = Color(0xFFE2E8F0);
 
   final TextEditingController _searchController = TextEditingController();
   final List<_HistoryToken> _tokens = [];
@@ -84,31 +85,18 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   Widget _buildTokenList() {
     final tokens = _filteredTokens;
     if (tokens.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(40),
-        child: Text('No tokens found.', style: TextStyle(color: _textSecondary)),
+      return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Text('No tokens found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _softBorder, width: 0.5),
-        ),
-        child: ListView.separated(
-          padding: EdgeInsets.zero,
-          itemCount: tokens.length,
-          separatorBuilder: (context, index) => const Divider(
-            height: 0.5,
-            thickness: 0.5,
-            color: Color(0xFFF0F0F0),
-          ),
-          itemBuilder: (context, index) => _tokenRow(tokens[index]),
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: 24),
+        itemCount: tokens.length,
+        itemBuilder: (context, index) => _tokenRow(tokens[index]),
       ),
     );
   }
@@ -118,23 +106,35 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     final isCancelled = token.status == 'Cancelled';
 
     final badgeBg = isCancelled
-        ? const Color(0xFFFEE2E2)
+        ? const Color(0xFFFEF2F2)
         : isReady
-            ? const Color(0xFFD1FAE5)
-            : const Color(0xFFFFF3CD);
+            ? const Color(0xFFF0FDF4)
+            : const Color(0xFFFFF7ED);
     final badgeFg = isCancelled
-        ? const Color(0xFF991B1B)
+        ? const Color(0xFFDC2626)
         : isReady
-            ? const Color(0xFF065F46)
-            : const Color(0xFF92400E);
+            ? const Color(0xFF16A34A)
+            : const Color(0xFFEA580C);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 44,
+            height: 44,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: badgeBg,
@@ -142,14 +142,14 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
             ),
             child: Text(
               token.shortId,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
                 color: badgeFg,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,18 +158,18 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   _getDisplayTitle(token),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                     color: _textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   '${token.payment.isEmpty ? 'N/A' : token.payment} · ${token.dateTimeString}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: _textSecondary),
+                  style: GoogleFonts.inter(fontSize: 12, color: _textSecondary, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -180,24 +180,24 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
             children: [
               Text(
                 _money(token.amount),
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                   color: _textPrimary,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: badgeBg,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   token.status,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
                     color: badgeFg,
                   ),
                 ),
@@ -223,21 +223,22 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: _softBorder, width: 0.5)),
+        border: const Border(bottom: BorderSide(color: _softBorder, width: 1.0)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Row(
+          Row(
             children: [
               Text(
                 'Analytics Reports',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
                   color: _textPrimary,
                 ),
               ),
@@ -260,32 +261,29 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   Widget _searchBar() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: _panelBackground,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.search, size: 16, color: Color(0xFFAAAAAA)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(fontSize: 14, color: _textPrimary),
-                decoration: const InputDecoration(
-                  hintText: 'Search token number or customer...',
-                  hintStyle: TextStyle(fontSize: 14, color: Color(0xFFBBBBBB)),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ),
-          ],
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: TextField(
+        controller: _searchController,
+        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: _textPrimary),
+        decoration: InputDecoration(
+          hintText: 'Search token number or customer...',
+          hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+          prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          filled: true,
+          fillColor: const Color(0xFFF1F5F9),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(24),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(24),
+            borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
+          ),
         ),
       ),
     );
@@ -296,13 +294,10 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: _softBorder, width: 0.5),
-          bottom: BorderSide(color: _softBorder, width: 0.5),
-        ),
+        border: Border(bottom: BorderSide(color: _softBorder, width: 1.0)),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -321,23 +316,23 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   Widget _rangeChip(String range) {
     final selected = _selectedRange == range;
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(24),
       onTap: () => setState(() => _selectedRange = range),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: selected ? 16 : 14,
-          vertical: 7,
+          horizontal: selected ? 20 : 16,
+          vertical: 10,
         ),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF111111) : const Color(0xFFF1F1F1),
-          borderRadius: BorderRadius.circular(20),
+          color: selected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Text(
           range,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-            color: selected ? Colors.white : const Color(0xFF666666),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? Colors.white : const Color(0xFF64748B),
           ),
         ),
       ),
@@ -353,7 +348,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
             'Total Tokens: ${_filteredTokens.length}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: _textSecondary),
+            style: GoogleFonts.inter(fontSize: 14, color: _textSecondary, fontWeight: FontWeight.w500),
           ),
         ),
         const SizedBox(width: 8),
@@ -364,10 +359,10 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
               fit: BoxFit.scaleDown,
               child: Text(
                 'Total: ${_money(_filteredTokens.fold(0, (sum, item) => sum + item.amount))}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF16A34A),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF16A34A),
                 ),
               ),
             ),
@@ -379,27 +374,26 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   Widget _exportButton() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(bottom: 16, top: 4),
       child: SizedBox(
         width: double.infinity,
-        height: 48,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFDC2626),
             foregroundColor: Colors.white,
             elevation: 0,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           ),
           onPressed: _exportToPdf,
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.picture_as_pdf_outlined, size: 17),
-              SizedBox(width: 8),
+              const Icon(Icons.picture_as_pdf_outlined, size: 20),
+              const SizedBox(width: 8),
               Text(
                 'Export PDF Report',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
               ),
             ],
           ),

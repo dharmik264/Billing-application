@@ -211,82 +211,58 @@ class _MainScreenState extends State<MainScreen> {
     List<Map<String, dynamic>> leftNavs = regularNavs.sublist(0, half);
     List<Map<String, dynamic>> rightNavs = regularNavs.sublist(half);
 
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.bottomCenter,
-      children: [
-        Container(
-          height: 72,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(36),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
-              )
-            ],
+    return Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(36),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: leftNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'])).toList(),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: leftNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'])).toList(),
-              ),
-              const SizedBox(width: 80), // Space for center FAB
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: rightNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'])).toList(),
-              ),
-            ],
-          ),
-        ),
-        
-        if (tokenIndex != -1)
-          Positioned(
-            top: -24,
-            child: GestureDetector(
+          if (tokenIndex != -1)
+            GestureDetector(
               onTap: () => _onTabTapped(tokenIndex),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
+                  shape: BoxShape.circle,
                   gradient: const LinearGradient(
                     colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
                     )
                   ],
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.add_circle_outline, color: Colors.white, size: 24),
-                    const SizedBox(width: 8),
-                    Text(
-                      'New Token',
-                      style: GoogleFonts.inter(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
+                child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
               ),
             ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: rightNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'])).toList(),
           ),
-      ],
+        ],
+      ),
     );
   }
 

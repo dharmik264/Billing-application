@@ -5,9 +5,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/restaurant_api.dart';
 import '../utils/bill_counter.dart';
+import '../utils/local_storage_helper.dart';
 
 import 'print_preview_screen.dart';
 import 'main_screen.dart';
+import 'dart:typed_data';
 import 'edit_item_screen.dart';
 
 class _TokenProduct {
@@ -18,6 +20,7 @@ class _TokenProduct {
   final double price;
   final String category;
   final Color accent;
+  Uint8List? localImageBytes;
 
   _TokenProduct({
     required this.rawItem,
@@ -299,6 +302,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           builder: (_) => PrintPreviewScreen(
             tokenNumber: tokenNum,
             billNumber: billNum,
+            customerName: name.isNotEmpty ? name : null,
             customerPhone: phone.isNotEmpty ? phone : null,
             paymentMode: _paymentMode,
             items: apiToken.items,
@@ -322,10 +326,10 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     return Scaffold(
       backgroundColor: _panelBackground,
       appBar: AppBar(
-        title: Text('Token Generation', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _textPrimary, fontSize: 18)),
-        backgroundColor: Colors.white,
+        title: Text('Token Generation', style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: const Color(0xFF0F172A), fontSize: 20)),
+        backgroundColor: const Color(0xFFEEF2FF),
         elevation: 0,
-        iconTheme: const IconThemeData(color: _textPrimary),
+        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
         actions: [
           LayoutBuilder(
             builder: (context, constraints) {
@@ -388,13 +392,31 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               if (totalItems == 0) return const SizedBox.shrink();
               return Padding(
                 padding: const EdgeInsets.only(bottom: 72.0),
-                child: FloatingActionButton.extended(
-                  backgroundColor: const Color(0xFF4F46E5),
-                  onPressed: _openCartPage,
-                  icon: const Icon(Icons.receipt_long, color: Colors.white),
-                  label: Text(
-                    'View Bill ($totalItems)', 
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white)
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF6366F1)]),
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      )
+                    ]
+                  ),
+                  child: FloatingActionButton.extended(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    hoverElevation: 0,
+                    focusElevation: 0,
+                    highlightElevation: 0,
+                    onPressed: _openCartPage,
+                    icon: const Icon(Icons.receipt_long_rounded, color: Colors.white),
+                    label: Text(
+                      'View Bill ($totalItems)', 
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 16)
+                    ),
                   ),
                 ),
               );
@@ -410,27 +432,39 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     return Column(
       children: [
         Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+          decoration: const BoxDecoration(
+            color: Color(0xFFEEF2FF),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(32),
+              bottomRight: Radius.circular(32),
+            ),
+          ),
           child: Container(
-            height: 44,
+            height: 48,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9), // Slate 100
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                )
+              ],
             ),
             child: Row(
               children: [
-                const Icon(Icons.search_rounded, size: 20, color: _muted),
+                const Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    style: GoogleFonts.inter(fontSize: 14, color: _textPrimary, fontWeight: FontWeight.w500),
+                    style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF0F172A), fontWeight: FontWeight.w500),
                     decoration: InputDecoration(
                       hintText: 'Search items...',
-                      hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF94A3B8)),
+                      hintStyle: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w400),
                       border: InputBorder.none,
                       isDense: true,
                       contentPadding: EdgeInsets.zero,
@@ -438,16 +472,12 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   ),
                 ),
                 if (_searchController.text.isNotEmpty)
-                  InkWell(
-                    borderRadius: BorderRadius.circular(14),
+                  GestureDetector(
                     onTap: _searchController.clear,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFE2E8F0),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.close_rounded, size: 14, color: _textSecondary),
+                      decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
+                      child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF64748B)),
                     ),
                   ),
               ],
@@ -455,28 +485,35 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           ).animate().fadeIn().slideY(begin: -0.1),
         ),
         Container(
-          height: 50,
-          color: Colors.white,
-          child: ListView.builder(
+          height: 60,
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            itemCount: _categories.length,
-            itemBuilder: (context, index) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _categoryChip(_categories[index]),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            clipBehavior: Clip.none,
+            child: Row(
+              children: [
+                for (var i = 0; i < _categories.length; i++) ...[
+                  _categoryChip(_categories[i]),
+                  if (i != _categories.length - 1) const SizedBox(width: 8),
+                ],
+              ],
             ),
           ),
         ),
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
               : GridView.builder(
-                  padding: const EdgeInsets.only(left: 14, right: 14, top: 14, bottom: 120),
+                  padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 140),
+                  physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200,
-                    childAspectRatio: 0.85,
-                    crossAxisSpacing: 14,
-                    mainAxisSpacing: 14,
+                    maxCrossAxisExtent: 220,
+                    childAspectRatio: 0.80,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
                   ),
                   itemCount: _filteredProducts.length,
                   itemBuilder: (context, index) => _productCard(_filteredProducts[index]),
@@ -488,24 +525,35 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
 
   Widget _categoryChip(String category) {
     final selected = _selectedCategory == category;
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
+    return GestureDetector(
       onTap: () => setState(() => _selectedCategory = category),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: selected ? 18 : 16, vertical: 8),
-        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          gradient: selected ? const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF6366F1)]) : null,
-          color: selected ? null : const Color(0xFFF1F5F9),
+          color: selected ? const Color(0xFF4F46E5) : Colors.white,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: selected ? [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))] : null,
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  )
+                ],
         ),
         child: Text(
           category,
           style: GoogleFonts.inter(
             fontSize: 13,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
             color: selected ? Colors.white : const Color(0xFF64748B),
           ),
         ),
@@ -518,74 +566,100 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
       ),
       child: Column(
         children: [
           Container(
-            height: 80,
+            height: 90,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [product.accent.withValues(alpha: 0.1), product.accent.withValues(alpha: 0.02)],
+                colors: [product.accent.withValues(alpha: 0.15), product.accent.withValues(alpha: 0.05)],
               ),
             ),
-            child: Icon(Icons.restaurant_menu_rounded, size: 32, color: product.accent.withValues(alpha: 0.4)),
+            child: product.localImageBytes != null
+                ? Image.memory(
+                    product.localImageBytes!,
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                : FutureBuilder<Uint8List?>(
+                    future: LocalImageStorage.loadImageBytes('item_image_${product.code}.png'),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            setState(() {
+                              product.localImageBytes = snapshot.data;
+                            });
+                          }
+                        });
+                        return Image.memory(
+                          snapshot.data!,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: BoxFit.cover,
+                        );
+                      }
+                      return Icon(Icons.restaurant_menu_rounded, size: 36, color: product.accent.withValues(alpha: 0.6));
+                    },
+                  ),
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     product.code,
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: product.accent, letterSpacing: 0.5),
+                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: product.accent, letterSpacing: 0.5),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     product.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: _textPrimary),
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                   ),
                   const Spacer(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         '\u20B9${product.price.toStringAsFixed(0)}',
-                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: _textPrimary),
+                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
                       ),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(10),
+                      GestureDetector(
                         onTap: () => _addProduct(product),
                         child: Container(
-                          width: 28,
-                          height: 28,
+                          width: 32,
+                          height: 32,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: const Color(0xFF4F46E5),
-                            borderRadius: BorderRadius.circular(10),
+                            shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          child: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                          child: const Icon(Icons.add_rounded, size: 20, color: Colors.white),
                         ),
                       ),
                     ],
@@ -604,12 +678,12 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => Scaffold(
         appBar: AppBar(
-          title: Text('Current Bill', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _textPrimary, fontSize: 18)),
-          backgroundColor: Colors.white,
+          title: Text('Current Bill', style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: const Color(0xFF0F172A), fontSize: 20)),
+          backgroundColor: const Color(0xFFF8FAFC),
           elevation: 0,
-          iconTheme: const IconThemeData(color: _textPrimary),
+          iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
         ),
-        backgroundColor: _panelBackground,
+        backgroundColor: const Color(0xFFF8FAFC),
         body: ValueListenableBuilder<int>(
           valueListenable: _cartTrigger,
           builder: (context, _, __) {
@@ -624,28 +698,35 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Widget _buildCartSection({required bool isTablet}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFF8FAFC),
         boxShadow: isTablet ? null : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -5))],
       ),
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: _softBorder))),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Current Bill', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: _textPrimary)),
-                    InkWell(
-                      onTap: _clearCart,
-                      child: Text('Clear', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _danger)),
-                    ),
+                    Text('Customer Details', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A))),
+                    if (_billItems.isNotEmpty)
+                      GestureDetector(
+                        onTap: _clearCart,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Text('Clear Cart', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFFEF4444))),
+                        ),
+                      ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _customerNameController,
                   style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
@@ -653,22 +734,24 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     hintText: 'Customer Name (Required)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    filled: true,
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(24),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(24),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF4F46E5)),
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 TextField(
                   controller: _customerPhoneController,
                   keyboardType: TextInputType.phone,
@@ -677,18 +760,20 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     hintText: 'Customer Mobile (Required)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    filled: true,
+                    fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(24),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(24),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF4F46E5)),
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
                     ),
                   ),
                 ),
@@ -702,60 +787,90 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.shopping_cart_outlined, size: 48, color: Color(0xFFE2E8F0)),
-                          const SizedBox(height: 12),
-                          Text('Cart is empty', style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 16)),
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.shopping_bag_outlined, size: 64, color: Color(0xFF4F46E5)),
+                          ),
+                          const SizedBox(height: 20),
+                          Text('Your cart is empty', style: GoogleFonts.inter(color: const Color(0xFF0F172A), fontSize: 18, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 8),
+                          Text('Add items from the menu to start billing', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 14)),
                         ],
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       itemCount: _billItems.length,
                       itemBuilder: (context, index) {
                         final item = _billItems[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
                           child: Row(
                             children: [
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item.product.name, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: const Color(0xFF0F172A))),
+                                    Text(item.product.name, style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15, color: const Color(0xFF0F172A))),
                                     const SizedBox(height: 4),
-                                    Text('\u20B9${item.product.price.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 12)),
+                                    Text('\u20B9${item.product.price.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500)),
                                   ],
                                 ),
                               ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    InkWell(
-                                      onTap: () => _updateQuantity(index, -1),
-                                      child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.remove, size: 16, color: Color(0xFF0F172A))),
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => _updateQuantity(index, -1),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF1F5F9),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.remove_rounded, size: 18, color: Color(0xFF0F172A)),
                                     ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                      child: Text('${item.quantity}', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                                  ),
+                                  Container(
+                                    width: 32,
+                                    alignment: Alignment.center,
+                                    child: Text('${item.quantity}', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15, color: const Color(0xFF0F172A))),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () => _updateQuantity(index, 1),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.add_rounded, size: 18, color: Color(0xFF4F46E5)),
                                     ),
-                                    InkWell(
-                                      onTap: () => _updateQuantity(index, 1),
-                                      child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.add, size: 16, color: Color(0xFF0F172A))),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(width: 16),
                               SizedBox(
-                                width: 60,
+                                width: 70,
                                 child: Text(
                                   '\u20B9${item.total.toStringAsFixed(2)}',
                                   textAlign: TextAlign.right,
-                                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: const Color(0xFF0F172A)),
+                                  style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: const Color(0xFF0F172A)),
                                 ),
                               ),
                             ],
@@ -773,83 +888,91 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             },
           ),
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF8FAFC),
-              border: Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                  blurRadius: 20,
+                  offset: const Offset(0, -10),
+                )
+              ],
             ),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Subtotal', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 14)),
-                    Text('\u20B9${_subtotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF0F172A), fontSize: 14)),
+                    Text('Subtotal', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w500)),
+                    Text('\u20B9${_subtotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: const Color(0xFF0F172A), fontSize: 15)),
                   ],
                 ),
                 if (_taxAmount > 0) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Tax', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 14)),
-                      Text('\u20B9${_taxAmount.toStringAsFixed(2)}', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF0F172A), fontSize: 14)),
+                      Text('Tax', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w500)),
+                      Text('\u20B9${_taxAmount.toStringAsFixed(2)}', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: const Color(0xFF0F172A), fontSize: 15)),
                     ],
                   ),
                 ],
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                Container(height: 1, color: const Color(0xFFF1F5F9)),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Grand Total', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16, color: const Color(0xFF0F172A))),
-                    Text('\u20B9${_grandTotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 20, color: const Color(0xFF4F46E5))),
+                    Text('Grand Total', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18, color: const Color(0xFF0F172A))),
+                    Text('\u20B9${_grandTotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 24, color: const Color(0xFF4F46E5))),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 Row(
                   children: [
                     Expanded(
-                      child: InkWell(
+                      child: GestureDetector(
                         onTap: _billItems.isEmpty || _isSaving ? null : () {
                           setState(() => _paymentMode = 'CASH');
                           _cartTrigger.value++;
                           _saveBill();
                         },
-                        borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            color: _paymentMode == 'CASH' ? const Color(0xFF10B981).withValues(alpha: 0.1) : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            color: _paymentMode == 'CASH' ? const Color(0xFF10B981) : Colors.white,
+                            borderRadius: BorderRadius.circular(24),
                             border: Border.all(color: _paymentMode == 'CASH' ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
+                            boxShadow: _paymentMode == 'CASH' ? [BoxShadow(color: const Color(0xFF10B981).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : null,
                           ),
                           alignment: Alignment.center,
                           child: _isSaving && _paymentMode == 'CASH'
-                              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Color(0xFF10B981), strokeWidth: 2))
-                              : Text('CASH', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _paymentMode == 'CASH' ? const Color(0xFF10B981) : const Color(0xFF64748B))),
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : Text('CASH', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: _paymentMode == 'CASH' ? Colors.white : const Color(0xFF64748B))),
                         ),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: InkWell(
+                      child: GestureDetector(
                         onTap: _billItems.isEmpty || _isSaving ? null : () {
                           setState(() => _paymentMode = 'ONLINE');
                           _cartTrigger.value++;
                           _saveBill();
                         },
-                        borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5).withValues(alpha: 0.1) : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5) : Colors.white,
+                            borderRadius: BorderRadius.circular(24),
                             border: Border.all(color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0)),
+                            boxShadow: _paymentMode == 'ONLINE' ? [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : null,
                           ),
                           alignment: Alignment.center,
                           child: _isSaving && _paymentMode == 'ONLINE'
-                              ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(color: Color(0xFF4F46E5), strokeWidth: 2))
-                              : Text('ONLINE', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5) : const Color(0xFF64748B))),
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : Text('ONLINE', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: _paymentMode == 'ONLINE' ? Colors.white : const Color(0xFF64748B))),
                         ),
                       ),
                     ),

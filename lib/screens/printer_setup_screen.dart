@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
@@ -14,12 +15,12 @@ class PrinterSetupScreen extends StatefulWidget {
 }
 
 class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
-  static const Color _panelBackground = Color(0xFFF5F6FA);
-  static const Color _primary = Color(0xFF2563EB);
-  static const Color _textPrimary = Color(0xFF1F2937);
-  static const Color _textSecondary = Color(0xFF6B7280);
-  static const Color _softBorder = Color(0xFFEEEEEE);
-  static const Color _danger = Color(0xFFDC2626);
+  static const Color _panelBackground = Color(0xFFF8FAFC);
+  static const Color _primary = Color(0xFF4F46E5);
+  static const Color _textPrimary = Color(0xFF0F172A);
+  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _softBorder = Color(0xFFE2E8F0);
+  static const Color _danger = Color(0xFFEF4444);
   static const double _panelWidth = 360;
 
   bool _wifiEnabled = false;
@@ -96,8 +97,15 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
       clipBehavior: Clip.antiAlias,
       child: Container(
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFE0E0E0)),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
+          ],
         ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -137,27 +145,28 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: _softBorder, width: 0.5)),
+        border: const Border(bottom: BorderSide(color: _softBorder, width: 1.0)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2))],
       ),
       child: Row(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(12),
             onTap: _goBack,
             child: const Padding(
-              padding: EdgeInsets.all(2),
-              child: Icon(Icons.arrow_back, size: 19, color: Color(0xFF555555)),
+              padding: EdgeInsets.all(4),
+              child: Icon(Icons.arrow_back_rounded, size: 24, color: Color(0xFF64748B)),
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
+          Text(
             'Printer Setup',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w500,
+            style: GoogleFonts.inter(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
               color: _textPrimary,
             ),
           ),
@@ -173,53 +182,63 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
           borderRadius: BorderRadius.circular(12),
           onTap: (_isScanning || _isProcessing) ? null : _scanBluetooth,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
-              color: _primary,
-              borderRadius: BorderRadius.circular(12),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                )
+              ],
             ),
             child: Row(
               children: [
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: 40,
+                  height: 40,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: _isScanning
                       ? const SizedBox(
-                          width: 14,
-                          height: 14,
+                          width: 18,
+                          height: 18,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.bluetooth,
-                          size: 18, color: Colors.white),
+                      : const Icon(Icons.bluetooth_rounded,
+                          size: 20, color: Colors.white),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         _isScanning ? 'Scanning...' : 'Scan Bluetooth',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
                           color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'Find nearby wireless printers',
-                        style:
-                            TextStyle(fontSize: 12, color: Color(0xFF93C5FD)),
+                        style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFE0E7FF), fontWeight: FontWeight.w500),
                       ),
                     ],
                   ),
                 ),
-                const Icon(Icons.search, size: 18, color: Colors.white),
+                const Icon(Icons.search_rounded, size: 24, color: Colors.white),
               ],
             ),
           ),
@@ -234,9 +253,10 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
             child: Column(
               children: _devices
                   .map((device) => ListTile(
-                        title: Text(device.name ?? 'Unknown'),
-                        subtitle: Text(device.address ?? ''),
-                        trailing: const Icon(Icons.link, color: _primary),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        title: Text(device.name ?? 'Unknown', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                        subtitle: Text(device.address ?? '', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
+                        trailing: const Icon(Icons.link_rounded, color: _primary),
                         onTap: () => _connectDevice(device),
                       ))
                   .toList(),
@@ -260,41 +280,48 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
               }
             },
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _softBorder, width: 0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _softBorder, width: 1.0),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Row(
           children: [
             Container(
-              width: 34,
-              height: 34,
+              width: 44,
+              height: 44,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: _panelBackground,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.wifi, size: 18, color: Color(0xFF555555)),
+              child: const Icon(Icons.wifi_rounded, size: 24, color: Color(0xFF64748B)),
             ),
-            const SizedBox(width: 10),
-            const Expanded(
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'WiFi / Network',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                       color: _textPrimary,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     'Connect via IP Address',
-                    style: TextStyle(fontSize: 12, color: _textSecondary),
+                    style: GoogleFonts.inter(fontSize: 13, color: _textSecondary, fontWeight: FontWeight.w400),
                   ),
                 ],
               ),
@@ -310,104 +337,110 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
     if (!_connected) {
       return Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _softBorder, width: 0.5),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _softBorder, width: 1.0),
         ),
-        child: const Text(
+        child: Text(
           'No printer connected',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13, color: _textSecondary),
+          style: GoogleFonts.inter(fontSize: 14, color: _textSecondary, fontWeight: FontWeight.w500),
         ),
       );
     }
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _primary, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _primary, width: 2.0),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          )
+        ],
       ),
       child: Column(
         children: [
           Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 48,
+                height: 48,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.print, size: 20, color: _primary),
+                child: const Icon(Icons.print_rounded, size: 24, color: _primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 6,
-                      runSpacing: 3,
+                      spacing: 8,
+                      runSpacing: 4,
                       children: [
                         Text(
                           _wifiEnabled
                               ? 'Network Printer'
                               : (_connectedDevice?.name ?? 'Bluetooth Printer'),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                             color: _textPrimary,
                           ),
                         ),
                         _statusBadge(),
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       _wifiEnabled
                           ? 'WiFi \u00B7 Port 9100'
                           : 'Bluetooth \u00B7 MAC: ${_connectedDevice?.address ?? ''}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          const TextStyle(fontSize: 12, color: _textSecondary),
+                      style: GoogleFonts.inter(fontSize: 13, color: _textSecondary, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
                 child: _testPrintButton(),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               InkWell(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 onTap: _isProcessing
                     ? null
                     : () => setState(() => _showDisconnectPrompt = true),
                 child: Container(
-                  width: 44,
-                  height: 44,
+                  width: 48,
+                  height: 48,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: const Color(0xFFFECACA),
-                      width: 0.5,
+                      width: 1.0,
                     ),
                   ),
-                  child: const Icon(Icons.link_off, size: 18, color: _danger),
+                  child: const Icon(Icons.link_off_rounded, size: 20, color: _danger),
                 ),
               ),
             ],
@@ -419,17 +452,17 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
 
   Widget _statusBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFD1FAE5),
+        color: const Color(0xFFDCFCE7),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: const Text(
+      child: Text(
         'Connected',
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF065F46),
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF166534),
         ),
       ),
     );
@@ -437,7 +470,7 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
 
   Widget _testPrintButton() {
     return InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       onTap: _isProcessing
           ? null
           : () async {
@@ -445,21 +478,21 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
               await PrinterService.instance.printTest();
             },
       child: Container(
-        height: 44,
+        height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: _panelBackground,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _softBorder, width: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _softBorder, width: 1.0),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.edit_outlined, size: 14, color: _textSecondary),
-            SizedBox(width: 6),
+            const Icon(Icons.edit_document, size: 18, color: _textSecondary),
+            const SizedBox(width: 8),
             Text(
               'Test Print',
-              style: TextStyle(fontSize: 13, color: _textSecondary),
+              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _textSecondary),
             ),
           ],
         ),
@@ -469,31 +502,31 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
 
   Widget _disconnectPrompt() {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFFFEF2F2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFECACA), width: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFECACA), width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Disconnect Printer?',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF991B1B),
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF991B1B),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             _wifiEnabled
                 ? 'This will disconnect the network printer. You will not be able to print until reconnected.'
                 : 'This will disconnect ${_connectedDevice?.name ?? 'the printer'}. You will not be able to print until reconnected.',
-            style: const TextStyle(fontSize: 12, color: Color(0xFFB91C1C)),
+            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFB91C1C), fontWeight: FontWeight.w500),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -504,7 +537,7 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
                   () => setState(() => _showDisconnectPrompt = false),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: _promptButton(
                   'Disconnect',
@@ -527,21 +560,21 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
     VoidCallback onTap,
   ) {
     return InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: Container(
-        height: 40,
+        height: 44,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFFECACA), width: 0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFFECACA), width: 1.0),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
             color: color,
           ),
         ),
@@ -579,67 +612,68 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
     final selected = _paperSize == size;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       onTap: _isProcessing ? null : () => setState(() => _paperSize = size),
       child: Container(
-        height: 142,
-        padding: const EdgeInsets.all(14),
+        height: 156,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEFF6FF) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: selected ? const Color(0xFFEEF2FF) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected ? _primary : _softBorder,
-            width: selected ? 1.5 : 0.5,
+            width: selected ? 2.0 : 1.0,
           ),
         ),
         child: Column(
           children: [
             Container(
               width: paperWidth,
-              height: 46,
+              height: 48,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: selected ? Colors.white : _panelBackground,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: const Color(0xFFDDDDDD)),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
               ),
               child: Text(
                 size.replaceAll(' ', ''),
-                style: const TextStyle(fontSize: 9, color: _mutedColor),
+                style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w600),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               size,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: selected ? const Color(0xFF1E40AF) : _textPrimary,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: selected ? _primary : _textPrimary,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Expanded(
               child: Text(
                 description,
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: selected ? const Color(0xFF3B82F6) : _textSecondary,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: selected ? const Color(0xFF6366F1) : _textSecondary,
                 ),
               ),
             ),
             if (selected)
               Container(
-                width: 18,
-                height: 18,
+                width: 22,
+                height: 22,
                 alignment: Alignment.center,
                 decoration: const BoxDecoration(
                   color: _primary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check, size: 11, color: Colors.white),
+                child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
               ),
           ],
         ),
@@ -650,14 +684,14 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   Widget _saveButton() {
     return SizedBox(
       width: double.infinity,
-      height: 48,
+      height: 54,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: _primary,
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(24),
           ),
         ),
         onPressed: _isProcessing
@@ -675,13 +709,13 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
               },
         child: _isProcessing
             ? const SizedBox(
-                width: 20,
-                height: 20,
+                width: 24,
+                height: 24,
                 child: CircularProgressIndicator(
                     color: Colors.white, strokeWidth: 2))
-            : const Text(
+            : Text(
                 'Save Printer Settings',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
               ),
       ),
     );
@@ -714,11 +748,11 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: _textSecondary,
-          letterSpacing: 0.5,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF94A3B8),
+          letterSpacing: 0.8,
         ),
       ),
     );

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
 import 'edit_item_screen.dart';
 import '../widgets/skeleton_loader.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import '../utils/local_storage_helper.dart';
 
 class ItemManagementScreen extends StatefulWidget {
   const ItemManagementScreen({super.key});
@@ -51,7 +55,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
             Column(
               children: [
                 _buildHeader(),
-                _buildSearch(),
                 _buildCategoryTabs(),
                 Expanded(child: _buildItemList()),
               ],
@@ -77,64 +80,82 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _softBorder, width: 0.5)),
+        color: Color(0xFFEEF2FF),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(32),
+          bottomRight: Radius.circular(32),
+        ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Expanded(
-            child: Text(
-              'Item Management',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: _textPrimary,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Item Management',
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: _isProcessing ? null : _addCategory,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: _textPrimary,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-              minimumSize: const Size(0, 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-                side: const BorderSide(color: Color(0xFFDDDDDD)),
+              GestureDetector(
+                onTap: _isProcessing ? null : _addCategory,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.category_rounded, size: 14, color: Color(0xFF4F46E5)),
+                      const SizedBox(width: 6),
+                      Text('Category', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            icon: const Icon(Icons.category, size: 16),
-            label: const Text(
-              'Add Category',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: _isProcessing ? null : _addItem,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _orange,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-              minimumSize: const Size(0, 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _isProcessing ? null : _addItem,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4F46E5),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.add_circle_outline, size: 14, color: Colors.white),
+                      const SizedBox(width: 6),
+                      Text('Item', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text(
-              'Add Item',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
+            ],
           ),
+          const SizedBox(height: 20),
+          _buildSearch(),
         ],
       ),
     );
@@ -144,43 +165,46 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Widget _buildSearch() {
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: _panelBackground,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.search, size: 16, color: _muted),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                style: const TextStyle(fontSize: 14, color: _textPrimary),
-                decoration: const InputDecoration(
-                  hintText: 'Search by name or code...',
-                  hintStyle: TextStyle(fontSize: 14, color: Color(0xFFBBBBBB)),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
+      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF0F172A), fontWeight: FontWeight.w500),
+              decoration: InputDecoration(
+                hintText: 'Search items by name or code...',
+                hintStyle: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w400),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
               ),
             ),
-            if (_searchController.text.isNotEmpty)
-              InkWell(
-                borderRadius: BorderRadius.circular(14),
-                onTap: _searchController.clear,
-                child: const Padding(
-                  padding: EdgeInsets.all(2),
-                  child: Icon(Icons.close, size: 16, color: _muted),
-                ),
+          ),
+          if (_searchController.text.isNotEmpty)
+            GestureDetector(
+              onTap: _searchController.clear,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
+                child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF64748B)),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -195,16 +219,11 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: _softBorder, width: 0.5),
-          bottom: BorderSide(color: _softBorder, width: 0.5),
-        ),
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        clipBehavior: Clip.none,
         child: Row(
           children: [
             for (var i = 0; i < categories.length; i++) ...[
@@ -221,24 +240,36 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     final selected = _selectedCategory == value;
     final label = value == 'All Items' ? 'All Items (${_items.length})' : value;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
       onTap: () => setState(() => _selectedCategory = value),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: selected ? 14 : 12,
-          vertical: 6,
-        ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF111111) : const Color(0xFFF1F1F1),
-          borderRadius: BorderRadius.circular(20),
+          color: selected ? const Color(0xFF4F46E5) : Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  )
+                ],
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-            color: selected ? Colors.white : const Color(0xFF666666),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            color: selected ? Colors.white : const Color(0xFF64748B),
           ),
         ),
       ),
@@ -250,6 +281,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
   Widget _buildItemList() {
     if (_loading) {
       return ListView.builder(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
         itemCount: 6,
         itemBuilder: (context, index) => const SkeletonListItem(),
       );
@@ -259,76 +291,108 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
     return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
-          child: items.isEmpty
-              ? Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: _softBorder, width: 0.5),
+        items.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 100),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.inventory_2_outlined, size: 64, color: Color(0xFFCBD5E1)),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No items found',
+                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF94A3B8)),
+                      ),
+                    ],
                   ),
-                  child: const Text(
-                    'No matching items',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: _textSecondary),
-                  ),
-                )
-              : ListView.builder(
-                  itemCount: items.length,
-                  itemBuilder: (context, index) => _itemCard(items[index], isLast: index == items.length - 1),
                 ),
-        ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
+                physics: const BouncingScrollPhysics(),
+                itemCount: items.length,
+                itemBuilder: (context, index) => _itemCard(items[index]),
+              ),
         if (_isProcessing)
           Positioned.fill(
             child: Container(
               color: Colors.white.withValues(alpha: 0.5),
-              child: const Center(child: CircularProgressIndicator()),
+              child: const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5))),
             ),
           ),
       ],
     );
   }
 
-  Widget _itemCard(_MenuItem item, {required bool isLast}) {
-    final activeTextColor = item.active ? _textPrimary : _muted;
-    final secondaryColor = item.active ? _muted : const Color(0xFFCCCCCC);
+  Widget _itemCard(_MenuItem item) {
+    final isActive = item.active;
 
     return Container(
-      margin: EdgeInsets.only(bottom: isLast ? 14 : 8),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _softBorder, width: 0.5),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          )
+        ],
       ),
       child: Column(
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Opacity(
-                opacity: item.active ? 1 : 0.5,
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F0F0),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.restaurant_menu,
-                    size: 24,
-                    color: Color(0xFFCCCCCC),
-                  ),
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: isActive ? const Color(0xFFEEF2FF) : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(16),
                 ),
+                clipBehavior: Clip.antiAlias,
+                child: item.localImageBytes != null
+                    ? Image.memory(
+                        item.localImageBytes!,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                      )
+                    : FutureBuilder<Uint8List?>(
+                        future: LocalImageStorage.loadImageBytes('item_image_${item.code}.png'),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                            // Cache it to avoid flickering on rebuilds
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (mounted) {
+                                setState(() {
+                                  item.localImageBytes = snapshot.data;
+                                });
+                              }
+                            });
+                            return Image.memory(
+                              snapshot.data!,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                            );
+                          }
+                          return Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 24,
+                            color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+                          );
+                        },
+                      ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -336,56 +400,38 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                         Expanded(
                           child: Text(
                             item.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: activeTextColor,
+                            style: GoogleFonts.inter(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        _statusBadge(item.active),
+                        _statusBadge(isActive),
                       ],
                     ),
-                    const SizedBox(height: 2),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        '${item.code} · ${item.category}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: 11, color: secondaryColor),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${item.code} • ${item.category}',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF94A3B8),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           '₹${item.price.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: activeTextColor,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
                           ),
                         ),
-                        // Active / Inactive toggle
-                        Row(
-                          children: [
-                            Text(
-                              item.active ? 'Active' : 'Inactive',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: item.active ? _green : secondaryColor,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            _activeSwitch(item),
-                          ],
-                        ),
+                        _activeSwitch(item),
                       ],
                     ),
                   ],
@@ -393,28 +439,45 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
+          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 12),
           Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Expanded(
-                child: _cardButton(
-                  label: 'Edit',
-                  icon: Icons.edit_outlined,
-                  background: _panelBackground,
-                  border: _softBorder,
-                  color: _textSecondary,
-                  onTap: () => _editItem(item),
+              GestureDetector(
+                onTap: () => _editItem(item),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.edit_rounded, size: 14, color: Color(0xFF475569)),
+                      const SizedBox(width: 6),
+                      Text('Edit', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _cardButton(
-                  label: 'Delete',
-                  icon: Icons.delete_outline,
-                  background: const Color(0xFFFEF2F2),
-                  border: const Color(0xFFFECACA),
-                  color: _danger,
-                  onTap: () => _deleteItem(item),
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: () => _deleteItem(item),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete_outline_rounded, size: 14, color: Color(0xFFEF4444)),
+                      const SizedBox(width: 6),
+                      Text('Delete', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444))),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -426,17 +489,17 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Widget _statusBadge(bool active) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: active ? const Color(0xFFD1FAE5) : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(20),
+        color: active ? const Color(0xFFD1FAE5) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         active ? 'Active' : 'Inactive',
-        style: TextStyle(
+        style: GoogleFonts.inter(
           fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: active ? const Color(0xFF065F46) : _textSecondary,
+          fontWeight: FontWeight.w700,
+          color: active ? const Color(0xFF059669) : const Color(0xFF64748B),
         ),
       ),
     );
@@ -447,53 +510,29 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     return GestureDetector(
       onTap: () => _toggleActiveStatus(item),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: 38,
-        height: 22,
+        duration: const Duration(milliseconds: 200),
+        width: 44,
+        height: 24,
         padding: const EdgeInsets.all(3),
         alignment: item.active ? Alignment.centerRight : Alignment.centerLeft,
         decoration: BoxDecoration(
-          color: item.active ? _green : const Color(0xFFDDDDDD),
-          borderRadius: BorderRadius.circular(11),
+          color: item.active ? const Color(0xFF10B981) : const Color(0xFFCBD5E1),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Container(
-          width: 16,
-          height: 16,
-          decoration: const BoxDecoration(
+          width: 18,
+          height: 18,
+          decoration: BoxDecoration(
             color: Colors.white,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              )
+            ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _cardButton({
-    required String label,
-    required IconData icon,
-    required Color background,
-    required Color border,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: onTap,
-      child: Container(
-        height: 36,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: border, width: 0.5),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 5),
-            Text(label, style: TextStyle(fontSize: 13, color: color)),
-          ],
         ),
       ),
     );
@@ -580,6 +619,10 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     if (result == null) return;
 
     setState(() => _isProcessing = true);
+    
+    if (result.imageBytes != null) {
+      await LocalImageStorage.saveImage('item_image_${result.code}.png', result.imageBytes!);
+    }
 
     final draft = ApiItemDraft(
       name: result.name,
@@ -588,7 +631,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       rate: result.rate,
       active: result.active,
       availableOnline: result.online,
-      imageBase64: result.imageBase64,
+      imageBase64: result.imageBytes != null ? base64Encode(result.imageBytes!) : null,
     );
     ApiItem? savedItem;
     String? errorMessage;
@@ -604,7 +647,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
           0,
           savedItem == null
               ? _MenuItem.fromEditResult(result)
-              : _MenuItem.fromApiItem(savedItem),
+              : _MenuItem.fromApiItem(savedItem).copyWith(localImageBytes: result.imageBytes),
         );
         _selectedCategory = 'All Items';
         _searchController.clear();
@@ -629,6 +672,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
           initialRate: item.price,
           initialOnline: item.online,
           initialActive: item.active,
+          initialImageBytes: item.localImageBytes,
         ),
       ),
     );
@@ -636,6 +680,10 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     if (result == null) return;
 
     setState(() => _isProcessing = true);
+    
+    if (result.imageBytes != null) {
+      await LocalImageStorage.saveImage('item_image_${result.code}.png', result.imageBytes!);
+    }
 
     final index = _items.indexOf(item);
     if (index == -1) {
@@ -650,7 +698,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       rate: result.rate,
       active: result.active,
       availableOnline: result.online,
-      imageBase64: result.imageBase64,
+      imageBase64: result.imageBytes != null ? base64Encode(result.imageBytes!) : null,
     );
     ApiItem? savedItem;
     String? errorMessage;
@@ -666,7 +714,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       setState(() {
         _items[index] = savedItem == null
             ? _MenuItem.fromEditResult(result).copyWith(id: item.id)
-            : _MenuItem.fromApiItem(savedItem);
+            : _MenuItem.fromApiItem(savedItem).copyWith(localImageBytes: result.imageBytes);
         _isProcessing = false;
       });
 
@@ -764,6 +812,7 @@ class _MenuItem {
     required this.price,
     required this.active,
     required this.online,
+    this.localImageBytes,
   });
 
   factory _MenuItem.fromEditResult(EditItemResult result, {String? id}) {
@@ -775,6 +824,7 @@ class _MenuItem {
       price: result.rate,
       active: result.active,
       online: result.online,
+      localImageBytes: result.imageBytes,
     );
   }
 
@@ -797,6 +847,7 @@ class _MenuItem {
   final double price;
   bool active;
   bool online;
+  Uint8List? localImageBytes;
 
   _MenuItem copyWith({
     String? id,
@@ -806,6 +857,7 @@ class _MenuItem {
     double? price,
     bool? active,
     bool? online,
+    Uint8List? localImageBytes,
   }) {
     return _MenuItem(
       id: id ?? this.id,
@@ -815,6 +867,7 @@ class _MenuItem {
       price: price ?? this.price,
       active: active ?? this.active,
       online: online ?? this.online,
+      localImageBytes: localImageBytes ?? this.localImageBytes,
     );
   }
 }

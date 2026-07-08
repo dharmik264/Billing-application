@@ -19,6 +19,7 @@ class PrintPreviewScreen extends StatefulWidget {
     this.orderId = '#2904-X',
     this.tokenNumber = '#T-001',
     this.billNumber,
+    this.customerName,
     this.customerPhone,
     this.paymentMode = 'Cash',
     this.logoBase64,
@@ -33,6 +34,7 @@ class PrintPreviewScreen extends StatefulWidget {
   final String orderId;
   final String tokenNumber;
   final String? billNumber;
+  final String? customerName;
   final String? customerPhone;
   final String paymentMode;
   final Future<ApiToken?> Function()? onSaveBill;
@@ -52,12 +54,12 @@ class PrintPreviewScreen extends StatefulWidget {
 }
 
 class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
-  static const Color _panelBackground = Color(0xFFF5F6FA);
-  static const Color _primary = Color(0xFF2563EB);
-  static const Color _textPrimary = Color(0xFF1F2937);
-  static const Color _textSecondary = Color(0xFF6B7280);
-  static const Color _muted = Color(0xFFAAAAAA);
-  static const Color _softBorder = Color(0xFFEEEEEE);
+  static const Color _panelBackground = Color(0xFFF8FAFC);
+  static const Color _primary = Color(0xFF4F46E5);
+  static const Color _textPrimary = Color(0xFF0F172A);
+  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _muted = Color(0xFF94A3B8);
+  static const Color _softBorder = Color(0xFFE2E8F0);
   static const double _panelWidth = 360;
 
   String _shopName = 'GOURMET EXPRESS';
@@ -183,7 +185,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: Stack(
           children: [
@@ -218,9 +220,15 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: _panelBackground,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.08),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          )
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -322,7 +330,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
               height: 32,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
-                color: Color(0xFFEFF6FF),
+                color: Color(0xFFEEF2FF),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.share, size: 16, color: _primary),
@@ -343,6 +351,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       shopData: _shopData,
       tokenNumber: _actualTokenNumber,
       billNumber: widget.billNumber,
+      customerName: widget.customerName,
       customerPhone: widget.customerPhone,
       date: _formatDate(DateTime.now()),
       time: _formatTime(DateTime.now()),
@@ -390,9 +399,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
           child: _stackedButton(
             label: 'Customer Slip',
             subtitle: 'Print Bill',
-            icon: Icons.receipt_long_outlined,
+            icon: Icons.receipt_long_rounded,
             background: _primary,
-            subtitleColor: const Color(0xFF93C5FD),
+            subtitleColor: const Color(0xFFC7D2FE),
             isLoading: _isPrinting,
             onTap: _saveAndPrint,
           ),
@@ -422,15 +431,32 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     required VoidCallback onTap,
     bool isLoading = false,
   }) {
+    final bool isPrimary = background == _primary;
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(20),
       onTap: isLoading ? null : onTap,
       child: Container(
         height: 62,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(12),
+          color: isPrimary ? null : background,
+          gradient: isPrimary
+              ? const LinearGradient(
+                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isPrimary
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
         ),
         child: isLoading
             ? const Center(
@@ -521,15 +547,15 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     VoidCallback onTap,
   ) {
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       onTap: onTap,
       child: Container(
         height: 42,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: _panelBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _softBorder, width: 0.5),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _softBorder, width: 1),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -661,7 +687,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                             width: 64,
                             height: 64,
                             decoration: const BoxDecoration(
-                              color: Color(0xFF2563EB),
+                              color: Color(0xFF4F46E5),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.print,
@@ -674,7 +700,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F2937),
+                              color: Color(0xFF0F172A),
                             ),
                           ),
                         ],

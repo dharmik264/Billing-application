@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'otp_login_screen.dart';
@@ -18,12 +19,12 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const Color _panelBackground = Color(0xFFF5F6FA);
-  static const Color _primary = Color(0xFF2563EB);
-  static const Color _textPrimary = Color(0xFF1F2937);
-  static const Color _textSecondary = Color(0xFF6B7280);
-  static const Color _softBorder = Color(0xFFEEEEEE);
-  static const Color _danger = Color(0xFFDC2626);
+  static const Color _panelBackground = Color(0xFFF8FAFC);
+  static const Color _primary = Color(0xFF4F46E5);
+  static const Color _textPrimary = Color(0xFF0F172A);
+  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _softBorder = Color(0xFFE2E8F0);
+  static const Color _danger = Color(0xFFEF4444);
   ApiShopData? _shopData;
   bool _isPrinterConnected = false;
 
@@ -159,22 +160,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'POS Version 2.4.0 (Build 842)',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: _textSecondary),
+                  style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
                 ),
-                const SizedBox(height: 2),
-                const Text(
+                const SizedBox(height: 4),
+                Text(
                   'DESIGNED WITH \u2665 FOR GASTRONOMY',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFFCCCCCC),
-                    letterSpacing: 0.5,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFFCBD5E1),
+                    letterSpacing: 1.0,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -184,18 +186,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: _softBorder, width: 0.5)),
+        border: const Border(bottom: BorderSide(color: _softBorder, width: 1.0)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2))],
       ),
-      child: const Row(
+      child: Row(
         children: [
           Text(
             'Settings',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+            style: GoogleFonts.inter(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
               color: _textPrimary,
             ),
           ),
@@ -206,27 +209,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _profileCard() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _softBorder, width: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 56,
+            height: 56,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: const Color(0xFFFFF7ED),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
             ),
             child: const Icon(Icons.restaurant_menu,
-                size: 24, color: Color(0xFFEA580C)),
+                size: 28, color: Color(0xFFEA580C)),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,31 +244,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _shopData?.name ?? 'Shop Name',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
+                  style: GoogleFonts.inter(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
                     color: _textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   _shopData?.id != null ? 'ID: ${_shopData!.id}' : 'Loading...',
-                  style: const TextStyle(fontSize: 12, color: _textSecondary),
+                  style: GoogleFonts.inter(fontSize: 13, color: _textSecondary, fontWeight: FontWeight.w500),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 8),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Premium Plan',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF166534),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF166534),
                     ),
                   ),
                 ),
@@ -281,11 +290,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         Container(
           clipBehavior: Clip.antiAlias,
-          margin: const EdgeInsets.only(bottom: 16),
+          margin: const EdgeInsets.only(bottom: 24),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _softBorder, width: 0.5),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -293,7 +308,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _settingsRow(rows[index]),
                 if (index != rows.length - 1)
                   const Divider(
-                      height: 0.5, thickness: 0.5, color: Color(0xFFF0F0F0)),
+                      height: 1.0, thickness: 1.0, color: Color(0xFFF1F5F9)),
               ],
             ],
           ),
@@ -306,61 +321,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return InkWell(
       onTap: data.onTap ?? () => _showSnackBar('${data.title} opened'),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Row(
           children: [
             Container(
-              width: 34,
-              height: 34,
+              width: 40,
+              height: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: data.iconBackground,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(data.icon, size: 17, color: data.iconColor),
+              child: Icon(data.icon, size: 20, color: data.iconColor),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     data.title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                       color: data.danger ? _danger : _textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 4),
                   Text(
                     data.subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: _textSecondary),
+                    style: GoogleFonts.inter(fontSize: 13, color: _textSecondary, fontWeight: FontWeight.w400),
                   ),
                 ],
               ),
             ),
             if (data.badge != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: data.badgeBackground,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   data.badge!,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
                     color: data.badgeColor,
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
             ],
-            const Icon(Icons.chevron_right, size: 16, color: Color(0xFFBBBBBB)),
+            const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFFCBD5E1)),
           ],
         ),
       ),
@@ -372,11 +387,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       alignment: Alignment.centerLeft,
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: _textSecondary,
-          letterSpacing: 0.5,
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: const Color(0xFF94A3B8),
+          letterSpacing: 0.8,
         ),
       ),
     );

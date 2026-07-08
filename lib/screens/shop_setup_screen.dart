@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/restaurant_api.dart';
 import '../widgets/bill_receipt_widget.dart';
 import '../utils/app_constants.dart';
+import '../utils/local_storage_helper.dart';
 import 'main_screen.dart';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -199,16 +200,22 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
           }
         }
 
-        if (shop.logoUrl != null && shop.logoUrl!.isNotEmpty) {
-          try {
-            _logoBytes = base64Decode(shop.logoUrl!);
-          } catch (_) {}
-        }
-        if (shop.qrUrl != null && shop.qrUrl!.isNotEmpty) {
-          try {
-            _qrBytes = base64Decode(shop.qrUrl!);
-          } catch (_) {}
-        }
+        // Load images from local storage directly
+        LocalImageStorage.loadImageBytes('shop_logo.png').then((bytes) {
+          if (mounted && bytes != null) {
+            setState(() {
+              _logoBytes = bytes;
+            });
+          }
+        });
+        
+        LocalImageStorage.loadImageBytes('shop_qr.png').then((bytes) {
+          if (mounted && bytes != null) {
+            setState(() {
+              _qrBytes = bytes;
+            });
+          }
+        });
       });
     } catch (_) {
       // Keep defaults if backend is unavailable
@@ -1106,6 +1113,13 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     try {
       final logoBase64 = _logoBytes != null ? base64Encode(_logoBytes!) : null;
       final qrBase64 = _qrBytes != null ? base64Encode(_qrBytes!) : null;
+
+      if (_logoBytes != null) {
+        await LocalImageStorage.saveImage('shop_logo.png', _logoBytes!);
+      }
+      if (_qrBytes != null) {
+        await LocalImageStorage.saveImage('shop_qr.png', _qrBytes!);
+      }
 
       await RestaurantApi.instance.saveShop(
         ApiShopDraft(

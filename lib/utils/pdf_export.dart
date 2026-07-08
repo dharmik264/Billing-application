@@ -236,15 +236,15 @@ class PdfExport {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey300),
       columnWidths: const {
-        0: pw.FlexColumnWidth(1.5),
-        1: pw.FlexColumnWidth(1.5),
-        2: pw.FlexColumnWidth(1.5),
-        3: pw.FlexColumnWidth(2.5),
-        4: pw.FlexColumnWidth(2.5),
-        5: pw.FlexColumnWidth(2.5), // Items
+        0: pw.FlexColumnWidth(1.2), // Bill No
+        1: pw.FlexColumnWidth(1.2), // Token No
+        2: pw.FlexColumnWidth(1.5), // Type
+        3: pw.FlexColumnWidth(2.0), // Customer
+        4: pw.FlexColumnWidth(2.0), // Date
+        5: pw.FlexColumnWidth(3.5), // Items (given more width for full bill)
         6: pw.FlexColumnWidth(1.5), // Amount
         7: pw.FlexColumnWidth(1.5), // Payment
-        8: pw.FlexColumnWidth(1.5), // Status
+        8: pw.FlexColumnWidth(1.2), // Status
       },
       children: [
         pw.TableRow(
@@ -266,6 +266,7 @@ class PdfExport {
             children: [
               _dataCell(t.billNumber),
               _dataCell(t.tokenNumber),
+              _dataCell(t.orderType),
               _dataCell(t.customerName.isEmpty
                   ? '-'
                   : '${t.customerName}\n${t.customerPhone}'),

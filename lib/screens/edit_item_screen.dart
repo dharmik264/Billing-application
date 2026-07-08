@@ -19,6 +19,7 @@ class EditItemScreen extends StatefulWidget {
     this.initialRate,
     this.initialOnline = true,
     this.initialActive = true,
+    this.initialImageBytes,
   });
 
   final String? initialName;
@@ -27,6 +28,7 @@ class EditItemScreen extends StatefulWidget {
   final double? initialRate;
   final bool initialOnline;
   final bool initialActive;
+  final Uint8List? initialImageBytes;
 
   @override
   State<EditItemScreen> createState() => _EditItemScreenState();
@@ -65,6 +67,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
     _category = widget.initialCategory;
     _availableOnline = widget.initialOnline;
     _activeStatus = widget.initialActive;
+    _imageBytes = widget.initialImageBytes;
     _loadCustomCategories();
   }
 
@@ -737,7 +740,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
         rate: rate,
         online: _availableOnline,
         active: _activeStatus,
-        imageBase64: _imageBytes != null ? base64Encode(_imageBytes!) : null,
+        imageBytes: _imageBytes,
       ),
     );
   }
@@ -761,7 +764,7 @@ class EditItemResult {
     required this.rate,
     required this.online,
     required this.active,
-    this.imageBase64,
+    this.imageBytes,
   });
 
   final String name;
@@ -770,5 +773,5 @@ class EditItemResult {
   final double rate;
   final bool online;
   final bool active;
-  final String? imageBase64;
+  final Uint8List? imageBytes;
 }
