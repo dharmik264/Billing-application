@@ -1,6 +1,3 @@
-import 'dart:math' as math;
-
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
@@ -200,7 +197,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: _border),
                     ),
-                    child: Icon(Icons.close_rounded, size: 20, color: _textPrimary),
+                    child: const Icon(Icons.close_rounded, size: 20, color: _textPrimary),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -267,7 +264,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     fit: BoxFit.cover,
                   ),
                 )
-              : Column(
+              : const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.add_a_photo_outlined, size: 24, color: _primary),
@@ -296,7 +293,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(color: _panelBackground, borderRadius: BorderRadius.circular(10)),
-                    child: Icon(Icons.camera_alt_outlined, color: _primary),
+                    child: const Icon(Icons.camera_alt_outlined, color: _primary),
                   ),
                   title: Text('Take Photo', style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: _textPrimary)),
                   onTap: () {
@@ -308,7 +305,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(color: _panelBackground, borderRadius: BorderRadius.circular(10)),
-                    child: Icon(Icons.photo_library_outlined, color: _primary),
+                    child: const Icon(Icons.photo_library_outlined, color: _primary),
                   ),
                   title: Text('Choose from Gallery', style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: _textPrimary)),
                   onTap: () {

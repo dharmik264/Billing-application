@@ -888,4 +888,3 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   }
 }
 
-const Color _mutedColor = Color(0xFFAAAAAA);

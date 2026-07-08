@@ -17,13 +17,8 @@ class ItemManagementScreen extends StatefulWidget {
 
 class _ItemManagementScreenState extends State<ItemManagementScreen> {
   static const Color _panelBackground = Color(0xFFF5F6FA);
-  static const Color _textPrimary = Color(0xFF0F172A);
   static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _muted = Color(0xFFAAAAAA);
-  static const Color _softBorder = Color(0xFFEEEEEE);
-  static const Color _danger = Color(0xFFDC2626);
   static const Color _orange = Color(0xFFEA580C);
-  static const Color _green = Color(0xFF16A34A);
   String _selectedCategory = 'All Items';
   final bool _showOnlyActive = false;
 

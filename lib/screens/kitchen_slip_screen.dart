@@ -14,7 +14,6 @@ class KitchenSlipScreen extends StatefulWidget {
 }
 
 class _KitchenSlipScreenState extends State<KitchenSlipScreen> {
-  static const Color _panelBackground = Color(0xFFF8FAFC);
   static const Color _textPrimary = Color(0xFF0F172A);
   static const Color _textSecondary = Color(0xFF64748B);
   static const Color _softBorder = Color(0xFFE2E8F0);

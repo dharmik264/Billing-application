@@ -54,7 +54,6 @@ class PrintPreviewScreen extends StatefulWidget {
 }
 
 class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
-  static const Color _panelBackground = Color(0xFFF8FAFC);
   static const Color _primary = Color(0xFF4F46E5);
   static const Color _textPrimary = Color(0xFF0F172A);
   static const Color _textSecondary = Color(0xFF64748B);

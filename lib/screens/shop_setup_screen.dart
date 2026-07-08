@@ -407,7 +407,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: _border),
               ),
-              child: Icon(Icons.arrow_back_rounded, size: 20, color: _textPrimary),
+              child: const Icon(Icons.arrow_back_rounded, size: 20, color: _textPrimary),
             ),
           ),
           const SizedBox(width: 16),
@@ -757,134 +757,6 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       contentPadding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,
       activeThumbColor: _primary,
-    );
-  }
-
-  Widget _buildBillSettingsPanel() {
-    return ExpansionTile(
-      title: Text('Bill Customization Settings',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: _textPrimary)),
-      childrenPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      tilePadding: EdgeInsets.zero,
-      children: [
-        _buildSectionTitle('Invoice Settings'),
-        _buildToggle('Auto Generate Invoice Number', 'autoGenerateInvoice'),
-        _buildToggle('Show Invoice Number', 'showInvoiceNumber'),
-        _buildToggle('Show Date & Time', 'showDateTime'),
-        _buildToggle('Show Cashier Name', 'showCashierName'),
-        const Divider(),
-        _buildSectionTitle('Customer Information'),
-        _buildToggle('Show Customer Name', 'showCustomerName'),
-        _buildToggle('Show Customer Mobile Number', 'showCustomerMobile'),
-        const Divider(),
-        _buildSectionTitle('Item Table Settings'),
-        _buildToggle('Show Item Name', 'showItemName'),
-        _buildToggle('Show Quantity', 'showQuantity'),
-        _buildToggle('Show Unit Price', 'showUnitPrice'),
-        _buildToggle('Show Total Price', 'showTotalPrice'),
-        const Divider(),
-        _buildSectionTitle('Amount Calculation Settings'),
-        _buildToggle('Show Subtotal', 'showSubtotal'),
-        _buildToggle('Show Discount', 'showDiscount'),
-        _buildToggle('Show GST/Tax', 'showGstTax'),
-        _buildToggle('Show Round Off', 'showRoundOff'),
-        _buildToggle('Show Grand Total', 'showGrandTotal'),
-        const Divider(),
-        _buildSectionTitle('Payment Settings'),
-        _buildToggle('Show Payment Method', 'showPaymentMethod'),
-        _buildToggle('Show QR Code on Bill', 'showQrCode'),
-        _buildToggle('Show UPI ID', 'showUpiId'),
-        const Divider(),
-        _buildSectionTitle('Footer Settings'),
-        _buildTextField(
-            label: 'Thank You Message', controller: _thankYouMessageController),
-        const SizedBox(height: 10),
-        _buildTextField(
-            label: 'Custom Footer Note',
-            controller: _customFooterNoteController),
-        const SizedBox(height: 10),
-        _buildTextField(
-            label: 'Terms & Conditions',
-            controller: _termsAndConditionsController),
-      ],
-    );
-  }
-
-  // ── Bill preview ───────────────────────────────────────────
-
-  Widget _buildBillPreview() {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(child: _fieldLabel('Bill Slip Preview')),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFEF3C7),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Live Preview',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF92400E),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        BillReceiptWidget(
-          template: ApiBillTemplate(
-            id: 'preview',
-            shopName: _receiptShopName,
-            tagline: _receiptTagline,
-            mobileNumber:
-                _phoneController.text.isEmpty ? null : _phoneController.text,
-            address: _addressController.text.isEmpty
-                ? null
-                : _addressController.text,
-            email: _emailController.text.isEmpty ? null : _emailController.text,
-            gstNumber:
-                _gstinController.text.isEmpty ? null : _gstinController.text,
-            showInvoiceNumber: _billSettings['showInvoiceNumber'] ?? true,
-            showDateTime: _billSettings['showDateTime'] ?? true,
-            showCustomerDetails: (_billSettings['showCustomerName'] ?? true) ||
-                (_billSettings['showCustomerMobile'] ?? true),
-            showDiscount: _billSettings['showDiscount'] ?? true,
-            showTax: _billSettings['showGstTax'] ?? true,
-            showItemName: _billSettings['showItemName'] ?? true,
-            showQuantity: _billSettings['showQuantity'] ?? true,
-            showUnitPrice: _billSettings['showUnitPrice'] ?? true,
-            showTotalPrice: _billSettings['showTotalPrice'] ?? true,
-            showSubtotal: _billSettings['showSubtotal'] ?? true,
-            showRoundOff: _billSettings['showRoundOff'] ?? true,
-            showGrandTotal: _billSettings['showGrandTotal'] ?? true,
-            showPaymentMethod: _billSettings['showPaymentMethod'] ?? true,
-            showUpiId: _billSettings['showUpiId'] ?? true,
-            footerMessage: _thankYouMessageController.text,
-            termsAndConditions: _termsAndConditionsController.text,
-            themeColor: '#000000',
-            templateDesign: 'standard',
-          ),
-          shopData: ApiShopData(
-            id: 'preview',
-            name: _receiptShopName,
-            tagline: _receiptTagline,
-            upiId: _upiIdController.text.isEmpty ? null : _upiIdController.text,
-            billSettings: _billSettings,
-          ),
-          subtotal: 12.00,
-          tax: 0.60,
-          grandTotal: 12.60,
-          logoBytesOverride: _logoBytes,
-          qrBytesOverride: _qrBytes,
-        ),
-      ],
     );
   }
 

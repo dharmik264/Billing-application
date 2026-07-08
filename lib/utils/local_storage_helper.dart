@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
@@ -14,7 +15,7 @@ class LocalImageStorage {
       await file.writeAsBytes(bytes);
       return filePath;
     } catch (e) {
-      print('Error saving image to local storage: $e');
+      debugPrint('Error saving image to local storage: $e');
       return '';
     }
   }
@@ -25,11 +26,12 @@ class LocalImageStorage {
       final directory = await getApplicationDocumentsDirectory();
       final filePath = path.join(directory.path, fileName);
       final file = File(filePath);
+      // ignore: avoid_slow_async_io
       if (await file.exists()) {
         return await file.readAsBytes();
       }
     } catch (e) {
-      print('Error loading image from local storage: $e');
+      debugPrint('Error loading image from local storage: $e');
     }
     return null;
   }
@@ -40,12 +42,13 @@ class LocalImageStorage {
       final directory = await getApplicationDocumentsDirectory();
       final filePath = path.join(directory.path, fileName);
       final file = File(filePath);
+      // ignore: avoid_slow_async_io
       if (await file.exists()) {
         await file.delete();
         return true;
       }
     } catch (e) {
-      print('Error deleting image from local storage: $e');
+      debugPrint('Error deleting image from local storage: $e');
     }
     return false;
   }

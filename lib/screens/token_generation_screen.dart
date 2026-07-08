@@ -55,11 +55,7 @@ class TokenGenerationScreen extends StatefulWidget {
 class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   static const Color _panelBackground = Color(0xFFF5F6FA);
 
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _muted = Color(0xFF94A3B8);
   static const Color _softBorder = Color(0xFFE2E8F0);
-  static const Color _danger = Color(0xFFDC2626);
 
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _customerNameController = TextEditingController();
@@ -839,8 +835,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                                     onTap: () => _updateQuantity(index, -1),
                                     child: Container(
                                       padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFF1F5F9),
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFF1F5F9),
                                         shape: BoxShape.circle,
                                       ),
                                       child: const Icon(Icons.remove_rounded, size: 18, color: Color(0xFF0F172A)),
