@@ -7,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/restaurant_api.dart';
-import '../widgets/bill_receipt_widget.dart';
 import '../utils/app_constants.dart';
 import '../utils/local_storage_helper.dart';
 import 'main_screen.dart';
@@ -730,36 +729,6 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8, top: 4),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          title,
-          style: GoogleFonts.inter(
-              fontSize: 15, fontWeight: FontWeight.w600, color: _primary),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToggle(String title, String key) {
-    return SwitchListTile(
-      title: Text(title,
-          style: GoogleFonts.inter(fontSize: 13, color: _textPrimary)),
-      value: _billSettings[key] ?? true,
-      onChanged: _saving
-          ? null
-          : (val) {
-              setState(() => _billSettings[key] = val);
-            },
-      contentPadding: EdgeInsets.zero,
-      visualDensity: VisualDensity.compact,
-      activeThumbColor: _primary,
-    );
-  }
-
   // ── Save button ────────────────────────────────────────────
 
   Widget _buildBottomNav() {
@@ -891,18 +860,6 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
         ),
       ),
     );
-  }
-
-  // ── Computed helpers ───────────────────────────────────────
-
-  String get _receiptShopName {
-    final value = _shopNameController.text.trim();
-    return value.isEmpty ? 'SHOP NAME' : value.toUpperCase();
-  }
-
-  String get _receiptTagline {
-    final value = _taglineController.text.trim();
-    return value.isEmpty ? 'Your shop tagline' : value;
   }
 
   void _refreshPreview() => setState(() {});
