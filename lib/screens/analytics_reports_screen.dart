@@ -71,7 +71,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   color: Colors.black.withValues(alpha: 0.05),
                   child: const Center(
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4F46E5)),
                     ),
                   ),
                 ),

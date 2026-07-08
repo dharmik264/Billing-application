@@ -451,7 +451,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
         _settingsRow(
           icon: Icons.public,
           iconBackground: const Color(0xFFEFF6FF),
-          iconColor: const Color(0xFF2563EB),
+          iconColor: const Color(0xFF4F46E5),
           title: 'Available Online',
           subtitle: 'Show this item on your website',
           value: _availableOnline,

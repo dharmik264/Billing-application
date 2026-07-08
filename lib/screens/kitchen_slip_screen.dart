@@ -14,10 +14,10 @@ class KitchenSlipScreen extends StatefulWidget {
 }
 
 class _KitchenSlipScreenState extends State<KitchenSlipScreen> {
-  static const Color _panelBackground = Color(0xFFF5F6FA);
-  static const Color _textPrimary = Color(0xFF1F2937);
-  static const Color _textSecondary = Color(0xFF6B7280);
-  static const Color _softBorder = Color(0xFFEEEEEE);
+  static const Color _panelBackground = Color(0xFFF8FAFC);
+  static const Color _textPrimary = Color(0xFF0F172A);
+  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _softBorder = Color(0xFFE2E8F0);
   static const Color _orange = Color(0xFFEA580C);
   static const double _panelWidth = 360;
 
@@ -28,7 +28,7 @@ class _KitchenSlipScreenState extends State<KitchenSlipScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8FAFC),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -50,9 +50,15 @@ class _KitchenSlipScreenState extends State<KitchenSlipScreen> {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: _panelBackground,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.08),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          )
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
