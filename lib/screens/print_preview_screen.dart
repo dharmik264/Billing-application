@@ -12,6 +12,7 @@ import '../services/printer_service.dart';
 import 'kitchen_slip_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'success_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class PrintPreviewScreen extends StatefulWidget {
   const PrintPreviewScreen({
