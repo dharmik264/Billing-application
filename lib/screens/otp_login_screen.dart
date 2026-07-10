@@ -73,6 +73,11 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     try {
       final responseMap = await RestaurantApi.instance.devLogin(phone);
       final prefs = await SharedPreferences.getInstance();
+      
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('loginPhone', phone);
+      await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
+      
       if (responseMap.containsKey('user')) {
          final userMap = responseMap['user'];
          await prefs.setString('account_status', userMap['account_status'] ?? '');
@@ -104,6 +109,12 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
       if (superAdmins.isEmpty) throw Exception('No Super Admin found');
       
       await RestaurantApi.instance.devLogin(superAdmins.first['phone']);
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('loginPhone', superAdmins.first['phone']);
+      await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
+      
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -155,8 +166,10 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
 
     setState(() => _isLoading = true);
 
+    bool otpSentSuccessfully = false;
     try {
       final devOtp = await RestaurantApi.instance.requestOtp(mobile);
+      otpSentSuccessfully = true;
       if (devOtp != null && devOtp.isNotEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -165,22 +178,37 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
             backgroundColor: Colors.blue,
           ),
         );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('OTP sent to your mobile number'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
     } catch (e) {
+      otpSentSuccessfully = false;
       if (mounted) {
+        String errMsg = e.toString().replaceAll('Exception: ', '');
+        // Friendly messages for common errors
+        if (errMsg.contains('Please register first') || errMsg.contains('register')) {
+          errMsg = 'Phone number not registered. Please register first.';
+        } else if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup') || errMsg.contains('network')) {
+          errMsg = 'No internet connection. Please check and try again.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
+            content: Text(errMsg),
             backgroundColor: Colors.red,
           ),
         );
       }
-      // Temporary frontend mode continues even when the backend is offline.
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
 
-    if (!mounted) return;
+    // Only show OTP screen if request was successful
+    if (!mounted || !otpSentSuccessfully) return;
     setState(() {
       _showOTPSection = true;
       _hasError = false;

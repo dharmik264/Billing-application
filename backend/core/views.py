@@ -63,6 +63,10 @@ class SendOTPView(APIView):
         serializer.is_valid(raise_exception=True)
         phone = serializer.validated_data['phone']
 
+        # Check if user exists
+        if not User.objects.filter(phone=phone).exists():
+            return Response({'error': 'Please register first'}, status=status.HTTP_400_BAD_REQUEST)
+
         # Invalidate old OTPs
         OTP.objects.filter(phone=phone, is_used=False).update(is_used=True)
 

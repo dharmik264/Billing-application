@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/restaurant_api.dart';
-import 'super_admin_dashboard_screen.dart';
+import 'super_admin_main_screen.dart';
 
 class SuperAdminLoginScreen extends StatefulWidget {
   const SuperAdminLoginScreen({super.key});
@@ -45,9 +46,15 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
     setState(() => _isLoading = true);
     try {
       await RestaurantApi.instance.devLogin(phone);
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('loginPhone', phone);
+      await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
+      
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const SuperAdminDashboardScreen()),
+          MaterialPageRoute(builder: (context) => const SuperAdminMainScreen()),
           (route) => false,
         );
       }
@@ -73,9 +80,14 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
       );
 
       if (response.containsKey('access')) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('loginPhone', _idController.text.trim());
+        await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
+
         if (!mounted) return;
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const SuperAdminDashboardScreen()),
+          MaterialPageRoute(builder: (context) => const SuperAdminMainScreen()),
           (route) => false,
         );
       } else {
