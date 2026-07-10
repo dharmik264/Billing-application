@@ -723,18 +723,33 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Future<void> _deleteItem(_MenuItem item) async {
     setState(() => _isProcessing = true);
+    
     if (item.id != null) {
       try {
         await RestaurantApi.instance.deleteItem(item.id!);
-      } catch (_) {}
+        if (mounted) {
+          setState(() {
+            _items.remove(item);
+            _isProcessing = false;
+          });
+          _showSnackBar('${item.name} deleted');
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          _showSnackBar('Failed to delete ${item.name}: $e');
+        }
+      }
+    } else {
+      // Local only item
+      if (mounted) {
+        setState(() {
+          _items.remove(item);
+          _isProcessing = false;
+        });
+        _showSnackBar('${item.name} deleted');
+      }
     }
-    if (mounted) {
-      setState(() {
-        _items.remove(item);
-        _isProcessing = false;
-      });
-    }
-    _showSnackBar('${item.name} deleted');
   }
 
   /// Immediately toggle active/inactive and persist to DB.

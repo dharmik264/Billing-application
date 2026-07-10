@@ -31,10 +31,10 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
       });
     } catch (e) {
       String errMsg = e.toString();
-      if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup')) {
-        errMsg = 'Unable to connect to server. Please check your internet connection.';
+      if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup') || errMsg.contains('TimeoutException')) {
+        errMsg = 'Unable to connect to server. Please try again.';
       } else {
-        errMsg = 'Failed to load dev super admins.';
+        errMsg = 'Failed to load dev super admins. Error: $errMsg';
       }
       _showSnack(errMsg);
     } finally {

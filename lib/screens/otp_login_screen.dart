@@ -56,10 +56,10 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     } catch (e) {
       if (mounted) {
         String errMsg = e.toString();
-        if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup')) {
-          errMsg = 'Unable to connect to server. Please check your internet connection.';
+        if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup') || errMsg.contains('TimeoutException')) {
+          errMsg = 'Unable to connect to server. Please try again.';
         } else {
-          errMsg = 'Failed to load dev users.';
+          errMsg = 'Failed to load dev users. Error: $errMsg';
         }
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg), backgroundColor: Colors.red));
       }
@@ -322,8 +322,8 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     bool isSetupComplete = prefs.getBool('isSetupComplete') ?? false;
     try {
       final shop = await RestaurantApi.instance.fetchShop(forceRefresh: true);
-      // 'My Restaurant' is the default name in backend. If changed, setup is done.
-      if (shop.name.isNotEmpty && shop.name != 'My Restaurant') {
+      // Shop setup screen sets paymentModesConfig when saved. Registration leaves it null.
+      if (shop.paymentModesConfig != null && shop.paymentModesConfig!.isNotEmpty) {
         isSetupComplete = true;
         await prefs.setBool('isSetupComplete', true);
       }
