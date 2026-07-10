@@ -11,6 +11,30 @@ from .models import User, OTP, AppSettings, SubscriptionPlan
 from .serializers import SendOTPSerializer, VerifyOTPSerializer, UserSerializer, AppSettingsSerializer, RegisterSerializer, SubscriptionPlanSerializer
 from shop.models import Shop
 from tokens.models import Token
+from django.contrib.auth import authenticate
+
+
+class PasswordLoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        phone = request.data.get('phone')
+        password = request.data.get('password')
+
+        user = authenticate(username=phone, password=password)
+        if user is None:
+            return Response({'error': 'Invalid mobile number or password'}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        if not user.can_login:
+            return Response({'error': 'Your account is pending approval or inactive.'}, status=status.HTTP_403_FORBIDDEN)
+            
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': UserSerializer(user).data
+        }, status=status.HTTP_200_OK)
+
 
 
 class RegisterView(APIView):
@@ -39,7 +63,9 @@ class RegisterView(APIView):
             trial_start=now,
             trial_end=trial_end
         )
-        user.set_unusable_password()
+        password = serializer.validated_data['password']
+        user.set_password(password)
+        user.save()
         
         Shop.objects.create(owner=user, name=shop_name, email=email, phone=phone)
         

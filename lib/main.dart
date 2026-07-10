@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/otp_login_screen.dart';
+import 'screens/password_login_screen.dart';
 import 'screens/shop_setup_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/super_admin_main_screen.dart';
@@ -111,7 +111,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // Routing Management Logic
       if (!isLoggedIn) {
-        _navigateTo(const OTPLoginScreen());
+        _navigateTo(const PasswordLoginScreen());
       } else if (!isSetupComplete) {
         _navigateTo(const ShopSetupScreen());
       } else {
@@ -122,7 +122,7 @@ class _SplashScreenState extends State<SplashScreen> {
       debugPrint('Initialization error: $e');
       if (mounted) {
         _navigateTo(
-            const OTPLoginScreen()); // Fallback to login on critical failure
+            const PasswordLoginScreen()); // Fallback to login on critical failure
       }
     }
   }

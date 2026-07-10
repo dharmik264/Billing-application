@@ -17,6 +17,7 @@ class RegisterSerializer(serializers.Serializer):
     phone     = serializers.CharField(max_length=15)
     shop_name = serializers.CharField(max_length=200)
     email     = serializers.EmailField(required=False, allow_blank=True)
+    password  = serializers.CharField(write_only=True)
 
     def validate_phone(self, value):
         import re

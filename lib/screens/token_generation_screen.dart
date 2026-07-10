@@ -232,21 +232,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     final name = _customerNameController.text.trim();
     final phone = _customerPhoneController.text.trim();
 
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Customer Name is required')),
-      );
-      return;
-    }
-
-    if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Customer Mobile Number is required')),
-      );
-      return;
-    }
-
-    if (!RegExp(r'^\d{10}$').hasMatch(phone)) {
+    if (phone.isNotEmpty && !RegExp(r'^\d{10}$').hasMatch(phone)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid 10-digit mobile number')),
       );
@@ -723,29 +709,75 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                TextField(
-                  controller: _customerNameController,
-                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
-                  decoration: InputDecoration(
-                    hintText: 'Customer Name (Required)',
-                    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
-                    prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
-                    ),
-                  ),
+                RawAutocomplete<Map<String, dynamic>>(
+                  textEditingController: _customerNameController,
+                  focusNode: FocusNode(),
+                  optionsBuilder: (TextEditingValue textEditingValue) async {
+                    if (textEditingValue.text.length < 2) {
+                      return const Iterable<Map<String, dynamic>>.empty();
+                    }
+                    try {
+                      return await RestaurantApi.instance.searchCustomers(textEditingValue.text);
+                    } catch (_) {
+                      return const Iterable<Map<String, dynamic>>.empty();
+                    }
+                  },
+                  displayStringForOption: (option) => option['customer_name'] ?? '',
+                  onSelected: (option) {
+                    _customerPhoneController.text = option['customer_phone'] ?? '';
+                  },
+                  fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+                      decoration: InputDecoration(
+                        hintText: 'Customer Name (Optional)',
+                        hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+                        prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF94A3B8)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24),
+                          borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
+                        ),
+                      ),
+                    );
+                  },
+                  optionsViewBuilder: (context, onSelected, options) {
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: Material(
+                        elevation: 4,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          width: MediaQuery.of(context).size.width - 40,
+                          constraints: const BoxConstraints(maxHeight: 200),
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: options.length,
+                            itemBuilder: (context, index) {
+                              final option = options.elementAt(index);
+                              return ListTile(
+                                title: Text(option['customer_name'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                                subtitle: Text(option['customer_phone'] ?? '', style: GoogleFonts.inter(color: Colors.grey)),
+                                onTap: () => onSelected(option),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -753,7 +785,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   keyboardType: TextInputType.phone,
                   style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
                   decoration: InputDecoration(
-                    hintText: 'Customer Mobile (Required)',
+                    hintText: 'Customer Mobile (Optional)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF94A3B8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

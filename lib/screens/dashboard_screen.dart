@@ -7,7 +7,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../services/restaurant_api.dart';
 import '../utils/app_constants.dart';
 import '../widgets/stat_card.dart';
-import 'printer_setup_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'password_login_screen.dart';
 import 'print_preview_screen.dart';
 import 'all_tokens_screen.dart';
 
@@ -201,7 +202,34 @@ class DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PrinterSetupScreen())),
+                          onTap: () async {
+                            bool? confirm = await showDialog(
+                              context: context,
+                              builder: (c) => AlertDialog(
+                                title: Text('Logout', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+                                content: const Text('Are you sure you want to logout?'),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(c, true),
+                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                    child: const Text('Logout', style: TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              )
+                            );
+                            if (confirm == true) {
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.clear();
+                              if (context.mounted) {
+                                Navigator.of(context).pushAndRemoveUntil(
+                                  MaterialPageRoute(builder: (_) => const PasswordLoginScreen()),
+                                  (route) => false,
+                                );
+                              }
+                            }
+                          },
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -215,7 +243,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                                 )
                               ],
                             ),
-                            child: const Icon(Icons.print_rounded, color: Color(0xFF4F46E5), size: 16),
+                            child: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 16),
                           ),
                         ),
                       ],

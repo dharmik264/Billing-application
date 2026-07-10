@@ -121,16 +121,29 @@ class RestaurantApi {
     return response;
   }
 
+  Future<Map<String, dynamic>> login(String phone, String password) async {
+    final response = await _post('auth/login/', {
+      'phone': phone,
+      'password': password,
+    });
+    if (response.containsKey('access') && response.containsKey('refresh')) {
+      await saveTokens(response['access'], response['refresh']);
+    }
+    return response;
+  }
+
   Future<Map<String, dynamic>> registerUser({
     required String name,
     required String phone,
     required String shopName,
+    required String password,
     String? email,
   }) async {
     return await _post('auth/register/', {
       'name': name,
       'phone': phone,
       'shop_name': shopName,
+      'password': password,
       'email': email ?? '',
     });
   }
@@ -320,6 +333,11 @@ class RestaurantApi {
 
   Future<void> cancelToken(String id) async {
     await _patch('tokens/$id/cancel/', {});
+  }
+
+  Future<List<Map<String, dynamic>>> searchCustomers(String query) async {
+    final response = await _get('tokens/customers/search/?q=$query');
+    return List<Map<String, dynamic>>.from(response);
   }
 
   Future<void> deleteToken(String id) async {

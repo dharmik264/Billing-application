@@ -251,3 +251,25 @@ class TodaySummaryView(APIView):
             'upi':           paid.filter(payment_mode__in=['online / upi', 'upi', 'online']).aggregate(s=Sum('total'))['s'] or 0,
             'card':          paid.filter(payment_mode__iexact='card').aggregate(s=Sum('total'))['s'] or 0,
         })
+
+class CustomerSearchAPIView(APIView):
+    """Search unique customers from past tokens for autocomplete"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from shop.models import Shop
+        from django.db.models import Q
+        shop = Shop.get_shop(request.user)
+        query = request.query_params.get('q', '').strip()
+
+        qs = Token.objects.filter(shop=shop).exclude(customer_name='').exclude(customer_phone='')
+        
+        if query:
+            qs = qs.filter(Q(customer_name__icontains=query) | Q(customer_phone__icontains=query))
+            
+        customers = qs.values('customer_name', 'customer_phone').distinct()[:20]
+        
+        return Response([{
+            'name': c['customer_name'],
+            'phone': c['customer_phone']
+        } for c in customers])

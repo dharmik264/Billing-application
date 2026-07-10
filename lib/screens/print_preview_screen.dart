@@ -70,6 +70,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   bool _isLoading = true;
   bool _isPrinting = false;
   ApiToken? _savedToken;
+  
+  bool _printCustomerSlip = true;
+  bool _printKitchenSlip = true;
 
   String _formatDate(DateTime date) {
     final months = [
@@ -392,29 +395,43 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   }
 
   Widget _primaryPrintActions() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
+        Row(
+          children: [
+            Expanded(
+              child: CheckboxListTile(
+                title: Text('Customer Slip', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                value: _printCustomerSlip,
+                onChanged: (val) => setState(() => _printCustomerSlip = val ?? true),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                activeColor: _primary,
+              ),
+            ),
+            Expanded(
+              child: CheckboxListTile(
+                title: Text('Kitchen Slip', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                value: _printKitchenSlip,
+                onChanged: (val) => setState(() => _printKitchenSlip = val ?? true),
+                controlAffinity: ListTileControlAffinity.leading,
+                contentPadding: EdgeInsets.zero,
+                activeColor: _primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
           child: _stackedButton(
-            label: 'Customer Slip',
-            subtitle: 'Print Bill',
-            icon: Icons.receipt_long_rounded,
+            label: 'Print Selected Slips',
+            subtitle: 'Send to Printer',
+            icon: Icons.print_rounded,
             background: _primary,
             subtitleColor: const Color(0xFFC7D2FE),
             isLoading: _isPrinting,
-            onTap: _saveAndPrint,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _stackedButton(
-            label: 'Kitchen Slip',
-            subtitle: 'Send to KOT',
-            icon: Icons.restaurant_menu,
-            background: const Color(0xFF111111),
-            subtitleColor: _muted,
-            isLoading: _isPrinting,
-            onTap: _openKitchenSlip,
+            onTap: _executePrint,
           ),
         ),
       ],
@@ -568,8 +585,13 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
-  void _saveAndPrint() async {
+  void _executePrint() async {
     if (_isPrinting) return;
+    if (!_printCustomerSlip && !_printKitchenSlip) {
+      _showSnackBar('Please select at least one slip to print');
+      return;
+    }
+    
     setState(() => _isPrinting = true);
     
     if (widget.onSaveBill != null && _savedToken == null) {
@@ -606,16 +628,13 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       return;
     }
     
-
-    
-    // Use savedToken or mock a token for printing if not saving
     final tokenToPrint = _savedToken ?? ApiToken(
       id: '',
       tokenNumber: _actualTokenNumber,
       billNumber: widget.billNumber ?? '',
       status: 'PENDING',
-      customerName: '',
-      customerPhone: '',
+      customerName: widget.customerName ?? '',
+      customerPhone: widget.customerPhone ?? '',
       grandTotal: widget.grandTotal,
       paymentMode: widget.paymentMode,
       createdAt: DateTime.now().toIso8601String(),
@@ -631,14 +650,20 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       orderType: 'dine_in',
     );
 
-    // Hardware Printing Call
     try {
-      if (_shopData != null && _billTemplate != null) {
+      if (_printCustomerSlip && _shopData != null && _billTemplate != null) {
         await PrinterService.instance
             .printReceipt(tokenToPrint, _shopData!, _billTemplate!)
             .timeout(const Duration(seconds: 5));
-        _showSnackBar('Receipt sent to thermal printer');
       }
+      
+      if (_printKitchenSlip) {
+        await PrinterService.instance
+            .printKitchenSlip(tokenToPrint)
+            .timeout(const Duration(seconds: 5));
+      }
+      
+      _showSnackBar('Slips sent to thermal printer');
     } catch (e) {
       debugPrint('Printer error: $e');
       _showSnackBar('Printer Error: ${e.toString()}');
@@ -647,6 +672,12 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     }
 
     _showPrintSuccessAnimationAndPrint();
+  }
+
+  void _saveAndPrint() async {
+    _printCustomerSlip = true;
+    _printKitchenSlip = false;
+    _executePrint();
   }
 
   void _showPrintSuccessAnimationAndPrint() async {
