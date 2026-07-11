@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'otp_login_screen.dart';
+
+import 'password_login_screen.dart';
 import 'printer_setup_screen.dart';
 import 'shop_setup_screen.dart';
 import 'payment_modes_screen.dart';
@@ -148,16 +149,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       danger: true,
                       onTap: () async {
                         final prefs = await SharedPreferences.getInstance();
-                        await prefs.remove('isLoggedIn');
-                        await prefs.remove('loginPhone');
-                        await prefs.remove('loginTimestamp');
-                        await prefs.remove('accessToken');
-                        await prefs.remove('refreshToken');
-                        await prefs.remove('isSetupComplete');
+                        await prefs.clear();
+                        await RestaurantApi.instance.clearTokens();
                         if (!mounted) return;
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(
-                              builder: (_) => const OTPLoginScreen()),
+                              builder: (_) => const PasswordLoginScreen()),
                           (route) => false,
                         );
                       },

@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/restaurant_api.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'otp_login_screen.dart';
+import 'password_login_screen.dart';
 import 'super_admin_shop_requests_screen.dart';
 import 'super_admin_user_roles_screen.dart';
 import 'super_admin_plan_settings_screen.dart';
@@ -98,14 +98,12 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
 
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', false);
-    await prefs.remove('loginPhone');
-    await prefs.remove('access_token');
-    await prefs.remove('refresh_token');
+    await prefs.clear();
+    await RestaurantApi.instance.clearTokens();
     
     if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const OTPLoginScreen()),
+        MaterialPageRoute(builder: (context) => const PasswordLoginScreen()),
         (route) => false,
       );
     }

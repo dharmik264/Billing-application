@@ -222,6 +222,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                             if (confirm == true) {
                               final prefs = await SharedPreferences.getInstance();
                               await prefs.clear();
+                              await RestaurantApi.instance.clearTokens();
                               if (context.mounted) {
                                 Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(builder: (_) => const PasswordLoginScreen()),
