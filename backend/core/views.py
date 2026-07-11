@@ -422,3 +422,49 @@ class DevLoginView(APIView):
             }, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class PublicSubscriptionPlanListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = SubscriptionPlanSerializer
+    queryset = SubscriptionPlan.objects.filter(is_active=True).order_by('display_order', 'id')
+
+class SystemSettingsView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        from .models import SystemSettings
+        from .serializers import SystemSettingsSerializer
+        settings = SystemSettings.get_settings()
+        serializer = SystemSettingsSerializer(settings, context={'request': request})
+        return Response(serializer.data)
+
+class SubmitSubscriptionPaymentView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        from .models import SubscriptionPlan, SubscriptionPayment
+        plan_id = request.data.get('plan_id')
+        transaction_id = request.data.get('transaction_id')
+        billing_cycle = request.data.get('billing_cycle', 'monthly')
+        
+        if not plan_id or not transaction_id:
+            return Response({'error': 'plan_id and transaction_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            plan = SubscriptionPlan.objects.get(id=plan_id, is_active=True)
+        except SubscriptionPlan.DoesNotExist:
+            return Response({'error': 'Invalid plan'}, status=status.HTTP_404_NOT_FOUND)
+            
+        amount = plan.price_monthly if billing_cycle == 'monthly' else plan.price_yearly
+            
+        payment = SubscriptionPayment.objects.create(
+            user=request.user,
+            plan=plan,
+            billing_cycle=billing_cycle,
+            transaction_id=transaction_id,
+            amount_paid=amount,
+            status='pending'
+        )
+        
+        from .serializers import SubscriptionPaymentSerializer
+        return Response(SubscriptionPaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
+

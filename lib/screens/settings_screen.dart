@@ -8,6 +8,7 @@ import 'shop_setup_screen.dart';
 import 'payment_modes_screen.dart';
 import 'tax_settings_screen.dart';
 import 'token_prefix_screen.dart';
+import 'subscription_plans_screen.dart';
 import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
 
@@ -26,6 +27,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const Color _softBorder = Color(0xFFE2E8F0);
   static const Color _danger = Color(0xFFEF4444);
   ApiShopData? _shopData;
+  ApiUser? _user;
   bool _isPrinterConnected = false;
 
   @override
@@ -38,11 +40,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final shop = RestaurantApi.instance.shopData ??
           await RestaurantApi.instance.fetchShop();
+      final user = await RestaurantApi.instance.fetchProfile();
       final isConnected = await PrinterService.instance.isConnected;
 
       if (!mounted) return;
       setState(() {
         _shopData = shop;
+        _user = user;
         _isPrinterConnected = isConnected;
       });
     } catch (_) {}
@@ -72,6 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.all(14),
             child: Column(
               children: [
+                if (_user != null) _subscriptionCard(),
                 _profileCard(),
                 _settingsSection(
                   title: 'Store Management',
@@ -201,6 +206,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
               fontWeight: FontWeight.w800,
               color: _textPrimary,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _subscriptionCard() {
+    bool isTrial = _user?.accountStatus == 'trial';
+    String planName = _user?.approvedPlan ?? 'Unknown Plan';
+    if (isTrial) planName = 'Trial Plan Active';
+    String statusStr = _user?.accountStatus.toUpperCase() ?? 'PENDING';
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4F46E5), Color(0xFF3730A3)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Subscription',
+                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  statusStr,
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            planName,
+            style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          if (_user?.trialEnd != null)
+            Text(
+              'Valid until: ',
+              style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+            ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () => _open(const SubscriptionPlansScreen()),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF4F46E5),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('View Plans / Upgrade'),
           ),
         ],
       ),

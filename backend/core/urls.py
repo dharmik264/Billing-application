@@ -5,7 +5,8 @@ from .views import (
     RegisterView, PasswordLoginView, ShopRequestsView, ShopRequestActionView, SuperAdminStatsView,
     SuperAdminLoginView, SuperAdminUsersView, SuperAdminUpdatePermissionsView,
     SuperAdminDeleteUserView, SuperAdminSubscriptionPlanListCreateView, SuperAdminSubscriptionPlanDetailView,
-    DevUsersView, DevLoginView
+    DevUsersView, DevLoginView,
+    PublicSubscriptionPlanListView, SystemSettingsView, SubmitSubscriptionPaymentView
 )
 
 urlpatterns = [
@@ -30,4 +31,9 @@ urlpatterns = [
     # Developer Mode Endpoints
     path('dev/users/', DevUsersView.as_view(), name='dev-users'),
     path('dev/login/', DevLoginView.as_view(), name='dev-login'),
+    
+    # Subscription Endpoints (Public/User)
+    path('plans/', PublicSubscriptionPlanListView.as_view(), name='public-plans'),
+    path('system-settings/', SystemSettingsView.as_view(), name='system-settings'),
+    path('subscriptions/pay/', SubmitSubscriptionPaymentView.as_view(), name='subscription-pay'),
 ]

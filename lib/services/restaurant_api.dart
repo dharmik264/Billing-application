@@ -161,6 +161,11 @@ class RestaurantApi {
     return response;
   }
 
+  Future<ApiUser> fetchProfile() async {
+    final data = await _get('auth/profile/');
+    return ApiUser.fromJson(data);
+  }
+
   // ── Super Admin ─────────────────────────────────────────────
 
   Future<List<Map<String, dynamic>>> fetchShopRequests() async {
@@ -536,6 +541,25 @@ class RestaurantApi {
     }
     return 'API request failed with status $statusCode';
   }
+
+  // --- Subscriptions ---
+  Future<List<ApiSubscriptionPlan>> fetchSubscriptionPlans() async {
+    final list = await _getPaginatedList('plans/');
+    return list.map((e) => ApiSubscriptionPlan.fromJson(e)).toList();
+  }
+
+  Future<ApiSystemSettings> fetchSystemSettings() async {
+    final data = await _get('system-settings/');
+    return ApiSystemSettings.fromJson(data);
+  }
+
+  Future<void> submitSubscriptionPayment(int planId, String transactionId, String billingCycle) async {
+    await _post('subscriptions/pay/', {
+      'plan_id': planId,
+      'transaction_id': transactionId,
+      'billing_cycle': billingCycle,
+    });
+  }
 }
 
 // ── Exceptions ────────────────────────────────────────────────
@@ -827,14 +851,20 @@ class ApiUser {
     required this.username,
     required this.phone,
     required this.role,
+    this.accountStatus = 'pending',
+    this.trialEnd,
+    this.approvedPlan,
   });
 
   factory ApiUser.fromJson(Map<String, dynamic> json) {
     return ApiUser(
       id: json['id']?.toString() ?? '',
-      username: json['username']?.toString() ?? '',
+      username: json['username']?.toString() ?? json['name']?.toString() ?? '',
       phone: json['phone']?.toString() ?? '',
       role: json['role']?.toString() ?? 'user',
+      accountStatus: json['account_status']?.toString() ?? 'pending',
+      trialEnd: json['trial_end']?.toString(),
+      approvedPlan: json['approved_plan']?.toString(),
     );
   }
 
@@ -842,6 +872,9 @@ class ApiUser {
   final String username;
   final String phone;
   final String role;
+  final String accountStatus;
+  final String? trialEnd;
+  final String? approvedPlan;
 }
 
 class ApiDashboardStats {
@@ -1223,3 +1256,65 @@ class ApiBillTemplateDraft {
     return map;
   }
 }
+
+class ApiSubscriptionPlan {
+  final int id;
+  final String name;
+  final String description;
+  final double priceMonthly;
+  final double priceYearly;
+  final int trialDays;
+  final bool isPopular;
+  final int maxUsers;
+  final int maxTables;
+  final int maxInvoicesPerMonth;
+  final Map<String, dynamic> features;
+
+  const ApiSubscriptionPlan({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.priceMonthly,
+    required this.priceYearly,
+    required this.trialDays,
+    required this.isPopular,
+    required this.maxUsers,
+    required this.maxTables,
+    required this.maxInvoicesPerMonth,
+    required this.features,
+  });
+
+  factory ApiSubscriptionPlan.fromJson(Map<String, dynamic> json) {
+    return ApiSubscriptionPlan(
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      priceMonthly: double.tryParse(json['price_monthly']?.toString() ?? '0') ?? 0.0,
+      priceYearly: double.tryParse(json['price_yearly']?.toString() ?? '0') ?? 0.0,
+      trialDays: json['trial_days'] as int? ?? 0,
+      isPopular: json['is_popular'] as bool? ?? false,
+      maxUsers: json['max_users'] as int? ?? 1,
+      maxTables: json['max_tables'] as int? ?? 0,
+      maxInvoicesPerMonth: json['max_invoices_per_month'] as int? ?? -1,
+      features: json['features'] as Map<String, dynamic>? ?? {},
+    );
+  }
+}
+
+class ApiSystemSettings {
+  final String? paymentQrCode;
+  final String? paymentUpiId;
+
+  const ApiSystemSettings({
+    this.paymentQrCode,
+    this.paymentUpiId,
+  });
+
+  factory ApiSystemSettings.fromJson(Map<String, dynamic> json) {
+    return ApiSystemSettings(
+      paymentQrCode: json['payment_qr_code'] as String?,
+      paymentUpiId: json['payment_upi_id'] as String?,
+    );
+  }
+}
+
