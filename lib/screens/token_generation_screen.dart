@@ -715,10 +715,10 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                RawAutocomplete<Map<String, dynamic>>(
+                const SizedBox(height: 16),                RawAutocomplete<Map<String, dynamic>>(
                   textEditingController: _customerNameController,
                   focusNode: FocusNode(),
+                  displayStringForOption: (option) => option['name'] as String? ?? '',
                   optionsBuilder: (TextEditingValue textEditingValue) async {
                     if (textEditingValue.text.length < 2) {
                       return const Iterable<Map<String, dynamic>>.empty();
@@ -729,9 +729,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       return const Iterable<Map<String, dynamic>>.empty();
                     }
                   },
-                  displayStringForOption: (option) => option['customer_name'] ?? '',
                   onSelected: (option) {
-                    _customerPhoneController.text = option['customer_phone'] ?? '';
+                    _customerPhoneController.text = option['phone']?.toString() ?? '';
                   },
                   fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                     return TextField(
@@ -775,8 +774,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                             itemBuilder: (context, index) {
                               final option = options.elementAt(index);
                               return ListTile(
-                                title: Text(option['customer_name'] ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                                subtitle: Text(option['customer_phone'] ?? '', style: GoogleFonts.inter(color: Colors.grey)),
+                                title: Text(option['name']?.toString() ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                                subtitle: Text(option['phone']?.toString() ?? '', style: GoogleFonts.inter(color: Colors.grey)),
                                 onTap: () => onSelected(option),
                               );
                             },

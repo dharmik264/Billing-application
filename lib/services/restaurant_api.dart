@@ -336,12 +336,7 @@ class RestaurantApi {
   }
 
   Future<List<Map<String, dynamic>>> searchCustomers(String query) async {
-    final response = await _get('tokens/customers/search/?q=$query');
-    final results = response['results'] as List?;
-    if (results != null) {
-      return List<Map<String, dynamic>>.from(results);
-    }
-    return [];
+    return await _getPaginatedList('tokens/customers/search/?q=$query');
   }
 
   Future<void> deleteToken(String id) async {
