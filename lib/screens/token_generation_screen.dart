@@ -218,6 +218,13 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       _paymentMode = 'CASH';
     });
     _cartTrigger.value++;
+    
+    // Automatically redirect back to the Token Generation page (item grid)
+    if (MediaQuery.of(context).size.width < 800) {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    }
   }
 
   Future<void> _saveBill() async {
