@@ -76,6 +76,7 @@ def build_kitchen_slip_text(token):
 
 class PrinterListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class   = PrinterSerializer
     def get_queryset(self):
         from shop.models import Shop
         shop = Shop.get_shop(self.request.user)
@@ -89,6 +90,7 @@ class PrinterListCreateView(generics.ListCreateAPIView):
 
 class PrinterDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class   = PrinterSerializer
     def get_queryset(self):
         from shop.models import Shop
         shop = Shop.get_shop(self.request.user)

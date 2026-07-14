@@ -8,6 +8,7 @@ import 'token_generation_screen.dart';
 import 'item_management_screen.dart';
 import 'analytics_reports_screen.dart';
 import 'settings_screen.dart';
+import 'customer_management_screen.dart';
 import '../services/restaurant_api.dart';
 
 class MainScreen extends StatefulWidget {
@@ -47,6 +48,10 @@ class _MainScreenState extends State<MainScreen> {
     if (perms['billing'] ?? true) {
       _screens.add(const TokenGenerationScreen());
       _navItems.add({'icon': Icons.receipt_long_rounded, 'inactive': Icons.receipt_long_outlined, 'label': 'Token'});
+    }
+    if (perms['customers'] ?? true) {
+      _screens.add(const CustomerManagementScreen());
+      _navItems.add({'icon': Icons.people_rounded, 'inactive': Icons.people_outline_rounded, 'label': 'Customers'});
     }
     if (perms['inventory'] ?? true) {
       _screens.add(const ItemManagementScreen());

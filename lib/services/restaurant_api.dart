@@ -348,6 +348,35 @@ class RestaurantApi {
     await _delete('tokens/$id/');
   }
 
+  // ── Customers ────────────────────────────────────────────────
+
+  Future<List<ApiCustomer>> fetchCustomers({String? search, String? status}) async {
+    final query = <String, String>{};
+    if (search != null && search.isNotEmpty) query['search'] = search;
+    if (status != null && status.isNotEmpty) query['status'] = status;
+    final data = await _getPaginatedList('customers/', query.isEmpty ? null : query);
+    return data.map((e) => ApiCustomer.fromJson(e)).toList();
+  }
+
+  Future<ApiCustomer> createCustomer(ApiCustomerDraft customer) async {
+    final data = await _post('customers/', customer.toJson());
+    return ApiCustomer.fromJson(data);
+  }
+
+  Future<ApiCustomer> updateCustomer(String id, ApiCustomerDraft customer) async {
+    final data = await _put('customers/$id/', customer.toJson());
+    return ApiCustomer.fromJson(data);
+  }
+
+  Future<void> deleteCustomer(String id) async {
+    await _delete('customers/$id/');
+  }
+
+  Future<ApiCustomer> fetchCustomer(String id) async {
+    final data = await _get('customers/$id/');
+    return ApiCustomer.fromJson(data);
+  }
+
   // ── Reports ──────────────────────────────────────────────────
 
   Future<ApiSummaryReport> fetchTodayReport(
@@ -1317,4 +1346,68 @@ class ApiSystemSettings {
     );
   }
 }
+
+// ── Customer Models ────────────────────────────────────────────
+
+class ApiCustomer {
+  const ApiCustomer({
+    required this.id,
+    required this.name,
+    required this.mobileNumber,
+    required this.address,
+    required this.gstNumber,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ApiCustomer.fromJson(Map<String, dynamic> json) {
+    return ApiCustomer(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      mobileNumber: json['mobile_number']?.toString() ?? '',
+      address: json['address']?.toString() ?? '',
+      gstNumber: json['gst_number']?.toString() ?? '',
+      status: json['status']?.toString() ?? 'active',
+      createdAt: json['created_at']?.toString() ?? '',
+      updatedAt: json['updated_at']?.toString() ?? '',
+    );
+  }
+
+  final String id;
+  final String name;
+  final String mobileNumber;
+  final String address;
+  final String gstNumber;
+  final String status;
+  final String createdAt;
+  final String updatedAt;
+
+  bool get isActive => status == 'active';
+}
+
+class ApiCustomerDraft {
+  const ApiCustomerDraft({
+    required this.name,
+    required this.mobileNumber,
+    required this.address,
+    required this.gstNumber,
+    required this.status,
+  });
+
+  final String name;
+  final String mobileNumber;
+  final String address;
+  final String gstNumber;
+  final String status;
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'mobile_number': mobileNumber,
+    'address': address,
+    'gst_number': gstNumber,
+    'status': status,
+  };
+}
+
 

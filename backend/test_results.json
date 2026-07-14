@@ -1,0 +1,227 @@
+{
+  "total": 55,
+  "passed": 55,
+  "failed": 0,
+  "tests": {
+    "customers_customer table exists": {
+      "passed": true,
+      "detail": ""
+    },
+    "  Column 'id' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "  Column 'name' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "  Column 'mobile_number' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "  Column 'address' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "  Column 'gst_number' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "  Column 'status' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "  Column 'created_at' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "  Column 'updated_at' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "  Column 'shop_id' exists": {
+      "passed": true,
+      "detail": "found"
+    },
+    "CREATE: Customer record saved": {
+      "passed": true,
+      "detail": "id=1"
+    },
+    "CREATE: Name stored correctly": {
+      "passed": true,
+      "detail": ""
+    },
+    "CREATE: Mobile stored correctly": {
+      "passed": true,
+      "detail": ""
+    },
+    "CREATE: Address stored correctly": {
+      "passed": true,
+      "detail": ""
+    },
+    "CREATE: GST stored correctly": {
+      "passed": true,
+      "detail": ""
+    },
+    "CREATE: Status stored correctly": {
+      "passed": true,
+      "detail": ""
+    },
+    "CREATE: created_at auto-set": {
+      "passed": true,
+      "detail": ""
+    },
+    "CREATE: updated_at auto-set": {
+      "passed": true,
+      "detail": ""
+    },
+    "UPDATE: Name updated in DB": {
+      "passed": true,
+      "detail": ""
+    },
+    "DELETE: Record removed from DB": {
+      "passed": true,
+      "detail": ""
+    },
+    "POST /api/customers/: Status 201": {
+      "passed": true,
+      "detail": "got 201"
+    },
+    "POST: id returned": {
+      "passed": true,
+      "detail": ""
+    },
+    "POST: name matches": {
+      "passed": true,
+      "detail": ""
+    },
+    "POST: mobile matches": {
+      "passed": true,
+      "detail": ""
+    },
+    "POST: status matches": {
+      "passed": true,
+      "detail": ""
+    },
+    "POST: created_at returned": {
+      "passed": true,
+      "detail": ""
+    },
+    "POST: updated_at returned": {
+      "passed": true,
+      "detail": ""
+    },
+    "GET /api/customers/: Status 200": {
+      "passed": true,
+      "detail": "got 200"
+    },
+    "GET list: returns data": {
+      "passed": true,
+      "detail": "count=1"
+    },
+    "GET /api/customers/{id}/: Status 200": {
+      "passed": true,
+      "detail": "got 200"
+    },
+    "GET detail: name correct": {
+      "passed": true,
+      "detail": ""
+    },
+    "PUT /api/customers/{id}/: Status 200": {
+      "passed": true,
+      "detail": "got 200"
+    },
+    "PUT: name updated": {
+      "passed": true,
+      "detail": ""
+    },
+    "PUT: status updated to inactive": {
+      "passed": true,
+      "detail": ""
+    },
+    "DELETE /api/customers/{id}/: Status 204": {
+      "passed": true,
+      "detail": "got 204"
+    },
+    "DELETE: 404 after delete": {
+      "passed": true,
+      "detail": "got 404"
+    },
+    "GET search: Status 200": {
+      "passed": true,
+      "detail": "got 200"
+    },
+    "GET search: returns matching": {
+      "passed": true,
+      "detail": ""
+    },
+    "GET filter by status=active: 200": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: Empty name rejected (400)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: Name < 3 chars rejected (400)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: 9-digit mobile rejected (400)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: 11-digit mobile rejected (400)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: Non-digit mobile rejected (400)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: Duplicate mobile rejected (400)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: Invalid GST rejected (400)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: Valid GST accepted (201)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Validation: Empty address rejected (400)": {
+      "passed": true,
+      "detail": ""
+    },
+    "Admin: Customer model registered": {
+      "passed": true,
+      "detail": "registered=True"
+    },
+    "Admin: search_fields configured": {
+      "passed": true,
+      "detail": ""
+    },
+    "Admin: list_filter configured": {
+      "passed": true,
+      "detail": ""
+    },
+    "Admin: list_display configured": {
+      "passed": true,
+      "detail": ""
+    },
+    "Admin: CSV export action registered": {
+      "passed": true,
+      "detail": ""
+    },
+    "Unauthenticated GET rejected (401)": {
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Unauthenticated POST rejected (401)": {
+      "passed": true,
+      "detail": "got 401"
+    }
+  }
+}

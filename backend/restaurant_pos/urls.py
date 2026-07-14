@@ -10,5 +10,6 @@ urlpatterns = [
     path('api/menu/',    include('menu.urls')),
     path('api/tokens/',  include('tokens.urls')),
     path('api/reports/', include('reports.urls')),
-    path('api/printer/', include('printer.urls')),
+    path('api/printer/',   include('printer.urls')),
+    path('api/customers/', include('customers.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

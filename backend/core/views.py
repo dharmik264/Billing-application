@@ -12,6 +12,42 @@ from .serializers import SendOTPSerializer, VerifyOTPSerializer, UserSerializer,
 from shop.models import Shop
 from tokens.models import Token
 from django.contrib.auth import authenticate
+import os
+import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
+def send_sms_otp(phone, code):
+    """
+    Sends an OTP via a configured SMS gateway.
+    Falls back to console print in local development if no API key is provided.
+    """
+    sms_url = os.getenv('SMS_API_URL')
+    sms_key = os.getenv('SMS_API_KEY')
+    
+    if sms_url and sms_key:
+        try:
+            # Generic POST implementation (Fast2SMS/MSG91 style)
+            payload = {
+                "route": "otp",
+                "variables_values": str(code),
+                "numbers": str(phone),
+            }
+            headers = {
+                "authorization": sms_key,
+                "Content-Type": "application/json"
+            }
+            response = requests.post(sms_url, json=payload, headers=headers, timeout=5)
+            response.raise_for_status()
+            logger.info(f"OTP sent to {phone} via SMS.")
+        except Exception as e:
+            logger.error(f"Failed to send SMS to {phone}: {str(e)}")
+    else:
+        # Development fallback
+        print(f"\n{'='*45}")
+        print(f"DEVELOPMENT OTP FOR {phone}: {code}")
+        print(f"{'='*45}\n")
 
 
 class PasswordLoginView(APIView):
@@ -72,8 +108,7 @@ class RegisterView(APIView):
         code = OTP.generate_code()
         OTP.objects.create(phone=phone, code=code)
         
-        print(f"DEVELOPMENT OTP FOR {phone}: {code}")
-        print("="*45 + "\n")
+        send_sms_otp(phone, code)
         
         response_data = {'message': 'Registration successful, OTP sent', 'phone': phone}
         if __import__('django.conf', fromlist=['settings']).settings.DEBUG:
@@ -99,12 +134,9 @@ class SendOTPView(APIView):
         code = OTP.generate_code()
         OTP.objects.create(phone=phone, code=code)
 
-        # TODO: Integrate real SMS gateway
-        print(f"DEVELOPMENT OTP FOR {phone}: {code}")
-        print("="*45 + "\n")
+        send_sms_otp(phone, code)
 
-        # TODO: Integrate SMS gateway (Twilio / MSG91)
-        # For dev, return OTP in response
+        # For dev, return OTP in response if DEBUG is True
         response_data = {'message': 'OTP sent successfully', 'phone': phone}
         if __import__('django.conf', fromlist=['settings']).settings.DEBUG:
             response_data['otp'] = code  # Remove in production!
@@ -424,7 +456,7 @@ class DevLoginView(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class PublicSubscriptionPlanListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Plans must be public for registration flow
     serializer_class = SubscriptionPlanSerializer
     queryset = SubscriptionPlan.objects.filter(is_active=True).order_by('display_order', 'id')
 
