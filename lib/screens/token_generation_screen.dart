@@ -137,6 +137,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         colorIndex++;
       }
 
+      if (mounted) {
         setState(() {
           _allProducts = products;
           _categories = ['All', ...categorySet.toList()..sort()];
