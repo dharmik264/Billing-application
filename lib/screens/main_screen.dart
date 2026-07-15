@@ -288,65 +288,62 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _mobileNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
     final isSelected = _currentIndex == index;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutBack,
-      margin: EdgeInsets.only(bottom: isSelected ? 24 : 12),
+    return Tooltip(
+      message: label,
+      preferBelow: false,
+      textStyle: GoogleFonts.inter(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeOutBack,
-        height: isSelected ? 56 : 48,
-        constraints: BoxConstraints(
-          minWidth: isSelected ? 100 : 48,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withOpacity(0.4),
-                    blurRadius: 20,
-                    spreadRadius: 6, // Sonar Glow
-                  ),
-                ]
-              : [],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(28),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(28),
-            onTap: () => _onTabTapped(index),
-            splashColor: Colors.white.withOpacity(0.2),
-            highlightColor: Colors.transparent,
-            child: Padding(
-              padding: isSelected ? const EdgeInsets.symmetric(horizontal: 16) : EdgeInsets.zero,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
+        margin: EdgeInsets.only(bottom: isSelected ? 24 : 12),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOutBack,
+          height: isSelected ? 56 : 48,
+          width: isSelected ? 56 : 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: isSelected
+                ? const LinearGradient(
+                    colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: isSelected ? null : Colors.transparent,
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFF4F46E5).withOpacity(0.4),
+                      blurRadius: 16,
+                      spreadRadius: 4, // Soft shadow
+                    ),
+                  ]
+                : [],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => _onTabTapped(index),
+              splashColor: Colors.white.withOpacity(0.2),
+              highlightColor: Colors.transparent,
+              child: Center(
+                child: AnimatedScale(
+                  scale: isSelected ? 1.15 : 1.0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutQuint,
+                  child: Icon(
                     isSelected ? activeIcon : inactiveIcon,
                     color: isSelected ? Colors.white : const Color(0xFF94A3B8),
                     size: 26,
                   ),
-                  if (isSelected) ...[
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.clip,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ]
-                ],
+                ),
               ),
             ),
           ),
