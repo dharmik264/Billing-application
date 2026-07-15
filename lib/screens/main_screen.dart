@@ -245,15 +245,15 @@ class _MainScreenState extends State<MainScreen> {
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.65),
+                    color: Colors.white.withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(36),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 30,
                         offset: const Offset(0, 10),
                       )
@@ -318,7 +318,7 @@ class _MainScreenState extends State<MainScreen> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF4F46E5).withOpacity(0.4),
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
                       blurRadius: 16,
                       spreadRadius: 4, // Soft shadow
                     ),
@@ -331,7 +331,7 @@ class _MainScreenState extends State<MainScreen> {
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: () => _onTabTapped(index),
-              splashColor: Colors.white.withOpacity(0.2),
+              splashColor: Colors.white.withValues(alpha: 0.2),
               highlightColor: Colors.transparent,
               child: Center(
                 child: AnimatedScale(

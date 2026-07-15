@@ -9,7 +9,6 @@ import '../services/restaurant_api.dart';
 import '../widgets/bill_receipt_widget.dart';
 
 import '../services/printer_service.dart';
-import 'kitchen_slip_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'success_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -62,7 +61,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   static const Color _primary = Color(0xFF4F46E5);
   static const Color _textPrimary = Color(0xFF0F172A);
   static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _muted = Color(0xFF94A3B8);
   static const Color _softBorder = Color(0xFFE2E8F0);
   static const double _panelWidth = 360;
 
@@ -766,77 +764,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
-  Future<void> _openKitchenSlip() async {
-    if (widget.onSaveBill != null && _savedToken == null) {
-      try {
-        _savedToken = await widget.onSaveBill!();
-        if (_savedToken == null) {
-          _showSnackBar('Unable to save bill. Please try again.');
-          return;
-        }
-      } catch (e) {
-        _showSnackBar('Error generating bill: $e');
-        return;
-      }
-    }
-
-    // Use savedToken or mock a token for printing if not saving
-    final tokenToUse = _savedToken ?? ApiToken(
-      id: '',
-      tokenNumber: _actualTokenNumber,
-      billNumber: widget.billNumber ?? '',
-      status: 'PENDING',
-      customerName: '',
-      customerPhone: '',
-      grandTotal: widget.grandTotal,
-      paymentMode: widget.paymentMode,
-      createdAt: DateTime.now().toIso8601String(),
-      items: widget.items
-          .map((i) => ApiTokenItem(
-              id: i.id ?? '',
-              name: i.name,
-              code: i.code,
-              rate: i.rate,
-              quantity: i.quantity,
-              subtotal: i.rate * i.quantity))
-          .toList(),
-      orderType: 'dine_in',
-    );
-
-    // Hardware Printing Call
-    try {
-      bool? isConnected = false;
-      if (kIsWeb) {
-        isConnected = false;
-      } else {
-        try {
-          isConnected = await PrinterService.instance.bluetooth.isConnected
-              .timeout(const Duration(seconds: 2));
-        } catch (e) {
-          debugPrint('Bluetooth check error: $e');
-        }
-      }
-
-      if (isConnected != true) {
-        if (mounted) setState(() => _isPrinting = false);
-        _showSnackBar('First off all connect your printer');
-        return;
-      }
-
-      await PrinterService.instance.printKitchenSlip(tokenToUse);
-      _showSnackBar('KOT sent to thermal printer');
-    } catch (e) {
-      _showSnackBar('Printer error: $e');
-    }
-
-    if (mounted) {
-      setState(() => _isPrinting = false);
-      Navigator.of(context).push(
-        MaterialPageRoute(
-            builder: (context) => KitchenSlipScreen(token: tokenToUse)),
-      );
-    }
-  }
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)

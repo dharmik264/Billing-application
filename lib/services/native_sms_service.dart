@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 
 class NativeSmsService {
   static const MethodChannel _channel = MethodChannel('com.example.billing_application/sms');
@@ -9,10 +10,10 @@ class NativeSmsService {
         'phone': phone,
         'message': message,
       });
-      print('SMS sent result: $result');
+      debugPrint('SMS sent result: $result');
       return true;
     } on PlatformException catch (e) {
-      print('Failed to send SMS: ${e.message}');
+      debugPrint('Failed to send SMS: ${e.message}');
       return false;
     }
   }

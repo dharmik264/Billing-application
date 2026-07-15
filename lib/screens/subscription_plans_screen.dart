@@ -80,7 +80,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4F46E5).withOpacity(0.1),
+                  color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text('POPULAR', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF4F46E5))),
