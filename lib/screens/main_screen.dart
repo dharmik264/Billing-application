@@ -170,28 +170,29 @@ class _MainScreenState extends State<MainScreen> {
       onTap: () => _onTabTapped(index),
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 64,
-        height: 64,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutQuint,
+        width: 72,
+        height: 72,
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF4F46E5).withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               isSelected ? activeIcon : inactiveIcon,
-              color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFAAAAAA),
-              size: 28,
+              color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+              size: isSelected ? 30 : 28,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFFAAAAAA),
+                color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
               ),
             )
           ],
@@ -258,7 +259,7 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Row(
             mainAxisSize: MainAxisSize.min,
-            children: leftNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'])).toList(),
+            children: leftNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'], nav['label'])).toList(),
           ),
           if (tokenIndex != -1)
             GestureDetector(
@@ -286,30 +287,47 @@ class _MainScreenState extends State<MainScreen> {
             ),
           Row(
             mainAxisSize: MainAxisSize.min,
-            children: rightNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'])).toList(),
+            children: rightNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'], nav['label'])).toList(),
           ),
         ],
       ),
     );
   }
 
-  Widget _mobileNavItem(int index, IconData activeIcon, IconData inactiveIcon) {
+  Widget _mobileNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () => _onTabTapped(index),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(12),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutQuint,
+        padding: isSelected ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12) : const EdgeInsets.all(12),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF4F46E5).withValues(alpha: 0.1) : Colors.transparent,
-          shape: BoxShape.circle,
+          borderRadius: BorderRadius.circular(30),
         ),
-        child: Icon(
-          isSelected ? activeIcon : inactiveIcon,
-          color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-          size: 26,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isSelected ? activeIcon : inactiveIcon,
+              color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+              size: 26,
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF4F46E5),
+                ),
+              ),
+            ]
+          ],
         ),
       ),
     );
