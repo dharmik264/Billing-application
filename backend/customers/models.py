@@ -16,7 +16,7 @@ class Customer(models.Model):
     shop          = models.ForeignKey('shop.Shop', on_delete=models.CASCADE, related_name='customers', null=True)
     name          = models.CharField(max_length=200)
     mobile_number = models.CharField(max_length=10)
-    address       = models.TextField()
+    address       = models.TextField(blank=True, null=True)
     gst_number    = models.CharField(max_length=15, blank=True, default='')
     status        = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
     created_at    = models.DateTimeField(auto_now_add=True)

@@ -164,6 +164,17 @@ class BillReceiptWidget extends StatelessWidget {
                 color: textPrimary,
               ),
             ),
+            const SizedBox(height: 2),
+            const Text(
+              'TAX INVOICE',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+                color: textPrimary,
+              ),
+            ),
             if (tagline?.isNotEmpty == true) ...[
               const SizedBox(height: 2),
               Text(
@@ -290,28 +301,6 @@ class BillReceiptWidget extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 2),
-            ],
-            if (customerAddress != null && customerAddress!.isNotEmpty) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text('Address: $customerAddress', style: baseStyle),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 2),
-            ],
-            if (customerGstNumber != null && customerGstNumber!.isNotEmpty) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text('GST: $customerGstNumber', style: baseStyle),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
             ],
             if (template.showInvoiceNumber ||
                 template.showDateTime ||

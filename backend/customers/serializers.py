@@ -47,12 +47,6 @@ class CustomerSerializer(serializers.ModelSerializer):
             )
         return value
 
-    def validate_address(self, value):
-        value = value.strip()
-        if not value:
-            raise serializers.ValidationError('Address is required.')
-        return value
-
     # ── Cross-field uniqueness check ───────────────────────────
 
     def validate(self, attrs):

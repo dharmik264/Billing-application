@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:background_sms/background_sms.dart';
 
 import '../services/restaurant_api.dart';
 import '../utils/bill_counter.dart';
@@ -46,7 +48,8 @@ class _CartItem {
 }
 
 class TokenGenerationScreen extends StatefulWidget {
-  const TokenGenerationScreen({super.key});
+  final ApiToken? editToken;
+  const TokenGenerationScreen({super.key, this.editToken});
 
   @override
   State<TokenGenerationScreen> createState() => _TokenGenerationScreenState();
@@ -134,10 +137,27 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         colorIndex++;
       }
 
-      if (mounted) {
         setState(() {
           _allProducts = products;
           _categories = ['All', ...categorySet.toList()..sort()];
+          
+          if (widget.editToken != null) {
+            _customerNameController.text = widget.editToken!.customerName;
+            _customerPhoneController.text = widget.editToken!.customerPhone;
+            _paymentMode = widget.editToken!.paymentMode.toUpperCase();
+            if (_paymentMode.isEmpty) _paymentMode = 'CASH';
+            
+            _billItems.clear();
+            for (var item in widget.editToken!.items) {
+              final prod = products.firstWhere((p) => p.code == item.code, orElse: () => _TokenProduct(
+                rawItem: ApiItem(id: '', name: item.name, code: item.code, category: 'Imported', rate: item.rate, active: true, availableOnline: true),
+                id: '', name: item.name, code: item.code, price: item.rate, category: 'Imported', accent: const Color(0xFF3B82F6)
+              ));
+              _billItems.add(_CartItem(product: prod)..quantity = item.quantity);
+            }
+            _cartTrigger.value++;
+          }
+          
           _isLoading = false;
         });
 
@@ -256,8 +276,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
 
     setState(() => _isSaving = true);
     try {
-      final billNum = await BillCounter.nextBillNumber();
-      final tokenNum = await BillCounter.nextTokenNumber();
+      final isEdit = widget.editToken != null;
+      final billNum = isEdit ? widget.editToken!.billNumber : await BillCounter.nextBillNumber();
+      final tokenNum = isEdit ? widget.editToken!.tokenNumber : await BillCounter.nextTokenNumber();
 
       final apiToken = ApiTokenDraft(
         billNumber: billNum,
@@ -274,21 +295,27 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         )).toList(),
       );
 
-      await RestaurantApi.instance.createToken(apiToken);
+      if (isEdit) {
+        await RestaurantApi.instance.updateToken(widget.editToken!.id, apiToken);
+      } else {
+        await RestaurantApi.instance.createToken(apiToken);
+      }
       
-      // if (phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
-      //   final message = Uri.encodeComponent(
-      //     'Thank you for visiting ${RestaurantApi.instance.shopData?.name ?? "our shop"}!\n'
-      //     'Your Bill Number is $billNum.\n'
-      //     'Total Amount: ₹${_grandTotal.toStringAsFixed(2)}\n'
-      //     'Have a great day!'
-      //   );
-      //   final url = Uri.parse('whatsapp://send?phone=+91$phone&text=$message');
-      //   try {
-      //     if (await canLaunchUrl(url)) {
-      //     }
-      //   } catch (_) {}
-      // }
+      if (phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
+        final message = 
+          'Thank you for visiting ${RestaurantApi.instance.shopData?.name ?? "our shop"}!\n'
+          'Your Bill Amount is ₹${_grandTotal.toStringAsFixed(2)}\n'
+          'Have a great day!';
+        try {
+          var status = await Permission.sms.status;
+          if (!status.isGranted) {
+             status = await Permission.sms.request();
+          }
+          if (status.isGranted) {
+            await BackgroundSms.sendMessage(phoneNumber: phone, message: message);
+          }
+        } catch (_) {}
+      }
 
       if (mounted) {
         final currentSubtotal = _subtotal;

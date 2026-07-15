@@ -311,11 +311,14 @@ class RestaurantApi {
 
   Future<ApiToken> createToken(ApiTokenDraft token,
       {String shopId = defaultShopId}) async {
-
-    // Online mode: standard API call
     final data = await _post('tokens/create/', {
       ...token.toJson(),
     });
+    return ApiToken.fromJson(data);
+  }
+
+  Future<ApiToken> updateToken(String id, ApiTokenDraft token) async {
+    final data = await _put('tokens/$id/', token.toJson());
     return ApiToken.fromJson(data);
   }
 
@@ -620,6 +623,7 @@ class ApiShopData {
     this.upiId,
     this.paymentModesConfig,
     this.billSettings,
+    this.smsCredits = 100,
   });
 
   factory ApiShopData.fromJson(Map<String, dynamic> json) {
@@ -639,6 +643,7 @@ class ApiShopData {
       paymentModesConfig: json['payment_modes_config']?.toString() ??
           json['paymentModesConfig']?.toString(),
       billSettings: json['billSettings'] ?? json['bill_settings'] ?? {},
+      smsCredits: (json['smsCredits'] ?? json['sms_credits'] ?? 100) as int,
     );
   }
 
@@ -655,6 +660,7 @@ class ApiShopData {
   final String? upiId;
   final String? paymentModesConfig;
   final Map<String, dynamic>? billSettings;
+  final int smsCredits;
 }
 
 class ApiItem {

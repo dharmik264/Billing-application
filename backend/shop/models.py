@@ -20,9 +20,10 @@ class Shop(models.Model):
     closing_time         = models.TimeField(null=True, blank=True)
     table_count          = models.PositiveIntegerField(default=0)
     upi_id               = models.CharField(max_length=100, blank=True, verbose_name='UPI ID')
+    sms_credits          = models.PositiveIntegerField(default=100, verbose_name='SMS Credits')
     bill_settings        = models.JSONField(default=dict, blank=True) # Kept for legacy/fallback
     created_at           = models.DateTimeField(auto_now_add=True)
-    updated_at    = models.DateTimeField(auto_now=True)
+    updated_at           = models.DateTimeField(auto_now=True)
 
     class Meta:
         verbose_name = 'Shop'

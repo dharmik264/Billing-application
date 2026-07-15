@@ -91,16 +91,78 @@ class CreateTokenView(APIView):
                 continue
 
         token.calculate_totals()
+        
+        # ── SMS Integration (Simulated) ───────────────────────────
+        if token.customer_phone and shop.sms_credits > 0:
+            import logging
+            logger = logging.getLogger(__name__)
+            # Deduct 1 credit for finalized bill SMS
+            shop.sms_credits -= 1
+            shop.save(update_fields=['sms_credits'])
+            
+            sms_body = (
+                f"Dear Customer,\n"
+                f"Your bill amount is ₹{token.total}.\n"
+                f"Thank you for shopping with us.\n"
+                f"- {shop.name}\n\n"
+                f"Thank you for your purchase.\n"
+                f"We appreciate your business and look forward to serving you again.\n"
+                f"- {shop.name}"
+            )
+            logger.info(f"--- SIMULATED SMS SENT TO {token.customer_phone} ---")
+            logger.info(sms_body)
+            logger.info("-------------------------------------------")
+
         return Response(TokenSerializer(token).data, status=status.HTTP_201_CREATED)
 
 
 class TokenDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class   = TokenSerializer
+    
     def get_queryset(self):
         from shop.models import Shop
         shop = Shop.get_shop(self.request.user)
         return Token.objects.filter(shop=shop).prefetch_related('items')
+
+    @transaction.atomic
+    def put(self, request, *args, **kwargs):
+        # Allow updating a token including its nested items
+        token = self.get_object()
+        data = request.data
+        
+        # Update basic token fields
+        token.customer_name = data.get('customer_name', token.customer_name)
+        token.customer_phone = data.get('customer_phone', token.customer_phone)
+        token.note = data.get('note', token.note)
+        if 'payment_mode' in data:
+            token.payment_mode = data['payment_mode']
+        if 'is_paid' in data:
+            token.is_paid = data['is_paid']
+        
+        token.save()
+
+        # Update items if provided
+        if 'items' in data:
+            token.items.all().delete()
+            for item_data in data['items']:
+                menu_item_id = item_data.get('menu_item')
+                quantity     = int(item_data.get('quantity', 1))
+                try:
+                    menu_item = MenuItem.objects.get(pk=menu_item_id)
+                    TokenItem.objects.create(
+                        token     = token,
+                        menu_item = menu_item,
+                        name      = menu_item.name,
+                        price     = menu_item.price,
+                        quantity  = quantity,
+                        note      = item_data.get('note', ''),
+                    )
+                except MenuItem.DoesNotExist:
+                    continue
+
+        token.calculate_totals()
+        return Response(TokenSerializer(token).data, status=status.HTTP_200_OK)
 
 
 class UpdateTokenStatusView(APIView):

@@ -81,8 +81,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
   }
 
   String? _validateAddress(String? v) {
-    if (v == null || v.trim().isEmpty) return 'Address is required';
-    return null;
+    return null; // optional
   }
 
   String? _validateGst(String? v) {
@@ -212,12 +211,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
                 ),
                 const SizedBox(height: 20),
 
-                // ── Address ────────────────────────────────────
-                _buildSectionTitle('Address'),
+                // ── Address (optional) ────────────────────────────────────
+                _buildSectionTitle('Address', optional: true),
                 const SizedBox(height: 8),
                 _buildTextField(
                   controller: _addressCtrl,
-                  hint: 'Enter full address',
+                  hint: 'Enter full address (optional)',
                   icon: Icons.location_on_outlined,
                   validator: _validateAddress,
                   maxLines: 3,

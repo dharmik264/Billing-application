@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'password_login_screen.dart';
 import 'print_preview_screen.dart';
 import 'all_tokens_screen.dart';
+import 'token_generation_screen.dart';
 
 class _LiveToken {
   final ApiToken rawToken;
@@ -45,6 +46,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   Uint8List? _shopLogoBytes;
 
   int _tokenCount = 0;
+  int _smsCredits = 0;
   double _totalSales = 0.0;
 
   double _cashSales = 0.0;
@@ -71,6 +73,7 @@ class DashboardScreenState extends State<DashboardScreen> {
       if (mounted) {
         setState(() {
           _shopName = shop.name.isNotEmpty ? shop.name : 'My Shop';
+          _smsCredits = shop.smsCredits;
           if (shop.logoUrl != null && shop.logoUrl!.isNotEmpty) {
             final uri = Uri.tryParse(shop.logoUrl!);
             if (uri != null && uri.scheme == 'data') {
@@ -345,6 +348,13 @@ class DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 10),
           StatCard(title: 'Tokens', value: _tokenCount.toString(), icon: Icons.receipt_long_rounded, color: AppColors.emerald500),
           const SizedBox(width: 10),
+          StatCard(
+            title: 'SMS Credits',
+            value: _smsCredits.toString(),
+            icon: Icons.message_rounded,
+            color: _smsCredits > 10 ? const Color(0xFF3B82F6) : const Color(0xFFEF4444),
+          ),
+          const SizedBox(width: 10),
           StatCard(title: 'Online Sales', value: '\u20B9${_onlineSales.toStringAsFixed(0)}', icon: Icons.language_rounded, color: AppColors.amber500),
           const SizedBox(width: 10),
           StatCard(title: 'Cash Sales', value: '\u20B9${_cashSales.toStringAsFixed(0)}', icon: Icons.payments_rounded, color: const Color(0xFFEC4899)),
@@ -483,6 +493,48 @@ class DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  // Action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _editToken(token),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.edit_document, size: 12, color: Color(0xFF3B82F6)),
+                              const SizedBox(width: 4),
+                              Text('Edit', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF3B82F6))),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => _deleteToken(token),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.delete_outline, size: 12, color: Color(0xFFEF4444)),
+                              const SizedBox(width: 4),
+                              Text('Delete', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444))),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -526,5 +578,47 @@ class DashboardScreenState extends State<DashboardScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
       }
     }
+  }
+
+  Future<void> _deleteToken(_LiveToken token) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete Bill', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete this bill (${token.orderId})? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      try {
+        await RestaurantApi.instance.deleteToken(token.rawToken.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill deleted successfully')));
+          refreshData();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+        }
+      }
+    }
+  }
+
+  void _editToken(_LiveToken token) async {
+    // Navigate to TokenGenerationScreen passing the editToken.
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TokenGenerationScreen(editToken: token.rawToken),
+      ),
+    );
+    if (result == true) refreshData();
   }
 }
