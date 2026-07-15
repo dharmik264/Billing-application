@@ -302,31 +302,36 @@ class _MainScreenState extends State<MainScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutQuint,
-        padding: isSelected ? const EdgeInsets.symmetric(horizontal: 16, vertical: 12) : const EdgeInsets.all(12),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4F46E5).withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Row(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        margin: const EdgeInsets.symmetric(horizontal: 2),
+        color: Colors.transparent,
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isSelected ? activeIcon : inactiveIcon,
-              color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-              size: 26,
+            AnimatedScale(
+              scale: isSelected ? 1.15 : 1.0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutQuint,
+              child: Icon(
+                isSelected ? activeIcon : inactiveIcon,
+                color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+                size: 26,
+              ),
             ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF4F46E5),
+            const SizedBox(height: 4),
+            AnimatedOpacity(
+              opacity: isSelected ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child: Container(
+                height: 4,
+                width: 4,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF4F46E5),
+                  shape: BoxShape.circle,
                 ),
               ),
-            ]
+            ),
           ],
         ),
       ),
