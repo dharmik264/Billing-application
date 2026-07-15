@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:telephony/telephony.dart';
+import 'package:flutter/services.dart';
 
 import '../services/restaurant_api.dart';
 import '../utils/bill_counter.dart';
@@ -313,7 +313,11 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
              status = await Permission.sms.request();
           }
           if (status.isGranted) {
-            Telephony.instance.sendSms(to: phone, message: message);
+            const platform = MethodChannel('com.example.billing_application/sms');
+            await platform.invokeMethod('sendSms', {
+              'phone': phone,
+              'message': message,
+            });
           }
         } catch (_) {}
       }
