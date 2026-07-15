@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -226,68 +227,59 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildUnifiedNavbar() {
-    List<Map<String, dynamic>> regularNavs = [];
-    int tokenIndex = -1;
-    for (int i = 0; i < _navItems.length; i++) {
-      if (_navItems[i]['label'] == 'Token') {
-        tokenIndex = i;
-      } else {
-        regularNavs.add({'index': i, ..._navItems[i]});
-      }
-    }
-    int half = (regularNavs.length / 2).ceil();
-    List<Map<String, dynamic>> leftNavs = regularNavs.sublist(0, half);
-    List<Map<String, dynamic>> rightNavs = regularNavs.sublist(half);
-
-    return Container(
-      height: 72,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(36),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
-          )
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
+    return SizedBox(
+      height: 90, // Taller to allow lifted tabs to break out of the 72px navbar
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
         children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: leftNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'], nav['label'])).toList(),
-          ),
-          if (tokenIndex != -1)
-            GestureDetector(
-              onTap: () => _onTabTapped(tokenIndex),
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+          // Glassmorphic Navbar Background
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 72,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(36),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.65),
+                    borderRadius: BorderRadius.circular(36),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.8),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
+                      )
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    )
-                  ],
                 ),
-                child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
               ),
             ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: rightNavs.map((nav) => _mobileNavItem(nav['index'], nav['icon'], nav['inactive'], nav['label'])).toList(),
+          ),
+          // Navigation Items Row
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 90,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: _navItems.map((nav) {
+                  int index = _navItems.indexOf(nav);
+                  return _mobileNavItem(index, nav['icon'], nav['inactive'], nav['label']);
+                }).toList(),
+              ),
+            ),
           ),
         ],
       ),
@@ -296,43 +288,68 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _mobileNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
     final isSelected = _currentIndex == index;
-    return GestureDetector(
-      onTap: () => _onTabTapped(index),
-      behavior: HitTestBehavior.opaque,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutBack,
+      margin: EdgeInsets.only(bottom: isSelected ? 24 : 12),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutQuint,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        color: Colors.transparent,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AnimatedScale(
-              scale: isSelected ? 1.15 : 1.0,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOutQuint,
-              child: Icon(
-                isSelected ? activeIcon : inactiveIcon,
-                color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-                size: 26,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutBack,
+        height: isSelected ? 56 : 48,
+        constraints: BoxConstraints(
+          minWidth: isSelected ? 100 : 48,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withOpacity(0.4),
+                    blurRadius: 20,
+                    spreadRadius: 6, // Sonar Glow
+                  ),
+                ]
+              : [],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(28),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(28),
+            onTap: () => _onTabTapped(index),
+            splashColor: Colors.white.withOpacity(0.2),
+            highlightColor: Colors.transparent,
+            child: Padding(
+              padding: isSelected ? const EdgeInsets.symmetric(horizontal: 16) : EdgeInsets.zero,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    isSelected ? activeIcon : inactiveIcon,
+                    color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                    size: 26,
+                  ),
+                  if (isSelected) ...[
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.clip,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ]
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            AnimatedOpacity(
-              opacity: isSelected ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: Container(
-                height: 4,
-                width: 4,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF4F46E5),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
