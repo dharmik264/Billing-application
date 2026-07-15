@@ -16,6 +16,8 @@ class BillReceiptWidget extends StatelessWidget {
     this.time,
     this.customerName,
     this.customerPhone,
+    this.customerAddress,
+    this.customerGstNumber,
     this.items = const [],
     this.subtotal = 0.0,
     this.discount = 0.0,
@@ -35,6 +37,8 @@ class BillReceiptWidget extends StatelessWidget {
   final String? time;
   final String? customerName;
   final String? customerPhone;
+  final String? customerAddress;
+  final String? customerGstNumber;
   final List<ApiTokenItemDraft> items;
   final double subtotal;
   final double discount;
@@ -272,6 +276,7 @@ class BillReceiptWidget extends StatelessWidget {
             if ((customerName != null && customerName!.isNotEmpty) || (customerPhone != null && customerPhone!.isNotEmpty)) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (customerName != null && customerName!.isNotEmpty)
                     Expanded(
@@ -282,6 +287,28 @@ class BillReceiptWidget extends StatelessWidget {
                       child: Text('Ph: $customerPhone',
                           textAlign: (customerName != null && customerName!.isNotEmpty) ? TextAlign.right : TextAlign.left, style: baseStyle),
                     ),
+                ],
+              ),
+              const SizedBox(height: 2),
+            ],
+            if (customerAddress != null && customerAddress!.isNotEmpty) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text('Address: $customerAddress', style: baseStyle),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 2),
+            ],
+            if (customerGstNumber != null && customerGstNumber!.isNotEmpty) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text('GST: $customerGstNumber', style: baseStyle),
+                  ),
                 ],
               ),
               const SizedBox(height: 4),

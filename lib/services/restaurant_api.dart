@@ -340,8 +340,8 @@ class RestaurantApi {
     await _patch('tokens/$id/cancel/', {});
   }
 
-  Future<List<Map<String, dynamic>>> searchCustomers(String query) async {
-    return await _getPaginatedList('tokens/customers/search/?q=$query');
+  Future<List<ApiCustomer>> searchCustomers(String query) async {
+    return fetchCustomers(search: query);
   }
 
   Future<void> deleteToken(String id) async {

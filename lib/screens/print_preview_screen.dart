@@ -22,6 +22,8 @@ class PrintPreviewScreen extends StatefulWidget {
     this.billNumber,
     this.customerName,
     this.customerPhone,
+    this.customerAddress,
+    this.customerGstNumber,
     this.paymentMode = 'Cash',
     this.logoBase64,
     this.qrBase64,
@@ -37,6 +39,8 @@ class PrintPreviewScreen extends StatefulWidget {
   final String? billNumber;
   final String? customerName;
   final String? customerPhone;
+  final String? customerAddress;
+  final String? customerGstNumber;
   final String paymentMode;
   final Future<ApiToken?> Function()? onSaveBill;
 
@@ -356,6 +360,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       billNumber: widget.billNumber,
       customerName: widget.customerName,
       customerPhone: widget.customerPhone,
+      customerAddress: widget.customerAddress,
+      customerGstNumber: widget.customerGstNumber,
       date: _formatDate(DateTime.now()),
       time: _formatTime(DateTime.now()),
       items: widget.items,

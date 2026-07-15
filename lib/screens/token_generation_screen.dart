@@ -60,6 +60,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _customerPhoneController = TextEditingController();
+  final TextEditingController _customerAddressController = TextEditingController();
+  final TextEditingController _customerGstController = TextEditingController();
   final TextEditingController _receivedAmountController = TextEditingController();
 
   bool _isLoading = true;
@@ -92,6 +94,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     _searchController.dispose();
     _customerNameController.dispose();
     _customerPhoneController.dispose();
+    _customerAddressController.dispose();
+    _customerGstController.dispose();
     _receivedAmountController.dispose();
     _cartTrigger
       ..removeListener(_onCartChanged)
@@ -214,6 +218,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       _billItems.clear();
       _customerNameController.clear();
       _customerPhoneController.clear();
+      _customerAddressController.clear();
+      _customerGstController.clear();
       _receivedAmountController.clear();
       _paymentMode = 'CASH';
     });
@@ -238,6 +244,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
 
     final name = _customerNameController.text.trim();
     final phone = _customerPhoneController.text.trim();
+    final address = _customerAddressController.text.trim();
+    final gst = _customerGstController.text.trim();
 
     if (phone.isNotEmpty && !RegExp(r'^\d{10}$').hasMatch(phone)) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -293,6 +301,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             billNumber: billNum,
             customerName: name.isNotEmpty ? name : null,
             customerPhone: phone.isNotEmpty ? phone : null,
+            customerAddress: address.isNotEmpty ? address : null,
+            customerGstNumber: gst.isNotEmpty ? gst : null,
             paymentMode: _paymentMode,
             items: apiToken.items,
             subtotal: currentSubtotal,
@@ -715,22 +725,24 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 16),                RawAutocomplete<Map<String, dynamic>>(
+                const SizedBox(height: 16),                RawAutocomplete<ApiCustomer>(
                   textEditingController: _customerNameController,
                   focusNode: FocusNode(),
-                  displayStringForOption: (option) => option['name'] as String? ?? '',
+                  displayStringForOption: (option) => option.name,
                   optionsBuilder: (TextEditingValue textEditingValue) async {
                     if (textEditingValue.text.length < 2) {
-                      return const Iterable<Map<String, dynamic>>.empty();
+                      return const Iterable<ApiCustomer>.empty();
                     }
                     try {
                       return await RestaurantApi.instance.searchCustomers(textEditingValue.text);
                     } catch (_) {
-                      return const Iterable<Map<String, dynamic>>.empty();
+                      return const Iterable<ApiCustomer>.empty();
                     }
                   },
                   onSelected: (option) {
-                    _customerPhoneController.text = option['phone']?.toString() ?? '';
+                    _customerPhoneController.text = option.mobileNumber;
+                    _customerAddressController.text = option.address;
+                    _customerGstController.text = option.gstNumber;
                   },
                   fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
                     return TextField(
@@ -774,8 +786,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                             itemBuilder: (context, index) {
                               final option = options.elementAt(index);
                               return ListTile(
-                                title: Text(option['name']?.toString() ?? '', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                                subtitle: Text(option['phone']?.toString() ?? '', style: GoogleFonts.inter(color: Colors.grey)),
+                                title: Text(option.name, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                                subtitle: Text(option.mobileNumber, style: GoogleFonts.inter(color: Colors.grey)),
                                 onTap: () => onSelected(option),
                               );
                             },
@@ -794,6 +806,58 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     hintText: 'Customer Mobile (Optional)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF94A3B8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _customerAddressController,
+                  maxLines: 2,
+                  minLines: 1,
+                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+                  decoration: InputDecoration(
+                    hintText: 'Customer Address (Optional)',
+                    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+                    prefixIcon: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF94A3B8)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _customerGstController,
+                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+                  decoration: InputDecoration(
+                    hintText: 'GST Number (Optional)',
+                    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+                    prefixIcon: const Icon(Icons.receipt_long_outlined, size: 18, color: Color(0xFF94A3B8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     filled: true,
                     fillColor: Colors.white,
