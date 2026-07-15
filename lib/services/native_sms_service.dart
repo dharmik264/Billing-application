@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 
 class NativeSmsService {
-  static const MethodChannel _channel = MethodChannel('com.example.billing_application/sms');
+  static const MethodChannel _channel = MethodChannel('com.dharmik.billingapp/sms');
 
   static Future<bool> sendSms({required String phone, required String message}) async {
     try {

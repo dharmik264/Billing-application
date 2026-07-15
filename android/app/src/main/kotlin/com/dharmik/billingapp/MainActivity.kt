@@ -1,4 +1,4 @@
-package com.example.billing_application
+package com.dharmik.billingapp
 
 import android.telephony.SmsManager
 import io.flutter.embedding.android.FlutterActivity
@@ -6,7 +6,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.example.billing_application/sms"
+    private val CHANNEL = "com.dharmik.billingapp/sms"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
