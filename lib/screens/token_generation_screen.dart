@@ -2,8 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter/services.dart';
 
 import '../services/restaurant_api.dart';
 import '../utils/bill_counter.dart';
@@ -12,7 +10,10 @@ import '../utils/local_storage_helper.dart';
 import 'print_preview_screen.dart';
 import 'main_screen.dart';
 import 'dart:typed_data';
+import 'package:permission_handler/permission_handler.dart';
+
 import 'edit_item_screen.dart';
+import '../services/native_sms_service.dart';
 
 class _TokenProduct {
   final ApiItem rawItem;
@@ -303,23 +304,16 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       }
       
       if (phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
-        final message = 
-          'Thank you for visiting ${RestaurantApi.instance.shopData?.name ?? "our shop"}!\n'
-          'Your Bill Amount is ₹${_grandTotal.toStringAsFixed(2)}\n'
-          'Have a great day!';
-        try {
-          var status = await Permission.sms.status;
-          if (!status.isGranted) {
-             status = await Permission.sms.request();
+        final status = await Permission.sms.request();
+        if (status.isGranted) {
+          final shopName = RestaurantApi.instance.shopData?.name ?? "our shop";
+          final message = 'Dear Customer,\n\nYour bill amount is \u20B9${_grandTotal.toStringAsFixed(2)}.\n\nThank you for shopping with us.\n\n- $shopName';
+          await NativeSmsService.sendSms(phone: '+91$phone', message: message);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SMS permission denied. Bill saved without SMS.')));
           }
-          if (status.isGranted) {
-            const platform = MethodChannel('com.example.billing_application/sms');
-            await platform.invokeMethod('sendSms', {
-              'phone': phone,
-              'message': message,
-            });
-          }
-        } catch (_) {}
+        }
       }
 
       if (mounted) {
