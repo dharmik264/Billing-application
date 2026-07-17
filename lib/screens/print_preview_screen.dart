@@ -11,7 +11,7 @@ import '../widgets/bill_receipt_widget.dart';
 import '../services/printer_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'success_screen.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:printing/printing.dart';
 import '../services/pdf_receipt_service.dart';
 
@@ -404,35 +404,10 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   Widget _primaryPrintActions() {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: CheckboxListTile(
-                title: Text('Customer Slip', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
-                value: _printCustomerSlip,
-                onChanged: (val) => setState(() => _printCustomerSlip = val ?? true),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-                activeColor: _primary,
-              ),
-            ),
-            Expanded(
-              child: CheckboxListTile(
-                title: Text('Kitchen Slip', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
-                value: _printKitchenSlip,
-                onChanged: (val) => setState(() => _printKitchenSlip = val ?? true),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
-                activeColor: _primary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
           child: _stackedButton(
-            label: 'Print Selected Slips',
+            label: 'Print Bill',
             subtitle: 'Send to Printer',
             icon: Icons.print_rounded,
             background: _primary,
