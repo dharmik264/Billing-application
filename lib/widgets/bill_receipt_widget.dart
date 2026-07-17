@@ -401,42 +401,31 @@ class BillReceiptWidget extends StatelessWidget {
             const SizedBox(height: 4),
             const Divider(color: border, height: 1),
             const SizedBox(height: 8),
-            if (template.showSubtotal) ...[
-              _receiptTotalRow('Subtotal', _money(subtotal), size: 11),
-              const SizedBox(height: 3),
-            ],
-            if (template.showDiscount) ...[
-              _receiptTotalRow('Discount', '-${_money(discount)}', size: 11),
-              const SizedBox(height: 3),
-            ],
-            if (template.showTax) ...[
-              Builder(
-                builder: (context) {
-                  final billSettings = shopData?.billSettings ?? {};
-                  final taxPercentValue = billSettings['tax_percent'] ?? 0.0;
-                  double taxPercent = 0.0;
-                  if (taxPercentValue is num) {
-                    taxPercent = taxPercentValue.toDouble();
-                  } else if (taxPercentValue is String) {
-                    taxPercent = double.tryParse(taxPercentValue) ?? 0.0;
-                  }
-                  final label = taxPercent > 0 ? 'Tax (GST ${taxPercent.toStringAsFixed(0)}%)' : 'Tax (GST)';
-                  return _receiptTotalRow(label, _money(tax), size: 11);
-                },
-              ),
-              const SizedBox(height: 3),
-            ],
-            if (template.showRoundOff) ...[
-              _receiptTotalRow('Round Off', _money(roundOff), size: 11),
-              const SizedBox(height: 3),
-            ],
-            if (template.showGrandTotal) ...[
-              const SizedBox(height: 4),
-              _receiptTotalRow(
-                  'Total Amount', _money(grandTotal > 0 ? grandTotal : subtotal),
-                  bold: true, size: 13),
-              const SizedBox(height: 8),
-            ],
+            _receiptTotalRow('Subtotal', _money(subtotal), size: 11),
+            const SizedBox(height: 3),
+            _receiptTotalRow('Discount', _money(discount), size: 11),
+            const SizedBox(height: 3),
+            Builder(
+              builder: (context) {
+                final billSettings = shopData?.billSettings ?? {};
+                final taxPercentValue = billSettings['tax_percent'] ?? 0.0;
+                double taxPercent = 0.0;
+                if (taxPercentValue is num) {
+                  taxPercent = taxPercentValue.toDouble();
+                } else if (taxPercentValue is String) {
+                  taxPercent = double.tryParse(taxPercentValue) ?? 0.0;
+                }
+                final label = taxPercent > 0 ? 'Tax (GST ${taxPercent.toStringAsFixed(0)}%)' : 'Tax';
+                return _receiptTotalRow(label, _money(tax), size: 11);
+              },
+            ),
+            const SizedBox(height: 3),
+            _receiptTotalRow('Round Off', _money(roundOff), size: 11),
+            const SizedBox(height: 7),
+            _receiptTotalRow(
+                'Grand Total', _money(grandTotal > 0 ? grandTotal : subtotal),
+                bold: true, size: 13),
+            const SizedBox(height: 8),
             if (template.showPaymentMethod) ...[
               const SizedBox(height: 4),
               Row(

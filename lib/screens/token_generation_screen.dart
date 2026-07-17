@@ -339,12 +339,46 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         final currentGrandTotal = _grandTotal;
         _clearCart();
 
-        if (!billPrintEnabled) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const SuccessScreen(isPrinted: false)),
-          );
-          return;
+        if (billPrintEnabled) {
+          try {
+            final shop = await RestaurantApi.instance.fetchShop();
+            final template = await RestaurantApi.instance.fetchBillTemplate();
+            
+            final savedToken = ApiToken(
+              id: '',
+              tokenNumber: tokenNum,
+              billNumber: billNum,
+              status: 'PENDING',
+              customerName: name,
+              customerPhone: phone,
+              grandTotal: currentGrandTotal,
+              paymentMode: _paymentMode,
+              createdAt: DateTime.now().toIso8601String(),
+              items: apiToken.items.map((i) => ApiTokenItem(
+                  id: i.id ?? '',
+                  name: i.name,
+                  code: i.code,
+                  rate: i.rate,
+                  quantity: i.quantity,
+                  subtotal: i.rate * i.quantity))
+              .toList(),
+              orderType: 'dine_in',
+            );
+            
+            if (billFormat == 'Bill A4') {
+              await PdfReceiptService.printReceipt(savedToken);
+            } else {
+              await PrinterService.instance.printReceipt(savedToken, shop, template).timeout(const Duration(seconds: 5));
+              if (pickupSlipEnabled) {
+                await PrinterService.instance.printKitchenSlip(savedToken).timeout(const Duration(seconds: 5));
+              }
+            }
+          } catch (e) {
+            debugPrint('Direct Print Error: $e');
+          }
         }
+
+        if (!mounted) return;
 
         if (printPreviewEnabled) {
           Navigator.of(context).push(MaterialPageRoute(
@@ -361,51 +395,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             ),
           ));
         } else {
-          // Background direct printing
-          final shop = await RestaurantApi.instance.fetchShop();
-          final template = await RestaurantApi.instance.fetchBillTemplate();
-          
-          final savedToken = ApiToken(
-            id: '',
-            tokenNumber: tokenNum,
-            billNumber: billNum,
-            status: 'PENDING',
-            customerName: name,
-            customerPhone: phone,
-            grandTotal: currentGrandTotal,
-            paymentMode: _paymentMode,
-            createdAt: DateTime.now().toIso8601String(),
-            items: apiToken.items.map((i) => ApiTokenItem(
-                id: i.id ?? '',
-                name: i.name,
-                code: i.code,
-                rate: i.rate,
-                quantity: i.quantity,
-                subtotal: i.rate * i.quantity))
-            .toList(),
-            orderType: 'dine_in',
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => SuccessScreen(isPrinted: billPrintEnabled)),
           );
-          
-          if (billFormat == 'Bill A4') {
-            await PdfReceiptService.printReceipt(savedToken);
-          } else {
-            try {
-              if (true) {
-                await PrinterService.instance.printReceipt(savedToken, shop, template).timeout(const Duration(seconds: 5));
-              }
-              if (pickupSlipEnabled) {
-                await PrinterService.instance.printKitchenSlip(savedToken).timeout(const Duration(seconds: 5));
-              }
-            } catch (e) {
-              debugPrint('Direct Thermal Print Error: $e');
-            }
-          }
-          
-          if (mounted) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const SuccessScreen(isPrinted: true)),
-            );
-          }
         }
       }
     } catch (e) {
@@ -1179,7 +1171,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                         title: Text('Send SMS', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                         subtitle: Text('Send bill SMS automatically after bill generation', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
                         value: sendSms,
-                        activeColor: const Color(0xFF4F46E5),
+                        activeThumbColor: const Color(0xFF4F46E5),
                         onChanged: (val) {
                           setModalState(() => sendSms = val);
                           BillSettingsHelper.setSendSms(val);
@@ -1189,7 +1181,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                         title: Text('Print Preview', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                         subtitle: Text('Show print preview before printing', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
                         value: printPreview,
-                        activeColor: const Color(0xFF4F46E5),
+                        activeThumbColor: const Color(0xFF4F46E5),
                         onChanged: (val) {
                           setModalState(() => printPreview = val);
                           BillSettingsHelper.setPrintPreview(val);
@@ -1199,7 +1191,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                         title: Text('Bill Print', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                         subtitle: Text('Enable bill printing', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
                         value: billPrint,
-                        activeColor: const Color(0xFF4F46E5),
+                        activeThumbColor: const Color(0xFF4F46E5),
                         onChanged: (val) {
                           setModalState(() => billPrint = val);
                           BillSettingsHelper.setBillPrint(val);
@@ -1208,7 +1200,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: DropdownButtonFormField<String>(
-                          value: billFormat,
+                          initialValue: billFormat,
                           decoration: InputDecoration(
                             labelText: 'Bill Format',
                             labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500),
@@ -1233,7 +1225,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                         title: Text('Pickup Slip', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                         subtitle: Text('Generate and print pickup slip', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
                         value: pickupSlip,
-                        activeColor: const Color(0xFF4F46E5),
+                        activeThumbColor: const Color(0xFF4F46E5),
                         onChanged: (val) {
                           setModalState(() => pickupSlip = val);
                           BillSettingsHelper.setPickupSlip(val);

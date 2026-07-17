@@ -80,23 +80,36 @@ class PdfReceiptService {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text('Subtotal:'),
-                  pw.Text(computedSubtotal.toStringAsFixed(2)),
+                  pw.Text('Rs. ${computedSubtotal.toStringAsFixed(2)}'),
                 ],
               ),
-              if (computedTax > 0)
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text('Tax:'),
-                    pw.Text(computedTax.toStringAsFixed(2)),
-                  ],
-                ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Discount:'),
+                  pw.Text('Rs. 0.00'),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Tax:'),
+                  pw.Text('Rs. ${computedTax.toStringAsFixed(2)}'),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Round Off:'),
+                  pw.Text('Rs. 0.00'),
+                ],
+              ),
               pw.Divider(),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('GRAND TOTAL:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
-                  pw.Text(token.grandTotal.toStringAsFixed(2), style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                  pw.Text('Grand Total:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                  pw.Text('Rs. ${token.grandTotal.toStringAsFixed(2)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
                 ],
               ),
               pw.SizedBox(height: 20),

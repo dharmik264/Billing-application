@@ -799,7 +799,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       );
 
       final bytes = await PdfReceiptService.generateReceipt(tokenToPrint, isThermal: false);
-      await Printing.sharePdf(bytes: bytes, filename: 'bill_${_actualTokenNumber}.pdf');
+      await Printing.sharePdf(bytes: bytes, filename: 'bill_$_actualTokenNumber.pdf');
     } catch (e) {
       if (mounted) _showSnackBar('Error sharing bill: $e');
     } finally {
