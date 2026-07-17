@@ -14,6 +14,10 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'edit_item_screen.dart';
 import '../services/native_sms_service.dart';
+import '../utils/bill_settings_helper.dart';
+import '../services/printer_service.dart';
+import '../services/pdf_receipt_service.dart';
+import 'success_screen.dart';
 
 class _TokenProduct {
   final ApiItem rawItem;
@@ -295,7 +299,13 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         await RestaurantApi.instance.createToken(apiToken);
       }
       
-      if (phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
+      final sendSmsEnabled = await BillSettingsHelper.getSendSms();
+      final billPrintEnabled = await BillSettingsHelper.getBillPrint();
+      final printPreviewEnabled = await BillSettingsHelper.getPrintPreview();
+      final billFormat = await BillSettingsHelper.getBillFormat();
+      final pickupSlipEnabled = await BillSettingsHelper.getPickupSlip();
+
+      if (sendSmsEnabled && phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
         final status = await Permission.sms.request();
         if (status.isGranted) {
           final shopName = RestaurantApi.instance.shopData?.name ?? "our shop";
@@ -328,19 +338,75 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         final currentTax = _taxAmount;
         final currentGrandTotal = _grandTotal;
         _clearCart();
-        Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (_) => PrintPreviewScreen(
+
+        if (!billPrintEnabled) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const SuccessScreen(isPrinted: false)),
+          );
+          return;
+        }
+
+        if (printPreviewEnabled) {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => PrintPreviewScreen(
+              tokenNumber: tokenNum,
+              billNumber: billNum,
+              customerName: name.isNotEmpty ? name : null,
+              customerPhone: phone.isNotEmpty ? phone : null,
+              paymentMode: _paymentMode,
+              items: apiToken.items,
+              subtotal: currentSubtotal,
+              tax: currentTax,
+              grandTotal: currentGrandTotal,
+            ),
+          ));
+        } else {
+          // Background direct printing
+          final shop = await RestaurantApi.instance.fetchShop();
+          final template = await RestaurantApi.instance.fetchBillTemplate();
+          
+          final savedToken = ApiToken(
+            id: '',
             tokenNumber: tokenNum,
             billNumber: billNum,
-            customerName: name.isNotEmpty ? name : null,
-            customerPhone: phone.isNotEmpty ? phone : null,
-            paymentMode: _paymentMode,
-            items: apiToken.items,
-            subtotal: currentSubtotal,
-            tax: currentTax,
+            status: 'PENDING',
+            customerName: name,
+            customerPhone: phone,
             grandTotal: currentGrandTotal,
-          ),
-        ));
+            paymentMode: _paymentMode,
+            createdAt: DateTime.now().toIso8601String(),
+            items: apiToken.items.map((i) => ApiTokenItem(
+                id: i.id ?? '',
+                name: i.name,
+                code: i.code,
+                rate: i.rate,
+                quantity: i.quantity,
+                subtotal: i.rate * i.quantity))
+            .toList(),
+            orderType: 'dine_in',
+          );
+          
+          if (billFormat == 'Bill A4') {
+            await PdfReceiptService.printReceipt(savedToken);
+          } else {
+            try {
+              if (true) {
+                await PrinterService.instance.printReceipt(savedToken, shop, template).timeout(const Duration(seconds: 5));
+              }
+              if (pickupSlipEnabled) {
+                await PrinterService.instance.printKitchenSlip(savedToken).timeout(const Duration(seconds: 5));
+              }
+            } catch (e) {
+              debugPrint('Direct Thermal Print Error: $e');
+            }
+          }
+          
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const SuccessScreen(isPrinted: true)),
+            );
+          }
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -393,6 +459,10 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               }
               return const SizedBox.shrink();
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: _showSettingsPanel,
           ),
           const SizedBox(width: 8),
         ],
@@ -1058,6 +1128,139 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showSettingsPanel() async {
+    bool sendSms = await BillSettingsHelper.getSendSms();
+    bool printPreview = await BillSettingsHelper.getPrintPreview();
+    bool billPrint = await BillSettingsHelper.getBillPrint();
+    String billFormat = await BillSettingsHelper.getBillFormat();
+    bool pickupSlip = await BillSettingsHelper.getPickupSlip();
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 24),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      Text('Bill Settings', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A))),
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        title: Text('Send SMS', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        subtitle: Text('Send bill SMS automatically after bill generation', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                        value: sendSms,
+                        activeColor: const Color(0xFF4F46E5),
+                        onChanged: (val) {
+                          setModalState(() => sendSms = val);
+                          BillSettingsHelper.setSendSms(val);
+                        },
+                      ),
+                      SwitchListTile(
+                        title: Text('Print Preview', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        subtitle: Text('Show print preview before printing', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                        value: printPreview,
+                        activeColor: const Color(0xFF4F46E5),
+                        onChanged: (val) {
+                          setModalState(() => printPreview = val);
+                          BillSettingsHelper.setPrintPreview(val);
+                        },
+                      ),
+                      SwitchListTile(
+                        title: Text('Bill Print', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        subtitle: Text('Enable bill printing', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                        value: billPrint,
+                        activeColor: const Color(0xFF4F46E5),
+                        onChanged: (val) {
+                          setModalState(() => billPrint = val);
+                          BillSettingsHelper.setBillPrint(val);
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: DropdownButtonFormField<String>(
+                          value: billFormat,
+                          decoration: InputDecoration(
+                            labelText: 'Bill Format',
+                            labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          ),
+                          items: ['Bill Slip', 'Bill A4'].map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value, style: GoogleFonts.inter()),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setModalState(() => billFormat = val);
+                              BillSettingsHelper.setBillFormat(val);
+                            }
+                          },
+                        ),
+                      ),
+                      SwitchListTile(
+                        title: Text('Pickup Slip', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                        subtitle: Text('Generate and print pickup slip', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                        value: pickupSlip,
+                        activeColor: const Color(0xFF4F46E5),
+                        onChanged: (val) {
+                          setModalState(() => pickupSlip = val);
+                          BillSettingsHelper.setPickupSlip(val);
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4F46E5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          child: Text('Done', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

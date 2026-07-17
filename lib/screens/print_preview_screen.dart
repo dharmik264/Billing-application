@@ -12,6 +12,8 @@ import '../services/printer_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'success_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:printing/printing.dart';
+import '../services/pdf_receipt_service.dart';
 
 class PrintPreviewScreen extends StatefulWidget {
   const PrintPreviewScreen({
@@ -329,7 +331,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
           ),
           InkWell(
             borderRadius: BorderRadius.circular(50),
-            onTap: () => _showSnackBar('Share options opened'),
+            onTap: _shareBill,
             child: Container(
               width: 32,
               height: 32,
@@ -769,5 +771,39 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _shareBill() async {
+    setState(() => _isPrinting = true);
+    try {
+      final tokenToPrint = _savedToken ?? ApiToken(
+        id: '',
+        tokenNumber: _actualTokenNumber,
+        billNumber: widget.billNumber ?? '',
+        status: 'PENDING',
+        customerName: widget.customerName ?? '',
+        customerPhone: widget.customerPhone ?? '',
+        grandTotal: widget.grandTotal,
+        paymentMode: widget.paymentMode,
+        createdAt: DateTime.now().toIso8601String(),
+        items: widget.items
+            .map((i) => ApiTokenItem(
+                id: i.id ?? '',
+                name: i.name,
+                code: i.code,
+                rate: i.rate,
+                quantity: i.quantity,
+                subtotal: i.rate * i.quantity))
+            .toList(),
+        orderType: 'dine_in',
+      );
+
+      final bytes = await PdfReceiptService.generateReceipt(tokenToPrint, isThermal: false);
+      await Printing.sharePdf(bytes: bytes, filename: 'bill_${_actualTokenNumber}.pdf');
+    } catch (e) {
+      if (mounted) _showSnackBar('Error sharing bill: $e');
+    } finally {
+      if (mounted) setState(() => _isPrinting = false);
+    }
   }
 }
