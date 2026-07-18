@@ -1,143 +1,9 @@
-import 'dart:typed_data';
-import 'dart:io';
+import re
 
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
-import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:shared_preferences/shared_preferences.dart';
+with open('lib/services/printer_service.dart', 'r', encoding='utf-8') as f:
+    content = f.read()
 
-import 'restaurant_api.dart';
-
-class PrinterService {
-  PrinterService._privateConstructor();
-  static final PrinterService instance = PrinterService._privateConstructor();
-
-  final BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
-  String? _printerIp;
-  bool _isNetworkPrinter = false;
-  PaperSize _paperSize = PaperSize.mm58;
-
-  bool _lastConnectionStatus = false;
-  DateTime _lastConnectionCheck = DateTime.fromMillisecondsSinceEpoch(0);
-
-  Future<void> initPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    final sizeStr = prefs.getString('paper_size') ?? '58 mm';
-    _paperSize = sizeStr == '80 mm' ? PaperSize.mm80 : PaperSize.mm58;
-
-    _printerIp = prefs.getString('printer_ip');
-    _isNetworkPrinter = prefs.getBool('is_network_printer') ?? false;
-  }
-
-  Future<List<BluetoothDevice>> getDevices() async {
-    try {
-      return await bluetooth.getBondedDevices();
-    } catch (e) {
-      return [];
-    }
-  }
-
-  Future<bool> connect(BluetoothDevice device) async {
-    try {
-      await bluetooth.connect(device);
-      _isNetworkPrinter = false;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('printer_mac', device.address ?? '');
-      await prefs.setBool('is_network_printer', false);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<void> disconnect() async {
-    try {
-      await bluetooth.disconnect();
-      _isNetworkPrinter = false;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('printer_mac');
-      await prefs.remove('printer_ip');
-      await prefs.remove('is_network_printer');
-      // ignore: empty_catches
-    } catch (e) {}
-  }
-
-  Future<bool> connectNetwork(String ip) async {
-    try {
-      final socket =
-          await Socket.connect(ip, 9100, timeout: const Duration(seconds: 3));
-      socket.destroy();
-
-      _printerIp = ip;
-      _isNetworkPrinter = true;
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('printer_ip', ip);
-      await prefs.setBool('is_network_printer', true);
-      return true;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> get isConnected async {
-    if (kIsWeb) return false;
-
-    final now = DateTime.now();
-    if (now.difference(_lastConnectionCheck).inSeconds < 5) {
-      return _lastConnectionStatus;
-    }
-
-    if (_isNetworkPrinter && _printerIp != null && _printerIp!.isNotEmpty) {
-      try {
-        final socket = await Socket.connect(_printerIp!, 9100,
-            timeout: const Duration(seconds: 1));
-        socket.destroy();
-        _lastConnectionStatus = true;
-      } catch (_) {
-        _lastConnectionStatus = false;
-      }
-    } else {
-      _lastConnectionStatus = await bluetooth.isConnected ?? false;
-    }
-
-    _lastConnectionCheck = now;
-    return _lastConnectionStatus;
-  }
-
-  Future<void> writeBytes(List<int> bytes) async {
-    if (_isNetworkPrinter && _printerIp != null && _printerIp!.isNotEmpty) {
-      try {
-        final socket = await Socket.connect(_printerIp!, 9100,
-            timeout: const Duration(seconds: 3));
-        socket.add(bytes);
-        await socket.flush();
-        await socket.close();
-      } catch (e) {
-        // print failed
-      }
-    } else {
-      bluetooth.writeBytes(Uint8List.fromList(bytes));
-    }
-  }
-
-  Future<void> attemptAutoConnect() async {
-    if (kIsWeb) return;
-    
-    await initPreferences();
-    if (_isNetworkPrinter) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final mac = prefs.getString('printer_mac');
-    if (mac != null && mac.isNotEmpty) {
-      final devices = await getDevices();
-      final device = devices.where((d) => d.address == mac).firstOrNull;
-      if (device != null) {
-        await connect(device);
-      }
-    }
-  }
-
-
+new_methods = """
   String _padRight(String text, int length) {
     if (text.length >= length) return text.substring(0, length);
     return text.padRight(length);
@@ -326,23 +192,12 @@ class PrinterService {
 
     await writeBytes(bytes);
   }
-  Future<void> printTest() async {
-    final connected = await isConnected;
-    if (!connected) return;
+"""
 
-    final profile = await CapabilityProfile.load();
-    final generator = Generator(_paperSize, profile);
-    List<int> bytes = [];
+start_idx = content.find('  Future<void> printReceipt')
+end_idx = content.find('  Future<void> printTest')
 
-    bytes += generator.text('Test Print Successful!',
-        styles: const PosStyles(
-            align: PosAlign.center,
-            bold: true,
-            height: PosTextSize.size2,
-            width: PosTextSize.size2));
-    bytes += generator.feed(2);
-    bytes += generator.cut();
+new_content = content[:start_idx] + new_methods + content[end_idx:]
 
-    await writeBytes(bytes);
-  }
-}
+with open('lib/services/printer_service.dart', 'w', encoding='utf-8') as f:
+    f.write(new_content)
