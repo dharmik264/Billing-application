@@ -109,10 +109,26 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
 
+      // Verify setup status if locally false but user is logged in
+      bool actualSetupComplete = isSetupComplete;
+      if (isLoggedIn && !isSetupComplete && loginPhone != '9999999999') {
+        try {
+          final shop = await RestaurantApi.instance.fetchShop(forceRefresh: true);
+          if (shop.paymentModesConfig != null && shop.paymentModesConfig!.isNotEmpty) {
+            actualSetupComplete = true;
+            await prefs.setBool('isSetupComplete', true);
+          }
+        } catch (_) {
+          // If offline or fails, fallback to existing local state
+        }
+      }
+
+      if (!mounted) return;
+
       // Routing Management Logic
       if (!isLoggedIn) {
         _navigateTo(const PasswordLoginScreen());
-      } else if (!isSetupComplete) {
+      } else if (!actualSetupComplete && loginPhone != '9999999999') {
         _navigateTo(const ShopSetupScreen());
       } else {
         await BillCounter.initialize(); // Seed counters

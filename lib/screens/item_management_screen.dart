@@ -75,7 +75,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
       decoration: const BoxDecoration(
         color: Color(0xFFEEF2FF),
         borderRadius: BorderRadius.only(
@@ -324,8 +324,8 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     final isActive = item.active;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
@@ -343,8 +343,8 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 56,
-                height: 56,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   color: isActive ? const Color(0xFFEEF2FF) : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(16),
@@ -353,26 +353,18 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                 child: item.localImageBytes != null
                     ? Image.memory(
                         item.localImageBytes!,
-                        width: 56,
-                        height: 56,
+                        width: 48,
+                        height: 48,
                         fit: BoxFit.cover,
                       )
                     : FutureBuilder<Uint8List?>(
                         future: LocalImageStorage.loadImageBytes('item_image_${item.code}.png'),
                         builder: (context, snapshot) {
                           if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                            // Cache it to avoid flickering on rebuilds
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              if (mounted) {
-                                setState(() {
-                                  item.localImageBytes = snapshot.data;
-                                });
-                              }
-                            });
                             return Image.memory(
                               snapshot.data!,
-                              width: 56,
-                              height: 56,
+                              width: 48,
+                              height: 48,
                               fit: BoxFit.cover,
                             );
                           }

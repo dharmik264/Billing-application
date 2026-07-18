@@ -180,6 +180,13 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           Expanded(child: _buildBody()),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openAdd,
+        backgroundColor: _indigo,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.person_add_rounded),
+        label: Text('Add Customer', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14)),
+      ),
     );
   }
 
@@ -222,23 +229,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Column(
         children: [
-          // Add Customer Button
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _openAdd,
-              icon: const Icon(Icons.person_add_rounded),
-              label: Text('Add New Customer', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _indigo,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
           // Search bar
           TextField(
             controller: _searchCtrl,

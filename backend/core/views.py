@@ -28,10 +28,14 @@ def send_sms_otp(phone, code):
     
     if sms_url and sms_key:
         try:
-            # Generic POST implementation (Fast2SMS/MSG91 style)
+            # Standard DLT-compliant format
+            template = os.getenv('SMS_DLT_TEMPLATE', 'Your verification code is {code}. Please do not share this with anyone.')
+            message = template.replace('{code}', str(code))
+            
             payload = {
                 "route": "otp",
                 "variables_values": str(code),
+                "message": message,
                 "numbers": str(phone),
             }
             headers = {

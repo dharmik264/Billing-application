@@ -94,55 +94,17 @@ class _EditItemScreenState extends State<EditItemScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: DefaultTabController(
-          length: 2,
-          child: Column(
-            children: [
-              _buildHeader(),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                height: 40,
-                decoration: BoxDecoration(
-                  color: _panelBackground,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: TabBar(
-                  dividerColor: Colors.transparent,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicator: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  labelColor: _primary,
-                  unselectedLabelColor: _textSecondary,
-                  labelStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
-                  tabs: const [
-                    Tab(text: 'Basic Info'),
-                    Tab(text: 'Settings'),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    _buildBasicInfoTab(),
-                    _buildSettingsTab(),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: _buildButtons(),
-              ),
-            ],
-          ),
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: _buildBasicInfoTab(),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: _buildButtons(),
+            ),
+          ],
         ),
       ),
     );
@@ -160,16 +122,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
           _buildCodeAndRate(),
           const SizedBox(height: 12),
           _buildCategorySelector(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSettingsTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Column(
-        children: [
+          const SizedBox(height: 16),
           _buildSwitchPanel(),
         ],
       ),

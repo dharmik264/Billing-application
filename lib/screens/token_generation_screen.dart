@@ -125,6 +125,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       int colorIndex = 0;
 
       for (var item in items) {
+        if (!item.active) continue;
         if (item.category.isNotEmpty) categorySet.add(item.category);
         products.add(_TokenProduct(
           rawItem: item,
@@ -690,13 +691,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     future: LocalImageStorage.loadImageBytes('item_image_${product.code}.png'),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) {
-                            setState(() {
-                              product.localImageBytes = snapshot.data;
-                            });
-                          }
-                        });
                         return Image.memory(
                           snapshot.data!,
                           width: double.infinity,

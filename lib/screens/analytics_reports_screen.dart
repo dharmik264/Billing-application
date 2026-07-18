@@ -444,10 +444,15 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     }
 
     return rangeFiltered.where((token) {
-      return query.isEmpty ||
-          token.title.toLowerCase().contains(query) ||
-          token.shortId.toLowerCase().contains(query) ||
-          token.payment.toLowerCase().contains(query);
+      if (query.isEmpty) return true;
+      final matchTitle = token.title.toLowerCase().contains(query);
+      final matchId = token.shortId.toLowerCase().contains(query);
+      final matchPayment = token.payment.toLowerCase().contains(query);
+      final matchCustomer = token.customerName.toLowerCase().contains(query) || token.customerPhone.contains(query);
+      final matchOrderType = token.orderType.toLowerCase().contains(query);
+      final matchItem = token.items.any((item) => item.name.toLowerCase().contains(query) || item.code.toLowerCase().contains(query));
+      
+      return matchTitle || matchId || matchPayment || matchCustomer || matchOrderType || matchItem;
     }).toList();
   }
 

@@ -561,7 +561,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                   topRight: Radius.circular(36),
                 ),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(32, 40, 32, 24),
+                  padding: EdgeInsets.fromLTRB(32, 40, 32, MediaQuery.of(context).viewInsets.bottom + 24),
                   child: _isDevMode && !_showOTPSection 
                       ? _buildDevUserList() 
                       : (_showOTPSection ? _buildOTPForm() : _buildPhoneForm()),
@@ -622,7 +622,22 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 32),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _sendOTP,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF4F46E5),
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            elevation: 4,
+            shadowColor: const Color(0xFF4F46E5).withValues(alpha: 0.5),
+          ),
+          child: _isLoading
+              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+              : Text('Send OTP', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+        ),
+        const SizedBox(height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -651,21 +666,6 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
               child: Text('Login here', style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontWeight: FontWeight.w700)),
             ),
           ],
-        ),
-        const SizedBox(height: 32),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _sendOTP,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4F46E5),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            elevation: 4,
-            shadowColor: const Color(0xFF4F46E5).withValues(alpha: 0.5),
-          ),
-          child: _isLoading
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text('Send OTP', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
         ),
       ],
     );

@@ -9,11 +9,7 @@ import '../services/restaurant_api.dart';
 import '../widgets/bill_receipt_widget.dart';
 
 import '../services/printer_service.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'success_screen.dart';
-
-import 'package:printing/printing.dart';
-import '../services/pdf_receipt_service.dart';
 
 class PrintPreviewScreen extends StatefulWidget {
   const PrintPreviewScreen({
@@ -62,11 +58,9 @@ class PrintPreviewScreen extends StatefulWidget {
 class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   static const Color _primary = Color(0xFF4F46E5);
   static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
   static const Color _softBorder = Color(0xFFE2E8F0);
   static const double _panelWidth = 360;
 
-  String _shopName = 'GOURMET EXPRESS';
   Uint8List? _logoBytes;
   Uint8List? _qrBytes;
   late String _actualTokenNumber;
@@ -76,8 +70,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   bool _isPrinting = false;
   ApiToken? _savedToken;
   
-  bool _printCustomerSlip = true;
-  bool _printKitchenSlip = true;
+  final bool _printCustomerSlip = true;
+  final bool _printKitchenSlip = true;
 
   String _formatDate(DateTime date) {
     final months = [
@@ -178,9 +172,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     }
 
     setState(() {
-      _shopName = finalTemplate.shopName?.isNotEmpty == true
-          ? finalTemplate.shopName!
-          : finalShop.name.toUpperCase();
       _logoBytes = logo;
       _qrBytes = qr;
       _billTemplate = finalTemplate;
@@ -264,8 +255,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                 _connectionBanner(),
                 const SizedBox(height: 12),
                 _primaryPrintActions(),
-                const SizedBox(height: 8),
-                _secondaryActions(),
               ],
             ),
           ),
@@ -329,20 +318,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
               ],
             ),
           ),
-          InkWell(
-            borderRadius: BorderRadius.circular(50),
-            onTap: _shareBill,
-            child: Container(
-              width: 32,
-              height: 32,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: Color(0xFFEEF2FF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.share, size: 16, color: _primary),
-            ),
-          ),
+
         ],
       ),
     );
@@ -499,73 +475,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
-  Widget _secondaryActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: _outlineAction(
-            'Reprint',
-            Icons.refresh,
-            _textSecondary,
-            _saveAndPrint,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _outlineAction(
-            'Share WA',
-            Icons.chat_outlined,
-            const Color(0xFF16A34A),
-            _shareWhatsApp,
-          ),
-        ),
-      ],
-    );
-  }
 
-  Future<void> _shareWhatsApp() async {
-    final text =
-        'Hello,\nHere is your Bill $_actualTokenNumber for Rs. ${widget.grandTotal}.\nThank you for visiting $_shopName!';
-    final url = Uri.parse('whatsapp://send?text=${Uri.encodeComponent(text)}');
-    try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url);
-      } else {
-        _showSnackBar('WhatsApp is not installed');
-      }
-    } catch (e) {
-      _showSnackBar('Could not launch WhatsApp');
-    }
-  }
-
-  Widget _outlineAction(
-    String label,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        height: 42,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _softBorder, width: 1),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 15, color: color),
-            const SizedBox(width: 6),
-            Text(label, style: TextStyle(fontSize: 13, color: color)),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _executePrint() async {
     if (_isPrinting) return;
@@ -656,11 +566,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     _showPrintSuccessAnimationAndPrint();
   }
 
-  void _saveAndPrint() async {
-    _printCustomerSlip = true;
-    _printKitchenSlip = false;
-    _executePrint();
-  }
 
   void _showPrintSuccessAnimationAndPrint() async {
     final overlay = Overlay.of(context);
@@ -748,37 +653,4 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Future<void> _shareBill() async {
-    setState(() => _isPrinting = true);
-    try {
-      final tokenToPrint = _savedToken ?? ApiToken(
-        id: '',
-        tokenNumber: _actualTokenNumber,
-        billNumber: widget.billNumber ?? '',
-        status: 'PENDING',
-        customerName: widget.customerName ?? '',
-        customerPhone: widget.customerPhone ?? '',
-        grandTotal: widget.grandTotal,
-        paymentMode: widget.paymentMode,
-        createdAt: DateTime.now().toIso8601String(),
-        items: widget.items
-            .map((i) => ApiTokenItem(
-                id: i.id ?? '',
-                name: i.name,
-                code: i.code,
-                rate: i.rate,
-                quantity: i.quantity,
-                subtotal: i.rate * i.quantity))
-            .toList(),
-        orderType: 'dine_in',
-      );
-
-      final bytes = await PdfReceiptService.generateReceipt(tokenToPrint, isThermal: false);
-      await Printing.sharePdf(bytes: bytes, filename: 'bill_$_actualTokenNumber.pdf');
-    } catch (e) {
-      if (mounted) _showSnackBar('Error sharing bill: $e');
-    } finally {
-      if (mounted) setState(() => _isPrinting = false);
-    }
-  }
 }
