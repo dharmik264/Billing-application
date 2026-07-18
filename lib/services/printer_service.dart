@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'dart:io';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:image/image.dart' as img;
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -146,6 +147,26 @@ class PrinterService {
   String _padLeft(String text, int length) {
     if (text.length >= length) return text.substring(0, length);
     return text.padLeft(length);
+  }
+
+
+  Future<void> printReceiptImage(Uint8List pngBytes) async {
+    final connected = await isConnected;
+    if (!connected) return;
+
+    final profile = await CapabilityProfile.load();
+    final generator = Generator(_paperSize, profile);
+    List<int> bytes = [];
+
+    final decodedImage = img.decodeImage(pngBytes);
+    if (decodedImage != null) {
+      bytes += generator.imageRaster(decodedImage);
+    }
+    
+    bytes += generator.feed(2);
+    bytes += generator.cut();
+
+    await writeBytes(bytes);
   }
 
   Future<void> printReceipt(

@@ -31,6 +31,7 @@ dependencies:
   flutter_animate: ^4.5.2
   qr_flutter: ^4.1.0
   permission_handler: ^12.0.3
+  image: ^4.9.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
@@ -72,6 +74,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   
   final bool _printCustomerSlip = true;
   final bool _printKitchenSlip = true;
+  final GlobalKey _receiptKey = GlobalKey();
 
   String _formatDate(DateTime date) {
     final months = [
@@ -329,7 +332,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return BillReceiptWidget(
+    return RepaintBoundary(
+        key: _receiptKey,
+        child: BillReceiptWidget(
       template: _billTemplate!,
       shopData: _shopData,
       tokenNumber: _actualTokenNumber,
