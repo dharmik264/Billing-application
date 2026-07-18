@@ -352,7 +352,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       paymentMode: widget.paymentMode,
       logoBytesOverride: _logoBytes,
       qrBytesOverride: _qrBytes,
-    );
+    ));
   }
 
   Widget _connectionBanner() {
