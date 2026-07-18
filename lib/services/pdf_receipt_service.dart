@@ -55,7 +55,7 @@ class PdfReceiptService {
               pw.Center(
                 child: pw.Text(
                   shop.name.toUpperCase(),
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                     fontSize: 20,
                     fontWeight: pw.FontWeight.bold,
                     letterSpacing: 1.5,
@@ -64,7 +64,7 @@ class PdfReceiptService {
               ),
               pw.SizedBox(height: 4),
               pw.Center(
-                child: pw.Text('TAX INVOICE', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, letterSpacing: 1.2)),
+                child: pw.Text('TAX INVOICE', style: const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, letterSpacing: 1.2)),
               ),
               if (shop.tagline.isNotEmpty) ...[
                 pw.SizedBox(height: 4),
@@ -118,10 +118,10 @@ class PdfReceiptService {
                 children: [
                   pw.TableRow(
                     children: [
-                      pw.Text('Item', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                      pw.Text('Qty', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                      pw.Text('Price', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                      pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.right),
+                      pw.Text('Item', style: const pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.Text('Qty', style: const pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.Text('Price', style: const pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                      pw.Text('Total', style: const pw.TextStyle(fontWeight: pw.FontWeight.bold), textAlign: pw.TextAlign.right),
                     ],
                   ),
                   ...token.items.map((item) => pw.TableRow(
@@ -169,8 +169,8 @@ class PdfReceiptService {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('Grand Total:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
-                  pw.Text('Rs. ${token.grandTotal.toStringAsFixed(2)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                  pw.Text('Grand Total:', style: const pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                  pw.Text('Rs. ${token.grandTotal.toStringAsFixed(2)}', style: const pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
                 ],
               ),
               pw.Row(
@@ -185,7 +185,7 @@ class PdfReceiptService {
                 pw.Center(
                   child: pw.Column(
                     children: [
-                      pw.Text('Scan to Pay', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                      pw.Text('Scan to Pay', style: const pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12)),
                       pw.SizedBox(height: 5),
                       pw.BarcodeWidget(
                         barcode: pw.Barcode.qrCode(),

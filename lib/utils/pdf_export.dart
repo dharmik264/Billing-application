@@ -82,7 +82,7 @@ class PdfExport {
           pw.SizedBox(height: 20),
           pw.Text('Transaction Details',
               style:
-                  pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                  const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 10),
           _buildTransactionTable(tokens),
         ],
@@ -121,7 +121,7 @@ class PdfExport {
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text(shopName,
-                style: pw.TextStyle(
+                style: const pw.TextStyle(
                     fontSize: 24,
                     fontWeight: pw.FontWeight.bold,
                     color: PdfColors.blue800)),
@@ -136,7 +136,7 @@ class PdfExport {
           children: [
             pw.Text('Range: $rangeLabel',
                 style:
-                    pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                    const pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 4),
             pw.Text('Generated: $dateStr, $timeStr',
                 style:
@@ -180,7 +180,7 @@ class PdfExport {
             pw.SizedBox(height: 4),
             pw.Text(value,
                 style:
-                    pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                    const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
           ],
         ),
       ),
@@ -212,7 +212,7 @@ class PdfExport {
                       fontSize: 10, color: PdfColors.grey700)),
               pw.SizedBox(height: 4),
               pw.Text('Rs. ${cashTotal.toStringAsFixed(2)} ($cashPct%)',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 12, fontWeight: pw.FontWeight.bold)),
             ],
           ),
@@ -223,7 +223,7 @@ class PdfExport {
                       fontSize: 10, color: PdfColors.grey700)),
               pw.SizedBox(height: 4),
               pw.Text('Rs. ${onlineTotal.toStringAsFixed(2)} ($onlinePct%)',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                       fontSize: 12, fontWeight: pw.FontWeight.bold)),
             ],
           ),
@@ -289,7 +289,7 @@ class PdfExport {
       child: pw.Text(
         text,
         textAlign: align,
-        style: pw.TextStyle(
+        style: const pw.TextStyle(
             fontSize: 10,
             fontWeight: pw.FontWeight.bold,
             color: PdfColors.white),

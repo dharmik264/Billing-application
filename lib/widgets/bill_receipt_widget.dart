@@ -237,7 +237,7 @@ class BillReceiptWidget extends StatelessWidget {
                               ),
                               child: Text(
                                 billNumber!,
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontSize: 9,
                                     color: Color(0xFF1D4ED8),
                                     fontWeight: FontWeight.bold),
@@ -257,7 +257,7 @@ class BillReceiptWidget extends StatelessWidget {
                               ),
                               child: Text(
                                 tokenNumber!,
-                                style: TextStyle(
+                                style: const TextStyle(
                                     fontSize: 9,
                                     color: Color(0xFFC2410C),
                                     fontWeight: FontWeight.bold),
