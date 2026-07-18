@@ -147,87 +147,127 @@ class PrinterService {
     List<int> bytes = [];
 
     // Header
-    bytes += generator.text(shopData.name,
+    bytes += generator.text(shopData.name.toUpperCase(),
         styles: const PosStyles(
             align: PosAlign.center,
             height: PosTextSize.size2,
             width: PosTextSize.size2,
             bold: true));
+    bytes += generator.text('TAX INVOICE', styles: const PosStyles(align: PosAlign.center, bold: true));
+    
+    if (shopData.tagline.isNotEmpty) {
+      bytes += generator.text('"${shopData.tagline}"', styles: const PosStyles(align: PosAlign.center));
+    }
     if (shopData.address != null && shopData.address!.isNotEmpty) {
       bytes += generator.text(shopData.address!,
           styles: const PosStyles(align: PosAlign.center));
     }
     if (shopData.phone != null && shopData.phone!.isNotEmpty) {
-      bytes += generator.text('Tel: ${shopData.phone}',
+      bytes += generator.text('Ph: ${shopData.phone}',
+          styles: const PosStyles(align: PosAlign.center));
+    }
+    if (shopData.email != null && shopData.email!.isNotEmpty) {
+      bytes += generator.text('Email: ${shopData.email}',
           styles: const PosStyles(align: PosAlign.center));
     }
     if (shopData.gstin != null && shopData.gstin!.isNotEmpty) {
-      bytes += generator.text('GST: ${shopData.gstin}',
+      bytes += generator.text('GSTIN: ${shopData.gstin}',
           styles: const PosStyles(align: PosAlign.center));
     }
     bytes += generator.feed(1);
+    bytes += generator.hr();
 
     // Bill Details
-    bytes += generator.text('Token: ${token.tokenNumber}',
-        styles: const PosStyles(bold: true));
-    bytes += generator.text('Bill No: ${token.billNumber}');
-    bytes += generator.text('Date: ${token.createdAt.split('T').first}');
-    if (token.customerName.isNotEmpty) {
-      bytes += generator.text('Customer: ${token.customerName}');
+    bytes += generator.row([
+      PosColumn(text: 'Inv: ${token.billNumber}', width: 6),
+      PosColumn(text: 'Token: ${token.tokenNumber}', width: 6, styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    final dtParts = token.createdAt.split('T');
+    final dateStr = dtParts.isNotEmpty ? dtParts.first : '';
+    bytes += generator.row([
+      PosColumn(text: 'Date: $dateStr', width: 12, styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    
+    if (token.customerName.isNotEmpty || token.customerPhone.isNotEmpty) {
+      bytes += generator.hr();
+      bytes += generator.row([
+        PosColumn(text: token.customerName.isNotEmpty ? 'Customer: ${token.customerName}' : '', width: 6),
+        PosColumn(text: token.customerPhone.isNotEmpty ? 'Ph: ${token.customerPhone}' : '', width: 6, styles: const PosStyles(align: PosAlign.right)),
+      ]);
     }
     bytes += generator.feed(1);
 
     // Items Header
     bytes += generator.row([
-      PosColumn(text: 'Item', width: 6, styles: const PosStyles(bold: true)),
-      PosColumn(text: 'Qty', width: 2, styles: const PosStyles(bold: true)),
-      PosColumn(
-          text: 'Amount',
-          width: 4,
-          styles: const PosStyles(align: PosAlign.right, bold: true)),
+      PosColumn(text: 'ITEM', width: 5, styles: const PosStyles(bold: true)),
+      PosColumn(text: 'QTY', width: 2, styles: const PosStyles(bold: true, align: PosAlign.center)),
+      PosColumn(text: 'PRICE', width: 2, styles: const PosStyles(bold: true, align: PosAlign.right)),
+      PosColumn(text: 'TOTAL', width: 3, styles: const PosStyles(align: PosAlign.right, bold: true)),
     ]);
     bytes += generator.hr();
 
     // Items
     for (final item in token.items) {
       bytes += generator.row([
-        PosColumn(text: item.name, width: 6),
-        PosColumn(text: '${item.quantity}', width: 2),
+        PosColumn(text: item.name, width: 5),
+        PosColumn(text: '${item.quantity}', width: 2, styles: const PosStyles(align: PosAlign.center)),
+        PosColumn(text: item.rate.toStringAsFixed(2), width: 2, styles: const PosStyles(align: PosAlign.right)),
         PosColumn(
             text: item.subtotal.toStringAsFixed(2),
-            width: 4,
+            width: 3,
             styles: const PosStyles(align: PosAlign.right)),
       ]);
     }
     bytes += generator.hr();
 
     // Totals
-    final subtotal = token.items.fold(0.0, (sum, i) => sum + i.subtotal);
+    final computedSubtotal = token.items.fold(0.0, (sum, i) => sum + i.subtotal);
+    final computedTax = token.grandTotal - computedSubtotal;
+
     bytes += generator.row([
-      PosColumn(text: 'Subtotal', width: 8),
-      PosColumn(
-          text: subtotal.toStringAsFixed(2),
-          width: 4,
-          styles: const PosStyles(align: PosAlign.right)),
+      PosColumn(text: 'Subtotal:', width: 8),
+      PosColumn(text: computedSubtotal.toStringAsFixed(2), width: 4, styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    bytes += generator.row([
+      PosColumn(text: 'Discount:', width: 8),
+      PosColumn(text: '0.00', width: 4, styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    bytes += generator.row([
+      PosColumn(text: 'Tax:', width: 8),
+      PosColumn(text: computedTax.toStringAsFixed(2), width: 4, styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    bytes += generator.row([
+      PosColumn(text: 'Round Off:', width: 8),
+      PosColumn(text: '0.00', width: 4, styles: const PosStyles(align: PosAlign.right)),
+    ]);
+    bytes += generator.feed(1);
+    
+    bytes += generator.row([
+      PosColumn(text: 'Grand Total', width: 8, styles: const PosStyles(bold: true)),
+      PosColumn(text: token.grandTotal.toStringAsFixed(2), width: 4, styles: const PosStyles(align: PosAlign.right, bold: true)),
     ]);
 
     bytes += generator.feed(1);
     bytes += generator.row([
-      PosColumn(
-          text: 'Grand Total', width: 8, styles: const PosStyles(bold: true)),
-      PosColumn(
-          text: token.grandTotal.toStringAsFixed(2),
-          width: 4,
-          styles: const PosStyles(align: PosAlign.right, bold: true)),
+      PosColumn(text: 'Payment Mode', width: 6),
+      PosColumn(text: token.paymentMode, width: 6, styles: const PosStyles(align: PosAlign.right)),
     ]);
-
     bytes += generator.feed(1);
-    bytes += generator.text('Payment Mode: ${token.paymentMode}',
-        styles: const PosStyles(align: PosAlign.center));
+
+    if (shopData.upiId != null && shopData.upiId!.isNotEmpty) {
+      final qrData = 'upi://pay?pa=${shopData.upiId}&pn=${Uri.encodeComponent(shopData.name)}&am=${token.grandTotal.toStringAsFixed(2)}&cu=INR';
+      bytes += generator.qrcode(qrData);
+      bytes += generator.text(shopData.upiId!, styles: const PosStyles(align: PosAlign.center));
+      bytes += generator.text('Scan to Pay Rs. ${token.grandTotal.toStringAsFixed(2)}', styles: const PosStyles(align: PosAlign.center, bold: true));
+      bytes += generator.feed(1);
+    }
 
     if (template.footerMessage.isNotEmpty) {
-      bytes += generator.feed(1);
       bytes += generator.text(template.footerMessage,
+          styles: const PosStyles(align: PosAlign.center));
+    }
+    if (template.termsAndConditions.isNotEmpty) {
+      bytes += generator.text(template.termsAndConditions,
           styles: const PosStyles(align: PosAlign.center));
     }
 

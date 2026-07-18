@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -14,6 +15,21 @@ class PdfReceiptService {
         ? PdfPageFormat.roll80
         : PdfPageFormat.a4;
 
+    pw.MemoryImage? logoImage;
+    pw.ImageProvider? networkLogo;
+
+    if (shop.logoUrl != null && shop.logoUrl!.isNotEmpty) {
+      try {
+        if (shop.logoUrl!.startsWith('data:image')) {
+          logoImage = pw.MemoryImage(base64Decode(shop.logoUrl!.split(',').last));
+        } else if (shop.logoUrl!.contains('/')) {
+          networkLogo = await networkImage(RestaurantApi.instance.getMediaUrl(shop.logoUrl!));
+        } else {
+          logoImage = pw.MemoryImage(base64Decode(shop.logoUrl!));
+        }
+      } catch (_) {}
+    }
+
     pdf.addPage(
       pw.Page(
         pageFormat: pageFormat,
@@ -24,26 +40,71 @@ class PdfReceiptService {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
+              if (logoImage != null || networkLogo != null) ...[
+                pw.Center(
+                  child: pw.ClipOval(
+                    child: pw.Container(
+                      width: 50,
+                      height: 50,
+                      child: pw.Image(logoImage ?? networkLogo!, fit: pw.BoxFit.cover),
+                    ),
+                  ),
+                ),
+                pw.SizedBox(height: 10),
+              ],
               pw.Center(
                 child: pw.Text(
-                  'RESTAURANT RECEIPT',
+                  shop.name.toUpperCase(),
                   style: pw.TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     fontWeight: pw.FontWeight.bold,
+                    letterSpacing: 1.5,
                   ),
                 ),
               ),
+              pw.SizedBox(height: 4),
+              pw.Center(
+                child: pw.Text('TAX INVOICE', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, letterSpacing: 1.2)),
+              ),
+              if (shop.tagline.isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                pw.Center(child: pw.Text('"${shop.tagline}"', style: const pw.TextStyle(fontSize: 10))),
+              ],
+              if (shop.address != null && shop.address!.isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                pw.Center(child: pw.Text(shop.address!, style: const pw.TextStyle(fontSize: 10))),
+              ],
+              if (shop.phone != null && shop.phone!.isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                pw.Center(child: pw.Text('Ph: ${shop.phone}', style: const pw.TextStyle(fontSize: 10))),
+              ],
+              if (shop.email != null && shop.email!.isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                pw.Center(child: pw.Text('Email: ${shop.email}', style: const pw.TextStyle(fontSize: 10))),
+              ],
+              if (shop.gstin != null && shop.gstin!.isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                pw.Center(child: pw.Text('GSTIN: ${shop.gstin}', style: const pw.TextStyle(fontSize: 10))),
+              ],
               pw.SizedBox(height: 10),
               pw.Divider(),
+              pw.SizedBox(height: 5),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
+                  pw.Text('Inv: ${token.billNumber}'),
                   pw.Text('Token No: ${token.tokenNumber}'),
-                  pw.Text('Date: ${token.createdAt.length >= 10 ? token.createdAt.substring(0, 10) : token.createdAt}'),
                 ],
               ),
               pw.SizedBox(height: 5),
-              pw.Text('Customer: ${token.customerName}'),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(token.customerName.isNotEmpty ? 'Customer: ${token.customerName}' : ''),
+                  pw.Text('Date: ${token.createdAt.split('T').first}'),
+                ],
+              ),
+              pw.SizedBox(height: 5),
               pw.Divider(),
               pw.SizedBox(height: 10),
               // Items
@@ -110,6 +171,13 @@ class PdfReceiptService {
                 children: [
                   pw.Text('Grand Total:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
                   pw.Text('Rs. ${token.grandTotal.toStringAsFixed(2)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                ],
+              ),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Payment Mode:'),
+                  pw.Text(token.paymentMode),
                 ],
               ),
               pw.SizedBox(height: 20),
