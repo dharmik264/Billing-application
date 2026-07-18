@@ -127,10 +127,10 @@ class BillReceiptWidget extends StatelessWidget {
 
     final upiIdStr = shopData?.upiId;
 
-    final baseStyle = TextStyle(fontSize: isForPrint ? 12 : 10, color: textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
+    final baseStyle = TextStyle(fontSize: isForPrint ? 16 : 10, color: isForPrint ? Colors.black : textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
 
     return Container(
-      width: isForPrint ? 400 : double.infinity,
+      width: isForPrint ? 340 : double.infinity,
       padding: isForPrint ? const EdgeInsets.symmetric(horizontal: 4, vertical: 8) : const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -138,7 +138,7 @@ class BillReceiptWidget extends StatelessWidget {
         border: isForPrint ? null : Border.all(color: border, width: 0.5),
       ),
       child: DefaultTextStyle.merge(
-        style: const TextStyle(fontFamily: 'monospace', color: textPrimary),
+        style: TextStyle(fontFamily: 'monospace', color: isForPrint ? Colors.black : textPrimary),
         child: Column(
           children: [
             if (finalLogo != null || networkLogo != null) ...[
@@ -160,10 +160,10 @@ class BillReceiptWidget extends StatelessWidget {
               shopName.toUpperCase(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: isForPrint ? 18 : 13,
+                fontSize: isForPrint ? 26 : 13,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
-                color: textPrimary,
+                color: isForPrint ? Colors.black : textPrimary,
               ),
             ),
             const SizedBox(height: 2),
@@ -171,10 +171,10 @@ class BillReceiptWidget extends StatelessWidget {
               'TAX INVOICE',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: isForPrint ? 15 : 11,
+                fontSize: isForPrint ? 20 : 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
-                color: textPrimary,
+                color: isForPrint ? Colors.black : textPrimary,
               ),
             ),
             if (tagline?.isNotEmpty == true) ...[
@@ -182,10 +182,10 @@ class BillReceiptWidget extends StatelessWidget {
               Text(
                 '"$tagline"',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 10,
                     fontStyle: FontStyle.italic,
-                    color: textSecondary),
+                    color: isForPrint ? Colors.black : textSecondary),
               ),
             ],
             if (address?.isNotEmpty == true) ...[
@@ -237,7 +237,7 @@ class BillReceiptWidget extends StatelessWidget {
                               ),
                               child: Text(
                                 billNumber!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 9,
                                     color: Color(0xFF1D4ED8),
                                     fontWeight: FontWeight.bold),
@@ -257,18 +257,18 @@ class BillReceiptWidget extends StatelessWidget {
                               ),
                               child: Text(
                                 tokenNumber!,
-                                style: const TextStyle(
+                                style: TextStyle(
                                     fontSize: 9,
                                     color: Color(0xFFC2410C),
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
                           if (billNumber == null && tokenNumber == null)
-                            const Text(
+                            Text(
                               'Inv: #1024',
                               style: TextStyle(
                                   fontSize: 10,
-                                  color: textSecondary,
+                                  color: isForPrint ? Colors.black : textSecondary,
                                   fontWeight: FontWeight.bold),
                             ),
                         ],
@@ -314,31 +314,31 @@ class BillReceiptWidget extends StatelessWidget {
             Row(
               children: [
                 if (template.showItemName)
-                  const Expanded(
+                  Expanded(
                     flex: 5,
                     child: Text('ITEM',
-                        style: TextStyle(fontSize: 10, color: muted)),
+                        style: TextStyle(fontSize: 10, color: isForPrint ? Colors.black : muted)),
                   ),
                 if (template.showQuantity)
-                  const Expanded(
+                  Expanded(
                     flex: 2,
                     child: Text('QTY',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 10, color: muted)),
+                        style: TextStyle(fontSize: 10, color: isForPrint ? Colors.black : muted)),
                   ),
                 if (template.showUnitPrice)
-                  const Expanded(
+                  Expanded(
                     flex: 3,
                     child: Text('PRICE',
                         textAlign: TextAlign.right,
-                        style: TextStyle(fontSize: 10, color: muted)),
+                        style: TextStyle(fontSize: 10, color: isForPrint ? Colors.black : muted)),
                   ),
                 if (template.showTotalPrice)
-                  const Expanded(
+                  Expanded(
                     flex: 3,
                     child: Text('TOTAL',
                         textAlign: TextAlign.right,
-                        style: TextStyle(fontSize: 10, color: muted)),
+                        style: TextStyle(fontSize: 10, color: isForPrint ? Colors.black : muted)),
                   ),
               ],
             ),
@@ -356,10 +356,10 @@ class BillReceiptWidget extends StatelessWidget {
                           item.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: textPrimary),
+                              color: isForPrint ? Colors.black : textPrimary),
                         ),
                       ),
                     if (template.showQuantity)
@@ -368,10 +368,10 @@ class BillReceiptWidget extends StatelessWidget {
                         child: Text(
                           item.quantity.toString(),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: textPrimary),
+                              color: isForPrint ? Colors.black : textPrimary),
                         ),
                       ),
                     if (template.showUnitPrice)
@@ -381,7 +381,7 @@ class BillReceiptWidget extends StatelessWidget {
                           _money(item.rate),
                           textAlign: TextAlign.right,
                           style:
-                              const TextStyle(fontSize: 12, color: textPrimary),
+                              TextStyle(fontSize: 12, color: isForPrint ? Colors.black : textPrimary),
                         ),
                       ),
                     if (template.showTotalPrice)
@@ -390,10 +390,10 @@ class BillReceiptWidget extends StatelessWidget {
                         child: Text(
                           _money(item.rate * item.quantity),
                           textAlign: TextAlign.right,
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: textPrimary),
+                              color: isForPrint ? Colors.black : textPrimary),
                         ),
                       ),
                   ],
@@ -433,10 +433,10 @@ class BillReceiptWidget extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Payment Mode',
-                      style: TextStyle(fontSize: 11, color: textSecondary)),
+                  Text('Payment Mode',
+                      style: TextStyle(fontSize: 11, color: isForPrint ? Colors.black : textSecondary)),
                   Text(paymentMode,
-                      style: const TextStyle(fontSize: 11, color: textPrimary)),
+                      style: TextStyle(fontSize: 11, color: isForPrint ? Colors.black : textPrimary)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -451,11 +451,11 @@ class BillReceiptWidget extends StatelessWidget {
               if (template.showUpiId) ...[
                 const SizedBox(height: 4),
                 Text(upiIdStr,
-                    style: const TextStyle(fontSize: 9, color: textPrimary)),
+                    style: TextStyle(fontSize: 9, color: isForPrint ? Colors.black : textPrimary)),
               ],
               const SizedBox(height: 4),
               Text('Scan to Pay ${_money(grandTotal > 0 ? grandTotal : subtotal)}',
-                  style: const TextStyle(fontSize: 10, color: textPrimary, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 10, color: isForPrint ? Colors.black : textPrimary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
             ]
             else if (finalQr != null || networkQr != null) ...[
@@ -473,16 +473,16 @@ class BillReceiptWidget extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text('Scan to Pay ${_money(grandTotal > 0 ? grandTotal : subtotal)}',
-                  style: const TextStyle(fontSize: 10, color: textPrimary, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 10, color: isForPrint ? Colors.black : textPrimary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
             ],
             if (template.footerMessage.isNotEmpty) ...[
               Text(
                 template.footerMessage,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 11,
-                    color: textPrimary,
+                    color: isForPrint ? Colors.black : textPrimary,
                     fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 4),
@@ -491,7 +491,7 @@ class BillReceiptWidget extends StatelessWidget {
               Text(
                 template.termsAndConditions,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 9, color: muted),
+                style: TextStyle(fontSize: 9, color: isForPrint ? Colors.black : muted),
               ),
             ],
           ],
