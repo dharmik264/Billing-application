@@ -70,6 +70,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   ApiShopData? _shopData;
   bool _isLoading = true;
   bool _isPrinting = false;
+  bool _isCapturingForPrint = false;
   ApiToken? _savedToken;
   
   final bool _printCustomerSlip = true;
@@ -352,6 +353,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       paymentMode: widget.paymentMode,
       logoBytesOverride: _logoBytes,
       qrBytesOverride: _qrBytes,
+      isForPrint: _isCapturingForPrint,
     ));
   }
 
@@ -565,7 +567,12 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       debugPrint('Printer error: $e');
       _showSnackBar('Printer Error: ${e.toString()}');
     } finally {
-      if (mounted) setState(() => _isPrinting = false);
+      if (mounted) {
+        setState(() {
+          _isPrinting = false;
+          _isCapturingForPrint = false;
+        });
+      }
     }
 
     _showPrintSuccessAnimationAndPrint();

@@ -27,6 +27,7 @@ class BillReceiptWidget extends StatelessWidget {
     this.paymentMode = 'Cash',
     this.logoBytesOverride,
     this.qrBytesOverride,
+    this.isForPrint = false,
   }) : super(key: key);
 
   final ApiBillTemplate template;
@@ -50,6 +51,7 @@ class BillReceiptWidget extends StatelessWidget {
   /// Used in Shop Setup to show the locally picked image before saving to the server
   final Uint8List? logoBytesOverride;
   final Uint8List? qrBytesOverride;
+  final bool isForPrint;
 
   String _money(double amount) => '\u20B9${amount.toStringAsFixed(2)}';
 
@@ -125,15 +127,15 @@ class BillReceiptWidget extends StatelessWidget {
 
     final upiIdStr = shopData?.upiId;
 
-    const baseStyle = TextStyle(fontSize: 10, color: textSecondary);
+    final baseStyle = TextStyle(fontSize: isForPrint ? 12 : 10, color: textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      width: isForPrint ? 400 : double.infinity,
+      padding: isForPrint ? const EdgeInsets.symmetric(horizontal: 4, vertical: 8) : const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: border, width: 0.5),
+        borderRadius: BorderRadius.circular(isForPrint ? 0 : 14),
+        border: isForPrint ? null : Border.all(color: border, width: 0.5),
       ),
       child: DefaultTextStyle.merge(
         style: const TextStyle(fontFamily: 'monospace', color: textPrimary),
@@ -157,20 +159,20 @@ class BillReceiptWidget extends StatelessWidget {
             Text(
               shopName.toUpperCase(),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+              style: TextStyle(
+                fontSize: isForPrint ? 18 : 13,
+                fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
                 color: textPrimary,
               ),
             ),
             const SizedBox(height: 2),
-            const Text(
+            Text(
               'TAX INVOICE',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+                fontSize: isForPrint ? 15 : 11,
+                fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
                 color: textPrimary,
               ),
