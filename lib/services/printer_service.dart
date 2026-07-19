@@ -17,6 +17,7 @@ class PrinterService {
   String? _printerIp;
   bool _isNetworkPrinter = false;
   PaperSize _paperSize = PaperSize.mm58;
+  bool get is80mm => _paperSize == PaperSize.mm80;
 
   bool _lastConnectionStatus = false;
   DateTime _lastConnectionCheck = DateTime.fromMillisecondsSinceEpoch(0);

@@ -28,6 +28,7 @@ class BillReceiptWidget extends StatelessWidget {
     this.logoBytesOverride,
     this.qrBytesOverride,
     this.isForPrint = false,
+    this.is80mm = false,
   }) : super(key: key);
 
   final ApiBillTemplate template;
@@ -52,6 +53,7 @@ class BillReceiptWidget extends StatelessWidget {
   final Uint8List? logoBytesOverride;
   final Uint8List? qrBytesOverride;
   final bool isForPrint;
+  final bool is80mm;
 
   String _money(double amount) => '\u20B9${amount.toStringAsFixed(2)}';
 
@@ -130,7 +132,7 @@ class BillReceiptWidget extends StatelessWidget {
     final baseStyle = TextStyle(fontSize: isForPrint ? 16 : 10, color: isForPrint ? Colors.black : textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
 
     return Container(
-      width: isForPrint ? 340 : double.infinity,
+      width: isForPrint ? (is80mm ? 510 : 340) : double.infinity,
       padding: isForPrint ? const EdgeInsets.symmetric(horizontal: 4, vertical: 8) : const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,

@@ -352,6 +352,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       logoBytesOverride: _logoBytes,
       qrBytesOverride: _qrBytes,
       isForPrint: _isCapturingForPrint,
+      is80mm: PrinterService.instance.is80mm,
     ));
   }
 
