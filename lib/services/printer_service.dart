@@ -179,7 +179,7 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 42;
 
     // Header
     bytes += generator.text(shopData.name.toUpperCase(),
@@ -238,10 +238,10 @@ class PrinterService {
     // Items Header
     bytes += generator.text('-' * paperWidth);
     
-    int itemLen = paperWidth == 48 ? 20 : 13;
+    int itemLen = paperWidth == 48 ? 20 : 20;
     int qtyLen = paperWidth == 48 ? 6 : 4;
-    int rateLen = paperWidth == 48 ? 10 : 7;
-    int totalLen = paperWidth == 48 ? 12 : 8;
+    int rateLen = paperWidth == 48 ? 10 : 8;
+    int totalLen = paperWidth == 48 ? 12 : 10;
 
     String headerStr = _padRight('Item', itemLen) + 
                        _padLeft('Qty', qtyLen) + 
@@ -264,8 +264,8 @@ class PrinterService {
     final computedSubtotal = token.items.fold(0.0, (sum, i) => sum + i.subtotal);
     final computedTax = token.grandTotal - computedSubtotal;
 
-    int totalLabelLen = paperWidth == 48 ? 36 : 24;
-    int totalValueLen = paperWidth == 48 ? 12 : 8;
+    int totalLabelLen = paperWidth == 48 ? 36 : 32;
+    int totalValueLen = paperWidth == 48 ? 12 : 10;
 
     bytes += generator.text(_padLeft('Subtotal: ', totalLabelLen) + _padLeft(computedSubtotal.toStringAsFixed(2), totalValueLen), styles: const PosStyles(fontType: PosFontType.fontA));
     bytes += generator.text(_padLeft('Discount: ', totalLabelLen) + _padLeft('0.00', totalValueLen), styles: const PosStyles(fontType: PosFontType.fontA));
@@ -315,7 +315,7 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 42;
 
     bytes += generator.text('=' * paperWidth);
     bytes += generator.text('KITCHEN SLIP',
