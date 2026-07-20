@@ -187,8 +187,8 @@ class PrinterService {
         styles: PosStyles(
             fontType: baseFont,
             align: PosAlign.center,
-            height: PosTextSize.size2,
-            width: PosTextSize.size2,
+            height: PosTextSize.size1,
+            width: PosTextSize.size1,
             bold: true));
     bytes += generator.text('TAX INVOICE', styles: PosStyles(fontType: baseFont, align: PosAlign.center, height: PosTextSize.size2, width: PosTextSize.size1, bold: true));
     
@@ -275,7 +275,7 @@ class PrinterService {
     bytes += generator.feed(1);
     
     bytes += generator.text('=' * paperWidth);
-    bytes += generator.text('GRAND TOTAL: Rs.${token.grandTotal.toStringAsFixed(2)}', styles: PosStyles(fontType: baseFont, height: PosTextSize.size2, width: PosTextSize.size2, bold: true, align: PosAlign.center));
+    bytes += generator.text('GRAND TOTAL: Rs.${token.grandTotal.toStringAsFixed(2)}', styles: PosStyles(fontType: baseFont, height: PosTextSize.size1, width: PosTextSize.size1, bold: true, align: PosAlign.center));
     bytes += generator.text('=' * paperWidth);
 
     bytes += generator.feed(1);

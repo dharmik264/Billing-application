@@ -162,7 +162,7 @@ class BillReceiptWidget extends StatelessWidget {
               shopName.toUpperCase(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: isForPrint ? 26 : 13,
+                fontSize: isForPrint ? 26 : 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
                 color: isForPrint ? Colors.black : textPrimary,
@@ -428,7 +428,7 @@ class BillReceiptWidget extends StatelessWidget {
             const SizedBox(height: 7),
             _receiptTotalRow(
                 'Grand Total', _money(grandTotal > 0 ? grandTotal : subtotal),
-                bold: true, size: isForPrint ? 28 : 13),
+                bold: true, size: isForPrint ? 28 : 10),
             const SizedBox(height: 8),
             if (template.showPaymentMethod) ...[
               const SizedBox(height: 4),
