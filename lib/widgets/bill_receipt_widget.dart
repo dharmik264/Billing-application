@@ -162,7 +162,7 @@ class BillReceiptWidget extends StatelessWidget {
               shopName.toUpperCase(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: isForPrint ? 26 : 10,
+                fontSize: isForPrint ? 26 : 26,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
                 color: isForPrint ? Colors.black : textPrimary,
