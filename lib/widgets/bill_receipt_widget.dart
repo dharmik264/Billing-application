@@ -129,11 +129,12 @@ class BillReceiptWidget extends StatelessWidget {
 
     final upiIdStr = shopData?.upiId;
 
-    final baseStyle = TextStyle(fontSize: isForPrint ? 16 : 10, color: isForPrint ? Colors.black : textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
+    final printFontSize = is80mm ? 22.0 : 16.0;
+    final baseStyle = TextStyle(fontSize: isForPrint ? printFontSize : 10, color: isForPrint ? Colors.black : textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
 
     return Container(
-      width: isForPrint ? (is80mm ? 864 : 384) : double.infinity,
-      padding: isForPrint ? const EdgeInsets.symmetric(horizontal: 4, vertical: 8) : const EdgeInsets.all(16),
+      width: isForPrint ? (is80mm ? 720 : 384) : double.infinity,
+      padding: isForPrint ? EdgeInsets.symmetric(horizontal: is80mm ? 16 : 6, vertical: 12) : const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(isForPrint ? 0 : 14),

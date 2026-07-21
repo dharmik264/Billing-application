@@ -190,8 +190,8 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    // 32 characters for 58mm, 72 characters for 80mm/120mm
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 72 : 32;
+    // 32 characters for 58mm, 60 characters for 100mm
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
     final PosFontType baseFont = PosFontType.fontA;
 
     PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
@@ -250,10 +250,10 @@ class PrinterService {
     // Items Header
     bytes += generator.text('-' * paperWidth, styles: receiptStyle());
     
-    int itemLen = paperWidth >= 72 ? 36 : (paperWidth == 48 ? 20 : 14);
-    int qtyLen = paperWidth >= 72 ? 10 : (paperWidth == 48 ? 6 : 4);
-    int rateLen = paperWidth >= 72 ? 12 : (paperWidth == 48 ? 10 : 6);
-    int totalLen = paperWidth >= 72 ? 14 : (paperWidth == 48 ? 12 : 8);
+    int itemLen = paperWidth >= 60 ? 30 : 14;
+    int qtyLen = paperWidth >= 60 ? 8 : 4;
+    int rateLen = paperWidth >= 60 ? 10 : 6;
+    int totalLen = paperWidth >= 60 ? 12 : 8;
 
     String headerStr = _padRight('Item', itemLen) + 
                        _padLeft('Qty', qtyLen) + 
@@ -319,7 +319,7 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 72 : 32;
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
     final PosFontType baseFont = PosFontType.fontA;
 
     PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
@@ -367,7 +367,7 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
 
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 72 : 32;
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
     final PosFontType baseFont = PosFontType.fontA;
 
     PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
