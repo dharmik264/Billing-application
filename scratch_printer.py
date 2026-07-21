@@ -1,203 +1,56 @@
-import re
+import os
+from PIL import Image, ImageDraw, ImageFont
 
-with open('lib/services/printer_service.dart', 'r', encoding='utf-8') as f:
-    content = f.read()
+img = Image.new('RGB', (420, 850), color='#F9F9F9')
+d = ImageDraw.Draw(img)
 
-new_methods = """
-  String _padRight(String text, int length) {
-    if (text.length >= length) return text.substring(0, length);
-    return text.padRight(length);
-  }
+try:
+    font = ImageFont.truetype("consola.ttf", 32)
+    font_large = ImageFont.truetype("consola.ttf", 72)
+    font_bold = ImageFont.truetype("consolab.ttf", 32)
+except:
+    font = ImageFont.load_default()
+    font_large = font
+    font_bold = font
 
-  String _padLeft(String text, int length) {
-    if (text.length >= length) return text.substring(0, length);
-    return text.padLeft(length);
-  }
+# Custom drawing to simulate Size 5 (very large) and Size 2 (normal large)
+y = 20
+def draw_line(text, size=2, align='left'):
+    global y
+    f = font_large if size == 5 else font
+    # approximate width
+    w = d.textlength(text, font=f)
+    if align == 'center':
+        x = (420 - w) / 2
+    else:
+        x = 25
+    d.text((x, y), text, fill='black', font=f)
+    y += 80 if size == 5 else 34
 
-  Future<void> printReceipt(
-      ApiToken token, ApiShopData shopData, ApiBillTemplate template) async {
-    final connected = await isConnected;
-    if (!connected) return;
+draw_line("RESTAURANT", size=5, align='center')
+draw_line("TAX INVOICE", size=2, align='center')
+draw_line("--------------------", size=2)
+draw_line("Inv: 101", size=2)
+draw_line("TOKEN", size=2, align='center')
+draw_line("55", size=5, align='center')
+draw_line("Date: 2026-07-21", size=2)
+draw_line("--------------------", size=2)
+draw_line("       ITEMS        ", size=2)
+draw_line("--------------------", size=2)
+draw_line("PANEER TIKKA", size=2)
+draw_line("2 x 150       300.00", size=2)
+draw_line("BUTTER NAAN", size=2)
+draw_line("4 x 30        120.00", size=2)
+draw_line("--------------------", size=2)
+draw_line("Subtotal:     420.00", size=2)
+draw_line("Tax:           21.00", size=2)
+draw_line("====================", size=2)
+draw_line("GRAND TOTAL", size=2, align='center')
+draw_line("441.00", size=5, align='center')
+draw_line("====================", size=2)
+draw_line("Pay Mode:       CASH", size=2)
 
-    final profile = await CapabilityProfile.load();
-    final generator = Generator(_paperSize, profile);
-    List<int> bytes = [];
-    
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
-
-    // Header
-    bytes += generator.text(shopData.name.toUpperCase(),
-        styles: const PosStyles(
-            fontType: PosFontType.fontA,
-            align: PosAlign.center,
-            height: PosTextSize.size2,
-            width: PosTextSize.size2,
-            bold: true));
-    bytes += generator.text('TAX INVOICE', styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center, height: PosTextSize.size2, width: PosTextSize.size1, bold: true));
-    
-    if (shopData.tagline.isNotEmpty) {
-      bytes += generator.text('"${shopData.tagline}"', styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center));
-    }
-    if (shopData.address != null && shopData.address!.isNotEmpty) {
-      bytes += generator.text(shopData.address!,
-          styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center));
-    }
-    if (shopData.phone != null && shopData.phone!.isNotEmpty) {
-      bytes += generator.text('Ph: ${shopData.phone}',
-          styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center));
-    }
-    if (shopData.email != null && shopData.email!.isNotEmpty) {
-      bytes += generator.text('Email: ${shopData.email}',
-          styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center));
-    }
-    if (shopData.gstin != null && shopData.gstin!.isNotEmpty) {
-      bytes += generator.text('GSTIN: ${shopData.gstin}',
-          styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center));
-    }
-    bytes += generator.feed(1);
-    bytes += generator.text('-' * paperWidth);
-
-    // Bill Details
-    bytes += generator.row([
-      PosColumn(text: 'Inv: ${token.billNumber}', width: 6, styles: const PosStyles(fontType: PosFontType.fontA)),
-      PosColumn(text: 'Token: ${token.tokenNumber}', width: 6, styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.right, bold: true)),
-    ]);
-    final dtParts = token.createdAt.split('T');
-    final dateStr = dtParts.isNotEmpty ? dtParts.first : '';
-    bytes += generator.row([
-      PosColumn(text: 'Date: $dateStr', width: 12, styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.right)),
-    ]);
-    
-    if (token.customerName.isNotEmpty || token.customerPhone.isNotEmpty) {
-      bytes += generator.text('-' * paperWidth);
-      if (token.customerName.isNotEmpty) {
-        bytes += generator.text('Customer: ${token.customerName}', styles: const PosStyles(fontType: PosFontType.fontA));
-      }
-      if (token.customerPhone.isNotEmpty) {
-        bytes += generator.text('Ph: ${token.customerPhone}', styles: const PosStyles(fontType: PosFontType.fontA));
-      }
-    }
-    bytes += generator.feed(1);
-
-    // Items Header
-    bytes += generator.text('-' * paperWidth);
-    
-    int itemLen = paperWidth == 48 ? 20 : 13;
-    int qtyLen = paperWidth == 48 ? 6 : 4;
-    int rateLen = paperWidth == 48 ? 10 : 7;
-    int totalLen = paperWidth == 48 ? 12 : 8;
-
-    String headerStr = _padRight('Item', itemLen) + 
-                       _padLeft('Qty', qtyLen) + 
-                       _padLeft('Rate', rateLen) + 
-                       _padLeft('Total', totalLen);
-    bytes += generator.text(headerStr, styles: const PosStyles(fontType: PosFontType.fontA, bold: true));
-    bytes += generator.text('-' * paperWidth);
-
-    // Items
-    for (final item in token.items) {
-      String iStr = _padRight(item.name, itemLen);
-      String qStr = _padLeft('${item.quantity}', qtyLen);
-      String rStr = _padLeft(item.rate.toStringAsFixed(2), rateLen);
-      String tStr = _padLeft(item.subtotal.toStringAsFixed(2), totalLen);
-      bytes += generator.text('$iStr$qStr$rStr$tStr', styles: const PosStyles(fontType: PosFontType.fontA));
-    }
-    bytes += generator.text('-' * paperWidth);
-
-    // Totals
-    final computedSubtotal = token.items.fold(0.0, (sum, i) => sum + i.subtotal);
-    final computedTax = token.grandTotal - computedSubtotal;
-
-    int totalLabelLen = paperWidth == 48 ? 36 : 24;
-    int totalValueLen = paperWidth == 48 ? 12 : 8;
-
-    bytes += generator.text(_padLeft('Subtotal: ', totalLabelLen) + _padLeft(computedSubtotal.toStringAsFixed(2), totalValueLen), styles: const PosStyles(fontType: PosFontType.fontA));
-    bytes += generator.text(_padLeft('Discount: ', totalLabelLen) + _padLeft('0.00', totalValueLen), styles: const PosStyles(fontType: PosFontType.fontA));
-    bytes += generator.text(_padLeft('Tax: ', totalLabelLen) + _padLeft(computedTax.toStringAsFixed(2), totalValueLen), styles: const PosStyles(fontType: PosFontType.fontA));
-    bytes += generator.text(_padLeft('Round Off: ', totalLabelLen) + _padLeft('0.00', totalValueLen), styles: const PosStyles(fontType: PosFontType.fontA));
-    bytes += generator.feed(1);
-    
-    bytes += generator.text('=' * paperWidth);
-    bytes += generator.text('GRAND TOTAL: Rs.${token.grandTotal.toStringAsFixed(2)}', styles: const PosStyles(fontType: PosFontType.fontA, height: PosTextSize.size2, width: PosTextSize.size2, bold: true, align: PosAlign.center));
-    bytes += generator.text('=' * paperWidth);
-
-    bytes += generator.feed(1);
-    bytes += generator.row([
-      PosColumn(text: 'Payment Mode', width: 6, styles: const PosStyles(fontType: PosFontType.fontA)),
-      PosColumn(text: token.paymentMode, width: 6, styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.right)),
-    ]);
-    bytes += generator.feed(1);
-
-    if (shopData.upiId != null && shopData.upiId!.isNotEmpty) {
-      final qrData = 'upi://pay?pa=${shopData.upiId}&pn=${Uri.encodeComponent(shopData.name)}&am=${token.grandTotal.toStringAsFixed(2)}&cu=INR';
-      bytes += generator.qrcode(qrData, size: QRSize.size6);
-      bytes += generator.text(shopData.upiId!, styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center));
-      bytes += generator.text('Scan to Pay Rs. ${token.grandTotal.toStringAsFixed(2)}', styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center, bold: true));
-      bytes += generator.feed(1);
-    }
-
-    if (template.footerMessage.isNotEmpty) {
-      bytes += generator.text(template.footerMessage,
-          styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center));
-    }
-    if (template.termsAndConditions.isNotEmpty) {
-      bytes += generator.text(template.termsAndConditions,
-          styles: const PosStyles(fontType: PosFontType.fontA, align: PosAlign.center));
-    }
-
-    bytes += generator.feed(2);
-    bytes += generator.cut();
-
-    await writeBytes(bytes);
-  }
-
-  Future<void> printKitchenSlip(ApiToken token) async {
-    final connected = await isConnected;
-    if (!connected) return;
-
-    final profile = await CapabilityProfile.load();
-    final generator = Generator(_paperSize, profile);
-    List<int> bytes = [];
-    
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
-
-    bytes += generator.text('=' * paperWidth);
-    bytes += generator.text('KITCHEN SLIP',
-        styles: const PosStyles(
-            align: PosAlign.center,
-            height: PosTextSize.size2,
-            width: PosTextSize.size2,
-            bold: true));
-    bytes += generator.text('=' * paperWidth);
-    bytes += generator.feed(1);
-
-    bytes += generator.text('TOKEN: ${token.tokenNumber}',
-        styles: const PosStyles(bold: true, height: PosTextSize.size2, width: PosTextSize.size1));
-    bytes += generator.text('DATE:  ${token.createdAt.split('T').first}',
-        styles: const PosStyles(bold: true));
-    bytes += generator.feed(1);
-
-    bytes += generator.text('ITEMS', styles: const PosStyles(bold: true, height: PosTextSize.size2));
-    bytes += generator.text('-' * paperWidth);
-
-    for (final item in token.items) {
-      bytes += generator.text('${item.name} x ${item.quantity}', styles: const PosStyles(bold: true, height: PosTextSize.size2, width: PosTextSize.size1));
-      bytes += generator.feed(1);
-    }
-
-    bytes += generator.text('=' * paperWidth);
-
-    bytes += generator.feed(2);
-    bytes += generator.cut();
-
-    await writeBytes(bytes);
-  }
-"""
-
-start_idx = content.find('  Future<void> printReceipt')
-end_idx = content.find('  Future<void> printTest')
-
-new_content = content[:start_idx] + new_methods + content[end_idx:]
-
-with open('lib/services/printer_service.dart', 'w', encoding='utf-8') as f:
-    f.write(new_content)
+out = r'C:\Users\dp982\.gemini\antigravity\brain\d9ee047e-5e16-46be-9d95-6058d57e891b\scratch\bill_render_size5.png'
+os.makedirs(os.path.dirname(out), exist_ok=True)
+img.save(out)
+print(out)

@@ -57,7 +57,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDashboardData(forceRefresh: true);
+    _loadDashboardData(forceRefresh: false);
   }
 
   Future<void> refreshData() async {
@@ -66,10 +66,39 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadDashboardData({bool forceRefresh = false}) async {
     if (!mounted) return;
-    setState(() => _isLoading = true);
+
+    // Load cached data instantly so UI renders without delay
+    if (!forceRefresh) {
+      final cachedShop = RestaurantApi.instance.shopData;
+      if (cachedShop != null) {
+        _shopName = cachedShop.name.isNotEmpty ? cachedShop.name : 'My Shop';
+        _smsCredits = cachedShop.smsCredits;
+        if (cachedShop.logoUrl != null && cachedShop.logoUrl!.isNotEmpty) {
+          final uri = Uri.tryParse(cachedShop.logoUrl!);
+          if (uri != null && uri.scheme == 'data') {
+            _shopLogoBytes = base64Decode(cachedShop.logoUrl!.split(',').last);
+          }
+        }
+        _isLoading = false;
+      }
+    }
+
+    if (_recentTokens.isEmpty && _isLoading) {
+      setState(() => _isLoading = true);
+    }
 
     try {
-      final shop = await RestaurantApi.instance.fetchShop(forceRefresh: forceRefresh);
+      // Execute network requests in parallel for maximum speed
+      final results = await Future.wait([
+        RestaurantApi.instance.fetchShop(forceRefresh: forceRefresh),
+        RestaurantApi.instance.fetchAllTimeSummary(useCache: !forceRefresh),
+        RestaurantApi.instance.fetchTokens(),
+      ]);
+
+      final shop = results[0] as ApiShopData;
+      final summary = results[1] as ApiSummaryReport;
+      final tokens = results[2] as List<ApiToken>;
+
       if (mounted) {
         setState(() {
           _shopName = shop.name.isNotEmpty ? shop.name : 'My Shop';
@@ -80,22 +109,12 @@ class DashboardScreenState extends State<DashboardScreen> {
               _shopLogoBytes = base64Decode(shop.logoUrl!.split(',').last);
             }
           }
-        });
-      }
 
-      final summary = await RestaurantApi.instance.fetchAllTimeSummary(useCache: !forceRefresh);
-      if (mounted) {
-        setState(() {
           _tokenCount = summary.totalTokens;
           _totalSales = summary.totalSales;
           _cashSales = summary.cashTotal;
           _onlineSales = summary.onlineTotal;
-        });
-      }
 
-      final tokens = await RestaurantApi.instance.fetchTokens();
-      if (mounted) {
-        setState(() {
           _recentTokens = tokens.map((t) {
             final date = DateTime.parse(t.createdAt).toLocal();
             return _LiveToken(
@@ -111,7 +130,7 @@ class DashboardScreenState extends State<DashboardScreen> {
         });
       }
     } catch (e) {
-      // Ignore errors for now
+      // Fallback gracefully on network delay/error
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
