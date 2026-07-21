@@ -460,9 +460,14 @@ class DevLoginView(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class PublicSubscriptionPlanListView(generics.ListAPIView):
-    permission_classes = [AllowAny]  # Plans must be public for registration flow
+    permission_classes = [AllowAny]  # Plans must be public for registration & selection flow
     serializer_class = SubscriptionPlanSerializer
-    queryset = SubscriptionPlan.objects.filter(is_active=True).order_by('display_order', 'id')
+    
+    def get_queryset(self):
+        active_plans = SubscriptionPlan.objects.filter(is_active=True).order_by('display_order', 'id')
+        if active_plans.exists():
+            return active_plans
+        return SubscriptionPlan.objects.all().order_by('display_order', 'id')
 
 class SystemSettingsView(APIView):
     permission_classes = [AllowAny]
