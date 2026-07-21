@@ -210,8 +210,8 @@ class PrinterService {
         styles: PosStyles(
             fontType: baseFont,
             align: PosAlign.center,
-            height: PosTextSize.size3,
-            width: PosTextSize.size3,
+            height: PosTextSize.size5,
+            width: PosTextSize.size5,
             bold: true));
     bytes += generator.text('TAX INVOICE', styles: largeStyle(align: PosAlign.center, bold: true));
     
@@ -234,9 +234,9 @@ class PrinterService {
     bytes += generator.text('-' * paperWidth, styles: largeStyle());
 
     // Bill Details
-    String invStr = 'Inv: ${token.billNumber}';
-    String tokenStr = 'Tkn: ${token.tokenNumber}';
-    bytes += generator.text(_justify(invStr, tokenStr, paperWidth), styles: largeStyle(bold: true));
+    bytes += generator.text('Inv: ${token.billNumber}', styles: largeStyle(bold: true));
+    bytes += generator.text('TOKEN', styles: largeStyle(align: PosAlign.center, bold: true));
+    bytes += generator.text(token.tokenNumber, styles: PosStyles(fontType: baseFont, align: PosAlign.center, height: PosTextSize.size5, width: PosTextSize.size5, bold: true));
     
     final dtParts = token.createdAt.split('T');
     final dateStr = dtParts.isNotEmpty ? dtParts.first : '';
@@ -281,7 +281,8 @@ class PrinterService {
     bytes += generator.feed(1);
     
     bytes += generator.text('=' * paperWidth, styles: largeStyle());
-    bytes += generator.text(_justify('TOTAL:', token.grandTotal.toStringAsFixed(2), paperWidth), styles: largeStyle(bold: true));
+    bytes += generator.text('GRAND TOTAL', styles: largeStyle(align: PosAlign.center, bold: true));
+    bytes += generator.text(token.grandTotal.toStringAsFixed(2), styles: PosStyles(fontType: baseFont, align: PosAlign.center, height: PosTextSize.size5, width: PosTextSize.size5, bold: true));
     bytes += generator.text('=' * paperWidth, styles: largeStyle());
 
     bytes += generator.feed(1);
@@ -340,8 +341,8 @@ class PrinterService {
     bytes += generator.text('=' * paperWidth, styles: largeStyle());
     bytes += generator.feed(1);
 
-    bytes += generator.text('TOKEN: ${token.tokenNumber}',
-        styles: PosStyles(fontType: baseFont, bold: true, height: PosTextSize.size3, width: PosTextSize.size2));
+    bytes += generator.text('TOKEN', styles: largeStyle(align: PosAlign.center, bold: true));
+    bytes += generator.text(token.tokenNumber, styles: PosStyles(fontType: baseFont, align: PosAlign.center, height: PosTextSize.size5, width: PosTextSize.size5, bold: true));
     bytes += generator.text('DATE:  ${token.createdAt.split('T').first}',
         styles: largeStyle(bold: true));
     bytes += generator.feed(1);
