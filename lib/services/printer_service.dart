@@ -190,118 +190,112 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    // Set line length to 20 for 58mm, 24 for 80mm so we can use size2 (large fonts)
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 24 : 20;
+    // 32 characters for 58mm, 48 characters for 80mm (full paper width)
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
     final PosFontType baseFont = PosFontType.fontA;
-
-    // Helper for large text
-    PosStyles largeStyle({PosAlign align = PosAlign.left, bool bold = false}) {
-      return PosStyles(
-        fontType: baseFont,
-        align: align,
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
-        bold: bold,
-      );
-    }
 
     // Header
     bytes += generator.text(shopData.name.toUpperCase(),
         styles: PosStyles(
             fontType: baseFont,
             align: PosAlign.center,
-            height: PosTextSize.size5,
-            width: PosTextSize.size5,
             bold: true));
-    bytes += generator.text('TAX INVOICE', styles: largeStyle(align: PosAlign.center, bold: true));
+    bytes += generator.text('TAX INVOICE', styles: PosStyles(fontType: baseFont, align: PosAlign.center, bold: true));
     
     if (shopData.tagline.isNotEmpty) {
-      bytes += generator.text('"${shopData.tagline}"', styles: largeStyle(align: PosAlign.center));
+      bytes += generator.text('"${shopData.tagline}"', styles: PosStyles(fontType: baseFont, align: PosAlign.center));
     }
     if (shopData.address != null && shopData.address!.isNotEmpty) {
-      bytes += generator.text(shopData.address!, styles: largeStyle(align: PosAlign.center));
+      bytes += generator.text(shopData.address!, styles: PosStyles(fontType: baseFont, align: PosAlign.center));
     }
     if (shopData.phone != null && shopData.phone!.isNotEmpty) {
-      bytes += generator.text('Ph: ${shopData.phone}', styles: largeStyle(align: PosAlign.center));
+      bytes += generator.text('Ph: ${shopData.phone}', styles: PosStyles(fontType: baseFont, align: PosAlign.center));
     }
     if (shopData.email != null && shopData.email!.isNotEmpty) {
-      bytes += generator.text('Email: ${shopData.email}', styles: largeStyle(align: PosAlign.center));
+      bytes += generator.text('Email: ${shopData.email}', styles: PosStyles(fontType: baseFont, align: PosAlign.center));
     }
     if (shopData.gstin != null && shopData.gstin!.isNotEmpty) {
-      bytes += generator.text('GSTIN: ${shopData.gstin}', styles: largeStyle(align: PosAlign.center));
+      bytes += generator.text('GSTIN: ${shopData.gstin}', styles: PosStyles(fontType: baseFont, align: PosAlign.center));
     }
     bytes += generator.feed(1);
-    bytes += generator.text('-' * paperWidth, styles: largeStyle());
+    bytes += generator.text('-' * paperWidth);
 
     // Bill Details
-    bytes += generator.text('Inv: ${token.billNumber}', styles: largeStyle(bold: true));
-    bytes += generator.text('TOKEN', styles: largeStyle(align: PosAlign.center, bold: true));
-    bytes += generator.text(token.tokenNumber, styles: PosStyles(fontType: baseFont, align: PosAlign.center, height: PosTextSize.size5, width: PosTextSize.size5, bold: true));
+    String invStr = 'Inv: ${token.billNumber}';
+    String tokenStr = 'Token: ${token.tokenNumber}';
+    bytes += generator.text(_justify(invStr, tokenStr, paperWidth), styles: PosStyles(fontType: baseFont, bold: true));
     
     final dtParts = token.createdAt.split('T');
     final dateStr = dtParts.isNotEmpty ? dtParts.first : '';
-    bytes += generator.text('Date: $dateStr', styles: largeStyle());
+    bytes += generator.text('Date: $dateStr', styles: PosStyles(fontType: baseFont));
     
     if (token.customerName.isNotEmpty || token.customerPhone.isNotEmpty) {
-      bytes += generator.text('-' * paperWidth, styles: largeStyle());
+      bytes += generator.text('-' * paperWidth);
       if (token.customerName.isNotEmpty) {
-        bytes += generator.text('Name: ${token.customerName}', styles: largeStyle());
+        bytes += generator.text('Name: ${token.customerName}', styles: PosStyles(fontType: baseFont));
       }
       if (token.customerPhone.isNotEmpty) {
-        bytes += generator.text('Ph: ${token.customerPhone}', styles: largeStyle());
+        bytes += generator.text('Ph: ${token.customerPhone}', styles: PosStyles(fontType: baseFont));
       }
     }
     bytes += generator.feed(1);
 
     // Items Header
-    bytes += generator.text('-' * paperWidth, styles: largeStyle());
-    bytes += generator.text('ITEMS', styles: largeStyle(align: PosAlign.center, bold: true));
-    bytes += generator.text('-' * paperWidth, styles: largeStyle());
+    bytes += generator.text('-' * paperWidth);
+    
+    int itemLen = paperWidth == 48 ? 20 : 14;
+    int qtyLen = paperWidth == 48 ? 6 : 4;
+    int rateLen = paperWidth == 48 ? 10 : 6;
+    int totalLen = paperWidth == 48 ? 12 : 8;
+
+    String headerStr = _padRight('Item', itemLen) + 
+                       _padLeft('Qty', qtyLen) + 
+                       _padLeft('Rate', rateLen) + 
+                       _padLeft('Total', totalLen);
+    bytes += generator.text(headerStr, styles: PosStyles(fontType: baseFont, bold: true));
+    bytes += generator.text('-' * paperWidth);
 
     // Items
     for (final item in token.items) {
-      // Line 1: Item Name
-      bytes += generator.text(item.name, styles: largeStyle(bold: true));
-      
-      // Line 2: Qty x Rate = Total
-      String qtyStr = '${item.quantity} x ${item.rate.toStringAsFixed(0)}';
-      String totalStr = item.subtotal.toStringAsFixed(2);
-      bytes += generator.text(_justify(qtyStr, totalStr, paperWidth), styles: largeStyle());
+      String iStr = _padRight(item.name, itemLen);
+      String qStr = _padLeft('${item.quantity}', qtyLen);
+      String rStr = _padLeft(item.rate.toStringAsFixed(0), rateLen);
+      String tStr = _padLeft(item.subtotal.toStringAsFixed(2), totalLen);
+      bytes += generator.text('$iStr$qStr$rStr$tStr', styles: PosStyles(fontType: baseFont));
     }
-    bytes += generator.text('-' * paperWidth, styles: largeStyle());
+    bytes += generator.text('-' * paperWidth);
 
     // Totals
     final computedSubtotal = token.items.fold(0.0, (sum, i) => sum + i.subtotal);
     final computedTax = token.grandTotal - computedSubtotal;
 
-    bytes += generator.text(_justify('Subtotal:', computedSubtotal.toStringAsFixed(2), paperWidth), styles: largeStyle());
-    bytes += generator.text(_justify('Discount:', '0.00', paperWidth), styles: largeStyle());
-    bytes += generator.text(_justify('Tax:', computedTax.toStringAsFixed(2), paperWidth), styles: largeStyle());
-    bytes += generator.text(_justify('Round Off:', '0.00', paperWidth), styles: largeStyle());
+    bytes += generator.text(_justify('Subtotal:', computedSubtotal.toStringAsFixed(2), paperWidth), styles: PosStyles(fontType: baseFont));
+    bytes += generator.text(_justify('Discount:', '0.00', paperWidth), styles: PosStyles(fontType: baseFont));
+    bytes += generator.text(_justify('Tax:', computedTax.toStringAsFixed(2), paperWidth), styles: PosStyles(fontType: baseFont));
+    bytes += generator.text(_justify('Round Off:', '0.00', paperWidth), styles: PosStyles(fontType: baseFont));
     bytes += generator.feed(1);
     
-    bytes += generator.text('=' * paperWidth, styles: largeStyle());
-    bytes += generator.text('GRAND TOTAL', styles: largeStyle(align: PosAlign.center, bold: true));
-    bytes += generator.text(token.grandTotal.toStringAsFixed(2), styles: PosStyles(fontType: baseFont, align: PosAlign.center, height: PosTextSize.size5, width: PosTextSize.size5, bold: true));
-    bytes += generator.text('=' * paperWidth, styles: largeStyle());
+    bytes += generator.text('=' * paperWidth);
+    bytes += generator.text(_justify('GRAND TOTAL:', token.grandTotal.toStringAsFixed(2), paperWidth), styles: PosStyles(fontType: baseFont, bold: true));
+    bytes += generator.text('=' * paperWidth);
 
     bytes += generator.feed(1);
-    bytes += generator.text(_justify('Pay Mode:', token.paymentMode, paperWidth), styles: largeStyle());
+    bytes += generator.text(_justify('Pay Mode:', token.paymentMode, paperWidth), styles: PosStyles(fontType: baseFont));
     bytes += generator.feed(1);
 
     if (shopData.upiId != null && shopData.upiId!.isNotEmpty) {
       final qrData = 'upi://pay?pa=${shopData.upiId}&pn=${Uri.encodeComponent(shopData.name)}&am=${token.grandTotal.toStringAsFixed(2)}&cu=INR';
       bytes += generator.qrcode(qrData, size: QRSize.size6);
-      bytes += generator.text(shopData.upiId!, styles: largeStyle(align: PosAlign.center));
-      bytes += generator.text('Scan to Pay Rs. ${token.grandTotal.toStringAsFixed(2)}', styles: largeStyle(align: PosAlign.center, bold: true));
+      bytes += generator.text(shopData.upiId!, styles: PosStyles(fontType: baseFont, align: PosAlign.center));
+      bytes += generator.text('Scan to Pay Rs. ${token.grandTotal.toStringAsFixed(2)}', styles: PosStyles(fontType: baseFont, align: PosAlign.center, bold: true));
       bytes += generator.feed(1);
     }
 
     if (template.footerMessage.isNotEmpty) {
-      bytes += generator.text(template.footerMessage, styles: largeStyle(align: PosAlign.center));
+      bytes += generator.text(template.footerMessage, styles: PosStyles(fontType: baseFont, align: PosAlign.center));
     }
     if (template.termsAndConditions.isNotEmpty) {
-      bytes += generator.text(template.termsAndConditions, styles: largeStyle(align: PosAlign.center));
+      bytes += generator.text(template.termsAndConditions, styles: PosStyles(fontType: baseFont, align: PosAlign.center));
     }
 
     bytes += generator.feed(2);
@@ -318,44 +312,30 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 24 : 20;
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
     final PosFontType baseFont = PosFontType.fontA;
 
-    PosStyles largeStyle({PosAlign align = PosAlign.left, bool bold = false}) {
-      return PosStyles(
-        fontType: baseFont,
-        align: align,
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
-        bold: bold,
-      );
-    }
-
-    bytes += generator.text('=' * paperWidth, styles: largeStyle());
+    bytes += generator.text('=' * paperWidth);
     bytes += generator.text('KITCHEN SLIP',
         styles: PosStyles(
             align: PosAlign.center,
-            height: PosTextSize.size3,
-            width: PosTextSize.size3,
             bold: true));
-    bytes += generator.text('=' * paperWidth, styles: largeStyle());
+    bytes += generator.text('=' * paperWidth);
     bytes += generator.feed(1);
 
-    bytes += generator.text('TOKEN', styles: largeStyle(align: PosAlign.center, bold: true));
-    bytes += generator.text(token.tokenNumber, styles: PosStyles(fontType: baseFont, align: PosAlign.center, height: PosTextSize.size5, width: PosTextSize.size5, bold: true));
-    bytes += generator.text('DATE:  ${token.createdAt.split('T').first}',
-        styles: largeStyle(bold: true));
+    String tokenStr = 'TOKEN: ${token.tokenNumber}';
+    bytes += generator.text(tokenStr, styles: PosStyles(fontType: baseFont, bold: true));
+    bytes += generator.text('DATE:  ${token.createdAt.split('T').first}', styles: PosStyles(fontType: baseFont));
     bytes += generator.feed(1);
 
-    bytes += generator.text('ITEMS', styles: largeStyle(bold: true, align: PosAlign.center));
-    bytes += generator.text('-' * paperWidth, styles: largeStyle());
+    bytes += generator.text('ITEMS', styles: PosStyles(fontType: baseFont, bold: true, align: PosAlign.center));
+    bytes += generator.text('-' * paperWidth);
 
     for (final item in token.items) {
-      bytes += generator.text('${item.quantity} x ${item.name}', styles: PosStyles(fontType: baseFont, bold: true, height: PosTextSize.size3, width: PosTextSize.size2));
-      bytes += generator.feed(1);
+      bytes += generator.text('${item.quantity} x ${item.name}', styles: PosStyles(fontType: baseFont, bold: true));
     }
 
-    bytes += generator.text('=' * paperWidth, styles: largeStyle());
+    bytes += generator.text('=' * paperWidth);
 
     bytes += generator.feed(2);
     bytes += generator.cut();
@@ -373,9 +353,7 @@ class PrinterService {
     bytes += generator.text('Test Print Successful!',
         styles: PosStyles(
             align: PosAlign.center,
-            bold: true,
-            height: PosTextSize.size3,
-            width: PosTextSize.size3));
+            bold: true));
     bytes += generator.feed(2);
     bytes += generator.cut();
 
