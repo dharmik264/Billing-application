@@ -198,7 +198,7 @@ class PrinterService {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: PosTextSize.size2,
+        height: _paperSize == PaperSize.mm80 ? PosTextSize.size3 : PosTextSize.size2,
         width: PosTextSize.size1,
         bold: bold,
       );
