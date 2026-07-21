@@ -190,8 +190,8 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    // 32 characters for 58mm, 48 characters for 80mm (full paper width)
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
+    // 26 characters for 58mm, 48 characters for 80mm
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 26;
     final PosFontType baseFont = PosFontType.fontA;
 
     // Header
@@ -243,9 +243,9 @@ class PrinterService {
     // Items Header
     bytes += generator.text('-' * paperWidth);
     
-    int itemLen = paperWidth == 48 ? 20 : 14;
-    int qtyLen = paperWidth == 48 ? 6 : 4;
-    int rateLen = paperWidth == 48 ? 10 : 6;
+    int itemLen = paperWidth == 48 ? 20 : 10;
+    int qtyLen = paperWidth == 48 ? 6 : 3;
+    int rateLen = paperWidth == 48 ? 10 : 5;
     int totalLen = paperWidth == 48 ? 12 : 8;
 
     String headerStr = _padRight('Item', itemLen) + 
@@ -312,7 +312,7 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 26;
     final PosFontType baseFont = PosFontType.fontA;
 
     bytes += generator.text('=' * paperWidth);
@@ -350,10 +350,14 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
 
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 26;
+
+    bytes += generator.text('=' * paperWidth, styles: PosStyles(align: PosAlign.center, bold: true));
     bytes += generator.text('Test Print Successful!',
         styles: PosStyles(
             align: PosAlign.center,
             bold: true));
+    bytes += generator.text('=' * paperWidth, styles: PosStyles(align: PosAlign.center, bold: true));
     bytes += generator.feed(2);
     bytes += generator.cut();
 
