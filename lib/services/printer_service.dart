@@ -206,7 +206,12 @@ class PrinterService {
 
     // Header
     bytes += generator.text(shopData.name.toUpperCase(),
-        styles: receiptStyle(align: PosAlign.center, bold: true));
+        styles: PosStyles(
+            fontType: baseFont,
+            align: PosAlign.center,
+            height: PosTextSize.size3,
+            width: PosTextSize.size2,
+            bold: true));
     bytes += generator.text('TAX INVOICE', styles: receiptStyle(align: PosAlign.center, bold: true));
     
     if (shopData.tagline.isNotEmpty) {
