@@ -190,16 +190,19 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    // 24x48 px font size (size2): 16 characters for 58mm, 24 characters for 80mm
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 24 : 16;
+    // size8 is an 8x multiplier, so characters-per-line shrinks to 1/4 of
+    // what size2 allowed (size2 = 2x multiplier). Recalculated accordingly:
+    // 58mm: 16 chars at size2 -> 4 chars at size8
+    // 80mm: 24 chars at size2 -> 6 chars at size8
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 6 : 4;
     final PosFontType baseFont = PosFontType.fontA;
 
     PosStyles style24x48({PosAlign align = PosAlign.left, bool bold = false}) {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
+        height: PosTextSize.size8,
+        width: PosTextSize.size8,
         bold: bold,
       );
     }
@@ -308,15 +311,15 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 24 : 16;
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 6 : 4;
     final PosFontType baseFont = PosFontType.fontA;
 
     PosStyles style24x48({PosAlign align = PosAlign.left, bool bold = false}) {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
+        height: PosTextSize.size8,
+        width: PosTextSize.size8,
         bold: bold,
       );
     }
@@ -356,15 +359,15 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
 
-    final int paperWidth = _paperSize == PaperSize.mm80 ? 24 : 16;
+    final int paperWidth = _paperSize == PaperSize.mm80 ? 6 : 4;
     final PosFontType baseFont = PosFontType.fontA;
 
     PosStyles style24x48({PosAlign align = PosAlign.left, bool bold = false}) {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
+        height: PosTextSize.size8,
+        width: PosTextSize.size8,
         bold: bold,
       );
     }
