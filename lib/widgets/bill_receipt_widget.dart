@@ -132,7 +132,7 @@ class BillReceiptWidget extends StatelessWidget {
     final baseStyle = TextStyle(fontSize: isForPrint ? 16 : 10, color: isForPrint ? Colors.black : textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
 
     return Container(
-      width: isForPrint ? (is80mm ? 576 : 384) : double.infinity,
+      width: isForPrint ? (is80mm ? 864 : 384) : double.infinity,
       padding: isForPrint ? const EdgeInsets.symmetric(horizontal: 4, vertical: 8) : const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
