@@ -29,6 +29,7 @@ class BillReceiptWidget extends StatelessWidget {
     this.qrBytesOverride,
     this.isForPrint = false,
     this.is80mm = false,
+    this.customFontSize,
   }) : super(key: key);
 
   final ApiBillTemplate template;
@@ -54,6 +55,7 @@ class BillReceiptWidget extends StatelessWidget {
   final Uint8List? qrBytesOverride;
   final bool isForPrint;
   final bool is80mm;
+  final double? customFontSize;
 
   String _money(double amount) => '\u20B9${amount.toStringAsFixed(2)}';
 
@@ -129,7 +131,7 @@ class BillReceiptWidget extends StatelessWidget {
 
     final upiIdStr = shopData?.upiId;
 
-    final printFontSize = is80mm ? 85.0 : 32.0;
+    final printFontSize = customFontSize ?? (is80mm ? 55.0 : 16.0);
     final baseStyle = TextStyle(fontSize: isForPrint ? printFontSize : 10, color: isForPrint ? Colors.black : textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
 
     return Container(
