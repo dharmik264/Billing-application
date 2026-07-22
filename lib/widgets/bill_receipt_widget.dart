@@ -165,7 +165,7 @@ class BillReceiptWidget extends StatelessWidget {
               shopName.toUpperCase(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: isForPrint ? 26 : 26,
+                fontSize: isForPrint ? (printFontSize * 0.75).clamp(24.0, 75.0) : 26,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
                 color: isForPrint ? Colors.black : textPrimary,
@@ -176,7 +176,7 @@ class BillReceiptWidget extends StatelessWidget {
               'TAX INVOICE',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: isForPrint ? 20 : 11,
+                fontSize: isForPrint ? (printFontSize * 0.55).clamp(18.0, 55.0) : 11,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
                 color: isForPrint ? Colors.black : textPrimary,
