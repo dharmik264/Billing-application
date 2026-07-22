@@ -209,8 +209,8 @@ class PrinterService {
         styles: PosStyles(
             fontType: baseFont,
             align: PosAlign.center,
-            height: PosTextSize.size20,
-            width: PosTextSize.size18,
+            height: PosTextSize.size3,
+            width: PosTextSize.size2,
             bold: true));
     bytes += generator.text('TAX INVOICE', styles: receiptStyle(align: PosAlign.center, bold: true));
     
