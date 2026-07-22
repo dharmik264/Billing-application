@@ -248,8 +248,20 @@ class ShopRequestActionView(APIView):
             user.account_status = 'approved'
             user.approved_plan = plan
             user.approved_at = timezone.now()
+            
+            if plan:
+                from .models import SubscriptionPlan
+                plan_obj = SubscriptionPlan.objects.filter(name__iexact=plan).first()
+                if not plan_obj and str(plan).isdigit():
+                    plan_obj = SubscriptionPlan.objects.filter(id=int(plan)).first()
+                if plan_obj and plan_obj.features:
+                    perms = user.permissions or {}
+                    for k, v in plan_obj.features.items():
+                        perms[k] = v
+                    user.permissions = perms
+            
             user.save()
-            return Response({'message': 'Shop approved successfully'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Shop approved successfully and plan features activated'}, status=status.HTTP_200_OK)
         elif action == 'decline':
             user.account_status = 'rejected'
             user.save()
@@ -506,6 +518,15 @@ class SubmitSubscriptionPaymentView(APIView):
             status='pending'
         )
         
+        # Auto sync plan features to user permissions
+        request.user.approved_plan = plan.name
+        perms = request.user.permissions or {}
+        if plan.features:
+            for k, v in plan.features.items():
+                perms[k] = v
+        request.user.permissions = perms
+        request.user.save()
+
         from .serializers import SubscriptionPaymentSerializer
         return Response(SubscriptionPaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
 
