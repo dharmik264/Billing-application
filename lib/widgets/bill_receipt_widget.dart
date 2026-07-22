@@ -129,7 +129,7 @@ class BillReceiptWidget extends StatelessWidget {
 
     final upiIdStr = shopData?.upiId;
 
-    final printFontSize = is80mm ? 55.0 : 16.0;
+    final printFontSize = is80mm ? 85.0 : 32.0;
     final baseStyle = TextStyle(fontSize: isForPrint ? printFontSize : 10, color: isForPrint ? Colors.black : textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
 
     return Container(
