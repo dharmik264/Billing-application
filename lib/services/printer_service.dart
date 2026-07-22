@@ -154,7 +154,7 @@ class PrinterService {
     if (left.length + right.length >= width) {
       int availableForLeft = width - right.length - 1;
       if (availableForLeft > 0) {
-        return left.substring(0, availableForLeft) + ' ' + right;
+        return '${left.substring(0, availableForLeft)} $right';
       }
       return left + right;
     }
@@ -192,7 +192,7 @@ class PrinterService {
     
     // 32 characters for 58mm, 60 characters for 100mm
     final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
-    final PosFontType baseFont = PosFontType.fontA;
+    const PosFontType baseFont = PosFontType.fontA;
 
     PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
       return PosStyles(
@@ -206,7 +206,7 @@ class PrinterService {
 
     // Header
     bytes += generator.text(shopData.name.toUpperCase(),
-        styles: PosStyles(
+        styles: const PosStyles(
             fontType: baseFont,
             align: PosAlign.center,
             height: PosTextSize.size3,
@@ -325,7 +325,7 @@ class PrinterService {
     List<int> bytes = [];
     
     final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
-    final PosFontType baseFont = PosFontType.fontA;
+    const PosFontType baseFont = PosFontType.fontA;
 
     PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
       return PosStyles(
@@ -373,7 +373,7 @@ class PrinterService {
     List<int> bytes = [];
 
     final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
-    final PosFontType baseFont = PosFontType.fontA;
+    const PosFontType baseFont = PosFontType.fontA;
 
     PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
       return PosStyles(
