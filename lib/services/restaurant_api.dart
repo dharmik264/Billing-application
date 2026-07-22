@@ -585,6 +585,14 @@ class RestaurantApi {
     return ApiSystemSettings.fromJson(data);
   }
 
+  Future<ApiSystemSettings> updateSystemSettings({String? upiId, String? base64QrImage}) async {
+    final body = <String, dynamic>{};
+    if (upiId != null) body['payment_upi_id'] = upiId;
+    if (base64QrImage != null) body['payment_qr_code'] = base64QrImage;
+    final data = await _postMultipart('system-settings/', body);
+    return ApiSystemSettings.fromJson(data);
+  }
+
   Future<void> submitSubscriptionPayment(int planId, String transactionId, String billingCycle) async {
     await _post('subscriptions/pay/', {
       'plan_id': planId,

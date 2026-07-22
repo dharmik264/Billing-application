@@ -483,12 +483,45 @@ class PublicSubscriptionPlanListView(generics.ListAPIView):
 
 class SystemSettingsView(APIView):
     permission_classes = [AllowAny]
+    
     def get(self, request):
         from .models import SystemSettings
         from .serializers import SystemSettingsSerializer
         settings = SystemSettings.get_settings()
         serializer = SystemSettingsSerializer(settings, context={'request': request})
         return Response(serializer.data)
+
+    def post(self, request):
+        from .models import SystemSettings
+        from .serializers import SystemSettingsSerializer
+        settings = SystemSettings.get_settings()
+        
+        upi_id = request.data.get('payment_upi_id')
+        if upi_id is not None:
+            settings.payment_upi_id = upi_id
+            
+        if 'payment_qr_code' in request.FILES:
+            settings.payment_qr_code = request.FILES['payment_qr_code']
+        elif 'payment_qr_code' in request.data and request.data['payment_qr_code']:
+            qr_val = request.data['payment_qr_code']
+            if isinstance(qr_val, str) and qr_val.startswith('data:image'):
+                import base64
+                from django.core.files.base import ContentFile
+                format, imgstr = qr_val.split(';base64,')
+                ext = format.split('/')[-1]
+                settings.payment_qr_code = ContentFile(base64.b64decode(imgstr), name=f'payment_qr.{ext}')
+            elif isinstance(qr_val, str) and not qr_val.startswith('http'):
+                import base64
+                from django.core.files.base import ContentFile
+                try:
+                    decoded = base64.b64decode(qr_val)
+                    settings.payment_qr_code = ContentFile(decoded, name='payment_qr.png')
+                except Exception:
+                    pass
+
+        settings.save()
+        serializer = SystemSettingsSerializer(settings, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class SubmitSubscriptionPaymentView(APIView):
     permission_classes = [IsAuthenticated]

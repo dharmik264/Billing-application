@@ -8,6 +8,7 @@ import 'password_login_screen.dart';
 import 'super_admin_shop_requests_screen.dart';
 import 'super_admin_user_roles_screen.dart';
 import 'super_admin_plan_settings_screen.dart';
+import 'super_admin_payment_settings_screen.dart';
 
 // ── Models ──────────────────────────────────────────
 
@@ -278,7 +279,9 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
             _mgmtCard(Icons.history_rounded, 'Plan Settings', 'Edit pricing tiers', const Color(0xFFEFF6FF), const Color(0xFF3B82F6), () {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SuperAdminPlanSettingsScreen()));
             }),
-            _mgmtCard(Icons.print_rounded, 'App Config', 'Maintenance & global', const Color(0xFFF5F3FF), const Color(0xFF8B5CF6), null),
+            _mgmtCard(Icons.qr_code_2_rounded, 'Payment & QR', 'UPI & QR Code', const Color(0xFFF5F3FF), const Color(0xFF8B5CF6), () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SuperAdminPaymentSettingsScreen()));
+            }),
           ],
         ),
       ],
