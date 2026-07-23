@@ -1,7 +1,7 @@
 {
   "total": 206,
-  "passed": 206,
-  "failed": 0,
+  "passed": 204,
+  "failed": 2,
   "sections": {
     "DB Tables": {
       "passed": 15,
@@ -40,8 +40,8 @@
       "failed": 0
     },
     "Validation": {
-      "passed": 8,
-      "failed": 0
+      "passed": 6,
+      "failed": 2
     },
     "Admin": {
       "passed": 9,
@@ -1044,7 +1044,7 @@
     "Validation::Customer: empty address rejected (400)": {
       "section": "Validation",
       "name": "Customer: empty address rejected (400)",
-      "passed": true,
+      "passed": false,
       "detail": ""
     },
     "Validation::Customer: invalid GST rejected (400)": {
@@ -1056,7 +1056,7 @@
     "Validation::Customer: valid GST accepted (201)": {
       "section": "Validation",
       "name": "Customer: valid GST accepted (201)",
-      "passed": true,
+      "passed": false,
       "detail": ""
     },
     "Validation::Customer: duplicate mobile rejected (400)": {

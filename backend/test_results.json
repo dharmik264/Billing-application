@@ -1,7 +1,7 @@
 {
   "total": 55,
-  "passed": 55,
-  "failed": 0,
+  "passed": 54,
+  "failed": 1,
   "tests": {
     "customers_customer table exists": {
       "passed": true,
@@ -45,7 +45,7 @@
     },
     "CREATE: Customer record saved": {
       "passed": true,
-      "detail": "id=1"
+      "detail": "id=17"
     },
     "CREATE: Name stored correctly": {
       "passed": true,
@@ -117,7 +117,7 @@
     },
     "GET list: returns data": {
       "passed": true,
-      "detail": "count=1"
+      "detail": "count=4"
     },
     "GET /api/customers/{id}/: Status 200": {
       "passed": true,
@@ -192,7 +192,7 @@
       "detail": ""
     },
     "Validation: Empty address rejected (400)": {
-      "passed": true,
+      "passed": false,
       "detail": ""
     },
     "Admin: Customer model registered": {

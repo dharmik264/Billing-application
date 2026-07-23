@@ -5,6 +5,10 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:image/image.dart' as img;
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart' show debugPrint;
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'restaurant_api.dart';
@@ -179,6 +183,34 @@ class PrinterService {
     bytes += generator.cut();
 
     await writeBytes(bytes);
+  }
+
+  Future<void> printWebReceipt(Uint8List pngBytes, {bool is80mm = false}) async {
+    try {
+      final doc = pw.Document();
+      final image = pw.MemoryImage(pngBytes);
+      final double widthMm = is80mm ? 80.0 : 58.0;
+      doc.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat(
+            widthMm * PdfPageFormat.mm,
+            double.infinity,
+            marginAll: 0,
+          ),
+          build: (pw.Context context) {
+            return pw.Center(
+              child: pw.Image(image, fit: pw.BoxFit.contain),
+            );
+          },
+        ),
+      );
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => doc.save(),
+        name: 'Bill_Receipt',
+      );
+    } catch (e) {
+      debugPrint('Web print error: $e');
+    }
   }
 
   Future<void> printReceipt(

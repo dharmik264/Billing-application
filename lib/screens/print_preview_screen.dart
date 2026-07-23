@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
@@ -507,16 +509,22 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       }
     }
     
-    bool? isConnected = false;
     if (kIsWeb) {
-      isConnected = false;
-    } else {
-      try {
-        isConnected = await PrinterService.instance.bluetooth.isConnected
-            .timeout(const Duration(seconds: 2));
-      } catch (e) {
-        debugPrint('Bluetooth check error: $e');
+      final pngBytes = await _captureReceiptPng();
+      if (pngBytes != null) {
+        await PrinterService.instance.printWebReceipt(pngBytes, is80mm: PrinterService.instance.is80mm);
       }
+      if (mounted) setState(() => _isPrinting = false);
+      _showPrintSuccessAnimationAndPrint();
+      return;
+    }
+
+    bool? isConnected = false;
+    try {
+      isConnected = await PrinterService.instance.bluetooth.isConnected
+          .timeout(const Duration(seconds: 2));
+    } catch (e) {
+      debugPrint('Bluetooth check error: $e');
     }
     
     if (isConnected != true) {
@@ -577,6 +585,19 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     _showPrintSuccessAnimationAndPrint();
   }
 
+
+  Future<Uint8List?> _captureReceiptPng() async {
+    try {
+      final boundary = _receiptKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      final image = await boundary.toImage(pixelRatio: 2.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
+    } catch (e) {
+      debugPrint('Capture receipt error: $e');
+      return null;
+    }
+  }
 
   void _showPrintSuccessAnimationAndPrint() async {
     final overlay = Overlay.of(context);
