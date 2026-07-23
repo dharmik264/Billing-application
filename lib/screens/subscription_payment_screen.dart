@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
 
@@ -115,24 +116,125 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                   ),
                   const SizedBox(height: 32),
                   
-                  // QR Code Section
-                  Center(
-                    child: _settings?.paymentQrCode != null && _settings!.paymentQrCode!.isNotEmpty
-                        ? ClipRRect(
+                  // Payment Method / Admin QR & UPI Section
+                  Builder(
+                    builder: (context) {
+                      final hasQr = _settings?.paymentQrCode != null && _settings!.paymentQrCode!.isNotEmpty;
+                      final hasUpi = _settings?.paymentUpiId != null && _settings!.paymentUpiId!.isNotEmpty;
+                      final hasPaymentConfig = hasQr || hasUpi;
+
+                      if (!hasPaymentConfig) {
+                        return Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
                             borderRadius: BorderRadius.circular(16),
-                            child: Image.network(_settings!.paymentQrCode!, width: 200, height: 200, fit: BoxFit.cover),
-                          )
-                        : Container(
-                            width: 200,
-                            height: 200,
-                            decoration: BoxDecoration(color: const Color(0xFFE2E8F0), borderRadius: BorderRadius.circular(16)),
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.qr_code_2, size: 64, color: Color(0xFF94A3B8)),
+                            border: Border.all(color: const Color(0xFFBFDBFE)),
                           ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.info_outline_rounded, color: Color(0xFF2563EB), size: 36),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Plan Payment Details Update in Progress',
+                                style: GoogleFonts.inter(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF1E40AF),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Super Admin is currently updating payment details for the ${widget.plan.name} plan.\n\nIf you have already transferred the payment, enter your Transaction ID below or contact Super Admin for quick approval.',
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  color: const Color(0xFF1E3A8A),
+                                  height: 1.4,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        children: [
+                          if (hasQr) ...[
+                            Center(
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    _settings!.paymentQrCode!,
+                                    width: 220,
+                                    height: 220,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      width: 220,
+                                      height: 220,
+                                      color: const Color(0xFFF1F5F9),
+                                      child: const Icon(Icons.qr_code_2, size: 64, color: Color(0xFF94A3B8)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          if (hasUpi) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('SUPER ADMIN UPI ID', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF94A3B8))),
+                                        const SizedBox(height: 2),
+                                        SelectableText(
+                                          _settings!.paymentUpiId!,
+                                          style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.copy_rounded, color: Color(0xFF4F46E5), size: 20),
+                                    onPressed: () {
+                                      Clipboard.setData(ClipboardData(text: _settings!.paymentUpiId!));
+                                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('UPI ID copied to clipboard!')));
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: 16),
-                  if (_settings?.paymentUpiId != null && _settings!.paymentUpiId!.isNotEmpty)
-                    Text('UPI ID: ${_settings!.paymentUpiId}', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)), textAlign: TextAlign.center),
                   
                   const SizedBox(height: 48),
                   
