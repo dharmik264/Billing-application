@@ -265,10 +265,20 @@ class ShopRequestActionView(APIView):
             user.save()
             return Response({'message': 'Shop activated successfully'}, status=status.HTTP_200_OK)
         elif action in ['decline', 'deactivate']:
-            user.account_status = 'rejected'
-            user.is_active = False
+            user.account_status = 'trial'
+            user.is_active = True
+            user.approved_plan = 'Trial Period'
+            user.permissions = {
+                'billing': True,
+                'billing_access': True,
+                'inventory_access': False,
+                'reports_access': False,
+                'tax_access': False,
+                'staff_management': False,
+                'customers_access': False,
+            }
             user.save()
-            return Response({'message': 'Shop deactivated successfully'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Shop plan stopped and switched to Trial Period'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
 
