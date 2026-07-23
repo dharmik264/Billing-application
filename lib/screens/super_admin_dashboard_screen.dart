@@ -115,35 +115,38 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          refreshData();
-        },
-        color: const Color(0xFF4F46E5),
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-          slivers: [
-            _buildHeader(),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    _buildStatCards().animate().fadeIn().slideY(begin: 0.1),
-                    const SizedBox(height: 24),
-                    _buildCoreManagement().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
-                    const SizedBox(height: 24),
-                    _buildShopRequests().animate().fadeIn().slideY(begin: 0.1, delay: 200.ms),
-                    const SizedBox(height: 24),
-                    _buildSystemHealth().animate().fadeIn().slideY(begin: 0.1, delay: 300.ms),
-                    const SizedBox(height: 120),
-                  ],
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            refreshData();
+          },
+          color: const Color(0xFF4F46E5),
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildHeaderContent(),
+                      const SizedBox(height: 16),
+                      _buildStatCards().animate().fadeIn().slideY(begin: 0.1),
+                      const SizedBox(height: 24),
+                      _buildCoreManagement().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
+                      const SizedBox(height: 24),
+                      _buildShopRequests().animate().fadeIn().slideY(begin: 0.1, delay: 200.ms),
+                      const SizedBox(height: 24),
+                      _buildSystemHealth().animate().fadeIn().slideY(begin: 0.1, delay: 300.ms),
+                      const SizedBox(height: 140),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -151,104 +154,124 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
 
   // ── 1. Header ──────────────────────────────────────────────
 
-  SliverAppBar _buildHeader() {
-    return SliverAppBar(
-      expandedHeight: 120.0,
-      floating: false,
-      pinned: true,
-      backgroundColor: const Color(0xFFF8FAFC),
-      elevation: 0,
-      automaticallyImplyLeading: false,
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
-        title: Row(
-          children: [
-            Container(
-              width: 40, height: 40,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)]),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 3)),
-                ],
+  Widget _buildHeaderContent() {
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)]),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
-              child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Super Admin', style: GoogleFonts.inter(color: const Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 16)),
-                  Row(
-                    children: [
-                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle)),
-                      const SizedBox(width: 4),
-                      Text('SYSTEM ACTIVE', style: GoogleFonts.inter(color: const Color(0xFF10B981), fontWeight: FontWeight.w600, fontSize: 9, letterSpacing: 0.5)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            GestureDetector(
-              onTap: _logout,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE2E8F0))),
-                child: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFEF4444)),
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => _showSnack('Profile'),
-              child: Container(
-                width: 36, height: 36,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFF06B6D4), Color(0xFF3B82F6)]),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.person_rounded, size: 20, color: Colors.white),
-              ),
-            ),
-          ],
+            ],
+          ),
+          child: const Icon(Icons.shield_rounded, color: Colors.white, size: 22),
         ),
-      ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Super Admin',
+                style: GoogleFonts.inter(color: const Color(0xFF0F172A), fontWeight: FontWeight.w700, fontSize: 18),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle)),
+                  const SizedBox(width: 4),
+                  Text('SYSTEM ACTIVE', style: GoogleFonts.inter(color: const Color(0xFF10B981), fontWeight: FontWeight.w600, fontSize: 9, letterSpacing: 0.5)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        GestureDetector(
+          onTap: _logout,
+          child: Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFEF4444)),
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () => _showSnack('Profile'),
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFF06B6D4), Color(0xFF3B82F6)]),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.person_rounded, size: 20, color: Colors.white),
+          ),
+        ),
+      ],
     );
   }
 
   // ── 2. Stat Cards ──────────────────────────────────────────
 
   Widget _buildStatCards() {
-    return Row(
-      children: [
-        Expanded(child: _bigStatCard('Total Revenue', _totalRevenue, Icons.trending_up_rounded, const Color(0xFF4F46E5), const Color(0xFF6366F1))),
-        const SizedBox(width: 12),
-        Expanded(child: _bigStatCard('Active Subs', _activeSubs, Icons.people_rounded, const Color(0xFF10B981), const Color(0xFF34D399))),
-      ],
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4F46E5), Color(0xFF3730A3)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _statItem('Total Revenue', _totalRevenue, Icons.account_balance_wallet)),
+              Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.2)),
+              Expanded(child: _statItem('Active Shops', _activeSubs, Icons.storefront)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _bigStatCard(String title, String value, IconData icon, Color c1, Color c2) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [c1, c2], begin: Alignment.topLeft, end: Alignment.bottomRight),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: c1.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 6))],
-      ),
+  Widget _statItem(String title, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(10)),
-            child: Icon(icon, color: Colors.white, size: 20),
+          Row(
+            children: [
+              Icon(icon, color: Colors.white70, size: 16),
+              const SizedBox(width: 6),
+              Text(title, style: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w500, fontSize: 12)),
+            ],
           ),
-          const SizedBox(height: 14),
-          Text(value, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 22, letterSpacing: -0.5)),
-          const SizedBox(height: 4),
-          Text(title, style: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.85), fontWeight: FontWeight.w500, fontSize: 12)),
+          const SizedBox(height: 6),
+          Text(value, style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
         ],
       ),
     );
@@ -269,7 +292,7 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.15,
           children: [
             _mgmtCard(Icons.bolt_rounded, 'User Roles', 'Manage permissions', const Color(0xFFFFF7ED), const Color(0xFFF59E0B), () {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SuperAdminUserRolesScreen()));
@@ -296,7 +319,7 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
     return GestureDetector(
       onTap: onTap ?? () => _showSnack(title),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -310,10 +333,15 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: iconColor, size: 18),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-            const SizedBox(height: 10),
-            Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
+            ),
             const SizedBox(height: 2),
             Text(subtitle, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B))),
           ],
