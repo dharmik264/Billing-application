@@ -252,18 +252,21 @@ class ShopRequestActionView(APIView):
             user.approved_at = timezone.now()
             
             if plan:
-                from .models import SubscriptionPlan
+                from .models import SubscriptionPlan, SubscriptionPayment
                 plan_obj = SubscriptionPlan.objects.filter(name__iexact=plan).first()
                 if not plan_obj and str(plan).isdigit():
                     plan_obj = SubscriptionPlan.objects.filter(id=int(plan)).first()
-                if plan_obj and plan_obj.features:
-                    perms = user.permissions or {}
-                    for k, v in plan_obj.features.items():
-                        perms[k] = v
-                    user.permissions = perms
+                if plan_obj:
+                    user.approved_plan = plan_obj.name
+                    if plan_obj.features:
+                        perms = user.permissions or {}
+                        for k, v in plan_obj.features.items():
+                            perms[k] = v
+                        user.permissions = perms
+                SubscriptionPayment.objects.filter(user=user, status='pending').update(status='approved')
             
             user.save()
-            return Response({'message': 'Shop activated successfully'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Shop and plan activated successfully'}, status=status.HTTP_200_OK)
         elif action in ['decline', 'deactivate']:
             user.account_status = 'trial'
             user.is_active = True
@@ -521,12 +524,10 @@ class SystemSettingsView(APIView):
                 import base64
                 from django.core.files.base import ContentFile
                 format, imgstr = qr_val.split(';base64,')
-                ext = format.split('/')[-1]
-                settings.payment_qr_code = ContentFile(base64.b64decode(imgstr), name=f'payment_qr.{ext}')
-            elif isinstance(qr_val, str) and not qr_val.startswith('http'):
-                import base64
-                from django.core.files.base import ContentFile
+            if qr_val:
                 try:
+                    if ',' in qr_val:
+                        qr_val = qr_val.split(',')[1]
                     decoded = base64.b64decode(qr_val)
                     settings.payment_qr_code = ContentFile(decoded, name='payment_qr.png')
                 except Exception:
@@ -564,15 +565,6 @@ class SubmitSubscriptionPaymentView(APIView):
             status='pending'
         )
         
-        # Auto sync plan features to user permissions
-        request.user.approved_plan = plan.name
-        perms = request.user.permissions or {}
-        if plan.features:
-            for k, v in plan.features.items():
-                perms[k] = v
-        request.user.permissions = perms
-        request.user.save()
-
         from .serializers import SubscriptionPaymentSerializer
         return Response(SubscriptionPaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
 
