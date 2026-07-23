@@ -55,7 +55,7 @@ class _SuperAdminPlanSettingsScreenState extends State<SuperAdminPlanSettingsScr
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
           : ListView.builder(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 100),
               itemCount: _plans.length,
               itemBuilder: (context, index) {
                 return _buildPlanCard(_plans[index]);
@@ -90,34 +90,69 @@ class _SuperAdminPlanSettingsScreenState extends State<SuperAdminPlanSettingsScr
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  Text(plan['name'] ?? 'Plan', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: isActive ? const Color(0xFF0F172A) : const Color(0xFF94A3B8))),
-                  if (isPopular)
-                    Container(
-                      margin: const EdgeInsets.only(left: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: const Color(0xFFF59E0B).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                      child: Text('POPULAR', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFFF59E0B))),
+              Expanded(
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    Text(
+                      plan['name'] ?? 'Plan',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: isActive ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                      ),
                     ),
-                  if (!isActive)
-                    Container(
-                      margin: const EdgeInsets.only(left: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: const Color(0xFF94A3B8).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                      child: Text('INACTIVE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF94A3B8))),
-                    ),
-                ],
+                    if (isPopular)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'POPULAR',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFF59E0B),
+                          ),
+                        ),
+                      ),
+                    if (!isActive)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF94A3B8).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'INACTIVE',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF94A3B8),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.all(6),
                     icon: const Icon(Icons.edit_rounded, size: 20, color: Color(0xFF64748B)),
                     onPressed: () => _showPlanDialog(plan: plan),
                   ),
                   IconButton(
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.all(6),
                     icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Color(0xFFEF4444)),
                     onPressed: () => _confirmDelete(plan),
                   ),
