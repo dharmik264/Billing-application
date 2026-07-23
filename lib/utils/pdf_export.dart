@@ -68,7 +68,7 @@ class PdfExport {
             margin: const pw.EdgeInsets.only(top: 10),
             child: pw.Text(
               'Page ${context.pageNumber} of ${context.pagesCount}',
-              style: const pw.TextStyle(color: PdfColors.grey, fontSize: 10),
+              style: pw.TextStyle(color: PdfColors.grey, fontSize: 10),
             ),
           );
         },
@@ -82,7 +82,7 @@ class PdfExport {
           pw.SizedBox(height: 20),
           pw.Text('Transaction Details',
               style:
-                  const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                  pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 10),
           _buildTransactionTable(tokens),
         ],
@@ -121,14 +121,14 @@ class PdfExport {
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text(shopName,
-                style: const pw.TextStyle(
+                style: pw.TextStyle(
                     fontSize: 24,
                     fontWeight: pw.FontWeight.bold,
                     color: PdfColors.blue800)),
             pw.SizedBox(height: 4),
             pw.Text('Analytics Report',
                 style:
-                    const pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
+                    pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
           ],
         ),
         pw.Column(
@@ -136,11 +136,11 @@ class PdfExport {
           children: [
             pw.Text('Range: $rangeLabel',
                 style:
-                    const pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                    pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 4),
             pw.Text('Generated: $dateStr, $timeStr',
                 style:
-                    const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                    pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
           ],
         ),
       ],
@@ -176,11 +176,11 @@ class PdfExport {
           children: [
             pw.Text(title,
                 style:
-                    const pw.TextStyle(fontSize: 10, color: PdfColors.grey800)),
+                    pw.TextStyle(fontSize: 10, color: PdfColors.grey800)),
             pw.SizedBox(height: 4),
             pw.Text(value,
                 style:
-                    const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                    pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
           ],
         ),
       ),
@@ -208,22 +208,22 @@ class PdfExport {
           pw.Column(
             children: [
               pw.Text('Cash Total',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey700)),
               pw.SizedBox(height: 4),
               pw.Text('Rs. ${cashTotal.toStringAsFixed(2)} ($cashPct%)',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 12, fontWeight: pw.FontWeight.bold)),
             ],
           ),
           pw.Column(
             children: [
               pw.Text('Online/UPI Total',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 10, color: PdfColors.grey700)),
               pw.SizedBox(height: 4),
               pw.Text('Rs. ${onlineTotal.toStringAsFixed(2)} ($onlinePct%)',
-                  style: const pw.TextStyle(
+                  style: pw.TextStyle(
                       fontSize: 12, fontWeight: pw.FontWeight.bold)),
             ],
           ),
@@ -289,7 +289,7 @@ class PdfExport {
       child: pw.Text(
         text,
         textAlign: align,
-        style: const pw.TextStyle(
+        style: pw.TextStyle(
             fontSize: 10,
             fontWeight: pw.FontWeight.bold,
             color: PdfColors.white),
@@ -304,7 +304,7 @@ class PdfExport {
       child: pw.Text(
         text,
         textAlign: align,
-        style: const pw.TextStyle(fontSize: 9),
+        style: pw.TextStyle(fontSize: 9),
       ),
     );
   }
