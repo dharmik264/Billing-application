@@ -102,86 +102,146 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
 
 
   Widget _buildRequestCard(Map<String, dynamic> req, int index) {
-    final status = req['account_status'];
+    final status = req['account_status'] ?? 'pending';
+    final isApproved = status == 'approved';
     final isPending = status == 'pending' || status == 'trial';
     final name = req['shop_name'] ?? 'Unknown Shop';
     final location = req['phone'] ?? 'Unknown Phone';
     final userId = req['id'];
+    final plan = req['approved_plan'] ?? 'Pro Plan';
 
     return GestureDetector(
       onTap: () => _showShopDetails(req),
       child: Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(color: const Color(0xFFFFF7ED), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.storefront, color: Color(0xFF64748B), size: 22),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isApproved ? const Color(0xFFBBF7D0) : const Color(0xFFE2E8F0),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        child: Column(
+          children: [
+            Row(
               children: [
-                Text(name, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
-                const SizedBox(height: 3),
-                Text('$location • Pending Approval', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B))),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isApproved ? const Color(0xFFF0FDF4) : const Color(0xFFFFF7ED),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.storefront,
+                    color: isApproved ? const Color(0xFF16A34A) : const Color(0xFF64748B),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '$location • ${status.toString().toUpperCase()}',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: isApproved
+                              ? const Color(0xFF16A34A)
+                              : (isPending ? const Color(0xFFD97706) : const Color(0xFFEF4444)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isApproved ? 'ACTIVE' : 'INACTIVE',
+                          style: GoogleFonts.inter(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: isApproved ? const Color(0xFF16A34A) : const Color(0xFF94A3B8),
+                          ),
+                        ),
+                        Transform.scale(
+                          scale: 0.8,
+                          child: Switch.adaptive(
+                            value: isApproved,
+                            activeTrackColor: const Color(0xFF16A34A),
+                            onChanged: (value) async {
+                              try {
+                                if (value) {
+                                  await RestaurantApi.instance.approveShopRequest(userId.toString(), plan);
+                                  _showSnack('$name activated!');
+                                } else {
+                                  await RestaurantApi.instance.declineShopRequest(userId.toString());
+                                  _showSnack('$name deactivated!');
+                                }
+                                _fetchRequests();
+                              } catch (e) {
+                                _showSnack('Error updating status: $e');
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 20),
+                      padding: const EdgeInsets.only(left: 4),
+                      constraints: const BoxConstraints(),
+                      onPressed: () => _confirmDeleteUser(req, index),
+                    ),
+                  ],
+                ),
               ],
             ),
-          ),
-          if (isPending)
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _actionBtn('Approve', const Color(0xFF10B981), () async {
-                  try {
-                    await RestaurantApi.instance.approveShopRequest(userId.toString(), 'Pro Plan');
-                    setState(() { _requests.removeAt(index); });
-                    _showSnack('$name approved!');
-                  } catch (e) {
-                    _showSnack('Failed to approve: $e');
-                  }
-                }),
-                _actionBtn('Decline', const Color(0xFFEF4444), () async {
-                  try {
-                    await RestaurantApi.instance.declineShopRequest(userId.toString());
-                    setState(() { _requests.removeAt(index); });
-                    _showSnack('$name declined');
-                  } catch (e) {
-                    _showSnack('Failed to decline: $e');
-                  }
-                }),
-              ],
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: const Color(0xFFF0FDF4), borderRadius: BorderRadius.circular(8)),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+            if (isPending) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const Icon(Icons.check_circle, size: 12, color: Color(0xFF10B981)),
-                  const SizedBox(width: 4),
-                  Text('ACTIVE', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
+                  _actionBtn('Approve', const Color(0xFF10B981), () async {
+                    try {
+                      await RestaurantApi.instance.approveShopRequest(userId.toString(), 'Pro Plan');
+                      _fetchRequests();
+                      _showSnack('$name approved!');
+                    } catch (e) {
+                      _showSnack('Failed to approve: $e');
+                    }
+                  }),
+                  const SizedBox(width: 8),
+                  _actionBtn('Decline', const Color(0xFFEF4444), () async {
+                    try {
+                      await RestaurantApi.instance.declineShopRequest(userId.toString());
+                      _fetchRequests();
+                      _showSnack('$name declined');
+                    } catch (e) {
+                      _showSnack('Failed to decline: $e');
+                    }
+                  }),
                 ],
               ),
-            ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 20),
-            padding: const EdgeInsets.only(left: 8),
-            constraints: const BoxConstraints(),
-            onPressed: () => _confirmDeleteUser(req, index),
-          ),
-        ],
-      ),
+            ]
+          ],
+        ),
       ),
     );
   }

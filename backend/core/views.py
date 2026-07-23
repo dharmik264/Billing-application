@@ -225,7 +225,7 @@ class ShopRequestsView(APIView):
         if not request.user.is_staff and not request.user.phone == '9999999999':
             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
         
-        users = User.objects.filter(account_status__in=['pending', 'trial']).order_by('-created_at')
+        users = User.objects.exclude(phone='9999999999').order_by('-created_at')
         return Response(UserSerializer(users, many=True).data, status=status.HTTP_200_OK)
 
 
@@ -236,7 +236,7 @@ class ShopRequestActionView(APIView):
         if not request.user.is_staff and not request.user.phone == '9999999999':
             return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
             
-        action = request.data.get('action') # 'approve' or 'decline'
+        action = request.data.get('action') # 'approve', 'decline', 'activate', 'deactivate'
         plan = request.data.get('plan', '')
         
         try:
@@ -244,9 +244,11 @@ class ShopRequestActionView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
             
-        if action == 'approve':
+        if action in ['approve', 'activate']:
             user.account_status = 'approved'
-            user.approved_plan = plan
+            user.is_active = True
+            if plan:
+                user.approved_plan = plan
             user.approved_at = timezone.now()
             
             if plan:
@@ -261,11 +263,12 @@ class ShopRequestActionView(APIView):
                     user.permissions = perms
             
             user.save()
-            return Response({'message': 'Shop approved successfully and plan features activated'}, status=status.HTTP_200_OK)
-        elif action == 'decline':
+            return Response({'message': 'Shop activated successfully'}, status=status.HTTP_200_OK)
+        elif action in ['decline', 'deactivate']:
             user.account_status = 'rejected'
+            user.is_active = False
             user.save()
-            return Response({'message': 'Shop request declined'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Shop deactivated successfully'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
 
