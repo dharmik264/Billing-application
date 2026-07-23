@@ -11,6 +11,7 @@ import 'analytics_reports_screen.dart';
 import 'settings_screen.dart';
 import 'customer_management_screen.dart';
 import '../services/restaurant_api.dart';
+import '../services/printer_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -33,6 +34,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _loadPermissions();
+    PrinterService.instance.attemptAutoConnect();
   }
 
   Future<void> _loadPermissions() async {

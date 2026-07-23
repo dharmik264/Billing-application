@@ -108,6 +108,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     super.initState();
     _actualTokenNumber = widget.tokenNumber;
     _initImages();
+    PrinterService.instance.attemptAutoConnect();
   }
 
   Future<void> _initImages() async {

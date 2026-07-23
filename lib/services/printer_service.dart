@@ -126,21 +126,31 @@ class PrinterService {
     }
   }
 
-  Future<void> attemptAutoConnect() async {
-    if (kIsWeb) return;
+  Future<bool> attemptAutoConnect() async {
+    if (kIsWeb) return false;
     
-    await initPreferences();
-    if (_isNetworkPrinter) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final mac = prefs.getString('printer_mac');
-    if (mac != null && mac.isNotEmpty) {
-      final devices = await getDevices();
-      final device = devices.where((d) => d.address == mac).firstOrNull;
-      if (device != null) {
-        await connect(device);
+    try {
+      await initPreferences();
+      if (_isNetworkPrinter && _printerIp != null && _printerIp!.isNotEmpty) {
+        return await connectNetwork(_printerIp!);
       }
+
+      final alreadyConnected = await isConnected;
+      if (alreadyConnected) return true;
+
+      final prefs = await SharedPreferences.getInstance();
+      final mac = prefs.getString('printer_mac');
+      if (mac != null && mac.isNotEmpty) {
+        final devices = await getDevices();
+        final device = devices.where((d) => d.address == mac).firstOrNull;
+        if (device != null) {
+          return await connect(device);
+        }
+      }
+    } catch (e) {
+      debugPrint('Printer auto-connect error: $e');
     }
+    return false;
   }
 
 

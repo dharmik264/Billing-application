@@ -576,12 +576,26 @@ class RestaurantApi {
 
   // --- Subscriptions ---
   Future<List<ApiSubscriptionPlan>> fetchSubscriptionPlans() async {
-    final list = await _getPaginatedList('plans/');
+    List<Map<String, dynamic>> list = [];
+    try {
+      list = await _getPaginatedList('auth/plans/');
+    } catch (_) {
+      try {
+        list = await _getPaginatedList('plans/');
+      } catch (e) {
+        rethrow;
+      }
+    }
     return list.map((e) => ApiSubscriptionPlan.fromJson(e)).toList();
   }
 
   Future<ApiSystemSettings> fetchSystemSettings() async {
-    final data = await _get('system-settings/');
+    Map<String, dynamic> data = {};
+    try {
+      data = await _get('auth/system-settings/');
+    } catch (_) {
+      data = await _get('system-settings/');
+    }
     return ApiSystemSettings.fromJson(data);
   }
 
@@ -589,16 +603,26 @@ class RestaurantApi {
     final body = <String, dynamic>{};
     if (upiId != null) body['payment_upi_id'] = upiId;
     if (base64QrImage != null) body['payment_qr_code'] = base64QrImage;
-    final data = await _postMultipart('system-settings/', body);
+    Map<String, dynamic> data = {};
+    try {
+      data = await _postMultipart('auth/system-settings/', body);
+    } catch (_) {
+      data = await _postMultipart('system-settings/', body);
+    }
     return ApiSystemSettings.fromJson(data);
   }
 
   Future<void> submitSubscriptionPayment(int planId, String transactionId, String billingCycle) async {
-    await _post('subscriptions/pay/', {
+    final body = {
       'plan_id': planId,
       'transaction_id': transactionId,
       'billing_cycle': billingCycle,
-    });
+    };
+    try {
+      await _post('auth/subscriptions/pay/', body);
+    } catch (_) {
+      await _post('subscriptions/pay/', body);
+    }
   }
 }
 
