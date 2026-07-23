@@ -221,6 +221,10 @@ class RestaurantApi {
     return response;
   }
 
+  Future<List<Map<String, dynamic>>> fetchSuperAdminPayments() async {
+    return await _getPaginatedList('auth/super-admin/payments/');
+  }
+
   // ── Shop ────────────────────────────────────────────────────
 
   Future<ApiShopData> fetchShop({String shopId = defaultShopId, bool forceRefresh = false}) async {

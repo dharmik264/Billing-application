@@ -6,7 +6,7 @@ from .views import (
     SuperAdminLoginView, SuperAdminUsersView, SuperAdminUpdatePermissionsView,
     SuperAdminDeleteUserView, SuperAdminSubscriptionPlanListCreateView, SuperAdminSubscriptionPlanDetailView,
     DevUsersView, DevLoginView,
-    PublicSubscriptionPlanListView, SystemSettingsView, SubmitSubscriptionPaymentView
+    PublicSubscriptionPlanListView, SystemSettingsView, SubmitSubscriptionPaymentView, SuperAdminPaymentsView
 )
 
 urlpatterns = [
@@ -27,6 +27,7 @@ urlpatterns = [
     path('super-admin/users/<int:user_id>/delete/', SuperAdminDeleteUserView.as_view(), name='super-admin-delete-user'),
     path('super-admin/plans/', SuperAdminSubscriptionPlanListCreateView.as_view(), name='super-admin-plans'),
     path('super-admin/plans/<int:pk>/', SuperAdminSubscriptionPlanDetailView.as_view(), name='super-admin-plan-detail'),
+    path('super-admin/payments/', SuperAdminPaymentsView.as_view(), name='super-admin-payments'),
     
     # Developer Mode Endpoints
     path('dev/users/', DevUsersView.as_view(), name='dev-users'),
