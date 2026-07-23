@@ -1,0 +1,1297 @@
+{
+  "total": 206,
+  "passed": 206,
+  "failed": 0,
+  "sections": {
+    "DB Tables": {
+      "passed": 15,
+      "failed": 0
+    },
+    "DB Fields": {
+      "passed": 96,
+      "failed": 0
+    },
+    "Auth API": {
+      "passed": 8,
+      "failed": 0
+    },
+    "Shop API": {
+      "passed": 7,
+      "failed": 0
+    },
+    "Menu API": {
+      "passed": 8,
+      "failed": 0
+    },
+    "Token API": {
+      "passed": 8,
+      "failed": 0
+    },
+    "Reports API": {
+      "passed": 6,
+      "failed": 0
+    },
+    "Printer API": {
+      "passed": 5,
+      "failed": 0
+    },
+    "Customer API": {
+      "passed": 8,
+      "failed": 0
+    },
+    "Validation": {
+      "passed": 8,
+      "failed": 0
+    },
+    "Admin": {
+      "passed": 9,
+      "failed": 0
+    },
+    "Security": {
+      "passed": 8,
+      "failed": 0
+    },
+    "Flutter Screens": {
+      "passed": 20,
+      "failed": 0
+    }
+  },
+  "all": {
+    "DB Tables::Table: core_user": {
+      "section": "DB Tables",
+      "name": "Table: core_user",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::core_user.id": {
+      "section": "DB Fields",
+      "name": "core_user.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_user.phone": {
+      "section": "DB Fields",
+      "name": "core_user.phone",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_user.name": {
+      "section": "DB Fields",
+      "name": "core_user.name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_user.email": {
+      "section": "DB Fields",
+      "name": "core_user.email",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_user.shop_name": {
+      "section": "DB Fields",
+      "name": "core_user.shop_name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_user.account_status": {
+      "section": "DB Fields",
+      "name": "core_user.account_status",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_user.is_active": {
+      "section": "DB Fields",
+      "name": "core_user.is_active",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_user.created_at": {
+      "section": "DB Fields",
+      "name": "core_user.created_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: core_otp": {
+      "section": "DB Tables",
+      "name": "Table: core_otp",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::core_otp.id": {
+      "section": "DB Fields",
+      "name": "core_otp.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_otp.phone": {
+      "section": "DB Fields",
+      "name": "core_otp.phone",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_otp.code": {
+      "section": "DB Fields",
+      "name": "core_otp.code",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_otp.created_at": {
+      "section": "DB Fields",
+      "name": "core_otp.created_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_otp.is_used": {
+      "section": "DB Fields",
+      "name": "core_otp.is_used",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: core_appsettings": {
+      "section": "DB Tables",
+      "name": "Table: core_appsettings",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::core_appsettings.id": {
+      "section": "DB Fields",
+      "name": "core_appsettings.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_appsettings.gst_enabled": {
+      "section": "DB Fields",
+      "name": "core_appsettings.gst_enabled",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_appsettings.gst_percentage": {
+      "section": "DB Fields",
+      "name": "core_appsettings.gst_percentage",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_appsettings.service_charge": {
+      "section": "DB Fields",
+      "name": "core_appsettings.service_charge",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_appsettings.currency_symbol": {
+      "section": "DB Fields",
+      "name": "core_appsettings.currency_symbol",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: core_subscriptionplan": {
+      "section": "DB Tables",
+      "name": "Table: core_subscriptionplan",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::core_subscriptionplan.id": {
+      "section": "DB Fields",
+      "name": "core_subscriptionplan.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionplan.name": {
+      "section": "DB Fields",
+      "name": "core_subscriptionplan.name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionplan.price_monthly": {
+      "section": "DB Fields",
+      "name": "core_subscriptionplan.price_monthly",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionplan.price_yearly": {
+      "section": "DB Fields",
+      "name": "core_subscriptionplan.price_yearly",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionplan.is_active": {
+      "section": "DB Fields",
+      "name": "core_subscriptionplan.is_active",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionplan.trial_days": {
+      "section": "DB Fields",
+      "name": "core_subscriptionplan.trial_days",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: core_systemsettings": {
+      "section": "DB Tables",
+      "name": "Table: core_systemsettings",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::core_systemsettings.id": {
+      "section": "DB Fields",
+      "name": "core_systemsettings.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_systemsettings.payment_upi_id": {
+      "section": "DB Fields",
+      "name": "core_systemsettings.payment_upi_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_systemsettings.created_at": {
+      "section": "DB Fields",
+      "name": "core_systemsettings.created_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_systemsettings.updated_at": {
+      "section": "DB Fields",
+      "name": "core_systemsettings.updated_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: core_subscriptionpayment": {
+      "section": "DB Tables",
+      "name": "Table: core_subscriptionpayment",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::core_subscriptionpayment.id": {
+      "section": "DB Fields",
+      "name": "core_subscriptionpayment.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionpayment.user_id": {
+      "section": "DB Fields",
+      "name": "core_subscriptionpayment.user_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionpayment.plan_id": {
+      "section": "DB Fields",
+      "name": "core_subscriptionpayment.plan_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionpayment.transaction_id": {
+      "section": "DB Fields",
+      "name": "core_subscriptionpayment.transaction_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionpayment.status": {
+      "section": "DB Fields",
+      "name": "core_subscriptionpayment.status",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::core_subscriptionpayment.amount_paid": {
+      "section": "DB Fields",
+      "name": "core_subscriptionpayment.amount_paid",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: shop_shop": {
+      "section": "DB Tables",
+      "name": "Table: shop_shop",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::shop_shop.id": {
+      "section": "DB Fields",
+      "name": "shop_shop.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_shop.owner_id": {
+      "section": "DB Fields",
+      "name": "shop_shop.owner_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_shop.name": {
+      "section": "DB Fields",
+      "name": "shop_shop.name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_shop.tagline": {
+      "section": "DB Fields",
+      "name": "shop_shop.tagline",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_shop.address": {
+      "section": "DB Fields",
+      "name": "shop_shop.address",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_shop.phone": {
+      "section": "DB Fields",
+      "name": "shop_shop.phone",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_shop.gstin": {
+      "section": "DB Fields",
+      "name": "shop_shop.gstin",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_shop.upi_id": {
+      "section": "DB Fields",
+      "name": "shop_shop.upi_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_shop.created_at": {
+      "section": "DB Fields",
+      "name": "shop_shop.created_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: shop_billtemplate": {
+      "section": "DB Tables",
+      "name": "Table: shop_billtemplate",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::shop_billtemplate.id": {
+      "section": "DB Fields",
+      "name": "shop_billtemplate.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_billtemplate.shop_id": {
+      "section": "DB Fields",
+      "name": "shop_billtemplate.shop_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_billtemplate.shop_name": {
+      "section": "DB Fields",
+      "name": "shop_billtemplate.shop_name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_billtemplate.footer_message": {
+      "section": "DB Fields",
+      "name": "shop_billtemplate.footer_message",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::shop_billtemplate.theme_color": {
+      "section": "DB Fields",
+      "name": "shop_billtemplate.theme_color",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: menu_category": {
+      "section": "DB Tables",
+      "name": "Table: menu_category",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::menu_category.id": {
+      "section": "DB Fields",
+      "name": "menu_category.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_category.shop_id": {
+      "section": "DB Fields",
+      "name": "menu_category.shop_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_category.name": {
+      "section": "DB Fields",
+      "name": "menu_category.name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_category.icon": {
+      "section": "DB Fields",
+      "name": "menu_category.icon",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_category.sort_order": {
+      "section": "DB Fields",
+      "name": "menu_category.sort_order",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_category.is_active": {
+      "section": "DB Fields",
+      "name": "menu_category.is_active",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: menu_menuitem": {
+      "section": "DB Tables",
+      "name": "Table: menu_menuitem",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::menu_menuitem.id": {
+      "section": "DB Fields",
+      "name": "menu_menuitem.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_menuitem.shop_id": {
+      "section": "DB Fields",
+      "name": "menu_menuitem.shop_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_menuitem.category_id": {
+      "section": "DB Fields",
+      "name": "menu_menuitem.category_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_menuitem.name": {
+      "section": "DB Fields",
+      "name": "menu_menuitem.name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_menuitem.price": {
+      "section": "DB Fields",
+      "name": "menu_menuitem.price",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_menuitem.is_available": {
+      "section": "DB Fields",
+      "name": "menu_menuitem.is_available",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::menu_menuitem.created_at": {
+      "section": "DB Fields",
+      "name": "menu_menuitem.created_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: tokens_token": {
+      "section": "DB Tables",
+      "name": "Table: tokens_token",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::tokens_token.id": {
+      "section": "DB Fields",
+      "name": "tokens_token.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_token.shop_id": {
+      "section": "DB Fields",
+      "name": "tokens_token.shop_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_token.token_number": {
+      "section": "DB Fields",
+      "name": "tokens_token.token_number",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_token.bill_number": {
+      "section": "DB Fields",
+      "name": "tokens_token.bill_number",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_token.status": {
+      "section": "DB Fields",
+      "name": "tokens_token.status",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_token.total": {
+      "section": "DB Fields",
+      "name": "tokens_token.total",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_token.is_paid": {
+      "section": "DB Fields",
+      "name": "tokens_token.is_paid",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_token.created_at": {
+      "section": "DB Fields",
+      "name": "tokens_token.created_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: tokens_tokenitem": {
+      "section": "DB Tables",
+      "name": "Table: tokens_tokenitem",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::tokens_tokenitem.id": {
+      "section": "DB Fields",
+      "name": "tokens_tokenitem.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_tokenitem.token_id": {
+      "section": "DB Fields",
+      "name": "tokens_tokenitem.token_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_tokenitem.menu_item_id": {
+      "section": "DB Fields",
+      "name": "tokens_tokenitem.menu_item_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_tokenitem.name": {
+      "section": "DB Fields",
+      "name": "tokens_tokenitem.name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_tokenitem.price": {
+      "section": "DB Fields",
+      "name": "tokens_tokenitem.price",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::tokens_tokenitem.quantity": {
+      "section": "DB Fields",
+      "name": "tokens_tokenitem.quantity",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: printer_printer": {
+      "section": "DB Tables",
+      "name": "Table: printer_printer",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::printer_printer.id": {
+      "section": "DB Fields",
+      "name": "printer_printer.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printer.shop_id": {
+      "section": "DB Fields",
+      "name": "printer_printer.shop_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printer.name": {
+      "section": "DB Fields",
+      "name": "printer_printer.name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printer.connection_type": {
+      "section": "DB Fields",
+      "name": "printer_printer.connection_type",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printer.paper_size": {
+      "section": "DB Fields",
+      "name": "printer_printer.paper_size",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printer.is_default": {
+      "section": "DB Fields",
+      "name": "printer_printer.is_default",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printer.is_active": {
+      "section": "DB Fields",
+      "name": "printer_printer.is_active",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: printer_printjob": {
+      "section": "DB Tables",
+      "name": "Table: printer_printjob",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::printer_printjob.id": {
+      "section": "DB Fields",
+      "name": "printer_printjob.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printjob.printer_id": {
+      "section": "DB Fields",
+      "name": "printer_printjob.printer_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printjob.job_type": {
+      "section": "DB Fields",
+      "name": "printer_printjob.job_type",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printjob.status": {
+      "section": "DB Fields",
+      "name": "printer_printjob.status",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::printer_printjob.created_at": {
+      "section": "DB Fields",
+      "name": "printer_printjob.created_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Tables::Table: customers_customer": {
+      "section": "DB Tables",
+      "name": "Table: customers_customer",
+      "passed": true,
+      "detail": ""
+    },
+    "DB Fields::customers_customer.id": {
+      "section": "DB Fields",
+      "name": "customers_customer.id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::customers_customer.shop_id": {
+      "section": "DB Fields",
+      "name": "customers_customer.shop_id",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::customers_customer.name": {
+      "section": "DB Fields",
+      "name": "customers_customer.name",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::customers_customer.mobile_number": {
+      "section": "DB Fields",
+      "name": "customers_customer.mobile_number",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::customers_customer.address": {
+      "section": "DB Fields",
+      "name": "customers_customer.address",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::customers_customer.gst_number": {
+      "section": "DB Fields",
+      "name": "customers_customer.gst_number",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::customers_customer.status": {
+      "section": "DB Fields",
+      "name": "customers_customer.status",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::customers_customer.created_at": {
+      "section": "DB Fields",
+      "name": "customers_customer.created_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "DB Fields::customers_customer.updated_at": {
+      "section": "DB Fields",
+      "name": "customers_customer.updated_at",
+      "passed": true,
+      "detail": "found"
+    },
+    "Auth API::POST /auth/send-otp/ (200)": {
+      "section": "Auth API",
+      "name": "POST /auth/send-otp/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Auth API::POST /auth/register/ (200/400/201)": {
+      "section": "Auth API",
+      "name": "POST /auth/register/ (200/400/201)",
+      "passed": true,
+      "detail": "got 400"
+    },
+    "Auth API::POST /auth/login/ returns token or error": {
+      "section": "Auth API",
+      "name": "POST /auth/login/ returns token or error",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Auth API::GET /auth/profile/ (200)": {
+      "section": "Auth API",
+      "name": "GET /auth/profile/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Auth API::POST /auth/token/refresh/ endpoint exists": {
+      "section": "Auth API",
+      "name": "POST /auth/token/refresh/ endpoint exists",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Auth API::GET /auth/profile/ unauthenticated = 401": {
+      "section": "Auth API",
+      "name": "GET /auth/profile/ unauthenticated = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Auth API::GET /auth/plans/ public (200)": {
+      "section": "Auth API",
+      "name": "GET /auth/plans/ public (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Auth API::GET /auth/system-settings/ (200)": {
+      "section": "Auth API",
+      "name": "GET /auth/system-settings/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Shop API::GET /shop/ (200)": {
+      "section": "Shop API",
+      "name": "GET /shop/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Shop API::GET /shop/ has 'name' field": {
+      "section": "Shop API",
+      "name": "GET /shop/ has 'name' field",
+      "passed": true,
+      "detail": ""
+    },
+    "Shop API::GET /shop/ has 'id' field": {
+      "section": "Shop API",
+      "name": "GET /shop/ has 'id' field",
+      "passed": true,
+      "detail": ""
+    },
+    "Shop API::PATCH /shop/ (200)": {
+      "section": "Shop API",
+      "name": "PATCH /shop/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Shop API::GET /shop/bill-template/ (200)": {
+      "section": "Shop API",
+      "name": "GET /shop/bill-template/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Shop API::PATCH /shop/bill-template/ (200)": {
+      "section": "Shop API",
+      "name": "PATCH /shop/bill-template/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Shop API::GET /shop/ unauthenticated = 401": {
+      "section": "Shop API",
+      "name": "GET /shop/ unauthenticated = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Menu API::POST /menu/categories/ (201)": {
+      "section": "Menu API",
+      "name": "POST /menu/categories/ (201)",
+      "passed": true,
+      "detail": "got 201"
+    },
+    "Menu API::GET /menu/categories/ (200)": {
+      "section": "Menu API",
+      "name": "GET /menu/categories/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Menu API::PATCH /menu/categories/{id}/ (200)": {
+      "section": "Menu API",
+      "name": "PATCH /menu/categories/{id}/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Menu API::POST /menu/items/ (201)": {
+      "section": "Menu API",
+      "name": "POST /menu/items/ (201)",
+      "passed": true,
+      "detail": "got 201"
+    },
+    "Menu API::GET /menu/items/ (200)": {
+      "section": "Menu API",
+      "name": "GET /menu/items/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Menu API::PATCH /menu/items/{id}/toggle/ (200)": {
+      "section": "Menu API",
+      "name": "PATCH /menu/items/{id}/toggle/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Menu API::DELETE /menu/items/{id}/ (204)": {
+      "section": "Menu API",
+      "name": "DELETE /menu/items/{id}/ (204)",
+      "passed": true,
+      "detail": "got 204"
+    },
+    "Menu API::GET /menu/by-category/ (200)": {
+      "section": "Menu API",
+      "name": "GET /menu/by-category/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Token API::GET /tokens/ (200)": {
+      "section": "Token API",
+      "name": "GET /tokens/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Token API::POST /tokens/create/ (201)": {
+      "section": "Token API",
+      "name": "POST /tokens/create/ (201)",
+      "passed": true,
+      "detail": "got 201"
+    },
+    "Token API::GET /tokens/{id}/ (200)": {
+      "section": "Token API",
+      "name": "GET /tokens/{id}/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Token API::POST /tokens/{id}/payment/ (200)": {
+      "section": "Token API",
+      "name": "POST /tokens/{id}/payment/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Token API::PATCH /tokens/{id}/cancel/ (200/400)": {
+      "section": "Token API",
+      "name": "PATCH /tokens/{id}/cancel/ (200/400)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Token API::GET /tokens/summary/today/ (200)": {
+      "section": "Token API",
+      "name": "GET /tokens/summary/today/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Token API::GET /tokens/customers/search/ (200)": {
+      "section": "Token API",
+      "name": "GET /tokens/customers/search/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Token API::GET /tokens/kitchen/ (200)": {
+      "section": "Token API",
+      "name": "GET /tokens/kitchen/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Reports API::GET /reports/daily/ (200)": {
+      "section": "Reports API",
+      "name": "GET /reports/daily/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Reports API::GET /reports/weekly/ (200)": {
+      "section": "Reports API",
+      "name": "GET /reports/weekly/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Reports API::GET /reports/monthly/ (200)": {
+      "section": "Reports API",
+      "name": "GET /reports/monthly/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Reports API::GET /reports/top-items/ (200)": {
+      "section": "Reports API",
+      "name": "GET /reports/top-items/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Reports API::GET /reports/categories/ (200)": {
+      "section": "Reports API",
+      "name": "GET /reports/categories/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Reports API::GET /reports/range/ (200)": {
+      "section": "Reports API",
+      "name": "GET /reports/range/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Printer API::POST /printer/printers/ (201)": {
+      "section": "Printer API",
+      "name": "POST /printer/printers/ (201)",
+      "passed": true,
+      "detail": "got 201"
+    },
+    "Printer API::GET /printer/printers/ (200)": {
+      "section": "Printer API",
+      "name": "GET /printer/printers/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Printer API::PATCH /printer/printers/{id}/ (200)": {
+      "section": "Printer API",
+      "name": "PATCH /printer/printers/{id}/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Printer API::DELETE /printer/printers/{id}/ (204)": {
+      "section": "Printer API",
+      "name": "DELETE /printer/printers/{id}/ (204)",
+      "passed": true,
+      "detail": "got 204"
+    },
+    "Printer API::GET /printer/jobs/ (200)": {
+      "section": "Printer API",
+      "name": "GET /printer/jobs/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Customer API::POST /customers/ (201)": {
+      "section": "Customer API",
+      "name": "POST /customers/ (201)",
+      "passed": true,
+      "detail": "got 201"
+    },
+    "Customer API::GET /customers/ (200)": {
+      "section": "Customer API",
+      "name": "GET /customers/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Customer API::GET /customers/{id}/ (200)": {
+      "section": "Customer API",
+      "name": "GET /customers/{id}/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Customer API::PUT /customers/{id}/ (200)": {
+      "section": "Customer API",
+      "name": "PUT /customers/{id}/ (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Customer API::DELETE /customers/{id}/ (204)": {
+      "section": "Customer API",
+      "name": "DELETE /customers/{id}/ (204)",
+      "passed": true,
+      "detail": "got 204"
+    },
+    "Customer API::GET /customers/?search= (200)": {
+      "section": "Customer API",
+      "name": "GET /customers/?search= (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Customer API::GET /customers/?status=active (200)": {
+      "section": "Customer API",
+      "name": "GET /customers/?status=active (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Customer API::GET /customers/ unauthenticated = 401": {
+      "section": "Customer API",
+      "name": "GET /customers/ unauthenticated = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Validation::Customer: empty name rejected (400)": {
+      "section": "Validation",
+      "name": "Customer: empty name rejected (400)",
+      "passed": true,
+      "detail": ""
+    },
+    "Validation::Customer: name<3 chars rejected (400)": {
+      "section": "Validation",
+      "name": "Customer: name<3 chars rejected (400)",
+      "passed": true,
+      "detail": ""
+    },
+    "Validation::Customer: short mobile rejected (400)": {
+      "section": "Validation",
+      "name": "Customer: short mobile rejected (400)",
+      "passed": true,
+      "detail": ""
+    },
+    "Validation::Customer: empty address rejected (400)": {
+      "section": "Validation",
+      "name": "Customer: empty address rejected (400)",
+      "passed": true,
+      "detail": ""
+    },
+    "Validation::Customer: invalid GST rejected (400)": {
+      "section": "Validation",
+      "name": "Customer: invalid GST rejected (400)",
+      "passed": true,
+      "detail": ""
+    },
+    "Validation::Customer: valid GST accepted (201)": {
+      "section": "Validation",
+      "name": "Customer: valid GST accepted (201)",
+      "passed": true,
+      "detail": ""
+    },
+    "Validation::Customer: duplicate mobile rejected (400)": {
+      "section": "Validation",
+      "name": "Customer: duplicate mobile rejected (400)",
+      "passed": true,
+      "detail": ""
+    },
+    "Validation::Token: empty items rejected (400/500)": {
+      "section": "Validation",
+      "name": "Token: empty items rejected (400/500)",
+      "passed": true,
+      "detail": "got 400"
+    },
+    "Admin::Customer registered in admin": {
+      "section": "Admin",
+      "name": "Customer registered in admin",
+      "passed": true,
+      "detail": ""
+    },
+    "Admin::Shop registered in admin": {
+      "section": "Admin",
+      "name": "Shop registered in admin",
+      "passed": true,
+      "detail": ""
+    },
+    "Admin::Category registered in admin": {
+      "section": "Admin",
+      "name": "Category registered in admin",
+      "passed": true,
+      "detail": ""
+    },
+    "Admin::MenuItem registered in admin": {
+      "section": "Admin",
+      "name": "MenuItem registered in admin",
+      "passed": true,
+      "detail": ""
+    },
+    "Admin::Token registered in admin": {
+      "section": "Admin",
+      "name": "Token registered in admin",
+      "passed": true,
+      "detail": ""
+    },
+    "Admin::Printer registered in admin": {
+      "section": "Admin",
+      "name": "Printer registered in admin",
+      "passed": true,
+      "detail": ""
+    },
+    "Admin::Customer admin: export_as_csv action": {
+      "section": "Admin",
+      "name": "Customer admin: export_as_csv action",
+      "passed": true,
+      "detail": ""
+    },
+    "Admin::Customer admin: search_fields set": {
+      "section": "Admin",
+      "name": "Customer admin: search_fields set",
+      "passed": true,
+      "detail": ""
+    },
+    "Admin::Customer admin: list_filter set": {
+      "section": "Admin",
+      "name": "Customer admin: list_filter set",
+      "passed": true,
+      "detail": ""
+    },
+    "Security::Unauthenticated /api/shop/ = 401": {
+      "section": "Security",
+      "name": "Unauthenticated /api/shop/ = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Security::Unauthenticated /api/menu/items/ = 401": {
+      "section": "Security",
+      "name": "Unauthenticated /api/menu/items/ = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Security::Unauthenticated /api/tokens/ = 401": {
+      "section": "Security",
+      "name": "Unauthenticated /api/tokens/ = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Security::Unauthenticated /api/customers/ = 401": {
+      "section": "Security",
+      "name": "Unauthenticated /api/customers/ = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Security::Unauthenticated /api/printer/printers/ = 401": {
+      "section": "Security",
+      "name": "Unauthenticated /api/printer/printers/ = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Security::Unauthenticated /api/reports/daily/ = 401": {
+      "section": "Security",
+      "name": "Unauthenticated /api/reports/daily/ = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Security::Unauthenticated /api/auth/profile/ = 401": {
+      "section": "Security",
+      "name": "Unauthenticated /api/auth/profile/ = 401",
+      "passed": true,
+      "detail": "got 401"
+    },
+    "Security::SQL injection in search param safe (200)": {
+      "section": "Security",
+      "name": "SQL injection in search param safe (200)",
+      "passed": true,
+      "detail": "got 200"
+    },
+    "Flutter Screens::Screen file: dashboard_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: dashboard_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: token_generation_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: token_generation_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: item_management_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: item_management_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: analytics_reports_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: analytics_reports_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: settings_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: settings_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: shop_setup_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: shop_setup_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: customer_management_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: customer_management_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: add_customer_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: add_customer_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: main_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: main_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: password_login_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: password_login_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: otp_login_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: otp_login_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: registration_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: registration_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: printer_setup_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: printer_setup_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: print_preview_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: print_preview_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: payment_modes_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: payment_modes_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: tax_settings_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: tax_settings_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: super_admin_dashboard_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: super_admin_dashboard_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: super_admin_main_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: super_admin_main_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: subscription_plans_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: subscription_plans_screen.dart",
+      "passed": true,
+      "detail": ""
+    },
+    "Flutter Screens::Screen file: subscription_payment_screen.dart": {
+      "section": "Flutter Screens",
+      "name": "Screen file: subscription_payment_screen.dart",
+      "passed": true,
+      "detail": ""
+    }
+  }
+}

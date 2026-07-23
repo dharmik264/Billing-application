@@ -80,7 +80,7 @@ class PrinterListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         from shop.models import Shop
         shop = Shop.get_shop(self.request.user)
-        return Printer.objects.filter(shop=shop, is_active=True)
+        return Printer.objects.filter(shop=shop, is_active=True).order_by('-id')
 
     def perform_create(self, serializer):
         from shop.models import Shop
@@ -94,7 +94,7 @@ class PrinterDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         from shop.models import Shop
         shop = Shop.get_shop(self.request.user)
-        return Printer.objects.filter(shop=shop)
+        return Printer.objects.filter(shop=shop).order_by('-id')
 
 
 class PrintReceiptView(APIView):

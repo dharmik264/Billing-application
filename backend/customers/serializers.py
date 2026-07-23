@@ -26,6 +26,14 @@ class CustomerSerializer(serializers.ModelSerializer):
             )
         return value
 
+    def validate_address(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError(
+                'Address cannot be empty.'
+            )
+        return value
+
     def validate_mobile_number(self, value):
         value = value.strip()
         if not value.isdigit():
