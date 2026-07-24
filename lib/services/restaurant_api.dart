@@ -1382,8 +1382,13 @@ class ApiSystemSettings {
   });
 
   factory ApiSystemSettings.fromJson(Map<String, dynamic> json) {
+    String? qr = json['payment_qr_code'] as String?;
+    if (qr != null && qr.isNotEmpty && !qr.startsWith('http') && !qr.startsWith('data:image')) {
+      final base = RestaurantApi.instance.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
+      qr = '$base$qr';
+    }
     return ApiSystemSettings(
-      paymentQrCode: json['payment_qr_code'] as String?,
+      paymentQrCode: qr,
       paymentUpiId: json['payment_upi_id'] as String?,
     );
   }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -179,17 +180,33 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    _settings!.paymentQrCode!,
-                                    width: 220,
-                                    height: 220,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      width: 220,
-                                      height: 220,
-                                      color: const Color(0xFFF1F5F9),
-                                      child: const Icon(Icons.qr_code_2, size: 64, color: Color(0xFF94A3B8)),
-                                    ),
+                                  child: Builder(
+                                    builder: (context) {
+                                      final qrUrl = _settings!.paymentQrCode!;
+                                      if (qrUrl.startsWith('data:image')) {
+                                        try {
+                                          final base64Str = qrUrl.split(',')[1];
+                                          return Image.memory(
+                                            base64Decode(base64Str),
+                                            width: 220,
+                                            height: 220,
+                                            fit: BoxFit.cover,
+                                          );
+                                        } catch (_) {}
+                                      }
+                                      return Image.network(
+                                        qrUrl,
+                                        width: 220,
+                                        height: 220,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => Container(
+                                          width: 220,
+                                          height: 220,
+                                          color: const Color(0xFFF1F5F9),
+                                          child: const Icon(Icons.qr_code_2, size: 64, color: Color(0xFF94A3B8)),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),

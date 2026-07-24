@@ -73,10 +73,20 @@ class SubscriptionPlanSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 class SystemSettingsSerializer(serializers.ModelSerializer):
+    payment_qr_code = serializers.SerializerMethodField()
+
     class Meta:
         model = SystemSettings
         fields = '__all__'
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def get_payment_qr_code(self, obj):
+        if not obj.payment_qr_code:
+            return None
+        request = self.context.get('request')
+        if request is not None:
+            return request.build_absolute_uri(obj.payment_qr_code.url)
+        return obj.payment_qr_code.url
 
 class SubscriptionPaymentSerializer(serializers.ModelSerializer):
     plan_name = serializers.CharField(source='plan.name', read_only=True)
