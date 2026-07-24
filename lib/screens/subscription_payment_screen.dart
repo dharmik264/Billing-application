@@ -15,7 +15,6 @@ class SubscriptionPaymentScreen extends StatefulWidget {
 }
 
 class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
-  final TextEditingController _utrController = TextEditingController();
   bool _isLoading = true;
   bool _isSubmitting = false;
   ApiSystemSettings? _settings;
@@ -44,17 +43,13 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
   }
 
   Future<void> _submitPayment() async {
-    final utr = _utrController.text.trim();
-    if (utr.isEmpty || utr.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid Transaction ID')));
-      return;
-    }
+    final String autoTxnId = 'PAY-${DateTime.now().millisecondsSinceEpoch}';
 
     setState(() => _isSubmitting = true);
     try {
-      await RestaurantApi.instance.submitSubscriptionPayment(widget.plan.id, utr, widget.billingCycle);
+      await RestaurantApi.instance.submitSubscriptionPayment(widget.plan.id, autoTxnId, widget.billingCycle);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment submitted! Pending verification.')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment request submitted! Pending Super Admin approval.')));
         Navigator.pop(context);
         Navigator.pop(context); // Go back to settings
       }
@@ -253,24 +248,15 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                     },
                   ),
                   
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 36),
                   
-                  // UTR Input
-                  Text('Enter Transaction ID (UTR)', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _utrController,
-                    decoration: InputDecoration(
-                      hintText: 'e.g., 230918239012',
-                      hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF4F46E5))),
-                    ),
+                  // Payment Confirmation Instruction
+                  Text(
+                    'After transferring payment via QR Code or UPI ID, tap the button below to notify Super Admin for instant plan activation.',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B), height: 1.4),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 20),
                   
                   ElevatedButton(
                     onPressed: _isSubmitting ? null : _submitPayment,
@@ -282,7 +268,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                     ),
                     child: _isSubmitting
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : Text('Submit Payment', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                        : Text('I Have Paid - Request Activation', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
                   ),
                 ],
               ),
