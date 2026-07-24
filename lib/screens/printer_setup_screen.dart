@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import '../services/printer_service.dart';
 
@@ -118,6 +119,39 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
             padding: const EdgeInsets.all(14),
             child: Column(
               children: [
+                if (kIsWeb) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.language_rounded, color: Color(0xFF2563EB), size: 28),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Web Browser Printing Active',
+                                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF1E40AF)),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'In Chrome, clicking "Print Bill" opens the Windows System Print dialog directly for Rego or any connected USB/Wi-Fi printer.',
+                                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF1E3A8A), height: 1.3),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 _label('Connect New Device'),
                 const SizedBox(height: 8),
                 _scanBluetoothButton(),
@@ -869,6 +903,11 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   }
 
   Future<void> _scanBluetooth() async {
+    if (kIsWeb) {
+      _showSnackBar(
+          'Web Mode: Printing uses Windows System Print dialog (`Ctrl+P`) for Rego/USB printers.');
+      return;
+    }
     setState(() {
       _isScanning = true;
       _devices = [];
