@@ -373,46 +373,52 @@ class PrinterService {
     final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
     const PosFontType baseFont = PosFontType.fontA;
 
-    PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
+    PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false, PosTextSize height = PosTextSize.size2, PosTextSize width = PosTextSize.size2}) {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: PosTextSize.size2,
-        width: PosTextSize.size1,
+        height: height,
+        width: width,
         bold: bold,
       );
     }
 
-    bytes += generator.text('=' * paperWidth, styles: receiptStyle());
+    bytes += generator.text('=' * (paperWidth ~/ 2), styles: receiptStyle(align: PosAlign.center, bold: true));
     bytes += generator.text('KITCHEN SLIP',
         styles: receiptStyle(
             align: PosAlign.center,
+            height: PosTextSize.size3,
+            width: PosTextSize.size2,
             bold: true));
-    bytes += generator.text('=' * paperWidth, styles: receiptStyle());
+    bytes += generator.text('=' * (paperWidth ~/ 2), styles: receiptStyle(align: PosAlign.center, bold: true));
     bytes += generator.feed(1);
 
     String tokenStr = 'TOKEN: ${token.tokenNumber}';
-    bytes += generator.text(tokenStr, styles: receiptStyle(bold: true));
+    bytes += generator.text(tokenStr, styles: receiptStyle(bold: true, height: PosTextSize.size3, width: PosTextSize.size2));
     bytes += generator.text('DATE:  ${token.createdAt.split('T').first}', styles: receiptStyle());
     bytes += generator.feed(1);
 
     bytes += generator.text('ITEMS', styles: receiptStyle(bold: true, align: PosAlign.center));
-    bytes += generator.text('-' * paperWidth, styles: receiptStyle());
+    bytes += generator.text('-' * (paperWidth ~/ 2), styles: receiptStyle());
 
     for (final item in token.items) {
       bytes += generator.text('${item.quantity} x ${item.name}', styles: receiptStyle(bold: true));
     }
 
-    bytes += generator.text('=' * paperWidth, styles: receiptStyle());
+    bytes += generator.text('=' * (paperWidth ~/ 2), styles: receiptStyle());
 
     bytes += generator.feed(2);
     bytes += generator.cut();
 
     await writeBytes(bytes);
   }
+
   Future<void> printTest() async {
     final connected = await isConnected;
     if (!connected) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final double fontSize = prefs.getDouble('print_font_size') ?? (_paperSize == PaperSize.mm80 ? 55.0 : 16.0);
 
     final profile = await CapabilityProfile.load();
     final generator = Generator(_paperSize, profile);
@@ -421,22 +427,38 @@ class PrinterService {
     final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
     const PosFontType baseFont = PosFontType.fontA;
 
-    PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
+    PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = true, PosTextSize height = PosTextSize.size3, PosTextSize width = PosTextSize.size2}) {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: PosTextSize.size2,
-        width: PosTextSize.size1,
+        height: height,
+        width: width,
         bold: bold,
       );
     }
 
-    bytes += generator.text('=' * paperWidth, styles: receiptStyle(align: PosAlign.center, bold: true));
-    bytes += generator.text('Test Print Successful!',
+    final int lineDividerLen = paperWidth ~/ 2;
+
+    bytes += generator.text('=' * lineDividerLen, styles: receiptStyle(align: PosAlign.center));
+    bytes += generator.text('TEST PRINT SUCCESSFUL!',
         styles: receiptStyle(
             align: PosAlign.center,
+            height: PosTextSize.size3,
+            width: PosTextSize.size2,
             bold: true));
-    bytes += generator.text('=' * paperWidth, styles: receiptStyle(align: PosAlign.center, bold: true));
+    bytes += generator.text('Font Size: ${fontSize.toInt()} px',
+        styles: receiptStyle(
+            align: PosAlign.center,
+            height: PosTextSize.size2,
+            width: PosTextSize.size2,
+            bold: true));
+    bytes += generator.text('Paper: ${_paperSize == PaperSize.mm80 ? "80 mm" : "58 mm"}',
+        styles: receiptStyle(
+            align: PosAlign.center,
+            height: PosTextSize.size2,
+            width: PosTextSize.size2,
+            bold: true));
+    bytes += generator.text('=' * lineDividerLen, styles: receiptStyle(align: PosAlign.center));
     bytes += generator.feed(2);
     bytes += generator.cut();
 
