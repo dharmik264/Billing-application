@@ -1375,21 +1375,10 @@ class ApiSystemSettings {
   });
 
   factory ApiSystemSettings.fromJson(Map<String, dynamic> json) {
-    String? qr = json['payment_qr_code'] as String?;
-    if (qr != null && qr.isNotEmpty) {
-      if (qr.contains('127.0.0.1') || qr.contains('localhost')) {
-        try {
-          final uri = Uri.parse(qr);
-          final base = RestaurantApi.instance.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
-          qr = '$base${uri.path}';
-        } catch (_) {}
-      } else if (!qr.startsWith('http') && !qr.startsWith('data:image')) {
-        final base = RestaurantApi.instance.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
-        qr = '$base${qr.startsWith('/') ? '' : '/'}$qr';
-      }
-    }
+    // QR code is now stored as base64 data URI directly in DB — no URL resolution needed
+    final String? qr = json['payment_qr_code'] as String?;
     return ApiSystemSettings(
-      paymentQrCode: qr,
+      paymentQrCode: (qr != null && qr.isNotEmpty) ? qr : null,
       paymentUpiId: json['payment_upi_id'] as String?,
     );
   }

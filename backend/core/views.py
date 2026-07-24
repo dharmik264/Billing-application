@@ -515,23 +515,21 @@ class SystemSettingsView(APIView):
         upi_id = request.data.get('payment_upi_id')
         if upi_id is not None:
             settings.payment_upi_id = upi_id
-            
+
+        # Handle QR code: store as base64 data URI directly in the DB (persistent on cloud servers)
         if 'payment_qr_code' in request.FILES:
-            settings.payment_qr_code = request.FILES['payment_qr_code']
+            import base64
+            file_obj = request.FILES['payment_qr_code']
+            mime = file_obj.content_type or 'image/png'
+            encoded = base64.b64encode(file_obj.read()).decode('utf-8')
+            settings.payment_qr_code = f'data:{mime};base64,{encoded}'
         elif 'payment_qr_code' in request.data and request.data['payment_qr_code']:
             qr_val = request.data['payment_qr_code']
-            if isinstance(qr_val, str) and qr_val.startswith('data:image'):
-                import base64
-                from django.core.files.base import ContentFile
-                format, imgstr = qr_val.split(';base64,')
-            if qr_val:
-                try:
-                    if ',' in qr_val:
-                        qr_val = qr_val.split(',')[1]
-                    decoded = base64.b64decode(qr_val)
-                    settings.payment_qr_code = ContentFile(decoded, name='payment_qr.png')
-                except Exception:
-                    pass
+            if isinstance(qr_val, str) and qr_val.strip():
+                # Accept plain base64, or full data URI
+                if not qr_val.startswith('data:image'):
+                    qr_val = f'data:image/png;base64,{qr_val}'
+                settings.payment_qr_code = qr_val
 
         settings.save()
         serializer = SystemSettingsSerializer(settings, context={'request': request})

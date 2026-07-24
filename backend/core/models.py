@@ -149,7 +149,7 @@ class SubscriptionPlan(models.Model):
         return self.name
 
 class SystemSettings(models.Model):
-    payment_qr_code = models.ImageField(upload_to='system/qr_codes/', null=True, blank=True)
+    payment_qr_code = models.TextField(null=True, blank=True, help_text='Base64 encoded QR code image stored directly in DB for persistence on cloud servers')
     payment_upi_id = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
