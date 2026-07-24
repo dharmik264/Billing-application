@@ -558,10 +558,17 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
 
     try {
-      if (_printCustomerSlip && _shopData != null && _billTemplate != null) {
-        await PrinterService.instance
-            .printReceipt(tokenToPrint, _shopData!, _billTemplate!)
-            .timeout(const Duration(seconds: 5));
+      if (_printCustomerSlip) {
+        final pngBytes = await _captureReceiptPng();
+        if (pngBytes != null) {
+          await PrinterService.instance
+              .printReceiptImage(pngBytes)
+              .timeout(const Duration(seconds: 7));
+        } else if (_shopData != null && _billTemplate != null) {
+          await PrinterService.instance
+              .printReceipt(tokenToPrint, _shopData!, _billTemplate!)
+              .timeout(const Duration(seconds: 5));
+        }
       }
       
       if (_printKitchenSlip) {

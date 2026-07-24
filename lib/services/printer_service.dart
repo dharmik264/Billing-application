@@ -240,12 +240,12 @@ class PrinterService {
     final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
     const PosFontType baseFont = PosFontType.fontA;
 
-    PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false}) {
+    PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false, PosTextSize height = PosTextSize.size2, PosTextSize width = PosTextSize.size2}) {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: _paperSize == PaperSize.mm80 ? PosTextSize.size3 : PosTextSize.size2,
-        width: PosTextSize.size1,
+        height: height,
+        width: width,
         bold: bold,
       );
     }
