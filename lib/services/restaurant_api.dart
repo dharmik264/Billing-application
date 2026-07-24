@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,14 +11,9 @@ class RestaurantApi {
     Duration timeout = const Duration(seconds: 0),
   })  : _client = client ?? http.Client(),
         _baseUrl = baseUrl ??
-            (const String.fromEnvironment('API_BASE_URL', defaultValue: '')
-                    .isNotEmpty
+            (const String.fromEnvironment('API_BASE_URL', defaultValue: '').isNotEmpty
                 ? const String.fromEnvironment('API_BASE_URL')
-                : (!kIsWeb && Platform.isAndroid
-                      // 10.0.2.2 works for Android Emulator, but physical devices need the PC's local IP.
-                      // Updated back to 127.0.0.1 since we are using 'adb reverse tcp:8000 tcp:8000' over USB
-                      ? 'https://billing-application-wdss.onrender.com/api'
-                    : 'https://billing-application-wdss.onrender.com/api')),
+                : 'https://billing-application-wdss.onrender.com/api'),
         _timeout = timeout;
 
   static final RestaurantApi instance = RestaurantApi(timeout: const Duration(seconds: 60));

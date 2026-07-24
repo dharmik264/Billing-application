@@ -61,14 +61,12 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def can_login(self):
-        """User can login if approved, or in active trial"""
+        """User can login if active and not rejected"""
         if self.phone == '9999999999':  # Super Admin bypass
             return True
-        if self.account_status == 'approved':
-            return True
-        if self.account_status == 'trial' and self.is_trial_active:
-            return True
-        return False
+        if not self.is_active:
+            return False
+        return self.account_status != 'rejected'
 
 
 class OTP(models.Model):
