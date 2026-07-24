@@ -447,8 +447,8 @@ class DevUsersView(APIView):
     permission_classes = [AllowAny]
     
     def get(self, request):
-        # Fetch all active users, super users first, then by creation date
-        users = User.objects.filter(account_status__in=['approved', 'trial', 'pending']).order_by('-is_superuser', '-id')
+        # Fetch all users, super users first, then by creation date
+        users = User.objects.all().order_by('-is_superuser', '-id')
         data = []
         for u in users:
             data.append({

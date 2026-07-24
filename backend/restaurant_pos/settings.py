@@ -127,11 +127,8 @@ SIMPLE_JWT = {
 }
 
 # CORS
-# Enforce strict CORS in production
-CORS_ALLOW_ALL_ORIGINS = os.getenv('CORS_ALLOW_ALL_ORIGINS', 'False') == 'True'
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()]
-if not CORS_ALLOW_ALL_ORIGINS and not CORS_ALLOWED_ORIGINS:
-    CORS_ALLOWED_ORIGINS = ['http://localhost:5000', 'http://127.0.0.1:5000']
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Celery
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
