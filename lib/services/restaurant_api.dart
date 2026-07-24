@@ -589,9 +589,9 @@ class RestaurantApi {
   Future<ApiSystemSettings> fetchSystemSettings() async {
     Map<String, dynamic> data = {};
     try {
-      data = await _get('auth/system-settings/');
-    } catch (_) {
       data = await _get('system-settings/');
+    } catch (_) {
+      data = await _get('auth/system-settings/');
     }
     return ApiSystemSettings.fromJson(data);
   }
@@ -1376,9 +1376,17 @@ class ApiSystemSettings {
 
   factory ApiSystemSettings.fromJson(Map<String, dynamic> json) {
     String? qr = json['payment_qr_code'] as String?;
-    if (qr != null && qr.isNotEmpty && !qr.startsWith('http') && !qr.startsWith('data:image')) {
-      final base = RestaurantApi.instance.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
-      qr = '$base$qr';
+    if (qr != null && qr.isNotEmpty) {
+      if (qr.contains('127.0.0.1') || qr.contains('localhost')) {
+        try {
+          final uri = Uri.parse(qr);
+          final base = RestaurantApi.instance.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
+          qr = '$base${uri.path}';
+        } catch (_) {}
+      } else if (!qr.startsWith('http') && !qr.startsWith('data:image')) {
+        final base = RestaurantApi.instance.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
+        qr = '$base${qr.startsWith('/') ? '' : '/'}$qr';
+      }
     }
     return ApiSystemSettings(
       paymentQrCode: qr,
