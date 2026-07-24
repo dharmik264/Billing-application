@@ -184,8 +184,12 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
 
-    final decodedImage = img.decodeImage(pngBytes);
+    var decodedImage = img.decodeImage(pngBytes);
     if (decodedImage != null) {
+      final targetWidth = _paperSize == PaperSize.mm80 ? 576 : 384;
+      if (decodedImage.width != targetWidth) {
+        decodedImage = img.copyResize(decodedImage, width: targetWidth);
+      }
       bytes += generator.imageRaster(decodedImage);
     }
     
