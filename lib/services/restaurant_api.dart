@@ -617,12 +617,16 @@ class RestaurantApi {
   Future<ApiSystemSettings> updateSystemSettings({String? upiId, String? base64QrImage}) async {
     final body = <String, dynamic>{};
     if (upiId != null) body['payment_upi_id'] = upiId;
-    if (base64QrImage != null) body['payment_qr_code'] = base64QrImage;
+    if (base64QrImage != null && base64QrImage.isNotEmpty) {
+      body['payment_qr_code'] = base64QrImage.startsWith('data:image') 
+          ? base64QrImage 
+          : 'data:image/png;base64,$base64QrImage';
+    }
     Map<String, dynamic> data = {};
     try {
-      data = await _postMultipart('auth/system-settings/', body);
+      data = await _post('auth/system-settings/', body);
     } catch (_) {
-      data = await _postMultipart('system-settings/', body);
+      data = await _post('system-settings/', body);
     }
     return ApiSystemSettings.fromJson(data);
   }
