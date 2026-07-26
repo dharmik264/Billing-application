@@ -177,29 +177,40 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                   child: Builder(
                                     builder: (context) {
-                                      final qrUrl = _settings!.paymentQrCode!;
-                                      if (qrUrl.startsWith('data:image')) {
-                                        try {
-                                          final base64Str = qrUrl.split(',')[1];
-                                          return Image.memory(
-                                            base64Decode(base64Str),
-                                            width: 220,
-                                            height: 220,
-                                            fit: BoxFit.cover,
-                                          );
-                                        } catch (_) {}
+                                      final qrData = _settings!.paymentQrCode!.trim();
+                                      
+                                      // Check if base64 data string (with or without data:image header)
+                                      String? base64Str;
+                                      if (qrData.startsWith('data:image')) {
+                                        final parts = qrData.split(',');
+                                        if (parts.length > 1) base64Str = parts[1].trim();
+                                      } else if (!qrData.startsWith('http://') && !qrData.startsWith('https://')) {
+                                        // Raw Base64 string directly
+                                        base64Str = qrData;
                                       }
+
+                                      if (base64Str != null && base64Str.isNotEmpty) {
+                                        try {
+                                          final bytes = base64Decode(base64Str.replaceAll(RegExp(r'\s+'), ''));
+                                          return Image.memory(
+                                            bytes,
+                                            width: 240,
+                                            height: 240,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (_, __, ___) => _qrErrorWidget(),
+                                          );
+                                        } catch (e) {
+                                          debugPrint('Base64 QR decoding failed: $e');
+                                        }
+                                      }
+
+                                      // HTTP / HTTPS URL fallback
                                       return Image.network(
-                                        qrUrl,
-                                        width: 220,
-                                        height: 220,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) => Container(
-                                          width: 220,
-                                          height: 220,
-                                          color: const Color(0xFFF1F5F9),
-                                          child: const Icon(Icons.qr_code_2, size: 64, color: Color(0xFF94A3B8)),
-                                        ),
+                                        qrData,
+                                        width: 240,
+                                        height: 240,
+                                        fit: BoxFit.contain,
+                                        errorBuilder: (context, error, stackTrace) => _qrErrorWidget(),
                                       );
                                     },
                                   ),
@@ -275,4 +286,24 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
             ),
     );
   }
+
+  Widget _qrErrorWidget() {
+    return Container(
+      width: 240,
+      height: 240,
+      color: const Color(0xFFF1F5F9),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.qr_code_2, size: 64, color: Color(0xFF94A3B8)),
+          const SizedBox(height: 8),
+          Text(
+            'Unable to load QR image',
+            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+          ),
+        ],
+      ),
+    );
+  }
 }
+
