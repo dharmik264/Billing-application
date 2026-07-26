@@ -275,12 +275,15 @@ class DashboardScreenState extends State<DashboardScreen> {
                 ),
                 SliverToBoxAdapter(
                   child: _isLoading && _recentTokens.isEmpty
-                      ? const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
+                      ? _buildShimmerLoading()
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 24),
-                            _buildStatCards().animate().fadeIn().slideY(begin: 0.1, delay: 100.ms),
+                            _buildStatCards()
+                                .animate()
+                                .fadeIn(duration: 500.ms)
+                                .slideX(begin: -0.05, curve: Curves.easeOut),
                             const SizedBox(height: 32),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -353,6 +356,62 @@ class DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  /// Shimmer placeholder while data loads
+  Widget _buildShimmerLoading() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        // Shimmer stat cards row
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: List.generate(4, (i) {
+              return Container(
+                width: 140,
+                height: 90,
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              )
+                  .animate(onPlay: (c) => c.repeat())
+                  .shimmer(
+                    delay: (i * 100).ms,
+                    duration: 1200.ms,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  );
+            }),
+          ),
+        ),
+        const SizedBox(height: 32),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: List.generate(3, (i) {
+              return Container(
+                height: 88,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              )
+                  .animate(onPlay: (c) => c.repeat())
+                  .shimmer(
+                    delay: (i * 150 + 200).ms,
+                    duration: 1200.ms,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  );
+            }),
+          ),
+        ),
+      ],
     );
   }
 

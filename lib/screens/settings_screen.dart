@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -72,7 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       children: [
-          _buildHeader(),
+          _buildHeader().animate().fadeIn(duration: 300.ms),
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -181,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
               ],
             ),
-          ),
+          ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.05),
       ],
     );
   }
@@ -280,7 +281,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.08, curve: Curves.easeOut);
   }
 
   Widget _profileCard() {
@@ -353,7 +354,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.08);
   }
 
   Widget _settingsSection({
@@ -390,7 +391,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ],
-    );
+    ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.06);
   }
 
   Widget _settingsRow(_SettingsRowData data) {
@@ -409,7 +410,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(data.icon, size: 20, color: data.iconColor),
-            ),
+            ).animate().shimmer(delay: 400.ms, duration: 1200.ms),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -474,7 +475,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _open(Widget screen) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => screen));
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (_, animation, __) => screen,
+        transitionsBuilder: (_, animation, __, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1.0, 0),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuint)),
+            child: FadeTransition(opacity: animation, child: child),
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 350),
+      ),
+    );
   }
 
   void _showSnackBar(String message) {

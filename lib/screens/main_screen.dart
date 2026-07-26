@@ -106,8 +106,12 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    
+  if (_isLoading) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC), // Slate 50 background
       body: LayoutBuilder(
@@ -158,8 +162,25 @@ class _MainScreenState extends State<MainScreen> {
               bottomLeft: Radius.circular(32),
             ),
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: _screens[_currentIndex],
+              duration: const Duration(milliseconds: 350),
+              switchInCurve: Curves.easeOutQuint,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0.04, 0),
+                      end: Offset.zero,
+                    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuint)),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey(_currentIndex),
+                child: _screens[_currentIndex],
+              ),
             ),
           ),
         ),
@@ -208,8 +229,25 @@ class _MainScreenState extends State<MainScreen> {
     return Stack(
       children: [
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: _screens[_currentIndex],
+          duration: const Duration(milliseconds: 380),
+          switchInCurve: Curves.easeOutQuint,
+          switchOutCurve: Curves.easeIn,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.04, 0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuint)),
+                child: child,
+              ),
+            );
+          },
+          child: KeyedSubtree(
+            key: ValueKey(_currentIndex),
+            child: _screens[_currentIndex],
+          ),
         ),
         ValueListenableBuilder<bool>(
           valueListenable: MainScreen.hideNavbar,

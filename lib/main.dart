@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/password_login_screen.dart';
@@ -33,13 +35,42 @@ class BillingApplication extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF4F46E5), // Vibrant Indigo
+          seedColor: const Color(0xFF4F46E5),
           primary: const Color(0xFF4F46E5),
-          secondary: const Color(0xFF06B6D4), // Cyan for accents
+          secondary: const Color(0xFF06B6D4),
+        ),
+        // Global page transitions
+        pageTransitionsTheme: const PageTransitionsTheme(
+          builders: {
+            TargetPlatform.android: _SlidePageTransition(),
+            TargetPlatform.iOS: _SlidePageTransition(),
+          },
         ),
       ),
       home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+/// Global smooth slide+fade page transition
+class _SlidePageTransition extends PageTransitionsBuilder {
+  const _SlidePageTransition();
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return SlideTransition(
+      position: Tween<Offset>(begin: const Offset(0.06, 0), end: Offset.zero)
+          .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuint)),
+      child: FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+        child: child,
+      ),
     );
   }
 }
@@ -145,17 +176,108 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateTo(Widget screen) {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => screen),
+      PageRouteBuilder(
+        pageBuilder: (_, anim, __) => screen,
+        transitionsBuilder: (_, anim, __, child) {
+          return FadeTransition(
+            opacity: CurvedAnimation(parent: anim, curve: Curves.easeOut),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 600),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    // Lock orientation during splash
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+    return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: CircularProgressIndicator(
-          color: Color(0xFF2563EB),
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Animated Logo
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                      blurRadius: 32,
+                      spreadRadius: 4,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.storefront_rounded,
+                  size: 52,
+                  color: Colors.white,
+                ),
+              )
+                  .animate(onPlay: (c) => c.repeat(reverse: true))
+                  .scaleXY(begin: 0.95, end: 1.05, duration: 1800.ms, curve: Curves.easeInOut)
+                  .then()
+                  .animate()
+                  .fadeIn(duration: 600.ms)
+                  .scaleXY(begin: 0.5, end: 1.0, curve: Curves.elasticOut, duration: 800.ms),
+              const SizedBox(height: 28),
+              // App Name
+              Text(
+                'BillEase POS',
+                style: GoogleFonts.inter(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF0F172A),
+                  letterSpacing: -0.5,
+                ),
+              )
+                  .animate()
+                  .fadeIn(delay: 300.ms, duration: 500.ms)
+                  .slideY(begin: 0.3, end: 0, delay: 300.ms, curve: Curves.easeOut),
+              const SizedBox(height: 8),
+              Text(
+                'Smart Billing · Fast Tokens · Easy Payments',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              )
+                  .animate()
+                  .fadeIn(delay: 500.ms, duration: 500.ms),
+              const SizedBox(height: 60),
+              // Loading bar
+              SizedBox(
+                width: 140,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: const LinearProgressIndicator(
+                    backgroundColor: Color(0xFFE2E8F0),
+                    color: Color(0xFF4F46E5),
+                    minHeight: 4,
+                  ),
+                ),
+              )
+                  .animate()
+                  .fadeIn(delay: 700.ms),
+            ],
+          ),
         ),
       ),
     );
