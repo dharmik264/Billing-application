@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../services/restaurant_api.dart';
 
 class SubscriptionPaymentScreen extends StatefulWidget {
@@ -157,10 +158,10 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
 
                       return Column(
                         children: [
-                          if (hasQr) ...[
+                          if (hasQr || hasUpi) ...[
                             Center(
                               child: Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(20),
@@ -177,41 +178,44 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                   child: Builder(
                                     builder: (context) {
-                                      final qrData = _settings!.paymentQrCode!.trim();
-                                      
-                                      // Check if base64 data string (with or without data:image header)
-                                      String? base64Str;
-                                      if (qrData.startsWith('data:image')) {
-                                        final parts = qrData.split(',');
-                                        if (parts.length > 1) base64Str = parts[1].trim();
-                                      } else if (!qrData.startsWith('http://') && !qrData.startsWith('https://')) {
-                                        // Raw Base64 string directly
-                                        base64Str = qrData;
-                                      }
-
-                                      if (base64Str != null && base64Str.isNotEmpty) {
-                                        try {
-                                          final bytes = base64Decode(base64Str.replaceAll(RegExp(r'\s+'), ''));
-                                          return Image.memory(
-                                            bytes,
-                                            width: 240,
-                                            height: 240,
-                                            fit: BoxFit.contain,
-                                            errorBuilder: (_, __, ___) => _qrErrorWidget(),
-                                          );
-                                        } catch (e) {
-                                          debugPrint('Base64 QR decoding failed: $e');
+                                      // 1. If custom uploaded QR code is present
+                                      if (hasQr) {
+                                        final qrData = _settings!.paymentQrCode!.trim();
+                                        
+                                        String? base64Str;
+                                        if (qrData.startsWith('data:image')) {
+                                          final parts = qrData.split(',');
+                                          if (parts.length > 1) base64Str = parts[1].trim();
+                                        } else if (!qrData.startsWith('http://') && !qrData.startsWith('https://')) {
+                                          base64Str = qrData;
                                         }
+
+                                        if (base64Str != null && base64Str.isNotEmpty) {
+                                          try {
+                                            final bytes = base64Decode(base64Str.replaceAll(RegExp(r'\s+'), ''));
+                                            return Image.memory(
+                                              bytes,
+                                              width: 230,
+                                              height: 230,
+                                              fit: BoxFit.contain,
+                                              errorBuilder: (_, __, ___) => _buildDynamicUpiQr(amount),
+                                            );
+                                          } catch (e) {
+                                            debugPrint('Base64 QR decoding failed: $e');
+                                          }
+                                        }
+
+                                        return Image.network(
+                                          qrData,
+                                          width: 230,
+                                          height: 230,
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (context, error, stackTrace) => _buildDynamicUpiQr(amount),
+                                        );
                                       }
 
-                                      // HTTP / HTTPS URL fallback
-                                      return Image.network(
-                                        qrData,
-                                        width: 240,
-                                        height: 240,
-                                        fit: BoxFit.contain,
-                                        errorBuilder: (context, error, stackTrace) => _qrErrorWidget(),
-                                      );
+                                      // 2. Fallback: Automatically generate live UPI QR code from paymentUpiId
+                                      return _buildDynamicUpiQr(amount);
                                     },
                                   ),
                                 ),
@@ -287,6 +291,25 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     );
   }
 
+  Widget _buildDynamicUpiQr(double amount) {
+    final upiId = _settings?.paymentUpiId?.trim() ?? '';
+    if (upiId.isEmpty) return _qrErrorWidget();
+
+    final upiUrl = 'upi://pay?pa=$upiId&pn=SuperAdmin&am=${amount.toStringAsFixed(2)}&cu=INR&tn=${Uri.encodeComponent("${widget.plan.name} Subscription")}';
+
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(8),
+      child: QrImageView(
+        data: upiUrl,
+        version: QrVersions.auto,
+        size: 230.0,
+        backgroundColor: Colors.white,
+        errorCorrectionLevel: QrErrorCorrectLevel.M,
+      ),
+    );
+  }
+
   Widget _qrErrorWidget() {
     return Container(
       width: 240,
@@ -306,4 +329,5 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     );
   }
 }
+
 
