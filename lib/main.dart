@@ -191,91 +191,147 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Lock orientation during splash
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
     ));
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Center(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF0F172A), // Dark Slate
+              Color(0xFF1E1B4B), // Deep Indigo
+              Color(0xFF312E81), // Rich Indigo Accent
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Animated Logo
+              const Spacer(flex: 2),
+
+              // Animated Glowing Icon Container
               Container(
-                width: 100,
-                height: 100,
+                padding: const EdgeInsets.all(26),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                    colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(28),
+                  shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
-                      blurRadius: 32,
-                      spreadRadius: 4,
-                      offset: const Offset(0, 12),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.45),
+                      blurRadius: 45,
+                      spreadRadius: 8,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
                 child: const Icon(
-                  Icons.storefront_rounded,
-                  size: 52,
+                  Icons.receipt_long_rounded,
+                  size: 64,
                   color: Colors.white,
                 ),
               )
                   .animate(onPlay: (c) => c.repeat(reverse: true))
-                  .scaleXY(begin: 0.95, end: 1.05, duration: 1800.ms, curve: Curves.easeInOut)
+                  .scaleXY(begin: 0.95, end: 1.05, duration: 2000.ms, curve: Curves.easeInOut)
                   .then()
                   .animate()
-                  .fadeIn(duration: 600.ms)
-                  .scaleXY(begin: 0.5, end: 1.0, curve: Curves.elasticOut, duration: 800.ms),
-              const SizedBox(height: 28),
-              // App Name
+                  .fadeIn(duration: 700.ms)
+                  .scaleXY(begin: 0.4, end: 1.0, curve: Curves.elasticOut, duration: 900.ms),
+
+              const SizedBox(height: 32),
+
+              // Animated App Title
               Text(
                 'BillEase POS',
-                style: GoogleFonts.inter(
-                  fontSize: 28,
+                style: GoogleFonts.outfit(
+                  fontSize: 34,
                   fontWeight: FontWeight.w900,
-                  color: const Color(0xFF0F172A),
+                  color: Colors.white,
                   letterSpacing: -0.5,
                 ),
               )
                   .animate()
-                  .fadeIn(delay: 300.ms, duration: 500.ms)
-                  .slideY(begin: 0.3, end: 0, delay: 300.ms, curve: Curves.easeOut),
-              const SizedBox(height: 8),
-              Text(
-                'Smart Billing · Fast Tokens · Easy Payments',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w500,
+                  .fadeIn(delay: 350.ms, duration: 600.ms)
+                  .slideY(begin: 0.3, end: 0, curve: Curves.easeOutCubic)
+                  .shimmer(delay: 1200.ms, duration: 1800.ms, color: Colors.white38),
+
+              const SizedBox(height: 10),
+
+              // Tagline
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
                 ),
-                textAlign: TextAlign.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFF38BDF8)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Smart · Fast · Secure Billing',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: const Color(0xFFE2E8F0),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
               )
                   .animate()
-                  .fadeIn(delay: 500.ms, duration: 500.ms),
-              const SizedBox(height: 60),
-              // Loading bar
-              SizedBox(
-                width: 140,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: const LinearProgressIndicator(
-                    backgroundColor: Color(0xFFE2E8F0),
-                    color: Color(0xFF4F46E5),
-                    minHeight: 4,
-                  ),
-                ),
-              )
-                  .animate()
-                  .fadeIn(delay: 700.ms),
+                  .fadeIn(delay: 550.ms, duration: 600.ms)
+                  .slideY(begin: 0.2, end: 0),
+
+              const Spacer(flex: 3),
+
+              // Smooth Loading Indicator & Version Info
+              Column(
+                children: [
+                  SizedBox(
+                    width: 150,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: const LinearProgressIndicator(
+                        backgroundColor: Color(0xFF334155),
+                        color: Color(0xFF38BDF8),
+                        minHeight: 4,
+                      ),
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 800.ms, duration: 500.ms),
+
+                  const SizedBox(height: 18),
+
+                  Text(
+                    'VERSION 1.0.5',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF64748B),
+                      letterSpacing: 1.5,
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(delay: 950.ms, duration: 500.ms),
+                ],
+              ),
+
+              const SizedBox(height: 36),
             ],
           ),
         ),
