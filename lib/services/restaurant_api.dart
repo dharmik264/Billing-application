@@ -141,6 +141,24 @@ class RestaurantApi {
     });
   }
 
+  /// Forgot Password Step 1 — sends OTP to registered phone
+  Future<Map<String, dynamic>> forgotPasswordRequest(String phone) async {
+    return await _post('auth/forgot-password/', {'phone': phone});
+  }
+
+  /// Forgot Password Step 2 — verify OTP + set new password
+  Future<Map<String, dynamic>> resetPassword({
+    required String phone,
+    required String otp,
+    required String newPassword,
+  }) async {
+    return await _post('auth/reset-password/', {
+      'phone': phone,
+      'otp': otp,
+      'new_password': newPassword,
+    });
+  }
+
   // ── Developer Mode ──────────────────────────────────────────
   Future<List<dynamic>> fetchDevUsers() async {
     return await _getPaginatedList('auth/dev/users/');

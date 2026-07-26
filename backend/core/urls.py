@@ -6,7 +6,8 @@ from .views import (
     SuperAdminLoginView, SuperAdminUsersView, SuperAdminUpdatePermissionsView,
     SuperAdminDeleteUserView, SuperAdminSubscriptionPlanListCreateView, SuperAdminSubscriptionPlanDetailView,
     DevUsersView, DevLoginView,
-    PublicSubscriptionPlanListView, SystemSettingsView, SubmitSubscriptionPaymentView, SuperAdminPaymentsView
+    PublicSubscriptionPlanListView, SystemSettingsView, SubmitSubscriptionPaymentView, SuperAdminPaymentsView,
+    ForgotPasswordRequestView, ForgotPasswordResetView,
 )
 
 urlpatterns = [
@@ -28,13 +29,18 @@ urlpatterns = [
     path('super-admin/plans/', SuperAdminSubscriptionPlanListCreateView.as_view(), name='super-admin-plans'),
     path('super-admin/plans/<int:pk>/', SuperAdminSubscriptionPlanDetailView.as_view(), name='super-admin-plan-detail'),
     path('super-admin/payments/', SuperAdminPaymentsView.as_view(), name='super-admin-payments'),
-    
+
+    # Forgot Password
+    path('forgot-password/', ForgotPasswordRequestView.as_view(), name='forgot-password'),
+    path('reset-password/',  ForgotPasswordResetView.as_view(),   name='reset-password'),
+
     # Developer Mode Endpoints
     path('dev/users/', DevUsersView.as_view(), name='dev-users'),
     path('dev/login/', DevLoginView.as_view(), name='dev-login'),
-    
+
     # Subscription Endpoints (Public/User)
     path('plans/', PublicSubscriptionPlanListView.as_view(), name='public-plans'),
     path('system-settings/', SystemSettingsView.as_view(), name='system-settings'),
     path('subscriptions/pay/', SubmitSubscriptionPaymentView.as_view(), name='subscription-pay'),
 ]
+

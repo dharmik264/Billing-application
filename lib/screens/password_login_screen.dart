@@ -11,6 +11,7 @@ import 'super_admin_main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'registration_screen.dart';
 import 'super_admin_login_screen.dart';
+import 'forgot_password_screen.dart';
 
 class PasswordLoginScreen extends StatefulWidget {
   const PasswordLoginScreen({Key? key}) : super(key: key);
@@ -405,7 +406,24 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+            ),
+            child: Text(
+              'Forgot Password?',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF4F46E5),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
         ElevatedButton(
           onPressed: _isLoading ? null : _login,
           style: ElevatedButton.styleFrom(

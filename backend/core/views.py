@@ -200,6 +200,70 @@ class LogoutView(APIView):
         return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)
 
 
+class ForgotPasswordRequestView(APIView):
+    """Step 1 — User enters phone → OTP sent to that phone number."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        phone = request.data.get('phone', '').strip()
+        if not phone:
+            return Response({'error': 'Phone number is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not User.objects.filter(phone=phone).exists():
+            return Response({'error': 'No account found with this phone number'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Invalidate old OTPs for this phone
+        OTP.objects.filter(phone=phone, is_used=False).update(is_used=True)
+
+        code = OTP.generate_code()
+        OTP.objects.create(phone=phone, code=code)
+        send_sms_otp(phone, code)
+
+        response_data = {'message': 'OTP sent to your registered phone number', 'phone': phone}
+        # In DEBUG mode, return OTP in response for testing
+        from django.conf import settings as dj_settings
+        if dj_settings.DEBUG:
+            response_data['otp'] = code
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+
+class ForgotPasswordResetView(APIView):
+    """Step 2 — Verify OTP + set new password."""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        phone = request.data.get('phone', '').strip()
+        code = request.data.get('otp', '').strip()
+        new_password = request.data.get('new_password', '').strip()
+
+        if not phone or not code or not new_password:
+            return Response({'error': 'Phone, OTP, and new password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(new_password) < 6:
+            return Response({'error': 'Password must be at least 6 characters'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify OTP
+        try:
+            otp = OTP.objects.filter(phone=phone, code=code, is_used=False).latest('created_at')
+            if otp.is_expired():
+                return Response({'error': 'OTP has expired. Please request a new one.'}, status=status.HTTP_400_BAD_REQUEST)
+            otp.is_used = True
+            otp.save()
+        except OTP.DoesNotExist:
+            return Response({'error': 'Invalid OTP. Please check and try again.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Reset password
+        try:
+            user = User.objects.get(phone=phone)
+            user.set_password(new_password)
+            user.save()
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({'message': 'Password reset successful! You can now login with your new password.'}, status=status.HTTP_200_OK)
+
+
 class ProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserSerializer
