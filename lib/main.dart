@@ -218,27 +218,26 @@ class _SplashScreenState extends State<SplashScreen> {
 
               // Animated Glowing Icon Container
               Container(
-                padding: const EdgeInsets.all(26),
+                width: 120,
+                height: 120,
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.45),
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.5),
                       blurRadius: 45,
                       spreadRadius: 8,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.receipt_long_rounded,
-                  size: 64,
-                  color: Colors.white,
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/icon/app_icon.png',
+                    fit: BoxFit.cover,
+                  ),
                 ),
               )
                   .animate(onPlay: (c) => c.repeat(reverse: true))
