@@ -607,9 +607,9 @@ class RestaurantApi {
   Future<ApiSystemSettings> fetchSystemSettings() async {
     Map<String, dynamic> data = {};
     try {
-      data = await _get('system-settings/');
-    } catch (_) {
       data = await _get('auth/system-settings/');
+    } catch (_) {
+      data = await _get('system-settings/');
     }
     return ApiSystemSettings.fromJson(data);
   }
