@@ -258,11 +258,17 @@ class PrinterService {
         styles: const PosStyles(
             fontType: baseFont,
             align: PosAlign.center,
+            height: PosTextSize.size4,
+            width: PosTextSize.size3,
+            bold: true));
+    bytes += generator.feed(1);
+    bytes += generator.text('TAX INVOICE',
+        styles: const PosStyles(
+            fontType: baseFont,
+            align: PosAlign.center,
             height: PosTextSize.size3,
             width: PosTextSize.size2,
             bold: true));
-    bytes += generator.feed(1);
-    bytes += generator.text('TAX INVOICE', styles: receiptStyle(align: PosAlign.center, bold: true));
     bytes += generator.feed(1);
     
     if (shopData.tagline.isNotEmpty) {
