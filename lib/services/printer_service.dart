@@ -250,6 +250,9 @@ class PrinterService {
       );
     }
 
+    // Top spacing to increase receipt height
+    bytes += generator.feed(1);
+
     // Header
     bytes += generator.text(shopData.name.toUpperCase(),
         styles: const PosStyles(
@@ -258,7 +261,9 @@ class PrinterService {
             height: PosTextSize.size3,
             width: PosTextSize.size2,
             bold: true));
+    bytes += generator.feed(1);
     bytes += generator.text('TAX INVOICE', styles: receiptStyle(align: PosAlign.center, bold: true));
+    bytes += generator.feed(1);
     
     if (shopData.tagline.isNotEmpty) {
       bytes += generator.text('"${shopData.tagline}"', styles: receiptStyle(align: PosAlign.center));
@@ -277,6 +282,7 @@ class PrinterService {
     }
     bytes += generator.feed(1);
     bytes += generator.text('=' * paperWidth, styles: receiptStyle());
+    bytes += generator.feed(1);
 
     // Bill Details
     String invStr = 'Inv: ${token.billNumber}';
@@ -288,6 +294,7 @@ class PrinterService {
     bytes += generator.text('Date: $dateStr', styles: receiptStyle());
     
     if (token.customerName.isNotEmpty || token.customerPhone.isNotEmpty) {
+      bytes += generator.feed(1);
       bytes += generator.text('-' * paperWidth, styles: receiptStyle());
       if (token.customerName.isNotEmpty) {
         bytes += generator.text('Name: ${token.customerName}', styles: receiptStyle());
@@ -304,7 +311,7 @@ class PrinterService {
     int itemLen = paperWidth >= 60 ? 30 : 14;
     int qtyLen = paperWidth >= 60 ? 8 : 4;
     int rateLen = paperWidth >= 60 ? 10 : 6;
-    int totalLen = paperWidth >= 60 ? 12 : 8;
+    int totalLen = paperWidth >= 60 ? 8 : 8;
 
     String headerStr = _padRight('Item', itemLen) + 
                        _padLeft('Qty', qtyLen) + 
@@ -312,16 +319,19 @@ class PrinterService {
                        _padLeft('Total', totalLen);
     bytes += generator.text(headerStr, styles: receiptStyle(bold: true));
     bytes += generator.text('-' * paperWidth, styles: receiptStyle());
+    bytes += generator.feed(1);
 
-    // Items
+    // Items (with height-increasing line spacing)
     for (final item in token.items) {
       String iStr = _padRight(item.name, itemLen);
       String qStr = _padLeft('${item.quantity}', qtyLen);
       String rStr = _padLeft(item.rate.toStringAsFixed(0), rateLen);
       String tStr = _padLeft(item.subtotal.toStringAsFixed(2), totalLen);
       bytes += generator.text('$iStr$qStr$rStr$tStr', styles: receiptStyle());
+      bytes += generator.feed(1); // Line spacing for increased bill height
     }
     bytes += generator.text('-' * paperWidth, styles: receiptStyle());
+    bytes += generator.feed(1);
 
     // Totals
     final computedSubtotal = token.items.fold(0.0, (sum, i) => sum + i.subtotal);
@@ -344,6 +354,7 @@ class PrinterService {
     if (shopData.upiId != null && shopData.upiId!.isNotEmpty) {
       final qrData = 'upi://pay?pa=${shopData.upiId}&pn=${Uri.encodeComponent(shopData.name)}&am=${token.grandTotal.toStringAsFixed(2)}&cu=INR';
       bytes += generator.qrcode(qrData, size: QRSize.size6);
+      bytes += generator.feed(1);
       bytes += generator.text(shopData.upiId!, styles: receiptStyle(align: PosAlign.center));
       bytes += generator.text('Scan to Pay Rs. ${token.grandTotal.toStringAsFixed(2)}', styles: receiptStyle(align: PosAlign.center, bold: true));
       bytes += generator.feed(1);
@@ -351,12 +362,15 @@ class PrinterService {
 
     if (template.footerMessage.isNotEmpty) {
       bytes += generator.text(template.footerMessage, styles: receiptStyle(align: PosAlign.center));
+      bytes += generator.feed(1);
     }
     if (template.termsAndConditions.isNotEmpty) {
       bytes += generator.text(template.termsAndConditions, styles: receiptStyle(align: PosAlign.center));
+      bytes += generator.feed(1);
     }
 
-    bytes += generator.feed(2);
+    // Extra bottom feed lines to significantly increase paper height & clear cutter safely
+    bytes += generator.feed(4);
     bytes += generator.cut();
 
     await writeBytes(bytes);
