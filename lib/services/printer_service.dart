@@ -111,6 +111,8 @@ class PrinterService {
   }
 
   Future<void> writeBytes(List<int> bytes) async {
+    debugPrint('🖨️ [PRINTER LOG] Total Raw Bytes to Send: ${bytes.length}');
+    debugPrint('🖨️ [PRINTER LOG] Raw Bytes Header Snippet (first 30): ${bytes.take(30).toList()}');
     if (_isNetworkPrinter && _printerIp != null && _printerIp!.isNotEmpty) {
       try {
         final socket = await Socket.connect(_printerIp!, 9100,
@@ -118,18 +120,21 @@ class PrinterService {
         socket.add(bytes);
         await socket.flush();
         await socket.close();
+        debugPrint('🖨️ [PRINTER LOG] Network Print sent successfully to $_printerIp');
       } catch (e) {
-        // print failed
+        debugPrint('❌ [PRINTER ERROR] Network Print Error: $e');
       }
     } else {
-      // Chunk bluetooth data sending into 512-byte packets to prevent buffer overflow garbage printing
-      const int chunkSize = 512;
+      // Send in smaller 128-byte chunks for classic 58mm Bluetooth thermal printers
+      const int chunkSize = 128;
+      debugPrint('🖨️ [PRINTER LOG] Sending via Bluetooth in $chunkSize-byte chunks...');
       for (int i = 0; i < bytes.length; i += chunkSize) {
         final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
         final chunk = bytes.sublist(i, end);
         await bluetooth.writeBytes(Uint8List.fromList(chunk));
-        await Future.delayed(const Duration(milliseconds: 20));
+        await Future.delayed(const Duration(milliseconds: 50));
       }
+      debugPrint('🖨️ [PRINTER LOG] All Bluetooth chunks sent successfully!');
     }
   }
 
@@ -237,7 +242,11 @@ class PrinterService {
   Future<void> printReceipt(
       ApiToken token, ApiShopData shopData, ApiBillTemplate template) async {
     final connected = await isConnected;
-    if (!connected) return;
+    debugPrint('🖨️ [PRINTER LOG] printReceipt called. Printer Connected: $connected, Paper: $_paperSize');
+    if (!connected) {
+      debugPrint('❌ [PRINTER LOG] Aborting printReceipt because Bluetooth/Network printer is NOT connected!');
+      return;
+    }
 
     final profile = await CapabilityProfile.load();
     final generator = Generator(_paperSize, profile);
