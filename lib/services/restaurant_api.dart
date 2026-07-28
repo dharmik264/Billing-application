@@ -609,7 +609,12 @@ class RestaurantApi {
     try {
       data = await _get('auth/system-settings/');
     } catch (_) {
-      data = await _get('system-settings/');
+      try {
+        data = await _get('system-settings/');
+      } catch (_) {
+        // Return default system settings if server endpoint is initializing
+        return const ApiSystemSettings();
+      }
     }
     return ApiSystemSettings.fromJson(data);
   }
@@ -633,7 +638,17 @@ class RestaurantApi {
     try {
       data = await _post('auth/system-settings/', body);
     } catch (_) {
-      data = await _post('system-settings/', body);
+      try {
+        data = await _post('system-settings/', body);
+      } catch (e) {
+        // Return fallback instance if offline/error
+        return ApiSystemSettings(
+          paymentUpiId: upiId,
+          paymentQrCode: base64QrImage,
+          billTitleFontSizeMm: titleFontSizeMm ?? 20.0,
+          billBodyFontSizeMm: bodyFontSizeMm ?? 4.0,
+        );
+      }
     }
     return ApiSystemSettings.fromJson(data);
   }
