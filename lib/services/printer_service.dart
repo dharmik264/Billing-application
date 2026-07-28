@@ -122,7 +122,14 @@ class PrinterService {
         // print failed
       }
     } else {
-      bluetooth.writeBytes(Uint8List.fromList(bytes));
+      // Chunk bluetooth data sending into 512-byte packets to prevent buffer overflow garbage printing
+      const int chunkSize = 512;
+      for (int i = 0; i < bytes.length; i += chunkSize) {
+        final end = (i + chunkSize < bytes.length) ? i + chunkSize : bytes.length;
+        final chunk = bytes.sublist(i, end);
+        await bluetooth.writeBytes(Uint8List.fromList(chunk));
+        await Future.delayed(const Duration(milliseconds: 20));
+      }
     }
   }
 
