@@ -369,9 +369,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             if (billFormat == 'Bill A4') {
               await PdfReceiptService.printReceipt(savedToken);
             } else {
-              await PrinterService.instance.printReceipt(savedToken, shop, template).timeout(const Duration(seconds: 5));
+              await PrinterService.instance.printReceipt(savedToken, shop, template);
               if (pickupSlipEnabled) {
-                await PrinterService.instance.printKitchenSlip(savedToken).timeout(const Duration(seconds: 5));
+                await PrinterService.instance.printKitchenSlip(savedToken);
               }
             }
           } catch (e) {

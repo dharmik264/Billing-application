@@ -561,26 +561,20 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       if (_printCustomerSlip) {
         final pngBytes = await _captureReceiptPng();
         if (pngBytes != null) {
-          await PrinterService.instance
-              .printReceiptImage(pngBytes)
-              .timeout(const Duration(seconds: 7));
+          await PrinterService.instance.printReceiptImage(pngBytes);
         } else if (_shopData != null && _billTemplate != null) {
-          await PrinterService.instance
-              .printReceipt(tokenToPrint, _shopData!, _billTemplate!)
-              .timeout(const Duration(seconds: 5));
+          await PrinterService.instance.printReceipt(tokenToPrint, _shopData!, _billTemplate!);
         }
       }
       
       if (_printKitchenSlip) {
-        await PrinterService.instance
-            .printKitchenSlip(tokenToPrint)
-            .timeout(const Duration(seconds: 5));
+        await PrinterService.instance.printKitchenSlip(tokenToPrint);
       }
       
       _showSnackBar('Slips sent to thermal printer');
     } catch (e) {
       debugPrint('Printer error: $e');
-      _showSnackBar('Printer Error: ${e.toString()}');
+      _showSnackBar('Unable to print. Please check printer connection.');
     } finally {
       if (mounted) {
         setState(() {
