@@ -559,11 +559,13 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
     try {
       if (_printCustomerSlip) {
-        final pngBytes = await _captureReceiptPng();
-        if (pngBytes != null) {
-          await PrinterService.instance.printReceiptImage(pngBytes);
-        } else if (_shopData != null && _billTemplate != null) {
+        if (_shopData != null && _billTemplate != null) {
           await PrinterService.instance.printReceipt(tokenToPrint, _shopData!, _billTemplate!);
+        } else {
+          final pngBytes = await _captureReceiptPng();
+          if (pngBytes != null) {
+            await PrinterService.instance.printReceiptImage(pngBytes);
+          }
         }
       }
       

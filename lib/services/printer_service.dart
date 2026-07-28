@@ -374,51 +374,45 @@
       final connected = await isConnected;
       if (!connected) return;
 
-      final profile = await CapabilityProfile.load();
-      final generator = Generator(_paperSize, profile);
-      List<int> bytes = [];
-      
-      final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
-      const PosFontType baseFont = PosFontType.fontA;
-
-      PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = false, PosTextSize height = PosTextSize.size2, PosTextSize width = PosTextSize.size2}) {
-        return PosStyles(
-          fontType: baseFont,
-          align: align,
-          height: height,
-          width: width,
-          bold: bold,
-        );
+      if (_isNetworkPrinter && _printerIp != null && _printerIp!.isNotEmpty) {
+        final profile = await CapabilityProfile.load(name: 'default');
+        final generator = Generator(_paperSize, profile);
+        List<int> bytes = [];
+        bytes += generator.reset();
+        bytes += generator.text('KITCHEN SLIP', styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size3, width: PosTextSize.size2, bold: true));
+        bytes += generator.text('TOKEN: ${token.tokenNumber}', styles: const PosStyles(bold: true, height: PosTextSize.size2));
+        bytes += generator.text('=' * 32);
+        for (final item in token.items) {
+          bytes += generator.text('${item.quantity} x ${item.name}');
+        }
+        bytes += generator.feed(2);
+        bytes += generator.cut();
+        await writeBytes(bytes);
+        return;
       }
 
-      bytes += generator.text('=' * (paperWidth ~/ 2), styles: receiptStyle(align: PosAlign.center, bold: true));
-      bytes += generator.text('KITCHEN SLIP',
-          styles: receiptStyle(
-              align: PosAlign.center,
-              height: PosTextSize.size3,
-              width: PosTextSize.size2,
-              bold: true));
-      bytes += generator.text('=' * (paperWidth ~/ 2), styles: receiptStyle(align: PosAlign.center, bold: true));
-      bytes += generator.feed(1);
+      // Native Bluetooth Kitchen Slip Printing
+      try {
+        bluetooth
+          ..printCustom('=' * 32, 1, 1)
+          ..printCustom('KITCHEN SLIP', 2, 1)
+          ..printCustom('=' * 32, 1, 1)
+          ..printCustom('TOKEN: ${token.tokenNumber}', 2, 0)
+          ..printCustom('DATE: ${token.createdAt.split('T').first}', 1, 0)
+          ..printCustom('-' * 32, 1, 0);
 
-      String tokenStr = 'TOKEN: ${token.tokenNumber}';
-      bytes += generator.text(tokenStr, styles: receiptStyle(bold: true, height: PosTextSize.size3, width: PosTextSize.size2));
-      bytes += generator.text('DATE:  ${token.createdAt.split('T').first}', styles: receiptStyle());
-      bytes += generator.feed(1);
+        for (final item in token.items) {
+          bluetooth.printCustom('${item.quantity} x ${item.name}', 2, 0);
+        }
 
-      bytes += generator.text('ITEMS', styles: receiptStyle(bold: true, align: PosAlign.center));
-      bytes += generator.text('-' * (paperWidth ~/ 2), styles: receiptStyle());
-
-      for (final item in token.items) {
-        bytes += generator.text('${item.quantity} x ${item.name}', styles: receiptStyle(bold: true));
+        bluetooth
+          ..printCustom('=' * 32, 1, 0)
+          ..printNewLine()
+          ..printNewLine();
+        debugPrint('🖨️ [PRINTER LOG] Native Bluetooth Kitchen Slip Complete!');
+      } catch (e) {
+        debugPrint('❌ [PRINTER LOG] Kitchen Slip Print Error: $e');
       }
-
-      bytes += generator.text('=' * (paperWidth ~/ 2), styles: receiptStyle());
-
-      bytes += generator.feed(2);
-      bytes += generator.cut();
-
-      await writeBytes(bytes);
     }
 
     Future<void> printTest() async {
