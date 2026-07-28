@@ -60,9 +60,10 @@ class _SuperAdminBillFontSettingsScreenState
           const SnackBar(
             content: Text('Global Printable Bill Font Sizes updated successfully!'),
             backgroundColor: Color(0xFF10B981),
+            duration: Duration(seconds: 2),
           ),
         );
-        _loadSettings();
+        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {

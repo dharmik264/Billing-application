@@ -84,11 +84,12 @@ class _SuperAdminPaymentSettingsScreenState
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('System Settings and Printable Bill Font Sizes updated successfully!'),
+            content: Text('Settings saved successfully!'),
             backgroundColor: Color(0xFF10B981),
+            duration: Duration(seconds: 2),
           ),
         );
-        _loadSettings();
+        Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
