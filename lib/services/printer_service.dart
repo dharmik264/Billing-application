@@ -273,10 +273,10 @@
       debugPrint('🖨️ [PRINTER LOG] Printing via Native Bluetooth Direct Text Stream...');
       
       try {
-        // 1. Shop Name Header (Jumbo Size 3)
+        // 1. Shop Name Header (Large Size 2)
         bluetooth
-          ..printCustom(shopData.name.toUpperCase(), 3, 1) // Jumbo Max (Size 3)
-          ..printCustom('TAX INVOICE', 2, 1); // Large Bold (Size 2)
+          ..printCustom(shopData.name.toUpperCase(), 2, 1) // Large Bold (Size 2)
+          ..printCustom('TAX INVOICE', 1, 1); // Medium (Size 1)
         
         if (shopData.tagline.isNotEmpty) {
           bluetooth.printCustom('"${shopData.tagline}"', 1, 1);
@@ -341,7 +341,7 @@
         }
         bluetooth
           ..printCustom('=' * 32, 1, 0)
-          ..printCustom('GRAND TOTAL: Rs.${token.grandTotal.toStringAsFixed(2)}', 3, 1) // Jumbo Size 3
+          ..printCustom('GRAND TOTAL: Rs.${token.grandTotal.toStringAsFixed(2)}', 2, 1) // Large Size 2
           ..printCustom('=' * 32, 1, 0)
           ..printCustom(_justify('Payment Mode:', token.paymentMode.toUpperCase(), 32), 2, 0);
 
