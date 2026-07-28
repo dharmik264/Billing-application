@@ -289,7 +289,7 @@ class PrinterService {
         fontType: baseFont,
         align: align,
         height: grandTotalHeight,
-        width: PosTextSize.size2,
+        width: PosTextSize.size1,
         bold: bold,
       );
     }
