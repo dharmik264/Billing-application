@@ -180,6 +180,135 @@ class _SuperAdminPaymentSettingsScreenState
                     ),
                   ),
                   const SizedBox(height: 24),
+                  Text(
+                    'PAYMENT QR CODE IMAGE',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 220,
+                          height: 220,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFCBD5E1)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                              )
+                            ],
+                          ),
+                          child: _newQrBytes != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.memory(_newQrBytes!,
+                                      fit: BoxFit.cover),
+                                )
+                              : (_currentQrUrl != null &&
+                                      _currentQrUrl!.isNotEmpty)
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Image.network(
+                                        RestaurantApi.instance
+                                            .getMediaUrl(_currentQrUrl!),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (c, e, s) => const Icon(
+                                            Icons.qr_code_2_rounded,
+                                            size: 80,
+                                            color: Color(0xFF94A3B8)),
+                                      ),
+                                    )
+                                  : const Icon(Icons.qr_code_2_rounded,
+                                      size: 80, color: Color(0xFF94A3B8)),
+                        ),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: _pickQrImage,
+                          icon: const Icon(Icons.upload_file_rounded),
+                          label: Text(
+                            _newQrBytes != null || _currentQrUrl != null
+                                ? 'Change QR Image'
+                                : 'Upload QR Image',
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Card 2: Global Printable Bill Font Settings Card (Shared/Global for all users)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.print_rounded, color: Color(0xFF10B981), size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Global Printable Bill Font Settings',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0F172A),
+                              ),
+                            ),
+                            Text(
+                              'Admin-only settings — applies globally to every user\'s thermal printable bill.',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   Row(
                     children: [
                       Expanded(
@@ -255,77 +384,9 @@ class _SuperAdminPaymentSettingsScreenState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'PAYMENT QR CODE IMAGE',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 220,
-                          height: 220,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                              )
-                            ],
-                          ),
-                          child: _newQrBytes != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.memory(_newQrBytes!,
-                                      fit: BoxFit.cover),
-                                )
-                              : (_currentQrUrl != null &&
-                                      _currentQrUrl!.isNotEmpty)
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.network(
-                                        RestaurantApi.instance
-                                            .getMediaUrl(_currentQrUrl!),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (c, e, s) => const Icon(
-                                            Icons.qr_code_2_rounded,
-                                            size: 80,
-                                            color: Color(0xFF94A3B8)),
-                                      ),
-                                    )
-                                  : const Icon(Icons.qr_code_2_rounded,
-                                      size: 80, color: Color(0xFF94A3B8)),
-                        ),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: _pickQrImage,
-                          icon: const Icon(Icons.upload_file_rounded),
-                          label: Text(
-                            _newQrBytes != null || _currentQrUrl != null
-                                ? 'Change QR Image'
-                                : 'Upload QR Image',
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                ],
+              ),
+            ),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
