@@ -594,6 +594,27 @@ class SystemSettingsView(APIView):
             except (ValueError, TypeError):
                 pass
 
+        subtotal_font = request.data.get('bill_subtotal_font_size_mm')
+        if subtotal_font is not None:
+            try:
+                settings.bill_subtotal_font_size_mm = float(subtotal_font)
+            except (ValueError, TypeError):
+                pass
+
+        grand_total_font = request.data.get('bill_grand_total_font_size_mm')
+        if grand_total_font is not None:
+            try:
+                settings.bill_grand_total_font_size_mm = float(grand_total_font)
+            except (ValueError, TypeError):
+                pass
+
+        footer_font = request.data.get('bill_footer_font_size_mm')
+        if footer_font is not None:
+            try:
+                settings.bill_footer_font_size_mm = float(footer_font)
+            except (ValueError, TypeError):
+                pass
+
         # Handle QR code: store as base64 data URI directly in the DB (persistent on cloud servers)
         if 'payment_qr_code' in request.FILES:
             import base64

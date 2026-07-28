@@ -14,7 +14,10 @@ class SuperAdminBillFontSettingsScreen extends StatefulWidget {
 class _SuperAdminBillFontSettingsScreenState
     extends State<SuperAdminBillFontSettingsScreen> {
   final TextEditingController _titleFontController = TextEditingController(text: '20.0');
-  final TextEditingController _bodyFontController = TextEditingController(text: '4.0');
+  final TextEditingController _bodyFontController = TextEditingController(text: '6.0');
+  final TextEditingController _subtotalFontController = TextEditingController(text: '7.0');
+  final TextEditingController _grandTotalFontController = TextEditingController(text: '10.0');
+  final TextEditingController _footerFontController = TextEditingController(text: '5.0');
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -31,6 +34,9 @@ class _SuperAdminBillFontSettingsScreenState
         setState(() {
           _titleFontController.text = settings.billTitleFontSizeMm.toStringAsFixed(1);
           _bodyFontController.text = settings.billBodyFontSizeMm.toStringAsFixed(1);
+          _subtotalFontController.text = settings.billSubtotalFontSizeMm.toStringAsFixed(1);
+          _grandTotalFontController.text = settings.billGrandTotalFontSizeMm.toStringAsFixed(1);
+          _footerFontController.text = settings.billFooterFontSizeMm.toStringAsFixed(1);
           _isLoading = false;
         });
       }
@@ -48,11 +54,17 @@ class _SuperAdminBillFontSettingsScreenState
     setState(() => _isSaving = true);
     try {
       final double titleFont = double.tryParse(_titleFontController.text.trim()) ?? 20.0;
-      final double bodyFont = double.tryParse(_bodyFontController.text.trim()) ?? 4.0;
+      final double bodyFont = double.tryParse(_bodyFontController.text.trim()) ?? 6.0;
+      final double subtotalFont = double.tryParse(_subtotalFontController.text.trim()) ?? 7.0;
+      final double grandTotalFont = double.tryParse(_grandTotalFontController.text.trim()) ?? 10.0;
+      final double footerFont = double.tryParse(_footerFontController.text.trim()) ?? 5.0;
 
       await RestaurantApi.instance.updateSystemSettings(
         titleFontSizeMm: titleFont,
         bodyFontSizeMm: bodyFont,
+        subtotalFontSizeMm: subtotalFont,
+        grandTotalFontSizeMm: grandTotalFont,
+        footerFontSizeMm: footerFont,
       );
 
       if (mounted) {
@@ -80,6 +92,43 @@ class _SuperAdminBillFontSettingsScreenState
         );
       }
     }
+  }
+
+  Widget _buildFontInput(String label, TextEditingController controller, String hint) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            hintText: hint,
+            prefixIcon: const Icon(Icons.format_size_rounded),
+            suffixText: 'mm',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
   }
 
   @override
@@ -119,7 +168,7 @@ class _SuperAdminBillFontSettingsScreenState
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Global Admin Setting: Change printable bill font sizes (mm) here. This setting applies globally to every user\'s thermal printed bills.',
+                            'Global Admin Setting: Change thermal bill font sizes (mm) here. This setting applies globally to every user\'s printed bills.',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               color: const Color(0xFF3730A3),
@@ -131,64 +180,12 @@ class _SuperAdminBillFontSettingsScreenState
                     ),
                   ),
                   const SizedBox(height: 24),
-                  Text(
-                    'TITLE FONT SIZE (MM)',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _titleFontController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      hintText: '20.0',
-                      prefixIcon: const Icon(Icons.format_size_rounded),
-                      suffixText: 'mm',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'BODY FONT SIZE (MM)',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF64748B),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _bodyFontController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      hintText: '4.0',
-                      prefixIcon: const Icon(Icons.text_fields_rounded),
-                      suffixText: 'mm',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
+                  _buildFontInput('Title Font Size (mm) [Bold]', _titleFontController, '20.0'),
+                  _buildFontInput('Body Font Size (mm)', _bodyFontController, '6.0'),
+                  _buildFontInput('Subtotal Font Size (mm)', _subtotalFontController, '7.0'),
+                  _buildFontInput('Grand Total Font Size (mm) [Bold]', _grandTotalFontController, '10.0'),
+                  _buildFontInput('Footer Font Size (mm)', _footerFontController, '5.0'),
+                  const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -220,6 +217,7 @@ class _SuperAdminBillFontSettingsScreenState
                             ),
                     ),
                   ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

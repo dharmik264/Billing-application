@@ -624,11 +624,17 @@ class RestaurantApi {
     String? base64QrImage,
     double? titleFontSizeMm,
     double? bodyFontSizeMm,
+    double? subtotalFontSizeMm,
+    double? grandTotalFontSizeMm,
+    double? footerFontSizeMm,
   }) async {
     final body = <String, dynamic>{};
     if (upiId != null) body['payment_upi_id'] = upiId;
     if (titleFontSizeMm != null) body['bill_title_font_size_mm'] = titleFontSizeMm;
     if (bodyFontSizeMm != null) body['bill_body_font_size_mm'] = bodyFontSizeMm;
+    if (subtotalFontSizeMm != null) body['bill_subtotal_font_size_mm'] = subtotalFontSizeMm;
+    if (grandTotalFontSizeMm != null) body['bill_grand_total_font_size_mm'] = grandTotalFontSizeMm;
+    if (footerFontSizeMm != null) body['bill_footer_font_size_mm'] = footerFontSizeMm;
     if (base64QrImage != null && base64QrImage.isNotEmpty) {
       body['payment_qr_code'] = base64QrImage.startsWith('data:image') 
           ? base64QrImage 
@@ -646,7 +652,10 @@ class RestaurantApi {
           paymentUpiId: upiId,
           paymentQrCode: base64QrImage,
           billTitleFontSizeMm: titleFontSizeMm ?? 20.0,
-          billBodyFontSizeMm: bodyFontSizeMm ?? 4.0,
+          billBodyFontSizeMm: bodyFontSizeMm ?? 6.0,
+          billSubtotalFontSizeMm: subtotalFontSizeMm ?? 7.0,
+          billGrandTotalFontSizeMm: grandTotalFontSizeMm ?? 10.0,
+          billFooterFontSizeMm: footerFontSizeMm ?? 5.0,
         );
       }
     }
@@ -1414,12 +1423,18 @@ class ApiSystemSettings {
   final String? paymentUpiId;
   final double billTitleFontSizeMm;
   final double billBodyFontSizeMm;
+  final double billSubtotalFontSizeMm;
+  final double billGrandTotalFontSizeMm;
+  final double billFooterFontSizeMm;
 
   const ApiSystemSettings({
     this.paymentQrCode,
     this.paymentUpiId,
     this.billTitleFontSizeMm = 20.0,
-    this.billBodyFontSizeMm = 4.0,
+    this.billBodyFontSizeMm = 6.0,
+    this.billSubtotalFontSizeMm = 7.0,
+    this.billGrandTotalFontSizeMm = 10.0,
+    this.billFooterFontSizeMm = 5.0,
   });
 
   factory ApiSystemSettings.fromJson(Map<String, dynamic> json) {
@@ -1428,7 +1443,10 @@ class ApiSystemSettings {
       paymentQrCode: (qr != null && qr.isNotEmpty) ? qr : null,
       paymentUpiId: json['payment_upi_id'] as String?,
       billTitleFontSizeMm: (json['bill_title_font_size_mm'] as num?)?.toDouble() ?? 20.0,
-      billBodyFontSizeMm: (json['bill_body_font_size_mm'] as num?)?.toDouble() ?? 4.0,
+      billBodyFontSizeMm: (json['bill_body_font_size_mm'] as num?)?.toDouble() ?? 6.0,
+      billSubtotalFontSizeMm: (json['bill_subtotal_font_size_mm'] as num?)?.toDouble() ?? 7.0,
+      billGrandTotalFontSizeMm: (json['bill_grand_total_font_size_mm'] as num?)?.toDouble() ?? 10.0,
+      billFooterFontSizeMm: (json['bill_footer_font_size_mm'] as num?)?.toDouble() ?? 5.0,
     );
   }
 }
