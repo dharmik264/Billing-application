@@ -425,51 +425,32 @@
       final connected = await isConnected;
       if (!connected) return;
 
-      final prefs = await SharedPreferences.getInstance();
-      final double fontSize = prefs.getDouble('print_font_size') ?? (_paperSize == PaperSize.mm80 ? 55.0 : 16.0);
-
-      final profile = await CapabilityProfile.load();
-      final generator = Generator(_paperSize, profile);
-      List<int> bytes = [];
-
-      final int paperWidth = _paperSize == PaperSize.mm80 ? 60 : 32;
-      const PosFontType baseFont = PosFontType.fontA;
-
-      PosStyles receiptStyle({PosAlign align = PosAlign.left, bool bold = true, PosTextSize height = PosTextSize.size3, PosTextSize width = PosTextSize.size2}) {
-        return PosStyles(
-          fontType: baseFont,
-          align: align,
-          height: height,
-          width: width,
-          bold: bold,
-        );
+      if (_isNetworkPrinter && _printerIp != null && _printerIp!.isNotEmpty) {
+        final profile = await CapabilityProfile.load(name: 'default');
+        final generator = Generator(_paperSize, profile);
+        List<int> bytes = [];
+        bytes += generator.reset();
+        bytes += generator.text('TEST PRINT SUCCESSFUL!', styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size4, width: PosTextSize.size2, bold: true));
+        bytes += generator.text('JUMBO MAX FONT (20mm)', styles: const PosStyles(align: PosAlign.center, height: PosTextSize.size3, width: PosTextSize.size1, bold: true));
+        bytes += generator.feed(2);
+        bytes += generator.cut();
+        await writeBytes(bytes);
+        return;
       }
 
-      final int lineDividerLen = paperWidth ~/ 2;
-
-      bytes += generator.text('=' * lineDividerLen, styles: receiptStyle(align: PosAlign.center));
-      bytes += generator.text('TEST PRINT SUCCESSFUL!',
-          styles: receiptStyle(
-              align: PosAlign.center,
-              height: PosTextSize.size3,
-              width: PosTextSize.size2,
-              bold: true));
-      bytes += generator.text('Font Size: ${fontSize.toInt()} px',
-          styles: receiptStyle(
-              align: PosAlign.center,
-              height: PosTextSize.size2,
-              width: PosTextSize.size2,
-              bold: true));
-      bytes += generator.text('Paper: ${_paperSize == PaperSize.mm80 ? "80 mm" : "58 mm"}',
-          styles: receiptStyle(
-              align: PosAlign.center,
-              height: PosTextSize.size2,
-              width: PosTextSize.size2,
-              bold: true));
-      bytes += generator.text('=' * lineDividerLen, styles: receiptStyle(align: PosAlign.center));
-      bytes += generator.feed(2);
-      bytes += generator.cut();
-
-      await writeBytes(bytes);
+      // Native Bluetooth Test Print with Jumbo Max (Size 3)
+      try {
+        bluetooth
+          ..printCustom('=' * 32, 0, 1)
+          ..printCustom('TEST PRINT', 3, 1) // Jumbo Max (Size 3)
+          ..printCustom('JUMBO MAX FONT', 3, 1) // Jumbo Max (Size 3)
+          ..printCustom('20mm - 24mm', 2, 1)
+          ..printCustom('=' * 32, 0, 1)
+          ..printNewLine()
+          ..printNewLine();
+        debugPrint('🖨️ [PRINTER LOG] Jumbo Max Test Print Sent Successfully!');
+      } catch (e) {
+        debugPrint('❌ [PRINTER LOG] Test Print Error: $e');
+      }
     }
   }
