@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/restaurant_api.dart';
+import 'super_admin_dashboard_screen.dart';
 
 class SuperAdminPaymentSettingsScreen extends StatefulWidget {
   const SuperAdminPaymentSettingsScreen({super.key});
@@ -89,7 +90,10 @@ class _SuperAdminPaymentSettingsScreenState
             duration: Duration(seconds: 2),
           ),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const SuperAdminDashboardScreen()),
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {

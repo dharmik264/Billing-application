@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
+import 'super_admin_dashboard_screen.dart';
 
 class SuperAdminBillFontSettingsScreen extends StatefulWidget {
   const SuperAdminBillFontSettingsScreen({super.key});
@@ -63,7 +64,10 @@ class _SuperAdminBillFontSettingsScreenState
             duration: Duration(seconds: 2),
           ),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const SuperAdminDashboardScreen()),
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {
