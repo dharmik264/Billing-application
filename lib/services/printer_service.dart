@@ -240,13 +240,36 @@ class PrinterService {
     final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
     const PosFontType baseFont = PosFontType.fontA;
 
-    // Standard 4.0mm Font Height Style (PosTextSize.size2 height x size1 width for 100% 32-char fit)
+    // Fetch global admin system settings for dynamic font size mapping
+    PosTextSize titleHeight = PosTextSize.size4;
+    PosTextSize bodyHeight = PosTextSize.size2;
+    try {
+      final sysSettings = await RestaurantApi.instance.fetchSystemSettings();
+      // Map mm height: >= 18mm -> size4, >= 12mm -> size3, >= 4mm -> size2, else -> size1
+      if (sysSettings.billTitleFontSizeMm >= 18.0) {
+        titleHeight = PosTextSize.size4;
+      } else if (sysSettings.billTitleFontSizeMm >= 12.0) {
+        titleHeight = PosTextSize.size3;
+      } else if (sysSettings.billTitleFontSizeMm >= 6.0) {
+        titleHeight = PosTextSize.size2;
+      } else {
+        titleHeight = PosTextSize.size1;
+      }
+
+      if (sysSettings.billBodyFontSizeMm >= 6.0) {
+        bodyHeight = PosTextSize.size2;
+      } else {
+        bodyHeight = PosTextSize.size1;
+      }
+    } catch (_) {}
+
+    // Dynamic Body Style mapped from Admin Settings
     PosStyles body4mmStyle({PosAlign align = PosAlign.left, bool bold = false}) {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: PosTextSize.size2, // 4.0mm Font Height
-        width: PosTextSize.size1,  // Standard width to fit 32 chars without line wrapping
+        height: bodyHeight,
+        width: PosTextSize.size1,
         bold: bold,
       );
     }
@@ -254,12 +277,12 @@ class PrinterService {
     // Top spacing to increase receipt height
     bytes += generator.feed(1);
 
-    // 1. SHOP NAME HEADER - 20.0mm JUMBO Title Height (PosTextSize.size4 height)
+    // 1. SHOP NAME HEADER - Dynamic Admin Title Height
     bytes += generator.text(shopData.name.toUpperCase(),
-        styles: const PosStyles(
+        styles: PosStyles(
             fontType: baseFont,
             align: PosAlign.center,
-            height: PosTextSize.size4, // 20.0mm Jumbo Height
+            height: titleHeight,
             width: PosTextSize.size2,
             bold: true));
     bytes += generator.feed(1);

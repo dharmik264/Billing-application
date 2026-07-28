@@ -580,6 +580,20 @@ class SystemSettingsView(APIView):
         if upi_id is not None:
             settings.payment_upi_id = upi_id
 
+        title_font = request.data.get('bill_title_font_size_mm')
+        if title_font is not None:
+            try:
+                settings.bill_title_font_size_mm = float(title_font)
+            except (ValueError, TypeError):
+                pass
+
+        body_font = request.data.get('bill_body_font_size_mm')
+        if body_font is not None:
+            try:
+                settings.bill_body_font_size_mm = float(body_font)
+            except (ValueError, TypeError):
+                pass
+
         # Handle QR code: store as base64 data URI directly in the DB (persistent on cloud servers)
         if 'payment_qr_code' in request.FILES:
             import base64

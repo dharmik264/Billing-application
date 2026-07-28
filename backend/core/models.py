@@ -151,6 +151,8 @@ class SubscriptionPlan(models.Model):
 class SystemSettings(models.Model):
     payment_qr_code = models.TextField(null=True, blank=True, help_text='Base64 encoded QR code image stored directly in DB for persistence on cloud servers')
     payment_upi_id = models.CharField(max_length=100, blank=True)
+    bill_title_font_size_mm = models.FloatField(default=20.0, help_text='Global printable bill title/shop name font height in mm')
+    bill_body_font_size_mm = models.FloatField(default=4.0, help_text='Global printable bill body text font height in mm')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

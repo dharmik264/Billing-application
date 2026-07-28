@@ -614,9 +614,16 @@ class RestaurantApi {
     return ApiSystemSettings.fromJson(data);
   }
 
-  Future<ApiSystemSettings> updateSystemSettings({String? upiId, String? base64QrImage}) async {
+  Future<ApiSystemSettings> updateSystemSettings({
+    String? upiId,
+    String? base64QrImage,
+    double? titleFontSizeMm,
+    double? bodyFontSizeMm,
+  }) async {
     final body = <String, dynamic>{};
     if (upiId != null) body['payment_upi_id'] = upiId;
+    if (titleFontSizeMm != null) body['bill_title_font_size_mm'] = titleFontSizeMm;
+    if (bodyFontSizeMm != null) body['bill_body_font_size_mm'] = bodyFontSizeMm;
     if (base64QrImage != null && base64QrImage.isNotEmpty) {
       body['payment_qr_code'] = base64QrImage.startsWith('data:image') 
           ? base64QrImage 
@@ -1390,18 +1397,23 @@ class ApiSubscriptionPlan {
 class ApiSystemSettings {
   final String? paymentQrCode;
   final String? paymentUpiId;
+  final double billTitleFontSizeMm;
+  final double billBodyFontSizeMm;
 
   const ApiSystemSettings({
     this.paymentQrCode,
     this.paymentUpiId,
+    this.billTitleFontSizeMm = 20.0,
+    this.billBodyFontSizeMm = 4.0,
   });
 
   factory ApiSystemSettings.fromJson(Map<String, dynamic> json) {
-    // QR code is now stored as base64 data URI directly in DB — no URL resolution needed
     final String? qr = json['payment_qr_code'] as String?;
     return ApiSystemSettings(
       paymentQrCode: (qr != null && qr.isNotEmpty) ? qr : null,
       paymentUpiId: json['payment_upi_id'] as String?,
+      billTitleFontSizeMm: (json['bill_title_font_size_mm'] as num?)?.toDouble() ?? 20.0,
+      billBodyFontSizeMm: (json['bill_body_font_size_mm'] as num?)?.toDouble() ?? 4.0,
     );
   }
 }

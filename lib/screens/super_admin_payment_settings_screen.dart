@@ -16,6 +16,8 @@ class SuperAdminPaymentSettingsScreen extends StatefulWidget {
 class _SuperAdminPaymentSettingsScreenState
     extends State<SuperAdminPaymentSettingsScreen> {
   final TextEditingController _upiController = TextEditingController();
+  final TextEditingController _titleFontController = TextEditingController(text: '20.0');
+  final TextEditingController _bodyFontController = TextEditingController(text: '4.0');
   bool _isLoading = true;
   bool _isSaving = false;
   String? _currentQrUrl;
@@ -34,6 +36,8 @@ class _SuperAdminPaymentSettingsScreenState
       if (mounted) {
         setState(() {
           _upiController.text = settings.paymentUpiId ?? '';
+          _titleFontController.text = settings.billTitleFontSizeMm.toStringAsFixed(1);
+          _bodyFontController.text = settings.billBodyFontSizeMm.toStringAsFixed(1);
           _currentQrUrl = settings.paymentQrCode;
           _isLoading = false;
         });
@@ -66,16 +70,21 @@ class _SuperAdminPaymentSettingsScreenState
         base64Image = base64Encode(_newQrBytes!);
       }
 
+      final double titleFont = double.tryParse(_titleFontController.text.trim()) ?? 20.0;
+      final double bodyFont = double.tryParse(_bodyFontController.text.trim()) ?? 4.0;
+
       await RestaurantApi.instance.updateSystemSettings(
         upiId: _upiController.text.trim(),
         base64QrImage: base64Image,
+        titleFontSizeMm: titleFont,
+        bodyFontSizeMm: bodyFont,
       );
 
       if (mounted) {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Payment QR Code and UPI ID updated successfully!'),
+            content: Text('System Settings and Printable Bill Font Sizes updated successfully!'),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -169,6 +178,82 @@ class _SuperAdminPaymentSettingsScreenState
                         borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'TITLE FONT SIZE (MM)',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _titleFontController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: InputDecoration(
+                                hintText: '20.0',
+                                prefixIcon: const Icon(Icons.format_size_rounded),
+                                suffixText: 'mm',
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'BODY FONT SIZE (MM)',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF64748B),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _bodyFontController,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: InputDecoration(
+                                hintText: '4.0',
+                                prefixIcon: const Icon(Icons.text_fields_rounded),
+                                suffixText: 'mm',
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   Text(
