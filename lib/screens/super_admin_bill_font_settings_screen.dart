@@ -1,28 +1,21 @@
-import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import '../services/restaurant_api.dart';
 
-class SuperAdminPaymentSettingsScreen extends StatefulWidget {
-  const SuperAdminPaymentSettingsScreen({super.key});
+class SuperAdminBillFontSettingsScreen extends StatefulWidget {
+  const SuperAdminBillFontSettingsScreen({super.key});
 
   @override
-  State<SuperAdminPaymentSettingsScreen> createState() =>
-      _SuperAdminPaymentSettingsScreenState();
+  State<SuperAdminBillFontSettingsScreen> createState() =>
+      _SuperAdminBillFontSettingsScreenState();
 }
 
-class _SuperAdminPaymentSettingsScreenState
-    extends State<SuperAdminPaymentSettingsScreen> {
-  final TextEditingController _upiController = TextEditingController();
+class _SuperAdminBillFontSettingsScreenState
+    extends State<SuperAdminBillFontSettingsScreen> {
   final TextEditingController _titleFontController = TextEditingController(text: '20.0');
   final TextEditingController _bodyFontController = TextEditingController(text: '4.0');
   bool _isLoading = true;
   bool _isSaving = false;
-  String? _currentQrUrl;
-  Uint8List? _newQrBytes;
-  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -35,10 +28,8 @@ class _SuperAdminPaymentSettingsScreenState
       final settings = await RestaurantApi.instance.fetchSystemSettings();
       if (mounted) {
         setState(() {
-          _upiController.text = settings.paymentUpiId ?? '';
           _titleFontController.text = settings.billTitleFontSizeMm.toStringAsFixed(1);
           _bodyFontController.text = settings.billBodyFontSizeMm.toStringAsFixed(1);
-          _currentQrUrl = settings.paymentQrCode;
           _isLoading = false;
         });
       }
@@ -52,30 +43,13 @@ class _SuperAdminPaymentSettingsScreenState
     }
   }
 
-  Future<void> _pickQrImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      final bytes = await image.readAsBytes();
-      setState(() {
-        _newQrBytes = bytes;
-      });
-    }
-  }
-
   Future<void> _saveSettings() async {
     setState(() => _isSaving = true);
     try {
-      String? base64Image;
-      if (_newQrBytes != null) {
-        base64Image = base64Encode(_newQrBytes!);
-      }
-
       final double titleFont = double.tryParse(_titleFontController.text.trim()) ?? 20.0;
       final double bodyFont = double.tryParse(_bodyFontController.text.trim()) ?? 4.0;
 
       await RestaurantApi.instance.updateSystemSettings(
-        upiId: _upiController.text.trim(),
-        base64QrImage: base64Image,
         titleFontSizeMm: titleFont,
         bodyFontSizeMm: bodyFont,
       );
@@ -84,7 +58,7 @@ class _SuperAdminPaymentSettingsScreenState
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('System Settings and Printable Bill Font Sizes updated successfully!'),
+            content: Text('Global Printable Bill Font Sizes updated successfully!'),
             backgroundColor: Color(0xFF10B981),
           ),
         );
@@ -95,7 +69,7 @@ class _SuperAdminPaymentSettingsScreenState
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save settings: $e'),
+            content: Text('Failed to save font settings: $e'),
             backgroundColor: const Color(0xFFEF4444),
           ),
         );
@@ -109,11 +83,10 @@ class _SuperAdminPaymentSettingsScreenState
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: Text(
-          'Payment QR & UPI Settings',
+          'Global Bill Font Settings',
           style: GoogleFonts.inter(
             fontWeight: FontWeight.w700,
             color: const Color(0xFF0F172A),
-            fontSize: 18,
           ),
         ),
         backgroundColor: Colors.white,
@@ -136,12 +109,12 @@ class _SuperAdminPaymentSettingsScreenState
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.qr_code_scanner_rounded,
+                        const Icon(Icons.print_rounded,
                             color: Color(0xFF4F46E5), size: 28),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Super Admin Payment Details: Set the QR Code image and UPI ID that users see during plan subscription payment.',
+                            'Global Admin Setting: Change printable bill font sizes (mm) here. This setting applies globally to every user\'s thermal printed bills.',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               color: const Color(0xFF3730A3),
@@ -154,7 +127,7 @@ class _SuperAdminPaymentSettingsScreenState
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'PAYMENT UPI ID',
+                    'TITLE FONT SIZE (MM)',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -163,10 +136,12 @@ class _SuperAdminPaymentSettingsScreenState
                   ),
                   const SizedBox(height: 8),
                   TextField(
-                    controller: _upiController,
+                    controller: _titleFontController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      hintText: 'e.g. merchant@upi or 9999999999@ybl',
-                      prefixIcon: const Icon(Icons.payment_rounded),
+                      hintText: '20.0',
+                      prefixIcon: const Icon(Icons.format_size_rounded),
+                      suffixText: 'mm',
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -181,73 +156,31 @@ class _SuperAdminPaymentSettingsScreenState
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'PAYMENT QR CODE IMAGE',
+                    'BODY FONT SIZE (MM)',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF64748B),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 220,
-                          height: 220,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFCBD5E1)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                              )
-                            ],
-                          ),
-                          child: _newQrBytes != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.memory(_newQrBytes!,
-                                      fit: BoxFit.cover),
-                                )
-                              : (_currentQrUrl != null &&
-                                      _currentQrUrl!.isNotEmpty)
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(16),
-                                      child: Image.network(
-                                        RestaurantApi.instance
-                                            .getMediaUrl(_currentQrUrl!),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (c, e, s) => const Icon(
-                                            Icons.qr_code_2_rounded,
-                                            size: 80,
-                                            color: Color(0xFF94A3B8)),
-                                      ),
-                                    )
-                                  : const Icon(Icons.qr_code_2_rounded,
-                                      size: 80, color: Color(0xFF94A3B8)),
-                        ),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: _pickQrImage,
-                          icon: const Icon(Icons.upload_file_rounded),
-                          label: Text(
-                            _newQrBytes != null || _currentQrUrl != null
-                                ? 'Change QR Image'
-                                : 'Upload QR Image',
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _bodyFontController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      hintText: '4.0',
+                      prefixIcon: const Icon(Icons.text_fields_rounded),
+                      suffixText: 'mm',
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFCBD5E1)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -273,7 +206,7 @@ class _SuperAdminPaymentSettingsScreenState
                               ),
                             )
                           : Text(
-                              'Save Payment Settings',
+                              'Save Font Size Settings',
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
