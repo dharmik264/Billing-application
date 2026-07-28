@@ -235,6 +235,7 @@ class PrinterService {
     final profile = await CapabilityProfile.load();
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
+    bytes += generator.reset();
     
     // 32 characters for 58mm paper at 4.0mm height (PosTextSize.size2 = 32 dots height / 24 dots width)
     final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
