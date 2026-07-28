@@ -248,7 +248,7 @@ class PrinterService {
       return;
     }
 
-    final profile = await CapabilityProfile.load();
+    final profile = await CapabilityProfile.load(name: 'default');
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     bytes += generator.reset();
@@ -421,11 +421,9 @@ class PrinterService {
 
     // 6. UPI ID / SCAN TO PAY
     if (shopData.upiId != null && shopData.upiId!.isNotEmpty) {
-      final qrData = 'upi://pay?pa=${shopData.upiId}&pn=${Uri.encodeComponent(shopData.name)}&am=${token.grandTotal.toStringAsFixed(2)}&cu=INR';
       bytes += generator.feed(1);
-      bytes += generator.qrcode(qrData, size: QRSize.size6);
-      bytes += generator.text(shopData.upiId!, styles: bodyStyle(align: PosAlign.center));
-      bytes += generator.text('Scan to Pay Rs.${token.grandTotal.toStringAsFixed(2)}', styles: bodyStyle(align: PosAlign.center, bold: true));
+      bytes += generator.text('UPI: ${shopData.upiId!}', styles: bodyStyle(align: PosAlign.center, bold: true));
+      bytes += generator.text('Pay Rs.${token.grandTotal.toStringAsFixed(2)}', styles: bodyStyle(align: PosAlign.center, bold: true));
     }
 
     // 7. FOOTER MESSAGE & TERMS (Footer Font Size)
