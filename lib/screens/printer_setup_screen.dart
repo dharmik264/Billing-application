@@ -779,9 +779,20 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
       setState(() {
         _devices = devices;
       });
+
       if (devices.isEmpty) {
         _showSnackBar(
             'No bonded devices found. Pair a printer in Android settings first.');
+      } else if (!_connected) {
+        // Auto-connect to last saved printer MAC address if available in scanned list
+        final prefs = await SharedPreferences.getInstance();
+        final lastMac = prefs.getString('printer_mac');
+        if (lastMac != null && lastMac.isNotEmpty) {
+          final target = devices.where((d) => d.address == lastMac).firstOrNull;
+          if (target != null) {
+            _connectDevice(target);
+          }
+        }
       }
     } catch (e) {
       _showSnackBar('Error scanning: $e');
