@@ -236,28 +236,17 @@ class PrinterService {
     final generator = Generator(_paperSize, profile);
     List<int> bytes = [];
     
-    // Character limit: 32 chars for 58mm, 48 chars for 80mm
+    // 32 characters for 58mm paper at 4.0mm height (PosTextSize.size2 = 32 dots height / 24 dots width)
     final int paperWidth = _paperSize == PaperSize.mm80 ? 48 : 32;
     const PosFontType baseFont = PosFontType.fontA;
 
-    // Normal body style (size1 = clear, crisp 12x24 dots text that fits 32 chars per line)
-    PosStyles bodyStyle({PosAlign align = PosAlign.left, bool bold = false}) {
+    // Standard 4.0mm Font Height Style (PosTextSize.size2 height x size1 width for 100% 32-char fit)
+    PosStyles body4mmStyle({PosAlign align = PosAlign.left, bool bold = false}) {
       return PosStyles(
         fontType: baseFont,
         align: align,
-        height: PosTextSize.size1,
-        width: PosTextSize.size1,
-        bold: bold,
-      );
-    }
-
-    // Medium header style (size2 = 24x48 dots for sub-headings like TAX INVOICE & GRAND TOTAL)
-    PosStyles mediumStyle({PosAlign align = PosAlign.left, bool bold = true}) {
-      return PosStyles(
-        fontType: baseFont,
-        align: align,
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
+        height: PosTextSize.size2, // 4.0mm Font Height
+        width: PosTextSize.size1,  // Standard width to fit 32 chars without line wrapping
         bold: bold,
       );
     }
@@ -265,59 +254,60 @@ class PrinterService {
     // Top spacing to increase receipt height
     bytes += generator.feed(1);
 
-    // 1. SHOP NAME HEADER - 20mm JUMBO Title Height (size4 height x size2 width for clean fit)
+    // 1. SHOP NAME HEADER - 20.0mm JUMBO Title Height (PosTextSize.size4 height)
     bytes += generator.text(shopData.name.toUpperCase(),
         styles: const PosStyles(
             fontType: baseFont,
             align: PosAlign.center,
-            height: PosTextSize.size4,
+            height: PosTextSize.size4, // 20.0mm Jumbo Height
             width: PosTextSize.size2,
             bold: true));
     bytes += generator.feed(1);
 
-    // 2. SUB-HEADER - TAX INVOICE
-    bytes += generator.text('TAX INVOICE', styles: mediumStyle(align: PosAlign.center, bold: true));
+    // 2. SUB-HEADER - TAX INVOICE (4.0mm Font Height)
+    bytes += generator.text('TAX INVOICE', styles: body4mmStyle(align: PosAlign.center, bold: true));
     bytes += generator.feed(1);
     
-    // Store Info (Crisp size1 body font for maximum readability without wrapping)
+    // Store Info - 4.0mm Font Height & CENTER Aligned
     if (shopData.tagline.isNotEmpty) {
-      bytes += generator.text('"${shopData.tagline}"', styles: bodyStyle(align: PosAlign.center));
+      bytes += generator.text('"${shopData.tagline}"', styles: body4mmStyle(align: PosAlign.center));
     }
     if (shopData.address != null && shopData.address!.isNotEmpty) {
-      bytes += generator.text(shopData.address!, styles: bodyStyle(align: PosAlign.center));
+      bytes += generator.text(shopData.address!, styles: body4mmStyle(align: PosAlign.center));
     }
     if (shopData.phone != null && shopData.phone!.isNotEmpty) {
-      bytes += generator.text('Ph: ${shopData.phone}', styles: bodyStyle(align: PosAlign.center));
+      bytes += generator.text('Ph: ${shopData.phone}', styles: body4mmStyle(align: PosAlign.center));
     }
     if (shopData.email != null && shopData.email!.isNotEmpty) {
-      bytes += generator.text('Email: ${shopData.email}', styles: bodyStyle(align: PosAlign.center));
+      bytes += generator.text('Email: ${shopData.email}', styles: body4mmStyle(align: PosAlign.center));
     }
     if (shopData.gstin != null && shopData.gstin!.isNotEmpty) {
-      bytes += generator.text('GSTIN: ${shopData.gstin}', styles: bodyStyle(align: PosAlign.center, bold: true));
+      bytes += generator.text('GSTIN: ${shopData.gstin}', styles: body4mmStyle(align: PosAlign.center, bold: true));
     }
-    bytes += generator.text('=' * paperWidth, styles: bodyStyle());
+    bytes += generator.text('=' * paperWidth, styles: body4mmStyle());
 
-    // 3. BILL & TOKEN DETAILS
+    // 3. INVOICE & TOKEN NO. (4.0mm Font Height)
     String invStr = 'Inv: #${token.billNumber}';
     String tokenStr = 'TOKEN: #${token.tokenNumber}';
-    bytes += generator.text(_justify(invStr, tokenStr, paperWidth), styles: bodyStyle(bold: true));
+    bytes += generator.text(_justify(invStr, tokenStr, paperWidth), styles: body4mmStyle(bold: true));
     
+    // DATE & CUSTOMER DETAILS (4.0mm Font Height)
     final dtParts = token.createdAt.split('T');
     final dateStr = dtParts.isNotEmpty ? dtParts.first : '';
-    bytes += generator.text('Date: $dateStr', styles: bodyStyle());
+    bytes += generator.text('Date: $dateStr', styles: body4mmStyle());
     
     if (token.customerName.isNotEmpty || token.customerPhone.isNotEmpty) {
-      bytes += generator.text('-' * paperWidth, styles: bodyStyle());
+      bytes += generator.text('-' * paperWidth, styles: body4mmStyle());
       if (token.customerName.isNotEmpty) {
-        bytes += generator.text('Customer: ${token.customerName}', styles: bodyStyle(bold: true));
+        bytes += generator.text('Customer: ${token.customerName}', styles: body4mmStyle(bold: true));
       }
       if (token.customerPhone.isNotEmpty) {
-        bytes += generator.text('Ph: ${token.customerPhone}', styles: bodyStyle());
+        bytes += generator.text('Ph: ${token.customerPhone}', styles: body4mmStyle());
       }
     }
 
-    // 4. ITEMS TABLE (Properly formatted columns for 32 chars)
-    bytes += generator.text('-' * paperWidth, styles: bodyStyle());
+    // 4. ITEMS TABLE (4.0mm Font Height)
+    bytes += generator.text('-' * paperWidth, styles: body4mmStyle());
     
     int itemLen = paperWidth >= 48 ? 24 : 14;
     int qtyLen = paperWidth >= 48 ? 6 : 4;
@@ -328,52 +318,53 @@ class PrinterService {
                        _padLeft('Qty', qtyLen) + 
                        _padLeft('Rate', rateLen) + 
                        _padLeft('Total', totalLen);
-    bytes += generator.text(headerStr, styles: bodyStyle(bold: true));
-    bytes += generator.text('-' * paperWidth, styles: bodyStyle());
+    bytes += generator.text(headerStr, styles: body4mmStyle(bold: true));
+    bytes += generator.text('-' * paperWidth, styles: body4mmStyle());
 
-    // Item rows with clean spacing
+    // Item rows at 4.0mm Font Height
     for (final item in token.items) {
       String iStr = _padRight(item.name, itemLen);
       String qStr = _padLeft('${item.quantity}', qtyLen);
       String rStr = _padLeft(item.rate.toStringAsFixed(0), rateLen);
       String tStr = _padLeft(item.subtotal.toStringAsFixed(2), totalLen);
-      bytes += generator.text('$iStr$qStr$rStr$tStr', styles: bodyStyle(bold: true));
+      bytes += generator.text('$iStr$qStr$rStr$tStr', styles: body4mmStyle(bold: true));
     }
-    bytes += generator.text('-' * paperWidth, styles: bodyStyle());
+    bytes += generator.text('-' * paperWidth, styles: body4mmStyle());
 
-    // 5. TOTALS & SUMMARY
+    // 5. SUBTOTAL & TAX (4.0mm Font Height)
     final computedSubtotal = token.items.fold(0.0, (sum, i) => sum + i.subtotal);
     final computedTax = token.grandTotal - computedSubtotal;
 
-    bytes += generator.text(_justify('Subtotal:', computedSubtotal.toStringAsFixed(2), paperWidth), styles: bodyStyle());
+    bytes += generator.text(_justify('Subtotal:', computedSubtotal.toStringAsFixed(2), paperWidth), styles: body4mmStyle());
     if (computedTax > 0) {
-      bytes += generator.text(_justify('Tax:', computedTax.toStringAsFixed(2), paperWidth), styles: bodyStyle());
+      bytes += generator.text(_justify('Tax:', computedTax.toStringAsFixed(2), paperWidth), styles: body4mmStyle());
     }
-    bytes += generator.text('=' * paperWidth, styles: bodyStyle());
+    bytes += generator.text('=' * paperWidth, styles: body4mmStyle());
     
-    // GRAND TOTAL - Highlighted Double Height
+    // GRAND TOTAL: Rs. XXX (4.0mm Font Height, Bold & Highlighted Center)
     String grandTotalText = 'GRAND TOTAL: Rs.${token.grandTotal.toStringAsFixed(2)}';
-    bytes += generator.text(grandTotalText, styles: mediumStyle(align: PosAlign.center, bold: true));
-    bytes += generator.text('=' * paperWidth, styles: bodyStyle());
+    bytes += generator.text(grandTotalText, styles: body4mmStyle(align: PosAlign.center, bold: true));
+    bytes += generator.text('=' * paperWidth, styles: body4mmStyle());
 
-    bytes += generator.text(_justify('Payment Mode:', token.paymentMode.toUpperCase(), paperWidth), styles: bodyStyle(bold: true));
+    // PAYMENT MODE (CASH/UPI) (4.0mm Font Height)
+    bytes += generator.text(_justify('Payment Mode:', token.paymentMode.toUpperCase(), paperWidth), styles: body4mmStyle(bold: true));
 
-    // 6. UPI QR CODE (If available)
+    // 6. UPI ID / SCAN TO PAY (4.0mm Font Height)
     if (shopData.upiId != null && shopData.upiId!.isNotEmpty) {
       final qrData = 'upi://pay?pa=${shopData.upiId}&pn=${Uri.encodeComponent(shopData.name)}&am=${token.grandTotal.toStringAsFixed(2)}&cu=INR';
       bytes += generator.feed(1);
       bytes += generator.qrcode(qrData, size: QRSize.size6);
-      bytes += generator.text(shopData.upiId!, styles: bodyStyle(align: PosAlign.center));
-      bytes += generator.text('Scan to Pay Rs.${token.grandTotal.toStringAsFixed(2)}', styles: bodyStyle(align: PosAlign.center, bold: true));
+      bytes += generator.text(shopData.upiId!, styles: body4mmStyle(align: PosAlign.center));
+      bytes += generator.text('Scan to Pay Rs.${token.grandTotal.toStringAsFixed(2)}', styles: body4mmStyle(align: PosAlign.center, bold: true));
     }
 
-    // 7. FOOTER & TERMS
+    // 7. FOOTER MESSAGE & TERMS (4.0mm Font Height, Center Aligned)
     if (template.footerMessage.isNotEmpty) {
       bytes += generator.feed(1);
-      bytes += generator.text(template.footerMessage, styles: bodyStyle(align: PosAlign.center, bold: true));
+      bytes += generator.text(template.footerMessage, styles: body4mmStyle(align: PosAlign.center, bold: true));
     }
     if (template.termsAndConditions.isNotEmpty) {
-      bytes += generator.text(template.termsAndConditions, styles: bodyStyle(align: PosAlign.center));
+      bytes += generator.text(template.termsAndConditions, styles: body4mmStyle(align: PosAlign.center));
     }
 
     // Extra bottom paper feed for clean cutting
