@@ -273,55 +273,55 @@
       debugPrint('🖨️ [PRINTER LOG] Printing via Native Bluetooth Direct Text Stream...');
       
       try {
-        // 1. Shop Name Header
+        // 1. Shop Name Header (Jumbo Size 3)
         bluetooth
-          ..printCustom(shopData.name.toUpperCase(), 3, 1)
-          ..printCustom('TAX INVOICE', 1, 1);
+          ..printCustom(shopData.name.toUpperCase(), 3, 1) // Jumbo Max (Size 3)
+          ..printCustom('TAX INVOICE', 2, 1); // Large Bold (Size 2)
         
         if (shopData.tagline.isNotEmpty) {
-          bluetooth.printCustom('"${shopData.tagline}"', 0, 1);
+          bluetooth.printCustom('"${shopData.tagline}"', 1, 1);
         }
         if (shopData.address != null && shopData.address!.isNotEmpty) {
-          bluetooth.printCustom(shopData.address!, 0, 1);
+          bluetooth.printCustom(shopData.address!, 1, 1);
         }
         if (shopData.phone != null && shopData.phone!.isNotEmpty) {
-          bluetooth.printCustom('Ph: ${shopData.phone}', 0, 1);
+          bluetooth.printCustom('Ph: ${shopData.phone}', 1, 1);
         }
         if (shopData.gstin != null && shopData.gstin!.isNotEmpty) {
-          bluetooth.printCustom('GSTIN: ${shopData.gstin}', 0, 1);
+          bluetooth.printCustom('GSTIN: ${shopData.gstin}', 1, 1);
         }
-        bluetooth.printCustom('=' * 32, 0, 1);
+        bluetooth.printCustom('=' * 32, 1, 1);
 
-        // 2. Invoice & Token Details
+        // 2. Invoice & Token Details (Increased Size 1 & Size 2)
         String invStr = 'Inv: #${token.billNumber}';
         String tokenStr = 'TOKEN: #${token.tokenNumber}';
-        bluetooth.printCustom(_justify(invStr, tokenStr, 32), 1, 0);
+        bluetooth.printCustom(_justify(invStr, tokenStr, 32), 2, 0);
 
         final dtParts = token.createdAt.split('T');
         final dateStr = dtParts.isNotEmpty ? dtParts.first : '';
-        bluetooth.printCustom('Date: $dateStr', 0, 0);
+        bluetooth.printCustom('Date: $dateStr', 1, 0);
 
         if (token.customerName.isNotEmpty || token.customerPhone.isNotEmpty) {
-          bluetooth.printCustom('-' * 32, 0, 0);
+          bluetooth.printCustom('-' * 32, 1, 0);
           if (token.customerName.isNotEmpty) {
-            bluetooth.printCustom('Customer: ${token.customerName}', 1, 0);
+            bluetooth.printCustom('Customer: ${token.customerName}', 2, 0);
           }
           if (token.customerPhone.isNotEmpty) {
-            bluetooth.printCustom('Ph: ${token.customerPhone}', 0, 0);
+            bluetooth.printCustom('Ph: ${token.customerPhone}', 1, 0);
           }
         }
 
-        // 3. Items Table Header
-        bluetooth.printCustom('-' * 32, 0, 0);
+        // 3. Items Table Header (Increased to Size 2)
+        bluetooth.printCustom('-' * 32, 1, 0);
         String headerStr = _padRight('Item', 14) + 
                           _padLeft('Qty', 4) + 
                           _padLeft('Rate', 6) + 
                           _padLeft('Total', 8);
         bluetooth
-          ..printCustom(headerStr, 1, 0)
-          ..printCustom('-' * 32, 0, 0);
+          ..printCustom(headerStr, 2, 0)
+          ..printCustom('-' * 32, 1, 0);
 
-        // Item Rows
+        // Item Rows (Increased to Size 1)
         for (final item in token.items) {
           String iStr = _padRight(item.name, 14);
           String qStr = _padLeft('${item.quantity}', 4);
@@ -329,36 +329,36 @@
           String tStr = _padLeft(item.subtotal.toStringAsFixed(2), 8);
           bluetooth.printCustom('$iStr$qStr$rStr$tStr', 1, 0);
         }
-        bluetooth.printCustom('-' * 32, 0, 0);
+        bluetooth.printCustom('-' * 32, 1, 0);
 
-        // 4. Subtotal & Totals
+        // 4. Subtotal & Totals (Increased Subtotal to Size 2, Grand Total to Size 3)
         final computedSubtotal = token.items.fold(0.0, (sum, i) => sum + i.subtotal);
         final computedTax = token.grandTotal - computedSubtotal;
 
-        bluetooth.printCustom(_justify('Subtotal:', computedSubtotal.toStringAsFixed(2), 32), 0, 0);
+        bluetooth.printCustom(_justify('Subtotal:', computedSubtotal.toStringAsFixed(2), 32), 1, 0);
         if (computedTax > 0) {
-          bluetooth.printCustom(_justify('Tax:', computedTax.toStringAsFixed(2), 32), 0, 0);
+          bluetooth.printCustom(_justify('Tax:', computedTax.toStringAsFixed(2), 32), 1, 0);
         }
         bluetooth
-          ..printCustom('=' * 32, 0, 0)
-          ..printCustom('GRAND TOTAL: Rs.${token.grandTotal.toStringAsFixed(2)}', 2, 1)
-          ..printCustom('=' * 32, 0, 0)
-          ..printCustom(_justify('Payment Mode:', token.paymentMode.toUpperCase(), 32), 1, 0);
+          ..printCustom('=' * 32, 1, 0)
+          ..printCustom('GRAND TOTAL: Rs.${token.grandTotal.toStringAsFixed(2)}', 3, 1) // Jumbo Size 3
+          ..printCustom('=' * 32, 1, 0)
+          ..printCustom(_justify('Payment Mode:', token.paymentMode.toUpperCase(), 32), 2, 0);
 
         if (shopData.upiId != null && shopData.upiId!.isNotEmpty) {
           bluetooth
             ..printNewLine()
-            ..printCustom('UPI: ${shopData.upiId!}', 1, 1)
-            ..printCustom('Pay Rs.${token.grandTotal.toStringAsFixed(2)}', 1, 1);
+            ..printCustom('UPI: ${shopData.upiId!}', 2, 1)
+            ..printCustom('Pay Rs.${token.grandTotal.toStringAsFixed(2)}', 2, 1);
         }
 
         if (template.footerMessage.isNotEmpty) {
           bluetooth
             ..printNewLine()
-            ..printCustom(template.footerMessage, 1, 1);
+            ..printCustom(template.footerMessage, 2, 1);
         }
         if (template.termsAndConditions.isNotEmpty) {
-          bluetooth.printCustom(template.termsAndConditions, 0, 1);
+          bluetooth.printCustom(template.termsAndConditions, 1, 1);
         }
 
         bluetooth
