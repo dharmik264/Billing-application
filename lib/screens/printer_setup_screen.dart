@@ -56,6 +56,8 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
     _connected = await PrinterService.instance.isConnected;
     if (_connected) {
       _showDisconnectPrompt = false;
+    } else {
+      _scanBluetooth();
     }
     if (mounted) setState(() {});
   }
@@ -246,7 +248,7 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
             ),
           ),
         ),
-        if (_devices.isNotEmpty && !_connected) ...[
+        if (_devices.isNotEmpty) ...[
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
@@ -259,7 +261,10 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                         title: Text(device.name ?? 'Unknown', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
                         subtitle: Text(device.address ?? '', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
-                        trailing: const Icon(Icons.link_rounded, color: _primary),
+                        trailing: Icon(
+                          _connectedDevice?.address == device.address ? Icons.check_circle_rounded : Icons.link_rounded,
+                          color: _connectedDevice?.address == device.address ? const Color(0xFF10B981) : _primary,
+                        ),
                         onTap: () => _connectDevice(device),
                       ))
                   .toList(),
