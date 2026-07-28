@@ -95,8 +95,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       icon: Icons.print_outlined,
                       iconBackground: const Color(0xFFFFF7ED),
                       iconColor: const Color(0xFFEA580C),
-                      title: 'Printer & Font Settings',
-                      subtitle: 'Bluetooth, Paper Size & Bill Text Size',
+                      title: 'Printer Settings',
+                      subtitle: 'Bluetooth & Paper Size (58mm / 80mm)',
                       badge: _isPrinterConnected ? 'Connected' : 'Disconnected',
                       badgeBackground: _isPrinterConnected
                           ? const Color(0xFFDCFCE7)

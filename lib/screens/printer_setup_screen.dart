@@ -135,10 +135,6 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
                 _label('Paper Size'),
                 const SizedBox(height: 8),
                 _paperSizeOptions(),
-                const SizedBox(height: 16),
-                _label('Bill Text & Font Size'),
-                const SizedBox(height: 8),
-                _fontSizeOptions(),
                 const SizedBox(height: 20),
                 _saveButton(),
               ],
@@ -688,108 +684,6 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
     );
   }
 
-  Widget _fontSizeOptions() {
-    final sizes = [
-      {'label': 'Small (20px)', 'val': 20.0},
-      {'label': 'Medium (32px)', 'val': 32.0},
-      {'label': 'Large (45px)', 'val': 45.0},
-      {'label': 'Extra Large (55px)', 'val': 55.0},
-      {'label': 'Huge (70px)', 'val': 70.0},
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _softBorder, width: 1.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Bill Print Text Size:', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: _textPrimary)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text('${_printFontSize.toInt()} px', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: _primary)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: sizes.map((s) {
-              final isSel = (_printFontSize - (s['val'] as double)).abs() < 1.0;
-              return ChoiceChip(
-                label: Text(s['label'] as String),
-                selected: isSel,
-                selectedColor: const Color(0xFFEEF2FF),
-                labelStyle: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: isSel ? FontWeight.w700 : FontWeight.w500,
-                  color: isSel ? _primary : _textSecondary,
-                ),
-                onSelected: (sel) {
-                  if (sel) {
-                    setState(() {
-                      _printFontSize = s['val'] as double;
-                    });
-                  }
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 12),
-          Slider(
-            value: _printFontSize,
-            min: 14.0,
-            max: 85.0,
-            divisions: 71,
-            activeColor: _primary,
-            inactiveColor: const Color(0xFFE2E8F0),
-            label: '${_printFontSize.toInt()} px',
-            onChanged: (val) {
-              setState(() {
-                _printFontSize = val;
-              });
-            },
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              children: [
-                Text('LIVE FONT SIZE PREVIEW', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF94A3B8), letterSpacing: 0.5)),
-                const SizedBox(height: 6),
-                Text(
-                  'VD GROUP BILL #101',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: (_printFontSize * 0.35).clamp(12.0, 32.0),
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _saveButton() {
     return SizedBox(

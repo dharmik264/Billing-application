@@ -10,7 +10,6 @@ import 'super_admin_user_roles_screen.dart';
 import 'super_admin_plan_settings_screen.dart';
 import 'super_admin_payment_settings_screen.dart';
 import 'super_admin_payments_screen.dart';
-import 'super_admin_bill_font_settings_screen.dart';
 
 // ── Models ──────────────────────────────────────────
 
@@ -306,9 +305,6 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
             }),
             _mgmtCard(Icons.qr_code_2_rounded, 'Payment & QR', 'UPI & QR Code', const Color(0xFFF5F3FF), const Color(0xFF8B5CF6), () {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SuperAdminPaymentSettingsScreen()));
-            }),
-            _mgmtCard(Icons.format_size_rounded, 'Bill Font Size', 'Set Title & Body (mm)', const Color(0xFFFEF2F2), const Color(0xFFEF4444), () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SuperAdminBillFontSettingsScreen()));
             }),
             _mgmtCard(Icons.receipt_long_rounded, 'User Payments', 'Verify UTR & Plan', const Color(0xFFECFDF5), const Color(0xFF059669), () {
               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SuperAdminPaymentsScreen()));
