@@ -85,14 +85,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
   }
 
   String? _validateGst(String? v) {
-    if (v == null || v.trim().isEmpty) return null; // optional
-    final gstRegex = RegExp(
-      r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$',
-    );
-    if (!gstRegex.hasMatch(v.trim().toUpperCase())) {
-      return 'Invalid GST format (e.g. 22AAAAA0000A1Z5)';
-    }
-    return null;
+    return null; // completely optional
   }
 
   // ── Save ───────────────────────────────────────────────────────
