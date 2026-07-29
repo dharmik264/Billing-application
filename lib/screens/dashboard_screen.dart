@@ -151,19 +151,19 @@ class DashboardScreenState extends State<DashboardScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 SliverAppBar(
-                  expandedHeight: 140.0,
+                  expandedHeight: 100.0,
                   floating: false,
                   pinned: true,
                   backgroundColor: const Color(0xFFEEF2FF),
                   elevation: 0,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(32),
-                      bottomRight: Radius.circular(32),
+                      bottomLeft: Radius.circular(24),
+                      bottomRight: Radius.circular(24),
                     ),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
-                    titlePadding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                    titlePadding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
                     title: Row(
                       children: [
                         Container(
@@ -279,7 +279,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 12),
                             _buildStatCards()
                                 .animate()
                                 .fadeIn(duration: 500.ms)
