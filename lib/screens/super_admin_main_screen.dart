@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'super_admin_dashboard_screen.dart';
+import 'super_admin_user_roles_screen.dart';
 
 class SuperAdminMainScreen extends StatefulWidget {
   const SuperAdminMainScreen({super.key});
@@ -23,7 +24,7 @@ class _SuperAdminMainScreenState extends State<SuperAdminMainScreen> {
     _screens = [
       SuperAdminDashboardScreen(key: _dashboardKey),
       _placeholderTab('System Logs', Icons.receipt_long_rounded),
-      _placeholderTab('User Management', Icons.bolt_rounded),
+      const SuperAdminUserRolesScreen(),
       _placeholderTab('Statistics', Icons.pie_chart_rounded),
       _placeholderTab('Admin Profile', Icons.person_rounded),
     ];
