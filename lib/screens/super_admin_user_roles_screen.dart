@@ -39,8 +39,17 @@ class _SuperAdminUserRolesScreenState extends State<SuperAdminUserRolesScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        final err = e.toString();
+        String userMsg = 'Unable to load users. Please check your internet connection.';
+        if (!err.contains('SocketException') && !err.contains('Failed host lookup')) {
+          userMsg = 'Failed to load users: $e';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load users: $e')),
+          SnackBar(
+            content: Text(userMsg),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF334155),
+          ),
         );
       }
     }
