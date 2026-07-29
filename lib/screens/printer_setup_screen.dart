@@ -248,6 +248,32 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
             ),
           ),
         ),
+        if (_isScanning && _devices.isEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              border: Border.all(color: _softBorder),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: _primary),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Searching nearby Bluetooth printers...',
+                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: _textSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
         if (_devices.isNotEmpty) ...[
           const SizedBox(height: 12),
           Container(
@@ -770,7 +796,6 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   Future<void> _scanBluetooth() async {
     setState(() {
       _isScanning = true;
-      _devices = [];
     });
 
     try {
