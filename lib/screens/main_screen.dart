@@ -257,7 +257,7 @@ class _MainScreenState extends State<MainScreen> {
               curve: Curves.easeInOut,
               left: 16,
               right: 16,
-              bottom: hide ? -140 : 24,
+              bottom: hide ? -140 : 12,
               child: _buildUnifiedNavbar(),
             );
           },

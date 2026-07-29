@@ -284,7 +284,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                                 .animate()
                                 .fadeIn(duration: 500.ms)
                                 .slideX(begin: -0.05, curve: Curves.easeOut),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 16),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: Row(
@@ -326,7 +326,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                         ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 90),
                   sliver: _recentTokens.isEmpty && !_isLoading
                       ? SliverToBoxAdapter(
                           child: Center(
