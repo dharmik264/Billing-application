@@ -220,100 +220,81 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: MediaQuery.of(context).size.height * 0.45,
-            child: Container(
-              color: const Color(0xFFEEF2FF),
-              child: SafeArea(
-                child: Stack(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: const Color(0xFFEEF2FF),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Top Hero / Header Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
                   children: [
-                    Positioned(
-                      top: 8,
-                      right: 16,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
-                          Switch(
-                            value: _isDevMode,
-                            activeTrackColor: const Color(0xFF4F46E5),
-                            onChanged: (val) {
-                              setState(() => _isDevMode = val);
-                              if (val && _devUsers.isEmpty) {
-                                _fetchDevUsers();
-                              }
-                            },
-                          ),
-                        ],
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
+                            Switch(
+                              value: _isDevMode,
+                              activeTrackColor: const Color(0xFF4F46E5),
+                              onChanged: (val) {
+                                setState(() => _isDevMode = val);
+                                if (val && _devUsers.isEmpty) {
+                                  _fetchDevUsers();
+                                }
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-                                  blurRadius: 30,
-                                  spreadRadius: 5,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(Icons.storefront_rounded, size: 64, color: Color(0xFF4F46E5)),
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                            blurRadius: 25,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 8),
                           ),
-                          const SizedBox(height: 20),
                         ],
                       ),
+                      child: const Icon(Icons.storefront_rounded, size: 54, color: Color(0xFF4F46E5)),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-          
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.4,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(36),
+              
+              // Bottom Card Form Container
+              Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(32),
+                    topRight: Radius.circular(32),
+                  ),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
-                ],
+                padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
+                child: _isDevMode 
+                    ? _buildDevUserList() 
+                    : _buildLoginForm(),
               ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(36),
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(32, 40, 32, MediaQuery.of(context).viewInsets.bottom + 24),
-                  child: _isDevMode 
-                      ? _buildDevUserList() 
-                      : _buildLoginForm(),
-                ),
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
