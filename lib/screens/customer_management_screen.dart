@@ -180,13 +180,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           Expanded(child: _buildBody()),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _openAdd,
-        backgroundColor: _indigo,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.person_add_rounded),
-        label: Text('Add Customer', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14)),
-      ),
     );
   }
 
@@ -214,7 +207,21 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           onPressed: _loadCustomers,
           tooltip: 'Refresh',
         ),
-        const SizedBox(width: 4),
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: ElevatedButton.icon(
+            onPressed: _openAdd,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _indigo,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            icon: const Icon(Icons.person_add_rounded, size: 18),
+            label: Text('Add', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+          ),
+        ),
       ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
