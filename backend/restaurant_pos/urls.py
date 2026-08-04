@@ -3,7 +3,13 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from django.http import JsonResponse
+
+def home_view(request):
+    return JsonResponse({"status": "healthy", "message": "Billing Application API Server is running"})
+
 urlpatterns = [
+    path('', home_view, name='home'),
     path('admin/', admin.site.urls),
     path('api/auth/',    include('core.urls')),
     path('api/shop/',    include('shop.urls')),
