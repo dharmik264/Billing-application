@@ -76,7 +76,10 @@ class CreateTokenView(APIView):
 
         for item_data in data['items']:
             menu_item_id = item_data.get('menu_item')
-            quantity     = int(item_data.get('quantity', 1))
+            try:
+                quantity = int(item_data.get('quantity', 1))
+            except (ValueError, TypeError):
+                quantity = 1
             try:
                 menu_item = MenuItem.objects.get(pk=menu_item_id)
                 TokenItem.objects.create(
@@ -87,7 +90,7 @@ class CreateTokenView(APIView):
                     quantity  = quantity,
                     note      = item_data.get('note', ''),
                 )
-            except MenuItem.DoesNotExist:
+            except (MenuItem.DoesNotExist, ValueError, TypeError):
                 continue
 
         token.calculate_totals()
@@ -147,7 +150,10 @@ class TokenDetailView(generics.RetrieveUpdateDestroyAPIView):
             token.items.all().delete()
             for item_data in data['items']:
                 menu_item_id = item_data.get('menu_item')
-                quantity     = int(item_data.get('quantity', 1))
+                try:
+                    quantity = int(item_data.get('quantity', 1))
+                except (ValueError, TypeError):
+                    quantity = 1
                 try:
                     menu_item = MenuItem.objects.get(pk=menu_item_id)
                     TokenItem.objects.create(
@@ -158,7 +164,7 @@ class TokenDetailView(generics.RetrieveUpdateDestroyAPIView):
                         quantity  = quantity,
                         note      = item_data.get('note', ''),
                     )
-                except MenuItem.DoesNotExist:
+                except (MenuItem.DoesNotExist, ValueError, TypeError):
                     continue
 
         token.calculate_totals()
@@ -201,16 +207,20 @@ class AddItemToTokenView(APIView):
         items_data = request.data.get('items', [])
         for item_data in items_data:
             try:
-                menu_item = MenuItem.objects.get(pk=item_data['menu_item'])
+                quantity = int(item_data.get('quantity', 1))
+            except (ValueError, TypeError):
+                quantity = 1
+            try:
+                menu_item = MenuItem.objects.get(pk=item_data.get('menu_item'))
                 TokenItem.objects.create(
                     token     = token,
                     menu_item = menu_item,
                     name      = menu_item.name,
                     price     = menu_item.price,
-                    quantity  = item_data.get('quantity', 1),
+                    quantity  = quantity,
                     note      = item_data.get('note', ''),
                 )
-            except MenuItem.DoesNotExist:
+            except (MenuItem.DoesNotExist, ValueError, TypeError, KeyError):
                 continue
 
         token.calculate_totals()

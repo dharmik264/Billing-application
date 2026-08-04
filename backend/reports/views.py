@@ -41,7 +41,12 @@ class DailyReportView(APIView):
             )
 
         # Dashboard requires total_bills (all time) and monthly_sales
-        report_date_obj = timezone.datetime.strptime(report_date, '%Y-%m-%d').date() if isinstance(report_date, str) else report_date
+        try:
+            report_date_obj = timezone.datetime.strptime(report_date, '%Y-%m-%d').date() if isinstance(report_date, str) else report_date
+        except (ValueError, TypeError):
+            report_date_obj = timezone.localdate()
+            report_date = str(report_date_obj)
+
         total_bills = Token.objects.filter(shop=shop).count()
         monthly_sales = Token.objects.filter(
             shop=shop,
@@ -89,8 +94,12 @@ class MonthlyReportView(APIView):
     def get(self, request):
         from shop.models import Shop
         shop = Shop.get_shop(request.user)
-        year  = int(request.query_params.get('year',  timezone.now().year))
-        month = int(request.query_params.get('month', timezone.now().month))
+        try:
+            year  = int(request.query_params.get('year',  timezone.now().year))
+            month = int(request.query_params.get('month', timezone.now().month))
+        except (ValueError, TypeError):
+            year  = timezone.now().year
+            month = timezone.now().month
         tokens = Token.objects.filter(shop=shop, date__year=year, date__month=month, is_paid=True)
 
         agg = tokens.aggregate(
@@ -123,8 +132,12 @@ class TopItemsReportView(APIView):
     def get(self, request):
         from shop.models import Shop
         shop = Shop.get_shop(request.user)
-        days  = int(request.query_params.get('days', 7))
-        limit = int(request.query_params.get('limit', 10))
+        try:
+            days  = int(request.query_params.get('days', 7))
+            limit = int(request.query_params.get('limit', 10))
+        except (ValueError, TypeError):
+            days  = 7
+            limit = 10
         start = timezone.localdate() - timedelta(days=days)
 
         top_items = (
@@ -148,7 +161,10 @@ class CategoryReportView(APIView):
     def get(self, request):
         from shop.models import Shop
         shop = Shop.get_shop(request.user)
-        days  = int(request.query_params.get('days', 7))
+        try:
+            days  = int(request.query_params.get('days', 7))
+        except (ValueError, TypeError):
+            days  = 7
         start = timezone.localdate() - timedelta(days=days)
 
         data = (
