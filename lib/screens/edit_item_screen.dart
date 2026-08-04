@@ -17,6 +17,7 @@ class EditItemScreen extends StatefulWidget {
     this.initialOnline = true,
     this.initialActive = true,
     this.initialImageBytes,
+    this.existingCategories = const [],
   });
 
   final String? initialName;
@@ -26,6 +27,7 @@ class EditItemScreen extends StatefulWidget {
   final bool initialOnline;
   final bool initialActive;
   final Uint8List? initialImageBytes;
+  final List<String> existingCategories;
 
   @override
   State<EditItemScreen> createState() => _EditItemScreenState();
@@ -73,11 +75,18 @@ class _EditItemScreenState extends State<EditItemScreen> {
     final custom = prefs.getStringList('custom_categories') ?? [];
     if (mounted) {
       setState(() {
-        final combined = {'Burgers', 'Beverages', 'Sides', 'Desserts', ...custom};
-        if (!combined.contains(_category) && _category.isNotEmpty) {
+        final combined = <String>{
+          'Burgers',
+          'Beverages',
+          'Sides',
+          'Desserts',
+          ...widget.existingCategories,
+          ...custom,
+        };
+        if (_category.isNotEmpty) {
           combined.add(_category);
         }
-        _categories = combined.toList()..sort();
+        _categories = combined.where((c) => c.trim().isNotEmpty).toList()..sort();
       });
     }
   }
@@ -630,27 +639,82 @@ class _EditItemScreenState extends State<EditItemScreen> {
   }
 
   Future<void> _pickCategory() async {
-    final category = await showModalBottomSheet<String>(
+    final result = await showModalBottomSheet<dynamic>(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              top: 16,
+              left: 16,
+              right: 16,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final category in _categories)
-                  ListTile(
-                    title: Text(category),
-                    trailing: category == _category
-                        ? const Icon(Icons.check, color: _primary)
-                        : null,
-                    onTap: () => Navigator.of(context).pop(category),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Category',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: _textPrimary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 280),
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final cat in _categories)
+                        ListTile(
+                          title: Text(
+                            cat,
+                            style: GoogleFonts.inter(
+                              fontSize: 15,
+                              fontWeight: cat == _category ? FontWeight.w700 : FontWeight.w500,
+                              color: cat == _category ? _primary : _textPrimary,
+                            ),
+                          ),
+                          trailing: cat == _category
+                              ? const Icon(Icons.check_circle_rounded, color: _primary)
+                              : null,
+                          onTap: () => Navigator.of(context).pop(cat),
+                        ),
+                    ],
                   ),
+                ),
+                const Divider(),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).pop('__ADD_NEW__'),
+                  icon: const Icon(Icons.add, size: 20),
+                  label: Text('Add New Category', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
               ],
             ),
           ),
@@ -658,8 +722,63 @@ class _EditItemScreenState extends State<EditItemScreen> {
       },
     );
 
-    if (category != null) {
-      setState(() => _category = category);
+    if (result == '__ADD_NEW__') {
+      await _showAddNewCategoryDialog();
+    } else if (result is String && result.isNotEmpty) {
+      setState(() => _category = result);
+    }
+  }
+
+  Future<void> _showAddNewCategoryDialog() async {
+    final controller = TextEditingController();
+    final newCategory = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Add New Category', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: 'Category Name (e.g. Pizza)',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancel', style: GoogleFonts.inter(color: _textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.of(context).pop(controller.text.trim());
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('Add', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+
+    if (newCategory != null && newCategory.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      final custom = prefs.getStringList('custom_categories') ?? [];
+      if (!custom.contains(newCategory)) {
+        custom.add(newCategory);
+        await prefs.setStringList('custom_categories', custom);
+      }
+      setState(() {
+        if (!_categories.contains(newCategory)) {
+          _categories.add(newCategory);
+          _categories.sort();
+        }
+        _category = newCategory;
+      });
+      _showSnackBar('Category "$newCategory" added!');
     }
   }
 

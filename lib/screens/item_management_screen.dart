@@ -24,6 +24,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   final List<_MenuItem> _items = [];
+  List<String> _customCategories = [];
   bool _loading = true;
   bool _isProcessing = false;
 
@@ -31,7 +32,20 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
   void initState() {
     super.initState();
     _searchController.addListener(() => setState(() {}));
+    _loadCustomCategories();
     _loadItemsFromDatabase();
+  }
+
+  Future<void> _loadCustomCategories() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final custom = prefs.getStringList('custom_categories') ?? [];
+      if (mounted) {
+        setState(() {
+          _customCategories = custom;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -209,7 +223,14 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
   Widget _buildCategoryTabs() {
     final categories = <String>['All Items'];
     for (final item in _items) {
-      if (!categories.contains(item.category)) categories.add(item.category);
+      if (item.category.isNotEmpty && !categories.contains(item.category)) {
+        categories.add(item.category);
+      }
+    }
+    for (final custom in _customCategories) {
+      if (custom.isNotEmpty && !categories.contains(custom)) {
+        categories.add(custom);
+      }
     }
 
     return Container(
@@ -597,13 +618,24 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Future<void> _addItem() async {
     final nextNumber = 9000 + _items.length + 1;
+    final allCategories = <String>{
+      ..._items.map((e) => e.category),
+      ..._customCategories,
+    }.where((c) => c.isNotEmpty).toList();
+
     final result = await Navigator.of(context).push<EditItemResult>(
       MaterialPageRoute(
-        builder: (context) => EditItemScreen(initialCode: 'C-$nextNumber'),
+        builder: (context) => EditItemScreen(
+          initialCode: 'C-$nextNumber',
+          existingCategories: allCategories,
+        ),
       ),
     );
 
     if (result == null) return;
+
+    // Refresh custom categories state
+    await _loadCustomCategories();
 
     setState(() => _isProcessing = true);
     
@@ -650,6 +682,11 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
   }
 
   Future<void> _editItem(_MenuItem item) async {
+    final allCategories = <String>{
+      ..._items.map((e) => e.category),
+      ..._customCategories,
+    }.where((c) => c.isNotEmpty).toList();
+
     final result = await Navigator.of(context).push<EditItemResult>(
       MaterialPageRoute(
         builder: (context) => EditItemScreen(
@@ -660,6 +697,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
           initialOnline: item.online,
           initialActive: item.active,
           initialImageBytes: item.localImageBytes,
+          existingCategories: allCategories,
         ),
       ),
     );
