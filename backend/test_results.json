@@ -1,7 +1,7 @@
 {
   "total": 55,
-  "passed": 54,
-  "failed": 1,
+  "passed": 55,
+  "failed": 0,
   "tests": {
     "customers_customer table exists": {
       "passed": true,
@@ -45,7 +45,7 @@
     },
     "CREATE: Customer record saved": {
       "passed": true,
-      "detail": "id=17"
+      "detail": "id=35"
     },
     "CREATE: Name stored correctly": {
       "passed": true,
@@ -192,7 +192,7 @@
       "detail": ""
     },
     "Validation: Empty address rejected (400)": {
-      "passed": false,
+      "passed": true,
       "detail": ""
     },
     "Admin: Customer model registered": {

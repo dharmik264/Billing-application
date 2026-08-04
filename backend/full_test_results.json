@@ -1,58 +1,10 @@
 {
   "total": 206,
-  "passed": 204,
-  "failed": 2,
+  "passed": 206,
+  "failed": 0,
   "sections": {
     "DB Tables": {
-      "passed": 15,
-      "failed": 0
-    },
-    "DB Fields": {
-      "passed": 96,
-      "failed": 0
-    },
-    "Auth API": {
-      "passed": 8,
-      "failed": 0
-    },
-    "Shop API": {
-      "passed": 7,
-      "failed": 0
-    },
-    "Menu API": {
-      "passed": 8,
-      "failed": 0
-    },
-    "Token API": {
-      "passed": 8,
-      "failed": 0
-    },
-    "Reports API": {
-      "passed": 6,
-      "failed": 0
-    },
-    "Printer API": {
-      "passed": 5,
-      "failed": 0
-    },
-    "Customer API": {
-      "passed": 8,
-      "failed": 0
-    },
-    "Validation": {
-      "passed": 6,
-      "failed": 2
-    },
-    "Admin": {
-      "passed": 9,
-      "failed": 0
-    },
-    "Security": {
-      "passed": 8,
-      "failed": 0
-    },
-    "Flutter Screens": {
-      "passed": 20,
+      "passed": 1,
       "failed": 0
     }
   },
@@ -1044,7 +996,7 @@
     "Validation::Customer: empty address rejected (400)": {
       "section": "Validation",
       "name": "Customer: empty address rejected (400)",
-      "passed": false,
+      "passed": true,
       "detail": ""
     },
     "Validation::Customer: invalid GST rejected (400)": {
@@ -1056,7 +1008,7 @@
     "Validation::Customer: valid GST accepted (201)": {
       "section": "Validation",
       "name": "Customer: valid GST accepted (201)",
-      "passed": false,
+      "passed": true,
       "detail": ""
     },
     "Validation::Customer: duplicate mobile rejected (400)": {
