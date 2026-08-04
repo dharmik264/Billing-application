@@ -20,18 +20,18 @@ dependencies:
   pdf: ^3.11.1
   path_provider: ^2.1.4
   open_filex: ^4.4.0
-  sqflite: ^2.4.3
+  sqflite: ^2.4.2
   path: ^1.9.1
   connectivity_plus: ^7.1.1
   blue_thermal_printer: ^1.2.3
   esc_pos_utils_plus: ^2.0.4
-  sqflite_common_ffi: ^2.4.1
+  sqflite_common_ffi: ^2.4.0
   printing: ^5.14.3
   google_fonts: ^8.1.0
   flutter_animate: ^4.5.2
   qr_flutter: ^4.1.0
   permission_handler: ^12.0.3
-  image: ^4.9.1
+  image: ^4.8.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
