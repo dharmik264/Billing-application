@@ -223,77 +223,90 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
       resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFFEEF2FF),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              // Top Hero / Header Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Column(
-                  children: [
-                    Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 16),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+        bottom: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Column(
+                    children: [
+                      // Top Hero / Header Section
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        child: Column(
                           children: [
-                            Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
-                            Switch(
-                              value: _isDevMode,
-                              activeTrackColor: const Color(0xFF4F46E5),
-                              onChanged: (val) {
-                                setState(() => _isDevMode = val);
-                                if (val && _devUsers.isEmpty) {
-                                  _fetchDevUsers();
-                                }
-                              },
+                            Align(
+                              alignment: Alignment.topRight,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 16),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
+                                    Switch(
+                                      value: _isDevMode,
+                                      activeTrackColor: const Color(0xFF4F46E5),
+                                      onChanged: (val) {
+                                        setState(() => _isDevMode = val);
+                                        if (val && _devUsers.isEmpty) {
+                                          _fetchDevUsers();
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                                    blurRadius: 25,
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.storefront_rounded, size: 54, color: Color(0xFF4F46E5)),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-                            blurRadius: 25,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 8),
+                      
+                      // Bottom Card Form Container (Expanded to fill to the bottom of screen)
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(32),
+                              topRight: Radius.circular(32),
+                            ),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
+                            ],
                           ),
-                        ],
+                          padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
+                          child: _isDevMode 
+                              ? _buildDevUserList() 
+                              : _buildLoginForm(),
+                        ),
                       ),
-                      child: const Icon(Icons.storefront_rounded, size: 54, color: Color(0xFF4F46E5)),
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Bottom Card Form Container
-              Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32),
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
-                  ],
                 ),
-                padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
-                child: _isDevMode 
-                    ? _buildDevUserList() 
-                    : _buildLoginForm(),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
