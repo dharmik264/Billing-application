@@ -773,8 +773,9 @@ class _EditItemScreenState extends State<EditItemScreen> {
       }
       setState(() {
         if (!_categories.contains(newCategory)) {
-          _categories.add(newCategory);
-          _categories.sort();
+          _categories
+            ..add(newCategory)
+            ..sort();
         }
         _category = newCategory;
       });
