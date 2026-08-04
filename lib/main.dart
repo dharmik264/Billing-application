@@ -90,6 +90,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initializeApp() async {
+    final startTime = DateTime.now();
     try {
       final prefs = await SharedPreferences.getInstance();
       bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
@@ -131,6 +132,13 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
+      // Ensure total splash screen display duration is at least 5 seconds (5s)
+      final elapsed = DateTime.now().difference(startTime);
+      const minSplashDuration = Duration(seconds: 5);
+      if (elapsed < minSplashDuration) {
+        await Future.delayed(minSplashDuration - elapsed);
+      }
+
       if (!mounted) return;
 
       // Super Admin auto-login routing
@@ -167,6 +175,11 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (e) {
       debugPrint('Initialization error: $e');
+      final elapsed = DateTime.now().difference(startTime);
+      const minSplashDuration = Duration(seconds: 5);
+      if (elapsed < minSplashDuration) {
+        await Future.delayed(minSplashDuration - elapsed);
+      }
       if (mounted) {
         _navigateTo(
             const PasswordLoginScreen()); // Fallback to login on critical failure
