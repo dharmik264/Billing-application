@@ -733,7 +733,7 @@
       "section": "Auth API",
       "name": "POST /auth/register/ (200/400/201)",
       "passed": true,
-      "detail": "got 201"
+      "detail": "got 400"
     },
     "Auth API::POST /auth/login/ returns token or error": {
       "section": "Auth API",
