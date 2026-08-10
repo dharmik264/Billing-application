@@ -28,6 +28,7 @@ class _TokenProduct {
   final String category;
   final Color accent;
   Uint8List? localImageBytes;
+  final String? imageUrl;
 
   _TokenProduct({
     required this.rawItem,
@@ -37,6 +38,7 @@ class _TokenProduct {
     required this.price,
     required this.category,
     required this.accent,
+    this.imageUrl,
   });
 }
 
@@ -135,6 +137,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           price: item.rate,
           category: item.category,
           accent: colors[colorIndex % colors.length],
+          imageUrl: item.imageUrl,
         ));
         colorIndex++;
       }
@@ -687,20 +690,36 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     height: double.infinity,
                     fit: BoxFit.cover,
                   )
-                : FutureBuilder<Uint8List?>(
-                    future: LocalImageStorage.loadImageBytes('item_image_${product.code}.png'),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                        return Image.memory(
-                          snapshot.data!,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.cover,
-                        );
-                      }
-                      return Icon(Icons.restaurant_menu_rounded, size: 36, color: product.accent.withValues(alpha: 0.6));
-                    },
-                  ),
+                : (product.imageUrl != null && product.imageUrl!.isNotEmpty)
+                    ? Image.network(
+                        product.imageUrl!,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.restaurant_menu_rounded,
+                          size: 36,
+                          color: product.accent.withValues(alpha: 0.6),
+                        ),
+                      )
+                    : FutureBuilder<Uint8List?>(
+                        future: LocalImageStorage.loadItemImageBytes(
+                          id: product.id,
+                          code: product.code,
+                          name: product.name,
+                        ),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                            return Image.memory(
+                              snapshot.data!,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                            );
+                          }
+                          return Icon(Icons.restaurant_menu_rounded, size: 36, color: product.accent.withValues(alpha: 0.6));
+                        },
+                      ),
           ),
           Expanded(
             child: Padding(

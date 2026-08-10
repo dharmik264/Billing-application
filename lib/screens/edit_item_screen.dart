@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/app_constants.dart';
+import '../utils/local_storage_helper.dart';
 
 class EditItemScreen extends StatefulWidget {
   const EditItemScreen({
@@ -226,11 +227,29 @@ class _EditItemScreenState extends State<EditItemScreen> {
                     fit: BoxFit.cover,
                   ),
                 )
-              : const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_a_photo_outlined, size: 24, color: _primary),
-                  ],
+              : FutureBuilder<Uint8List?>(
+                  future: LocalImageStorage.loadItemImageBytes(
+                    code: widget.initialCode,
+                    name: widget.initialName,
+                  ),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                      return ClipOval(
+                        child: Image.memory(
+                          snapshot.data!,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
+                      );
+                    }
+                    return const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo_outlined, size: 24, color: _primary),
+                      ],
+                    );
+                  },
                 ),
         ),
       ),

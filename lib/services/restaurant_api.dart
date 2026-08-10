@@ -754,6 +754,8 @@
       required this.rate,
       required this.active,
       required this.availableOnline,
+      this.imageUrl,
+      this.imageBase64,
     });
 
     factory ApiItem.fromJson(Map<String, dynamic> json) {
@@ -777,6 +779,8 @@
             json['is_active'] == true,
         availableOnline: json['availableOnline'] == true ||
             json['is_available_online'] == true,
+        imageUrl: json['image_url']?.toString() ?? (json['image'] is String ? json['image'].toString() : null),
+        imageBase64: json['image_base64']?.toString(),
       );
     }
 
@@ -787,6 +791,8 @@
     final double rate;
     final bool active;
     final bool availableOnline;
+    final String? imageUrl;
+    final String? imageBase64;
   }
 
   class ApiItemDraft {

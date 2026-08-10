@@ -378,24 +378,40 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                         height: 48,
                         fit: BoxFit.cover,
                       )
-                    : FutureBuilder<Uint8List?>(
-                        future: LocalImageStorage.loadImageBytes('item_image_${item.code}.png'),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                            return Image.memory(
-                              snapshot.data!,
-                              width: 48,
-                              height: 48,
-                              fit: BoxFit.cover,
-                            );
-                          }
-                          return Icon(
-                            Icons.restaurant_menu_rounded,
-                            size: 24,
-                            color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-                          );
-                        },
-                      ),
+                    : (item.imageUrl != null && item.imageUrl!.isNotEmpty)
+                        ? Image.network(
+                            item.imageUrl!,
+                            width: 48,
+                            height: 48,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.restaurant_menu_rounded,
+                              size: 24,
+                              color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+                            ),
+                          )
+                        : FutureBuilder<Uint8List?>(
+                            future: LocalImageStorage.loadItemImageBytes(
+                              id: item.id,
+                              code: item.code,
+                              name: item.name,
+                            ),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                                return Image.memory(
+                                  snapshot.data!,
+                                  width: 48,
+                                  height: 48,
+                                  fit: BoxFit.cover,
+                                );
+                              }
+                              return Icon(
+                                Icons.restaurant_menu_rounded,
+                                size: 24,
+                                color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+                              );
+                            },
+                          ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -640,7 +656,11 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     setState(() => _isProcessing = true);
     
     if (result.imageBytes != null) {
-      await LocalImageStorage.saveImage('item_image_${result.code}.png', result.imageBytes!);
+      await LocalImageStorage.saveItemImage(
+        code: result.code,
+        name: result.name,
+        bytes: result.imageBytes!,
+      );
     }
 
     final draft = ApiItemDraft(
@@ -661,6 +681,15 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     }
 
     if (mounted) {
+      if (result.imageBytes != null) {
+        await LocalImageStorage.saveItemImage(
+          id: savedItem?.id,
+          code: result.code,
+          name: result.name,
+          bytes: result.imageBytes!,
+        );
+      }
+
       setState(() {
         _items.insert(
           0,
@@ -707,7 +736,12 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     setState(() => _isProcessing = true);
     
     if (result.imageBytes != null) {
-      await LocalImageStorage.saveImage('item_image_${result.code}.png', result.imageBytes!);
+      await LocalImageStorage.saveItemImage(
+        id: item.id,
+        code: result.code,
+        name: result.name,
+        bytes: result.imageBytes!,
+      );
     }
 
     final index = _items.indexOf(item);
@@ -753,6 +787,12 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Future<void> _deleteItem(_MenuItem item) async {
     setState(() => _isProcessing = true);
+    
+    await LocalImageStorage.deleteItemImage(
+      id: item.id,
+      code: item.code,
+      name: item.name,
+    );
     
     if (item.id != null) {
       try {
@@ -853,6 +893,7 @@ class _MenuItem {
     required this.active,
     required this.online,
     this.localImageBytes,
+    this.imageUrl,
   });
 
   factory _MenuItem.fromEditResult(EditItemResult result, {String? id}) {
@@ -877,6 +918,7 @@ class _MenuItem {
       price: item.rate,
       active: item.active,
       online: item.availableOnline,
+      imageUrl: item.imageUrl,
     );
   }
 
@@ -888,6 +930,7 @@ class _MenuItem {
   bool active;
   bool online;
   Uint8List? localImageBytes;
+  String? imageUrl;
 
   _MenuItem copyWith({
     String? id,
@@ -898,6 +941,7 @@ class _MenuItem {
     bool? active,
     bool? online,
     Uint8List? localImageBytes,
+    String? imageUrl,
   }) {
     return _MenuItem(
       id: id ?? this.id,
@@ -908,6 +952,7 @@ class _MenuItem {
       active: active ?? this.active,
       online: online ?? this.online,
       localImageBytes: localImageBytes ?? this.localImageBytes,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }
