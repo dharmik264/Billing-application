@@ -132,9 +132,9 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
-      // Ensure total splash screen display duration is at least 5 seconds (5s)
+      // Ensure total splash screen display duration is fast & smooth (~1.2s)
       final elapsed = DateTime.now().difference(startTime);
-      const minSplashDuration = Duration(seconds: 8);
+      const minSplashDuration = Duration(milliseconds: 1200);
       if (elapsed < minSplashDuration) {
         await Future.delayed(minSplashDuration - elapsed);
       }
