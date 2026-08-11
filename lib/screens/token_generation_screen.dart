@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -140,6 +141,17 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           imageUrl: item.imageUrl,
         ));
         colorIndex++;
+      }
+
+      for (var prod in products) {
+        final bytes = await LocalImageStorage.loadItemImageBytes(
+          id: prod.id,
+          code: prod.code,
+          name: prod.name,
+        );
+        if (bytes != null) {
+          prod.localImageBytes = bytes;
+        }
       }
 
       if (mounted) {
@@ -683,43 +695,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                 colors: [product.accent.withValues(alpha: 0.15), product.accent.withValues(alpha: 0.05)],
               ),
             ),
-            child: product.localImageBytes != null
-                ? Image.memory(
-                    product.localImageBytes!,
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.cover,
-                  )
-                : (product.imageUrl != null && product.imageUrl!.isNotEmpty)
-                    ? Image.network(
-                        product.imageUrl!,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.restaurant_menu_rounded,
-                          size: 36,
-                          color: product.accent.withValues(alpha: 0.6),
-                        ),
-                      )
-                    : FutureBuilder<Uint8List?>(
-                        future: LocalImageStorage.loadItemImageBytes(
-                          id: product.id,
-                          code: product.code,
-                          name: product.name,
-                        ),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                            return Image.memory(
-                              snapshot.data!,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                            );
-                          }
-                          return Icon(Icons.restaurant_menu_rounded, size: 36, color: product.accent.withValues(alpha: 0.6));
-                        },
-                      ),
+            child: _buildCardImage(product),
           ),
           Expanded(
             child: Padding(
@@ -799,6 +775,69 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     ));
   }
 
+
+  Widget _buildCardImage(_TokenProduct product) {
+    if (product.localImageBytes != null) {
+      return Image.memory(
+        product.localImageBytes!,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+      );
+    }
+
+    final imgUrl = product.imageUrl;
+    if (imgUrl != null && imgUrl.startsWith('data:image')) {
+      try {
+        final base64Str = imgUrl.split(',').last;
+        final bytes = base64Decode(base64Str);
+        return Image.memory(
+          bytes,
+          width: double.infinity,
+          height: double.infinity,
+          fit: BoxFit.cover,
+        );
+      } catch (_) {}
+    }
+
+    return FutureBuilder<Uint8List?>(
+      future: LocalImageStorage.loadItemImageBytes(
+        id: product.id,
+        code: product.code,
+        name: product.name,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+          return Image.memory(
+            snapshot.data!,
+            width: double.infinity,
+            height: double.infinity,
+            fit: BoxFit.cover,
+          );
+        }
+
+        if (imgUrl != null && imgUrl.isNotEmpty && (imgUrl.startsWith('http://') || imgUrl.startsWith('https://'))) {
+          return Image.network(
+            imgUrl,
+            width: double.infinity,
+            height: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              Icons.restaurant_menu_rounded,
+              size: 36,
+              color: product.accent.withValues(alpha: 0.6),
+            ),
+          );
+        }
+
+        return Icon(
+          Icons.restaurant_menu_rounded,
+          size: 36,
+          color: product.accent.withValues(alpha: 0.6),
+        );
+      },
+    );
+  }
 
   Widget _buildCartSection({required bool isTablet}) {
     return Container(

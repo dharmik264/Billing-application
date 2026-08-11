@@ -82,10 +82,15 @@ class LocalImageStorage {
     final cleanCode = code?.trim() ?? '';
     if (cleanCode.isNotEmpty) {
       await saveImage('item_image_$cleanCode.png', bytes);
+      await saveImage('item_image_code_$cleanCode.png', bytes);
     }
     final cleanId = id?.trim() ?? '';
     if (cleanId.isNotEmpty) {
       await saveImage('item_image_id_$cleanId.png', bytes);
+    }
+    final cleanName = (name ?? '').trim().replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase();
+    if (cleanName.isNotEmpty) {
+      await saveImage('item_image_name_$cleanName.png', bytes);
     }
 
     return savedPath;
@@ -103,8 +108,10 @@ class LocalImageStorage {
 
     final cleanCode = code?.trim() ?? '';
     if (cleanCode.isNotEmpty) {
-      final codeBytes = await loadImageBytes('item_image_$cleanCode.png');
+      final codeBytes = await loadImageBytes('item_image_code_$cleanCode.png');
       if (codeBytes != null) return codeBytes;
+      final codeBytesRaw = await loadImageBytes('item_image_$cleanCode.png');
+      if (codeBytesRaw != null) return codeBytesRaw;
     }
 
     final cleanId = id?.trim() ?? '';

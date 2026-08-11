@@ -371,47 +371,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: item.localImageBytes != null
-                    ? Image.memory(
-                        item.localImageBytes!,
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
-                      )
-                    : (item.imageUrl != null && item.imageUrl!.isNotEmpty)
-                        ? Image.network(
-                            item.imageUrl!,
-                            width: 48,
-                            height: 48,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Icon(
-                              Icons.restaurant_menu_rounded,
-                              size: 24,
-                              color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-                            ),
-                          )
-                        : FutureBuilder<Uint8List?>(
-                            future: LocalImageStorage.loadItemImageBytes(
-                              id: item.id,
-                              code: item.code,
-                              name: item.name,
-                            ),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                                return Image.memory(
-                                  snapshot.data!,
-                                  width: 48,
-                                  height: 48,
-                                  fit: BoxFit.cover,
-                                );
-                              }
-                              return Icon(
-                                Icons.restaurant_menu_rounded,
-                                size: 24,
-                                color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-                              );
-                            },
-                          ),
+                child: _buildItemTileImage(item, isActive),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -559,6 +519,69 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildItemTileImage(_MenuItem item, bool isActive) {
+    if (item.localImageBytes != null) {
+      return Image.memory(
+        item.localImageBytes!,
+        width: 48,
+        height: 48,
+        fit: BoxFit.cover,
+      );
+    }
+
+    final imgUrl = item.imageUrl;
+    if (imgUrl != null && imgUrl.startsWith('data:image')) {
+      try {
+        final base64Str = imgUrl.split(',').last;
+        final bytes = base64Decode(base64Str);
+        return Image.memory(
+          bytes,
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+        );
+      } catch (_) {}
+    }
+
+    return FutureBuilder<Uint8List?>(
+      future: LocalImageStorage.loadItemImageBytes(
+        id: item.id,
+        code: item.code,
+        name: item.name,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+          return Image.memory(
+            snapshot.data!,
+            width: 48,
+            height: 48,
+            fit: BoxFit.cover,
+          );
+        }
+
+        if (imgUrl != null && imgUrl.isNotEmpty && (imgUrl.startsWith('http://') || imgUrl.startsWith('https://'))) {
+          return Image.network(
+            imgUrl,
+            width: 48,
+            height: 48,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              Icons.restaurant_menu_rounded,
+              size: 24,
+              color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+            ),
+          );
+        }
+
+        return Icon(
+          Icons.restaurant_menu_rounded,
+          size: 24,
+          color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+        );
+      },
     );
   }
 
