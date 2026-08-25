@@ -427,7 +427,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          _statusBadge(customer.isActive),
+                          _statusToggleBadge(customer),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -475,22 +475,76 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     );
   }
 
-  Widget _statusBadge(bool active) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: (active ? _green : _slate400).withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        active ? 'Active' : 'Inactive',
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: active ? _green : _slate400,
+  Widget _statusToggleBadge(ApiCustomer customer) {
+    final active = customer.isActive;
+    return GestureDetector(
+      onTap: () => _toggleCustomerStatus(customer),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: active ? _green.withValues(alpha: 0.1) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: active ? _green.withValues(alpha: 0.3) : const Color(0xFFCBD5E1),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              active ? 'Active' : 'Inactive',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: active ? _green : const Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              active ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
+              size: 18,
+              color: active ? _green : const Color(0xFF64748B),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Future<void> _toggleCustomerStatus(ApiCustomer customer) async {
+    final newStatus = customer.isActive ? 'inactive' : 'active';
+    final updatedDraft = ApiCustomerDraft(
+      name: customer.name,
+      mobileNumber: customer.mobileNumber,
+      address: customer.address,
+      gstNumber: customer.gstNumber,
+      status: newStatus,
+    );
+
+    try {
+      await RestaurantApi.instance.updateCustomer(customer.id, updatedDraft);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${customer.name} status updated to $newStatus'),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        _loadCustomers();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update status: $e'),
+            backgroundColor: _red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {

@@ -21,6 +21,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   final List<_HistoryToken> _tokens = [];
 
   String _selectedRange = 'Today';
+  String _activeReportType = 'Bills';
   DateTime? _customStart;
   DateTime? _customEnd;
 
@@ -50,19 +51,20 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
               children: [
                 _buildHeader(),
                 _searchBar(),
+                _reportTypeTabs(),
                 _rangeTabs(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
                   child: Column(
                     children: [
                       _summaryHeader(),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 12),
                       _exportButton(),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                     ],
                   ),
                 ),
-                Expanded(child: _buildTokenList()),
+                Expanded(child: _buildActiveReportView()),
               ],
             ),
             if (_loading)
@@ -80,6 +82,67 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _reportTypeTabs() {
+    const reportTypes = ['Bills', 'Item Detail', 'Item Summary', 'Customer Detail', 'Customer Summary'];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+      color: Colors.white,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            for (final rType in reportTypes) ...[
+              _reportTypeChip(rType),
+              const SizedBox(width: 8),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _reportTypeChip(String label) {
+    final selected = _activeReportType == label;
+    return GestureDetector(
+      onTap: () => setState(() => _activeReportType = label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF4F46E5) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            color: selected ? Colors.white : const Color(0xFF64748B),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveReportView() {
+    switch (_activeReportType) {
+      case 'Item Detail':
+        return _buildItemDetailList();
+      case 'Item Summary':
+        return _buildItemSummaryList();
+      case 'Customer Detail':
+        return _buildCustomerDetailList();
+      case 'Customer Summary':
+        return _buildCustomerSummaryList();
+      case 'Bills':
+      default:
+        return _buildTokenList();
+    }
   }
 
   Widget _buildTokenList() {
@@ -465,48 +528,448 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   Future<void> _exportToPdf() async {
     if (_filteredTokens.isEmpty) {
-      _showSnackBar('No tokens to export');
+      _showSnackBar('No data to export');
       return;
     }
 
     _showSnackBar('Generating PDF...');
 
     try {
-      final pdfTokens = _filteredTokens.map((t) {
-        // Fallback bill number generation if empty
-        String bNum = t.billNumber;
-        if (bNum.isEmpty) {
-          final digits = t.shortId.replaceAll(RegExp(r'[^0-9]'), '');
-          bNum = digits.padLeft(4, '0');
+      if (_activeReportType == 'Item Detail') {
+        final entries = <PdfItemDetailRow>[];
+        for (final token in _filteredTokens) {
+          for (final item in token.items) {
+            entries.add(PdfItemDetailRow(
+              date: token.dateTimeString,
+              billNumber: token.billNumber.isNotEmpty ? token.billNumber : token.shortId,
+              itemName: item.name,
+              category: item.category,
+              quantity: item.quantity,
+              rate: item.rate,
+              subtotal: item.subtotal,
+            ));
+          }
         }
-
-        return PdfTokenRow(
-          billNumber: bNum,
-          tokenNumber: t.title.replaceFirst('Token ', ''),
-          orderType: t.orderType,
+        await PdfExport.exportItemDetailReport(
+          items: entries,
+          rangeLabel: _selectedRange,
+          shopName: 'My Shop',
+        );
+      } else if (_activeReportType == 'Item Summary') {
+        final map = <String, PdfItemSummaryRow>{};
+        for (final token in _filteredTokens) {
+          for (final item in token.items) {
+            if (!map.containsKey(item.name)) {
+              map[item.name] = PdfItemSummaryRow(
+                itemName: item.name,
+                category: item.category,
+                totalQty: 0,
+                totalRevenue: 0.0,
+              );
+            }
+            final existing = map[item.name]!;
+            map[item.name] = PdfItemSummaryRow(
+              itemName: item.name,
+              category: item.category.isNotEmpty ? item.category : existing.category,
+              totalQty: existing.totalQty + item.quantity,
+              totalRevenue: existing.totalRevenue + item.subtotal,
+            );
+          }
+        }
+        await PdfExport.exportItemSummaryReport(
+          summary: map.values.toList()..sort((a, b) => b.totalRevenue.compareTo(a.totalRevenue)),
+          rangeLabel: _selectedRange,
+          shopName: 'My Shop',
+        );
+      } else if (_activeReportType == 'Customer Detail') {
+        final entries = _filteredTokens.map((t) => PdfCustomerDetailRow(
+          date: t.dateTimeString,
           customerName: t.customerName,
           customerPhone: t.customerPhone,
-          dateTime: t.dateTimeString,
+          billNumber: t.billNumber.isNotEmpty ? t.billNumber : t.shortId,
           amount: t.amount,
-          payment: t.payment,
+          paymentMode: t.payment,
           status: t.status,
-          items: t.items.map((i) => '${i.name} x${i.quantity}').join(', '),
+        )).toList();
+        await PdfExport.exportCustomerDetailReport(
+          customers: entries,
+          rangeLabel: _selectedRange,
+          shopName: 'My Shop',
         );
-      }).toList();
+      } else if (_activeReportType == 'Customer Summary') {
+        final map = <String, PdfCustomerSummaryRow>{};
+        for (final token in _filteredTokens) {
+          final key = token.customerName.isNotEmpty
+              ? token.customerName
+              : (token.customerPhone.isNotEmpty ? token.customerPhone : 'Walk-in');
+          if (!map.containsKey(key)) {
+            map[key] = PdfCustomerSummaryRow(
+              customerName: key,
+              customerPhone: token.customerPhone,
+              totalOrders: 0,
+              totalSpent: 0.0,
+              lastPurchaseDate: token.dateTimeString,
+            );
+          }
+          final existing = map[key]!;
+          map[key] = PdfCustomerSummaryRow(
+            customerName: key,
+            customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : existing.customerPhone,
+            totalOrders: existing.totalOrders + 1,
+            totalSpent: existing.totalSpent + token.amount,
+            lastPurchaseDate: token.dateTimeString,
+          );
+        }
+        await PdfExport.exportCustomerSummaryReport(
+          summary: map.values.toList()..sort((a, b) => b.totalSpent.compareTo(a.totalSpent)),
+          rangeLabel: _selectedRange,
+          shopName: 'My Shop',
+        );
+      } else {
+        final pdfTokens = _filteredTokens.map((t) {
+          String bNum = t.billNumber;
+          if (bNum.isEmpty) {
+            final digits = t.shortId.replaceAll(RegExp(r'[^0-9]'), '');
+            bNum = digits.padLeft(4, '0');
+          }
 
-      final totalAmount = _filteredTokens.fold(0.0, (sum, t) => sum + t.amount);
+          return PdfTokenRow(
+            billNumber: bNum,
+            tokenNumber: t.title.replaceFirst('Token ', ''),
+            orderType: t.orderType,
+            customerName: t.customerName,
+            customerPhone: t.customerPhone,
+            dateTime: t.dateTimeString,
+            amount: t.amount,
+            payment: t.payment,
+            status: t.status,
+            items: t.items.map((i) => '${i.name} x${i.quantity}').join(', '),
+          );
+        }).toList();
 
-      await PdfExport.exportReport(
-        tokens: pdfTokens,
-        rangeLabel: _selectedRange,
-        shopName: 'My Shop',
-        totalAmount: totalAmount,
-      );
+        final totalAmount = _filteredTokens.fold(0.0, (sum, t) => sum + t.amount);
+
+        await PdfExport.exportReport(
+          tokens: pdfTokens,
+          rangeLabel: _selectedRange,
+          shopName: 'My Shop',
+          totalAmount: totalAmount,
+        );
+      }
 
       _showSnackBar('Report saved successfully');
     } catch (e) {
       _showSnackBar('Error exporting report: $e');
     }
+  }
+
+  // ── Item Detail List (Date Order wise) ──────────────────────────
+  Widget _buildItemDetailList() {
+    final entries = <_ItemDetailEntry>[];
+    for (final token in _filteredTokens) {
+      for (final item in token.items) {
+        entries.add(_ItemDetailEntry(
+          date: token.dateTimeString,
+          rawDate: token.rawDate,
+          billNumber: token.billNumber.isNotEmpty ? token.billNumber : token.shortId,
+          itemName: item.name,
+          category: item.category,
+          quantity: item.quantity,
+          rate: item.rate,
+          subtotal: item.subtotal,
+        ));
+      }
+    }
+
+    entries.sort((a, b) => b.rawDate.compareTo(a.rawDate));
+
+    if (entries.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Text('No item transactions found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      itemCount: entries.length,
+      itemBuilder: (context, index) {
+        final item = entries[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.fastfood_rounded, color: Color(0xFF4F46E5), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.itemName, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary)),
+                    const SizedBox(height: 2),
+                    Text('Bill: ${item.billNumber} · ${item.date}', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(_money(item.subtotal), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF10B981))),
+                  const SizedBox(height: 2),
+                  Text('${item.quantity} x ${_money(item.rate)}', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Item Summary List ─────────────────────────────────────────
+  Widget _buildItemSummaryList() {
+    final map = <String, _ItemSummaryEntry>{};
+    for (final token in _filteredTokens) {
+      for (final item in token.items) {
+        if (!map.containsKey(item.name)) {
+          map[item.name] = _ItemSummaryEntry(
+            itemName: item.name,
+            category: item.category,
+            totalQty: 0,
+            totalRevenue: 0.0,
+          );
+        }
+        final existing = map[item.name]!;
+        map[item.name] = _ItemSummaryEntry(
+          itemName: item.name,
+          category: item.category.isNotEmpty ? item.category : existing.category,
+          totalQty: existing.totalQty + item.quantity,
+          totalRevenue: existing.totalRevenue + item.subtotal,
+        );
+      }
+    }
+
+    final summaries = map.values.toList()..sort((a, b) => b.totalRevenue.compareTo(a.totalRevenue));
+
+    if (summaries.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Text('No item summary data found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      itemCount: summaries.length,
+      itemBuilder: (context, index) {
+        final summary = summaries[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text('#${index + 1}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFFD97706), fontSize: 13)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(summary.itemName, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary)),
+                    const SizedBox(height: 2),
+                    Text(summary.category.isNotEmpty ? summary.category : 'General', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(_money(summary.totalRevenue), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF4F46E5))),
+                  const SizedBox(height: 2),
+                  Text('Qty Sold: ${summary.totalQty}', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF059669))),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Customer Detail List (Date Order wise) ──────────────────────
+  Widget _buildCustomerDetailList() {
+    final list = _filteredTokens.where((t) => t.customerName.isNotEmpty || t.customerPhone.isNotEmpty).toList();
+    list.sort((a, b) => b.rawDate.compareTo(a.rawDate));
+
+    if (list.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Text('No customer transactions found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        final token = list[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.person_outline_rounded, color: Color(0xFF059669), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(token.customerName.isNotEmpty ? token.customerName : 'Walk-in Customer', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary)),
+                    const SizedBox(height: 2),
+                    Text('${token.customerPhone.isNotEmpty ? token.customerPhone : 'No Mobile'} · ${token.dateTimeString}', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(_money(token.amount), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF059669))),
+                  const SizedBox(height: 2),
+                  Text('${token.billNumber} (${token.payment})', style: GoogleFonts.inter(fontSize: 11, color: _textSecondary)),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Customer Summary List ──────────────────────────────────────
+  Widget _buildCustomerSummaryList() {
+    final map = <String, _CustomerSummaryEntry>{};
+    for (final token in _filteredTokens) {
+      final key = token.customerName.isNotEmpty
+          ? token.customerName
+          : (token.customerPhone.isNotEmpty ? token.customerPhone : 'Walk-in');
+
+      if (!map.containsKey(key)) {
+        map[key] = _CustomerSummaryEntry(
+          customerName: key,
+          customerPhone: token.customerPhone,
+          totalOrders: 0,
+          totalSpent: 0.0,
+          lastPurchaseDate: token.dateTimeString,
+        );
+      }
+      final existing = map[key]!;
+      map[key] = _CustomerSummaryEntry(
+        customerName: key,
+        customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : existing.customerPhone,
+        totalOrders: existing.totalOrders + 1,
+        totalSpent: existing.totalSpent + token.amount,
+        lastPurchaseDate: token.dateTimeString,
+      );
+    }
+
+    final summaries = map.values.toList()..sort((a, b) => b.totalSpent.compareTo(a.totalSpent));
+
+    if (summaries.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Text('No customer summary data found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      itemCount: summaries.length,
+      itemBuilder: (context, index) {
+        final summary = summaries[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text('#${index + 1}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5), fontSize: 13)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(summary.customerName, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary)),
+                    const SizedBox(height: 2),
+                    Text('${summary.customerPhone.isNotEmpty ? summary.customerPhone : 'No Mobile'} · Orders: ${summary.totalOrders}', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(_money(summary.totalSpent), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF10B981))),
+                  const SizedBox(height: 2),
+                  Text('Last: ${summary.lastPurchaseDate.split(',').first}', style: GoogleFonts.inter(fontSize: 11, color: _textSecondary)),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   String _money(double amount) => '\u20B9${amount.toStringAsFixed(2)}';
@@ -662,4 +1125,56 @@ String _formatDateTime(String value) {
   final suffix = local.hour >= 12 ? 'PM' : 'AM';
 
   return '$day/$month/$year, $hour:$minute $suffix';
+}
+
+class _ItemDetailEntry {
+  final String date;
+  final DateTime rawDate;
+  final String billNumber;
+  final String itemName;
+  final String category;
+  final int quantity;
+  final double rate;
+  final double subtotal;
+
+  _ItemDetailEntry({
+    required this.date,
+    required this.rawDate,
+    required this.billNumber,
+    required this.itemName,
+    required this.category,
+    required this.quantity,
+    required this.rate,
+    required this.subtotal,
+  });
+}
+
+class _ItemSummaryEntry {
+  final String itemName;
+  final String category;
+  final int totalQty;
+  final double totalRevenue;
+
+  _ItemSummaryEntry({
+    required this.itemName,
+    required this.category,
+    required this.totalQty,
+    required this.totalRevenue,
+  });
+}
+
+class _CustomerSummaryEntry {
+  final String customerName;
+  final String customerPhone;
+  final int totalOrders;
+  final double totalSpent;
+  final String lastPurchaseDate;
+
+  _CustomerSummaryEntry({
+    required this.customerName,
+    required this.customerPhone,
+    required this.totalOrders,
+    required this.totalSpent,
+    required this.lastPurchaseDate,
+  });
 }

@@ -6,8 +6,10 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 
 import '../services/restaurant_api.dart';
+import '../services/pdf_receipt_service.dart';
 import '../widgets/bill_receipt_widget.dart';
 
 import '../services/printer_service.dart';
@@ -387,10 +389,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   }
 
   Widget _primaryPrintActions() {
-    return Column(
+    return Row(
       children: [
-        SizedBox(
-          width: double.infinity,
+        Expanded(
           child: _stackedButton(
             label: 'Print Bill',
             subtitle: 'Send to Printer',
@@ -401,8 +402,67 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
             onTap: _executePrint,
           ),
         ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _stackedButton(
+            label: 'Share Bill',
+            subtitle: 'Share PDF Invoice',
+            icon: Icons.share_rounded,
+            background: const Color(0xFF10B981),
+            subtitleColor: const Color(0xFFA7F3D0),
+            isLoading: _isPrinting,
+            onTap: _shareBill,
+          ),
+        ),
       ],
     );
+  }
+
+  Future<void> _shareBill() async {
+    setState(() => _isPrinting = true);
+    try {
+      final token = ApiToken(
+        id: widget.orderId,
+        shopId: _shopData?.id ?? '',
+        tokenNumber: _actualTokenNumber,
+        billNumber: widget.billNumber ?? '',
+        orderType: 'Walk-in',
+        paymentMode: widget.paymentMode,
+        status: 'completed',
+        subtotal: widget.subtotal,
+        tax: widget.tax,
+        discount: 0.0,
+        grandTotal: widget.grandTotal,
+        customerName: widget.customerName ?? '',
+        customerPhone: widget.customerPhone ?? '',
+        customerAddress: widget.customerAddress ?? '',
+        customerGstNumber: widget.customerGstNumber ?? '',
+        items: widget.items.map((e) => ApiTokenItem(
+          id: e.id ?? '',
+          name: e.name,
+          code: e.code,
+          rate: e.rate,
+          quantity: e.quantity,
+          subtotal: e.rate * e.quantity,
+        )).toList(),
+        createdAt: DateTime.now().toIso8601String(),
+        updatedAt: DateTime.now().toIso8601String(),
+      );
+
+      final pdfBytes = await PdfReceiptService.generateReceipt(token);
+      await Printing.sharePdf(
+        bytes: pdfBytes,
+        filename: 'Bill_${widget.billNumber ?? widget.tokenNumber}.pdf',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to share bill: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPrinting = false);
+    }
   }
 
   Widget _stackedButton({

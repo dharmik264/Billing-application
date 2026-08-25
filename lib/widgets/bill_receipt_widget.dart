@@ -309,6 +309,20 @@ class BillReceiptWidget extends StatelessWidget {
               ),
               const SizedBox(height: 2),
             ],
+            if (customerAddress != null && customerAddress!.trim().isNotEmpty) ...[
+              Text(
+                'Address: ${customerAddress!.trim()}',
+                style: baseStyle,
+              ),
+              const SizedBox(height: 2),
+            ],
+            if (customerGstNumber != null && customerGstNumber!.trim().isNotEmpty) ...[
+              Text(
+                'Cust GSTIN: ${customerGstNumber!.trim()}',
+                style: baseStyle,
+              ),
+              const SizedBox(height: 2),
+            ],
             if (template.showInvoiceNumber ||
                 template.showDateTime ||
                 ((customerName != null && customerName!.isNotEmpty) || (customerPhone != null && customerPhone!.isNotEmpty))) ...[

@@ -113,7 +113,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                 ),
               ),
               GestureDetector(
-                onTap: _isProcessing ? null : _addCategory,
+                onTap: _isProcessing ? null : _manageCategories,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
@@ -415,7 +415,23 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                             color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
                           ),
                         ),
-                        _activeSwitch(item),
+                        Row(
+                          children: [
+                            _compactToggleSwitch(
+                              label: 'Active',
+                              value: item.active,
+                              activeColor: const Color(0xFF10B981),
+                              onTap: () => _toggleActiveStatus(item),
+                            ),
+                            const SizedBox(width: 8),
+                            _compactToggleSwitch(
+                              label: 'Online',
+                              value: item.online,
+                              activeColor: const Color(0xFF3B82F6),
+                              onTap: () => _toggleOnlineStatus(item),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ],
@@ -489,34 +505,55 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     );
   }
 
-  /// Toggle switch for Active / Inactive status
-  Widget _activeSwitch(_MenuItem item) {
+  Widget _compactToggleSwitch({
+    required String label,
+    required bool value,
+    required Color activeColor,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
-      onTap: () => _toggleActiveStatus(item),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 44,
-        height: 24,
-        padding: const EdgeInsets.all(3),
-        alignment: item.active ? Alignment.centerRight : Alignment.centerLeft,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: item.active ? const Color(0xFF10B981) : const Color(0xFFCBD5E1),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Container(
-          width: 18,
-          height: 18,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              )
-            ],
+          color: value ? activeColor.withValues(alpha: 0.1) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: value ? activeColor.withValues(alpha: 0.3) : const Color(0xFFE2E8F0),
           ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: value ? activeColor : const Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(width: 6),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 32,
+              height: 18,
+              padding: const EdgeInsets.all(2),
+              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+              decoration: BoxDecoration(
+                color: value ? activeColor : const Color(0xFFCBD5E1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Container(
+                width: 14,
+                height: 14,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -878,6 +915,229 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
     _showSnackBar(
       '${item.name} is now ${newActive ? 'Active' : 'Inactive'}',
+    );
+  }
+
+  /// Immediately toggle online availability and persist.
+  Future<void> _toggleOnlineStatus(_MenuItem item) async {
+    final newOnline = !item.online;
+
+    setState(() {
+      item.online = newOnline;
+      _isProcessing = true;
+    });
+
+    if (item.id != null) {
+      try {
+        final draft = ApiItemDraft(
+          name: item.name,
+          code: item.code,
+          category: item.category,
+          rate: item.price,
+          active: item.active,
+          availableOnline: newOnline,
+        );
+        await RestaurantApi.instance.updateItem(item.id!, draft);
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            item.online = !newOnline;
+            _isProcessing = false;
+          });
+        }
+        _showSnackBar('Failed to update online status');
+        return;
+      }
+    }
+
+    if (mounted) setState(() => _isProcessing = false);
+
+    _showSnackBar(
+      '${item.name} is now ${newOnline ? 'Available Online' : 'Offline'}',
+    );
+  }
+
+  Future<void> _editCategory(String oldName) async {
+    final controller = TextEditingController(text: oldName);
+    final updated = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Edit Category', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: 'Category Name',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            isDense: true,
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: _textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                Navigator.of(context).pop(controller.text.trim());
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4F46E5),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (updated != null && updated.isNotEmpty && updated != oldName) {
+      final prefs = await SharedPreferences.getInstance();
+      final customCategories = prefs.getStringList('custom_categories') ?? [];
+      final index = customCategories.indexOf(oldName);
+      if (index != -1) {
+        customCategories[index] = updated;
+      } else {
+        customCategories.add(updated);
+      }
+      await prefs.setStringList('custom_categories', customCategories);
+
+      for (var i = 0; i < _items.length; i++) {
+        if (_items[i].category == oldName) {
+          _items[i] = _items[i].copyWith(category: updated);
+        }
+      }
+
+      if (_selectedCategory == oldName) {
+        _selectedCategory = updated;
+      }
+
+      await _loadCustomCategories();
+      _showSnackBar('Category updated to "$updated"');
+      setState(() {});
+    }
+  }
+
+  Future<void> _deleteCategory(String categoryName) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Delete Category', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to delete category "$categoryName"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final prefs = await SharedPreferences.getInstance();
+      final customCategories = prefs.getStringList('custom_categories') ?? [];
+      customCategories.remove(categoryName);
+      await prefs.setStringList('custom_categories', customCategories);
+
+      if (_selectedCategory == categoryName) {
+        _selectedCategory = 'All Items';
+      }
+
+      await _loadCustomCategories();
+      _showSnackBar('Category "$categoryName" deleted');
+      setState(() {});
+    }
+  }
+
+  Future<void> _manageCategories() async {
+    final allCategories = <String>{
+      ..._items.map((e) => e.category),
+      ..._customCategories,
+    }.where((c) => c.isNotEmpty).toList()..sort();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.7,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Manage Categories', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline, color: Color(0xFF4F46E5)),
+                      onPressed: () async {
+                        Navigator.of(ctx).pop();
+                        await _addCategory();
+                      },
+                    ),
+                  ],
+                ),
+                const Divider(),
+                if (allCategories.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text('No categories found', style: GoogleFonts.inter(color: Colors.grey)),
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: allCategories.length,
+                      itemBuilder: (ctx, idx) {
+                        final cat = allCategories[idx];
+                        return ListTile(
+                          title: Text(cat, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_rounded, size: 20, color: Color(0xFF4F46E5)),
+                                onPressed: () async {
+                                  Navigator.of(ctx).pop();
+                                  await _editCategory(cat);
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.red),
+                                onPressed: () async {
+                                  Navigator.of(ctx).pop();
+                                  await _deleteCategory(cat);
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 

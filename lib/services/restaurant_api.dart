@@ -843,6 +843,13 @@
       required this.createdAt,
       required this.items,
       this.orderType = 'dine_in',
+      this.customerAddress = '',
+      this.customerGstNumber = '',
+      this.subtotal = 0.0,
+      this.tax = 0.0,
+      this.discount = 0.0,
+      this.shopId = '',
+      this.updatedAt = '',
     });
 
     factory ApiToken.fromJson(Map<String, dynamic> json) {
@@ -861,13 +868,25 @@
         customerPhone: json['customer_phone']?.toString() ??
             json['customerPhone']?.toString() ??
             '',
+        customerAddress: json['customer_address']?.toString() ??
+            json['customerAddress']?.toString() ??
+            '',
+        customerGstNumber: json['customer_gst_number']?.toString() ??
+            json['customerGstNumber']?.toString() ??
+            '',
         grandTotal:
             _toDouble(json['total'] ?? json['grand_total'] ?? json['grandTotal']),
+        subtotal: _toDouble(json['subtotal']),
+        tax: _toDouble(json['tax']),
+        discount: _toDouble(json['discount']),
         paymentMode: json['payment_mode']?.toString() ??
             json['paymentMode']?.toString() ??
             'CASH',
         createdAt:
             json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
+        updatedAt:
+            json['updated_at']?.toString() ?? json['updatedAt']?.toString() ?? '',
+        shopId: json['shop']?.toString() ?? json['shopId']?.toString() ?? '',
         orderType: json['order_type']?.toString() ?? 'dine_in',
         items: (json['items'] as List<dynamic>?)
                 ?.map((item) => ApiTokenItem.fromJson(item))
@@ -882,9 +901,16 @@
     final String status;
     final String customerName;
     final String customerPhone;
+    final String customerAddress;
+    final String customerGstNumber;
     final double grandTotal;
+    final double subtotal;
+    final double tax;
+    final double discount;
     final String paymentMode;
     final String createdAt;
+    final String updatedAt;
+    final String shopId;
     final String orderType;
     final List<ApiTokenItem> items;
   }
@@ -897,6 +923,7 @@
       required this.rate,
       required this.quantity,
       required this.subtotal,
+      this.category = '',
     });
 
     factory ApiTokenItem.fromJson(Map<String, dynamic> json) {
@@ -907,6 +934,7 @@
         name:
             json['name']?.toString() ?? json['menu_item_name']?.toString() ?? '',
         code: json['item_code']?.toString() ?? json['code']?.toString() ?? '',
+        category: json['category']?.toString() ?? json['category_name']?.toString() ?? '',
         rate: r,
         quantity: q.toInt() == 0 ? 1 : q.toInt(),
         subtotal: _toDouble(json['subtotal'] ?? (r * q)),
@@ -916,6 +944,7 @@
     final String id;
     final String name;
     final String code;
+    final String category;
     final double rate;
     final int quantity;
     final double subtotal;

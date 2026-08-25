@@ -13,7 +13,7 @@ class EditItemScreen extends StatefulWidget {
     super.key,
     this.initialName,
     this.initialCode = 'C-1030',
-    this.initialCategory = 'Burgers',
+    this.initialCategory = '',
     this.initialRate,
     this.initialOnline = true,
     this.initialActive = true,
@@ -41,12 +41,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
   static const Color _textSecondary = AppColors.slate500;
   static const Color _border = AppColors.slate200;
 
-  List<String> _categories = [
-    'Burgers',
-    'Beverages',
-    'Sides',
-    'Desserts',
-  ];
+  List<String> _categories = [];
 
   late final TextEditingController _nameController;
   late final TextEditingController _rateController;
@@ -77,10 +72,6 @@ class _EditItemScreenState extends State<EditItemScreen> {
     if (mounted) {
       setState(() {
         final combined = <String>{
-          'Burgers',
-          'Beverages',
-          'Sides',
-          'Desserts',
           ...widget.existingCategories,
           ...custom,
         };

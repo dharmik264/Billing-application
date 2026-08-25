@@ -339,4 +339,336 @@ class PdfExport {
       ),
     );
   }
+
+  static Future<String> exportItemDetailReport({
+    required List<PdfItemDetailRow> items,
+    required String rangeLabel,
+    required String shopName,
+  }) async {
+    final pdf = pw.Document();
+    final totalQty = items.fold(0, (sum, i) => sum + i.quantity);
+    final totalRev = items.fold(0.0, (sum, i) => sum + i.subtotal);
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) => [
+          _buildHeader(shopName, '$rangeLabel (Item Details - Date Order)'),
+          pw.SizedBox(height: 16),
+          pw.Row(
+            children: [
+              _summaryCard('Total Transactions', items.length.toString(), PdfColors.blue50),
+              _summaryCard('Total Quantity Sold', totalQty.toString(), PdfColors.teal50),
+              _summaryCard('Total Revenue', 'Rs. ${totalRev.toStringAsFixed(2)}', PdfColors.green50),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(2),
+              1: pw.FlexColumnWidth(1.5),
+              2: pw.FlexColumnWidth(3),
+              3: pw.FlexColumnWidth(2),
+              4: pw.FlexColumnWidth(1.2),
+              5: pw.FlexColumnWidth(1.5),
+              6: pw.FlexColumnWidth(2),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.blue800),
+                children: [
+                  _headerCell('Date/Time'),
+                  _headerCell('Bill No'),
+                  _headerCell('Item Name'),
+                  _headerCell('Category'),
+                  _headerCell('Qty', align: pw.TextAlign.center),
+                  _headerCell('Rate', align: pw.TextAlign.right),
+                  _headerCell('Total', align: pw.TextAlign.right),
+                ],
+              ),
+              for (final row in items)
+                pw.TableRow(
+                  children: [
+                    _dataCell(row.date),
+                    _dataCell(row.billNumber),
+                    _dataCell(row.itemName),
+                    _dataCell(row.category.isEmpty ? '-' : row.category),
+                    _dataCell(row.quantity.toString(), align: pw.TextAlign.center),
+                    _dataCell('Rs. ${row.rate.toStringAsFixed(2)}', align: pw.TextAlign.right),
+                    _dataCell('Rs. ${row.subtotal.toStringAsFixed(2)}', align: pw.TextAlign.right),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final fileName = 'item_detail_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    await downloadPdf(await pdf.save(), fileName);
+    return fileName;
+  }
+
+  static Future<String> exportItemSummaryReport({
+    required List<PdfItemSummaryRow> summary,
+    required String rangeLabel,
+    required String shopName,
+  }) async {
+    final pdf = pw.Document();
+    final totalQty = summary.fold(0, (sum, i) => sum + i.totalQty);
+    final totalRev = summary.fold(0.0, (sum, i) => sum + i.totalRevenue);
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) => [
+          _buildHeader(shopName, '$rangeLabel (Item Summary)'),
+          pw.SizedBox(height: 16),
+          pw.Row(
+            children: [
+              _summaryCard('Unique Items Sold', summary.length.toString(), PdfColors.blue50),
+              _summaryCard('Total Quantity Sold', totalQty.toString(), PdfColors.teal50),
+              _summaryCard('Total Sales', 'Rs. ${totalRev.toStringAsFixed(2)}', PdfColors.green50),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(3),
+              1: pw.FlexColumnWidth(2),
+              2: pw.FlexColumnWidth(1.5),
+              3: pw.FlexColumnWidth(2),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.blue800),
+                children: [
+                  _headerCell('Item Name'),
+                  _headerCell('Category'),
+                  _headerCell('Total Qty Sold', align: pw.TextAlign.center),
+                  _headerCell('Total Revenue', align: pw.TextAlign.right),
+                ],
+              ),
+              for (final row in summary)
+                pw.TableRow(
+                  children: [
+                    _dataCell(row.itemName),
+                    _dataCell(row.category.isEmpty ? '-' : row.category),
+                    _dataCell(row.totalQty.toString(), align: pw.TextAlign.center),
+                    _dataCell('Rs. ${row.totalRevenue.toStringAsFixed(2)}', align: pw.TextAlign.right),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final fileName = 'item_summary_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    await downloadPdf(await pdf.save(), fileName);
+    return fileName;
+  }
+
+  static Future<String> exportCustomerDetailReport({
+    required List<PdfCustomerDetailRow> customers,
+    required String rangeLabel,
+    required String shopName,
+  }) async {
+    final pdf = pw.Document();
+    final totalRev = customers.fold(0.0, (sum, i) => sum + i.amount);
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) => [
+          _buildHeader(shopName, '$rangeLabel (Customer Details - Date Order)'),
+          pw.SizedBox(height: 16),
+          pw.Row(
+            children: [
+              _summaryCard('Total Customer Orders', customers.length.toString(), PdfColors.blue50),
+              _summaryCard('Total Revenue', 'Rs. ${totalRev.toStringAsFixed(2)}', PdfColors.green50),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(2),
+              1: pw.FlexColumnWidth(2.5),
+              2: pw.FlexColumnWidth(1.8),
+              3: pw.FlexColumnWidth(1.5),
+              4: pw.FlexColumnWidth(1.8),
+              5: pw.FlexColumnWidth(1.5),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.blue800),
+                children: [
+                  _headerCell('Date/Time'),
+                  _headerCell('Customer Name'),
+                  _headerCell('Mobile'),
+                  _headerCell('Bill No'),
+                  _headerCell('Amount', align: pw.TextAlign.right),
+                  _headerCell('Payment', align: pw.TextAlign.center),
+                ],
+              ),
+              for (final row in customers)
+                pw.TableRow(
+                  children: [
+                    _dataCell(row.date),
+                    _dataCell(row.customerName.isEmpty ? 'Walk-in' : row.customerName),
+                    _dataCell(row.customerPhone.isEmpty ? '-' : row.customerPhone),
+                    _dataCell(row.billNumber),
+                    _dataCell('Rs. ${row.amount.toStringAsFixed(2)}', align: pw.TextAlign.right),
+                    _dataCell(row.paymentMode, align: pw.TextAlign.center),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final fileName = 'customer_detail_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    await downloadPdf(await pdf.save(), fileName);
+    return fileName;
+  }
+
+  static Future<String> exportCustomerSummaryReport({
+    required List<PdfCustomerSummaryRow> summary,
+    required String rangeLabel,
+    required String shopName,
+  }) async {
+    final pdf = pw.Document();
+    final totalRev = summary.fold(0.0, (sum, i) => sum + i.totalSpent);
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) => [
+          _buildHeader(shopName, '$rangeLabel (Customer Summary)'),
+          pw.SizedBox(height: 16),
+          pw.Row(
+            children: [
+              _summaryCard('Total Customers', summary.length.toString(), PdfColors.blue50),
+              _summaryCard('Total Revenue', 'Rs. ${totalRev.toStringAsFixed(2)}', PdfColors.green50),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(3),
+              1: pw.FlexColumnWidth(2),
+              2: pw.FlexColumnWidth(1.5),
+              3: pw.FlexColumnWidth(2),
+              4: pw.FlexColumnWidth(2),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.blue800),
+                children: [
+                  _headerCell('Customer Name'),
+                  _headerCell('Mobile'),
+                  _headerCell('Bills Count', align: pw.TextAlign.center),
+                  _headerCell('Total Spent', align: pw.TextAlign.right),
+                  _headerCell('Last Purchase'),
+                ],
+              ),
+              for (final row in summary)
+                pw.TableRow(
+                  children: [
+                    _dataCell(row.customerName.isEmpty ? 'Walk-in Customer' : row.customerName),
+                    _dataCell(row.customerPhone.isEmpty ? '-' : row.customerPhone),
+                    _dataCell(row.totalOrders.toString(), align: pw.TextAlign.center),
+                    _dataCell('Rs. ${row.totalSpent.toStringAsFixed(2)}', align: pw.TextAlign.right),
+                    _dataCell(row.lastPurchaseDate),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final fileName = 'customer_summary_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    await downloadPdf(await pdf.save(), fileName);
+    return fileName;
+  }
+}
+
+class PdfItemDetailRow {
+  final String date;
+  final String billNumber;
+  final String itemName;
+  final String category;
+  final int quantity;
+  final double rate;
+  final double subtotal;
+
+  PdfItemDetailRow({
+    required this.date,
+    required this.billNumber,
+    required this.itemName,
+    required this.category,
+    required this.quantity,
+    required this.rate,
+    required this.subtotal,
+  });
+}
+
+class PdfItemSummaryRow {
+  final String itemName;
+  final String category;
+  final int totalQty;
+  final double totalRevenue;
+
+  PdfItemSummaryRow({
+    required this.itemName,
+    required this.category,
+    required this.totalQty,
+    required this.totalRevenue,
+  });
+}
+
+class PdfCustomerDetailRow {
+  final String date;
+  final String customerName;
+  final String customerPhone;
+  final String billNumber;
+  final double amount;
+  final String paymentMode;
+  final String status;
+
+  PdfCustomerDetailRow({
+    required this.date,
+    required this.customerName,
+    required this.customerPhone,
+    required this.billNumber,
+    required this.amount,
+    required this.paymentMode,
+    required this.status,
+  });
+}
+
+class PdfCustomerSummaryRow {
+  final String customerName;
+  final String customerPhone;
+  final int totalOrders;
+  final double totalSpent;
+  final String lastPurchaseDate;
+
+  PdfCustomerSummaryRow({
+    required this.customerName,
+    required this.customerPhone,
+    required this.totalOrders,
+    required this.totalSpent,
+    required this.lastPurchaseDate,
+  });
 }

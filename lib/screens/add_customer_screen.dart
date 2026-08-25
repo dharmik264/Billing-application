@@ -202,12 +202,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
                 ),
                 const SizedBox(height: 20),
 
-                // ── Address (optional) ────────────────────────────────────
-                _buildSectionTitle('Address', optional: true),
+                // ── Address ────────────────────────────────────
+                _buildSectionTitle('Address'),
                 const SizedBox(height: 8),
                 _buildTextField(
                   controller: _addressCtrl,
-                  hint: 'Enter full address (optional)',
+                  hint: 'Enter full address',
                   icon: Icons.location_on_outlined,
                   validator: _validateAddress,
                   maxLines: 3,
