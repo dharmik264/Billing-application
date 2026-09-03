@@ -379,7 +379,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Text(
@@ -391,7 +391,13 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                             ),
                           ),
                         ),
-                        _statusBadge(isActive),
+                        const SizedBox(width: 8),
+                        _compactToggleSwitch(
+                          label: 'Active',
+                          value: item.active,
+                          activeColor: const Color(0xFF10B981),
+                          onTap: () => _toggleActiveStatus(item),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -404,35 +410,13 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '₹${item.price.toStringAsFixed(2)}',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w800,
-                            color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            _compactToggleSwitch(
-                              label: 'Active',
-                              value: item.active,
-                              activeColor: const Color(0xFF10B981),
-                              onTap: () => _toggleActiveStatus(item),
-                            ),
-                            const SizedBox(width: 8),
-                            _compactToggleSwitch(
-                              label: 'Online',
-                              value: item.online,
-                              activeColor: const Color(0xFF3B82F6),
-                              onTap: () => _toggleOnlineStatus(item),
-                            ),
-                          ],
-                        ),
-                      ],
+                    Text(
+                      '₹${item.price.toStringAsFixed(2)}',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+                      ),
                     ),
                   ],
                 ),
@@ -487,23 +471,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     );
   }
 
-  Widget _statusBadge(bool active) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: active ? const Color(0xFFD1FAE5) : const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        active ? 'Active' : 'Inactive',
-        style: GoogleFonts.inter(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: active ? const Color(0xFF059669) : const Color(0xFF64748B),
-        ),
-      ),
-    );
-  }
+
 
   Widget _compactToggleSwitch({
     required String label,
@@ -918,44 +886,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     );
   }
 
-  /// Immediately toggle online availability and persist.
-  Future<void> _toggleOnlineStatus(_MenuItem item) async {
-    final newOnline = !item.online;
 
-    setState(() {
-      item.online = newOnline;
-      _isProcessing = true;
-    });
-
-    if (item.id != null) {
-      try {
-        final draft = ApiItemDraft(
-          name: item.name,
-          code: item.code,
-          category: item.category,
-          rate: item.price,
-          active: item.active,
-          availableOnline: newOnline,
-        );
-        await RestaurantApi.instance.updateItem(item.id!, draft);
-      } catch (_) {
-        if (mounted) {
-          setState(() {
-            item.online = !newOnline;
-            _isProcessing = false;
-          });
-        }
-        _showSnackBar('Failed to update online status');
-        return;
-      }
-    }
-
-    if (mounted) setState(() => _isProcessing = false);
-
-    _showSnackBar(
-      '${item.name} is now ${newOnline ? 'Available Online' : 'Offline'}',
-    );
-  }
 
   Future<void> _editCategory(String oldName) async {
     final controller = TextEditingController(text: oldName);

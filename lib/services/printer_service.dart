@@ -301,13 +301,22 @@
         final dateStr = dtParts.isNotEmpty ? dtParts.first : '';
         bluetooth.printCustom('Date: $dateStr', 1, 0);
 
-        if (token.customerName.isNotEmpty || token.customerPhone.isNotEmpty) {
+        if (token.customerName.isNotEmpty ||
+            token.customerPhone.isNotEmpty ||
+            token.customerAddress.isNotEmpty ||
+            token.customerGstNumber.isNotEmpty) {
           bluetooth.printCustom('-' * 32, 1, 0);
           if (token.customerName.isNotEmpty) {
             bluetooth.printCustom('Customer: ${token.customerName}', 2, 0);
           }
           if (token.customerPhone.isNotEmpty) {
             bluetooth.printCustom('Ph: ${token.customerPhone}', 1, 0);
+          }
+          if (token.customerAddress.isNotEmpty) {
+            bluetooth.printCustom('Address: ${token.customerAddress}', 1, 0);
+          }
+          if (token.customerGstNumber.isNotEmpty) {
+            bluetooth.printCustom('Cust GSTIN: ${token.customerGstNumber}', 1, 0);
           }
         }
 

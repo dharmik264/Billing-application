@@ -104,6 +104,18 @@ class PdfReceiptService {
                   pw.Text('Date: ${token.createdAt.split('T').first}'),
                 ],
               ),
+              if (token.customerPhone.isNotEmpty) ...[
+                pw.SizedBox(height: 2),
+                pw.Text('Ph: ${token.customerPhone}'),
+              ],
+              if (token.customerAddress.isNotEmpty) ...[
+                pw.SizedBox(height: 2),
+                pw.Text('Address: ${token.customerAddress}'),
+              ],
+              if (token.customerGstNumber.isNotEmpty) ...[
+                pw.SizedBox(height: 2),
+                pw.Text('Cust GSTIN: ${token.customerGstNumber}'),
+              ],
               pw.SizedBox(height: 5),
               pw.Divider(),
               pw.SizedBox(height: 10),

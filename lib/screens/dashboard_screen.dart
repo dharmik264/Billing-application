@@ -458,7 +458,10 @@ class DashboardScreenState extends State<DashboardScreen> {
           builder: (_) => PrintPreviewScreen(
             tokenNumber: token.tokenNumber,
             billNumber: token.rawToken.billNumber,
-            customerPhone: token.rawToken.customerPhone,
+            customerName: token.rawToken.customerName.isNotEmpty ? token.rawToken.customerName : null,
+            customerPhone: token.rawToken.customerPhone.isNotEmpty ? token.rawToken.customerPhone : null,
+            customerAddress: token.rawToken.customerAddress.isNotEmpty ? token.rawToken.customerAddress : null,
+            customerGstNumber: token.rawToken.customerGstNumber.isNotEmpty ? token.rawToken.customerGstNumber : null,
             paymentMode: token.paymentMode,
             items: token.rawToken.items.map((i) => ApiTokenItemDraft(
               name: i.name,

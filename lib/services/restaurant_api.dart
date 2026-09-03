@@ -1060,6 +1060,8 @@
       required this.items,
       this.customerName,
       this.customerPhone,
+      this.customerAddress,
+      this.customerGstNumber,
       this.tokenNumber,
       this.billNumber,
       this.orderType,
@@ -1074,6 +1076,8 @@
             [],
         customerName: json['customer_name']?.toString(),
         customerPhone: json['customer_phone']?.toString(),
+        customerAddress: json['customer_address']?.toString(),
+        customerGstNumber: json['customer_gst_number']?.toString(),
         tokenNumber: json['token_number']?.toString(),
         billNumber: json['bill_number']?.toString(),
         orderType: json['order_type']?.toString(),
@@ -1084,6 +1088,8 @@
     final List<ApiTokenItemDraft> items;
     final String? customerName;
     final String? customerPhone;
+    final String? customerAddress;
+    final String? customerGstNumber;
     final String? tokenNumber;
     final String? billNumber;
     final String? orderType;
@@ -1097,6 +1103,10 @@
           'customer_name': customerName,
         if (customerPhone != null && customerPhone!.isNotEmpty)
           'customer_phone': customerPhone,
+        if (customerAddress != null && customerAddress!.isNotEmpty)
+          'customer_address': customerAddress,
+        if (customerGstNumber != null && customerGstNumber!.isNotEmpty)
+          'customer_gst_number': customerGstNumber,
         if (tokenNumber != null && tokenNumber!.isNotEmpty)
           'token_number':
               int.tryParse(tokenNumber!.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,

@@ -70,7 +70,10 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         builder: (context) => PrintPreviewScreen(
           tokenNumber: token.tokenNumber,
           billNumber: token.billNumber,
-          customerPhone: token.customerPhone,
+          customerName: token.customerName.isNotEmpty ? token.customerName : null,
+          customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : null,
+          customerAddress: token.customerAddress.isNotEmpty ? token.customerAddress : null,
+          customerGstNumber: token.customerGstNumber.isNotEmpty ? token.customerGstNumber : null,
           paymentMode: token.paymentMode,
           items: token.items.map((e) => ApiTokenItemDraft(
             id: e.id,
