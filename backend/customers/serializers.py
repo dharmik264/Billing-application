@@ -8,6 +8,8 @@ GST_REGEX = re.compile(
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+    address = serializers.CharField(required=False, allow_blank=True, default='')
+
     class Meta:
         model  = Customer
         fields = [
@@ -27,12 +29,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         return value
 
     def validate_address(self, value):
-        value = value.strip()
         if not value:
-            raise serializers.ValidationError(
-                'Address cannot be empty.'
-            )
-        return value
+            return ''
+        return value.strip()
 
     def validate_mobile_number(self, value):
         value = value.strip()
