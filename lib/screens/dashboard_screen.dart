@@ -121,7 +121,8 @@ class DashboardScreenState extends State<DashboardScreen> {
               rawToken: t,
               orderId: '#${t.billNumber}',
               tokenNumber: t.tokenNumber,
-              time: '${date.hour > 12 ? date.hour - 12 : date.hour == 0 ? 12 : date.hour}:${date.minute.toString().padLeft(2, '0')} ${date.hour >= 12 ? 'PM' : 'AM'}',
+              time:
+                  '${date.hour > 12 ? date.hour - 12 : date.hour == 0 ? 12 : date.hour}:${date.minute.toString().padLeft(2, '0')} ${date.hour >= 12 ? 'PM' : 'AM'}',
               amount: t.grandTotal,
               status: t.status,
               paymentMode: t.paymentMode,
@@ -163,7 +164,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   flexibleSpace: FlexibleSpaceBar(
-                    titlePadding: const EdgeInsets.only(left: 20, right: 20, bottom: 12),
+                    titlePadding:
+                        const EdgeInsets.only(left: 20, right: 20, bottom: 12),
                     title: Row(
                       children: [
                         Container(
@@ -174,7 +176,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                                color: const Color(0xFF4F46E5)
+                                    .withValues(alpha: 0.15),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               )
@@ -183,7 +186,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                           clipBehavior: Clip.antiAlias,
                           child: _shopLogoBytes != null
                               ? Image.memory(_shopLogoBytes!, fit: BoxFit.cover)
-                              : const Icon(Icons.storefront_rounded, color: Color(0xFF4F46E5), size: 24),
+                              : const Icon(Icons.storefront_rounded,
+                                  color: Color(0xFF4F46E5), size: 24),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -196,7 +200,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                                 style: GoogleFonts.inter(
                                   color: const Color(0xFF0F172A),
                                   fontWeight: FontWeight.w800,
-                                  fontSize: 18,
+                                  fontSize: 12,
                                 ),
                               ),
                               Row(
@@ -226,28 +230,42 @@ class DashboardScreenState extends State<DashboardScreen> {
                         GestureDetector(
                           onTap: () async {
                             bool? confirm = await showDialog(
-                              context: context,
-                              builder: (c) => AlertDialog(
-                                title: Text('Logout', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-                                content: const Text('Are you sure you want to logout?'),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.pop(c, true),
-                                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                    child: const Text('Logout', style: TextStyle(color: Colors.white)),
-                                  ),
-                                ],
-                              )
-                            );
+                                context: context,
+                                builder: (c) => AlertDialog(
+                                      title: Text('Logout',
+                                          style: GoogleFonts.inter(
+                                              fontWeight: FontWeight.bold)),
+                                      content: const Text(
+                                          'Are you sure you want to logout?'),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(16)),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(c, false),
+                                            child: const Text('Cancel')),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              Navigator.pop(c, true),
+                                          style: ElevatedButton.styleFrom(
+                                              backgroundColor: Colors.red),
+                                          child: const Text('Logout',
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        ),
+                                      ],
+                                    ));
                             if (confirm == true) {
-                              final prefs = await SharedPreferences.getInstance();
+                              final prefs =
+                                  await SharedPreferences.getInstance();
                               await prefs.clear();
                               await RestaurantApi.instance.clearTokens();
                               if (context.mounted) {
                                 Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(builder: (_) => const PasswordLoginScreen()),
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const PasswordLoginScreen()),
                                   (route) => false,
                                 );
                               }
@@ -260,13 +278,15 @@ class DashboardScreenState extends State<DashboardScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                                  color: const Color(0xFF0F172A)
+                                      .withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 )
                               ],
                             ),
-                            child: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444), size: 16),
+                            child: const Icon(Icons.logout_rounded,
+                                color: Color(0xFFEF4444), size: 16),
                           ),
                         ),
                       ],
@@ -286,9 +306,11 @@ class DashboardScreenState extends State<DashboardScreen> {
                                 .slideX(begin: -0.05, curve: Curves.easeOut),
                             const SizedBox(height: 16),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     'Recent Tokens',
@@ -302,12 +324,15 @@ class DashboardScreenState extends State<DashboardScreen> {
                                     onTap: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (_) => const AllTokensScreen()),
+                                        MaterialPageRoute(
+                                            builder: (_) =>
+                                                const AllTokensScreen()),
                                       );
                                     },
                                     borderRadius: BorderRadius.circular(20),
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 6),
                                       child: Text(
                                         'View All',
                                         style: GoogleFonts.inter(
@@ -334,7 +359,10 @@ class DashboardScreenState extends State<DashboardScreen> {
                               padding: const EdgeInsets.only(top: 40),
                               child: Text(
                                 'No recent tokens found',
-                                style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 16, fontWeight: FontWeight.w500),
+                                style: GoogleFonts.inter(
+                                    color: const Color(0xFF94A3B8),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500),
                               ),
                             ),
                           ),
@@ -347,7 +375,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                                   .fadeIn()
                                   .slideX(begin: 0.05, delay: (index * 50).ms);
                             },
-                            childCount: _recentTokens.length > 3 ? 3 : _recentTokens.length,
+                            childCount: _recentTokens.length > 3
+                                ? 3
+                                : _recentTokens.length,
                           ),
                         ),
                 ),
@@ -379,9 +409,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                   color: const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(16),
                 ),
-              )
-                  .animate(onPlay: (c) => c.repeat())
-                  .shimmer(
+              ).animate(onPlay: (c) => c.repeat()).shimmer(
                     delay: (i * 100).ms,
                     duration: 1200.ms,
                     color: Colors.white.withValues(alpha: 0.6),
@@ -401,9 +429,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                   color: const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(16),
                 ),
-              )
-                  .animate(onPlay: (c) => c.repeat())
-                  .shimmer(
+              ).animate(onPlay: (c) => c.repeat()).shimmer(
                     delay: (i * 150 + 200).ms,
                     duration: 1200.ms,
                     color: Colors.white.withValues(alpha: 0.6),
@@ -422,20 +448,38 @@ class DashboardScreenState extends State<DashboardScreen> {
       physics: const BouncingScrollPhysics(),
       child: Row(
         children: [
-          StatCard(title: "Today's Sales", value: '\u20B9${_totalSales.toStringAsFixed(0)}', icon: Icons.trending_up_rounded, color: AppColors.indigo600),
+          StatCard(
+              title: "Today's Sales",
+              value: '\u20B9${_totalSales.toStringAsFixed(0)}',
+              icon: Icons.trending_up_rounded,
+              color: AppColors.indigo600),
           const SizedBox(width: 10),
-          StatCard(title: 'Tokens', value: _tokenCount.toString(), icon: Icons.receipt_long_rounded, color: AppColors.emerald500),
+          StatCard(
+              title: 'Tokens',
+              value: _tokenCount.toString(),
+              icon: Icons.receipt_long_rounded,
+              color: AppColors.emerald500),
           const SizedBox(width: 10),
           StatCard(
             title: 'SMS Credits',
             value: _smsCredits.toString(),
             icon: Icons.message_rounded,
-            color: _smsCredits > 10 ? const Color(0xFF3B82F6) : const Color(0xFFEF4444),
+            color: _smsCredits > 10
+                ? const Color(0xFF3B82F6)
+                : const Color(0xFFEF4444),
           ),
           const SizedBox(width: 10),
-          StatCard(title: 'Online Sales', value: '\u20B9${_onlineSales.toStringAsFixed(0)}', icon: Icons.language_rounded, color: AppColors.amber500),
+          StatCard(
+              title: 'Online Sales',
+              value: '\u20B9${_onlineSales.toStringAsFixed(0)}',
+              icon: Icons.language_rounded,
+              color: AppColors.amber500),
           const SizedBox(width: 10),
-          StatCard(title: 'Cash Sales', value: '\u20B9${_cashSales.toStringAsFixed(0)}', icon: Icons.payments_rounded, color: const Color(0xFFEC4899)),
+          StatCard(
+              title: 'Cash Sales',
+              value: '\u20B9${_cashSales.toStringAsFixed(0)}',
+              icon: Icons.payments_rounded,
+              color: const Color(0xFFEC4899)),
         ],
       ),
     );
@@ -458,17 +502,27 @@ class DashboardScreenState extends State<DashboardScreen> {
           builder: (_) => PrintPreviewScreen(
             tokenNumber: token.tokenNumber,
             billNumber: token.rawToken.billNumber,
-            customerName: token.rawToken.customerName.isNotEmpty ? token.rawToken.customerName : null,
-            customerPhone: token.rawToken.customerPhone.isNotEmpty ? token.rawToken.customerPhone : null,
-            customerAddress: token.rawToken.customerAddress.isNotEmpty ? token.rawToken.customerAddress : null,
-            customerGstNumber: token.rawToken.customerGstNumber.isNotEmpty ? token.rawToken.customerGstNumber : null,
+            customerName: token.rawToken.customerName.isNotEmpty
+                ? token.rawToken.customerName
+                : null,
+            customerPhone: token.rawToken.customerPhone.isNotEmpty
+                ? token.rawToken.customerPhone
+                : null,
+            customerAddress: token.rawToken.customerAddress.isNotEmpty
+                ? token.rawToken.customerAddress
+                : null,
+            customerGstNumber: token.rawToken.customerGstNumber.isNotEmpty
+                ? token.rawToken.customerGstNumber
+                : null,
             paymentMode: token.paymentMode,
-            items: token.rawToken.items.map((i) => ApiTokenItemDraft(
-              name: i.name,
-              code: i.code,
-              quantity: i.quantity,
-              rate: i.rate,
-            )).toList(),
+            items: token.rawToken.items
+                .map((i) => ApiTokenItemDraft(
+                      name: i.name,
+                      code: i.code,
+                      quantity: i.quantity,
+                      rate: i.rate,
+                    ))
+                .toList(),
             subtotal: token.amount,
             tax: 0.0,
             grandTotal: token.amount,
@@ -495,11 +549,17 @@ class DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Text(
                     'TOKEN',
-                    style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.inter(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF64748B)),
                   ),
                   Text(
                     token.tokenNumber,
-                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF4F46E5)),
+                    style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF4F46E5)),
                   ),
                 ],
               ),
@@ -514,11 +574,17 @@ class DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         token.orderId,
-                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
+                        style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF0F172A)),
                       ),
                       Text(
                         '\u20B9${token.amount.toStringAsFixed(2)}',
-                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                        style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF0F172A)),
                       ),
                     ],
                   ),
@@ -528,7 +594,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         token.time,
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: const Color(0xFF64748B)),
                       ),
                       Expanded(
                         child: Wrap(
@@ -538,8 +605,10 @@ class DashboardScreenState extends State<DashboardScreen> {
                             GestureDetector(
                               onTap: () => _changePaymentMode(token),
                               child: Container(
-                                margin: const EdgeInsets.only(right: 4, bottom: 2, top: 2),
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                margin: const EdgeInsets.only(
+                                    right: 4, bottom: 2, top: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE2E8F0),
                                   borderRadius: BorderRadius.circular(6),
@@ -548,25 +617,35 @@ class DashboardScreenState extends State<DashboardScreen> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      token.paymentMode.isNotEmpty ? token.paymentMode.toUpperCase() : 'CASH',
-                                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
+                                      token.paymentMode.isNotEmpty
+                                          ? token.paymentMode.toUpperCase()
+                                          : 'CASH',
+                                      style: GoogleFonts.inter(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF475569)),
                                     ),
                                     const SizedBox(width: 4),
-                                    const Icon(Icons.edit, size: 10, color: Color(0xFF475569)),
+                                    const Icon(Icons.edit,
+                                        size: 10, color: Color(0xFF475569)),
                                   ],
                                 ),
                               ),
                             ),
                             Container(
                               margin: const EdgeInsets.only(bottom: 2, top: 2),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 color: statusColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 statusText,
-                                style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: statusColor),
+                                style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: statusColor),
                               ),
                             ),
                           ],
@@ -582,16 +661,22 @@ class DashboardScreenState extends State<DashboardScreen> {
                       GestureDetector(
                         onTap: () => _editToken(token),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: const Color(0xFFEFF6FF),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.edit_document, size: 12, color: Color(0xFF3B82F6)),
+                              const Icon(Icons.edit_document,
+                                  size: 12, color: Color(0xFF3B82F6)),
                               const SizedBox(width: 4),
-                              Text('Edit', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF3B82F6))),
+                              Text('Edit',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF3B82F6))),
                             ],
                           ),
                         ),
@@ -600,16 +685,22 @@ class DashboardScreenState extends State<DashboardScreen> {
                       GestureDetector(
                         onTap: () => _deleteToken(token),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFEF2F2),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.delete_outline, size: 12, color: Color(0xFFEF4444)),
+                              const Icon(Icons.delete_outline,
+                                  size: 12, color: Color(0xFFEF4444)),
                               const SizedBox(width: 4),
-                              Text('Delete', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444))),
+                              Text('Delete',
+                                  style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFFEF4444))),
                             ],
                           ),
                         ),
@@ -629,13 +720,16 @@ class DashboardScreenState extends State<DashboardScreen> {
     final newMode = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Change Payment Mode', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('Change Payment Mode',
+            style:
+                GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               title: Text('Cash', style: GoogleFonts.inter()),
-              leading: const Icon(Icons.payments_outlined, color: Color(0xFF10B981)),
+              leading:
+                  const Icon(Icons.payments_outlined, color: Color(0xFF10B981)),
               onTap: () => Navigator.pop(context, 'CASH'),
             ),
             ListTile(
@@ -648,15 +742,19 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
 
-    if (newMode != null && newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
+    if (newMode != null &&
+        newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
       try {
-        await RestaurantApi.instance.updateTokenPaymentMode(token.rawToken.id, newMode);
+        await RestaurantApi.instance
+            .updateTokenPaymentMode(token.rawToken.id, newMode);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment mode updated successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Payment mode updated successfully!')));
         refreshData();
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
       }
     }
   }
@@ -665,10 +763,14 @@ class DashboardScreenState extends State<DashboardScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Delete Bill', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete this bill (${token.orderId})? This action cannot be undone.'),
+        title: Text('Delete Bill',
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        content: Text(
+            'Are you sure you want to delete this bill (${token.orderId})? This action cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -681,12 +783,14 @@ class DashboardScreenState extends State<DashboardScreen> {
       try {
         await RestaurantApi.instance.deleteToken(token.rawToken.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill deleted successfully')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Bill deleted successfully')));
           refreshData();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
         }
       }
     }
