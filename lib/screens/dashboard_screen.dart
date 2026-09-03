@@ -199,8 +199,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                                 _shopName,
                                 style: GoogleFonts.inter(
                                   color: const Color(0xFF0F172A),
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 17,
                                 ),
                               ),
                               Row(

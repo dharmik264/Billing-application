@@ -202,8 +202,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
                 ),
                 const SizedBox(height: 20),
 
-                // ── Address ────────────────────────────────────
-                _buildSectionTitle('Address'),
+                // ── Address (optional) ─────────────────────────
+                _buildSectionTitle('Address', optional: true),
                 const SizedBox(height: 8),
                 _buildTextField(
                   controller: _addressCtrl,

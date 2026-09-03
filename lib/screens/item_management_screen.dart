@@ -89,33 +89,33 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       decoration: const BoxDecoration(
         color: Color(0xFFEEF2FF),
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            'Item Management',
+            maxLines: 1,
+            style: GoogleFonts.inter(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF0F172A),
+            ),
+          ),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  'Item Management',
-                  style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ),
-              ),
               GestureDetector(
                 onTap: _isProcessing ? null : _manageCategories,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -140,7 +140,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
               GestureDetector(
                 onTap: _isProcessing ? null : _addItem,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF4F46E5),
                     borderRadius: BorderRadius.circular(20),
@@ -163,7 +163,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
           _buildSearch(),
         ],
       ),
@@ -174,30 +174,30 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Widget _buildSearch() {
     return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      height: 42,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           )
         ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
-          const SizedBox(width: 12),
+          const Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
+          const SizedBox(width: 10),
           Expanded(
             child: TextField(
               controller: _searchController,
-              style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF0F172A), fontWeight: FontWeight.w500),
+              style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF0F172A), fontWeight: FontWeight.w500),
               decoration: InputDecoration(
                 hintText: 'Search items by name or code...',
-                hintStyle: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w400),
+                hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w400),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -206,7 +206,10 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
           ),
           if (_searchController.text.isNotEmpty)
             GestureDetector(
-              onTap: _searchController.clear,
+              onTap: () {
+                _searchController.clear();
+                setState(() {});
+              },
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
@@ -217,7 +220,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       ),
     );
   }
-
   // ── Category tabs ──────────────────────────────────────────
 
   Widget _buildCategoryTabs() {

@@ -300,8 +300,8 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
               Text(
                 'Analytics Reports',
                 style: GoogleFonts.inter(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
                   color: _textPrimary,
                 ),
               ),

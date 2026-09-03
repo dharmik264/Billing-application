@@ -95,7 +95,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     return Scaffold(
       backgroundColor: _panelBackground,
       appBar: AppBar(
-        title: Text('Token History', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _textPrimary, fontSize: 18)),
+        title: Text('Token History', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _textPrimary, fontSize: 17)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: _textPrimary),

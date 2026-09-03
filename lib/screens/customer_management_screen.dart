@@ -379,75 +379,117 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           onTap: () => _openEdit(customer),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+            padding: const EdgeInsets.all(14),
+            child: Column(
               children: [
-                // Avatar
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: customer.isActive
-                          ? [const Color(0xFF4F46E5), const Color(0xFF6366F1)]
-                          : [const Color(0xFF94A3B8), const Color(0xFFCBD5E1)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(
-                      initials,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Avatar
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: customer.isActive
+                              ? [const Color(0xFF4F46E5), const Color(0xFF6366F1)]
+                              : [const Color(0xFF94A3B8), const Color(0xFFCBD5E1)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Center(
+                        child: Text(
+                          initials,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    const SizedBox(width: 12),
+                    // Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              customer.name,
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: _slate900,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  customer.name,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: _slate900,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                              _statusToggleBadge(customer),
+                            ],
                           ),
-                          _statusToggleBadge(customer),
+                          const SizedBox(height: 4),
+                          _infoRow(Icons.phone_outlined, customer.mobileNumber),
+                          if (customer.address.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            _infoRow(Icons.location_on_outlined, customer.address, maxLines: 1),
+                          ],
+                          if (customer.gstNumber.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            _infoRow(Icons.receipt_long_outlined, customer.gstNumber),
+                          ],
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      _infoRow(Icons.phone_outlined, customer.mobileNumber),
-                      const SizedBox(height: 2),
-                      _infoRow(Icons.location_on_outlined, customer.address, maxLines: 1),
-                      if (customer.gstNumber.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        _infoRow(Icons.receipt_long_outlined, customer.gstNumber),
-                      ],
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                // Actions
-                const SizedBox(width: 8),
-                Column(
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    _iconBtn(Icons.edit_rounded, _indigo, () => _openEdit(customer)),
-                    const SizedBox(height: 4),
-                    _iconBtn(Icons.delete_outline_rounded, _red, () => _deleteCustomer(customer)),
+                    GestureDetector(
+                      onTap: () => _openEdit(customer),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: _indigo.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.edit_rounded, size: 14, color: _indigo),
+                            const SizedBox(width: 4),
+                            Text('Edit', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: _indigo)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => _deleteCustomer(customer),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: _red.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.delete_outline_rounded, size: 14, color: _red),
+                            const SizedBox(width: 4),
+                            Text('Delete', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: _red)),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -545,21 +587,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
         );
       }
     }
-  }
-
-  Widget _iconBtn(IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 34,
-        height: 34,
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, size: 17, color: color),
-      ),
-    );
   }
 
   Widget _buildEmptyState({required bool noCustomers}) {

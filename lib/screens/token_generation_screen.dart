@@ -440,7 +440,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     return Scaffold(
       backgroundColor: _panelBackground,
       appBar: AppBar(
-        title: Text('Token Generation', style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: const Color(0xFF0F172A), fontSize: 20)),
+        title: Text('Token Generation', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: const Color(0xFF0F172A), fontSize: 17)),
         backgroundColor: const Color(0xFFEEF2FF),
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
@@ -550,25 +550,25 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
           decoration: const BoxDecoration(
             color: Color(0xFFEEF2FF),
             borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(32),
-              bottomRight: Radius.circular(32),
+              bottomLeft: Radius.circular(24),
+              bottomRight: Radius.circular(24),
             ),
           ),
           child: Container(
-            height: 48,
+            height: 44,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
                 )
               ],
             ),
@@ -603,9 +603,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           ).animate().fadeIn().slideY(begin: -0.1),
         ),
         Container(
-          height: 60,
+          height: 48,
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -625,13 +625,13 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
               : GridView.builder(
-                  padding: const EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 140),
+                  padding: const EdgeInsets.only(left: 20, right: 20, top: 6, bottom: 140),
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 220,
-                    childAspectRatio: 0.80,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
                   ),
                   itemCount: _filteredProducts.length,
                   itemBuilder: (context, index) => _productCard(_filteredProducts[index]),
@@ -647,7 +647,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       onTap: () => setState(() => _selectedCategory = category),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFF4F46E5) : Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -684,7 +684,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F172A).withValues(alpha: 0.04),
@@ -696,7 +696,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       child: Column(
         children: [
           Container(
-            height: 90,
+            height: 75,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -709,20 +709,22 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    product.code,
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: product.accent, letterSpacing: 0.5),
-                  ),
-                  const SizedBox(height: 4),
+                  if (product.code.isNotEmpty) ...[
+                    Text(
+                      product.code,
+                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: product.accent, letterSpacing: 0.5),
+                    ),
+                    const SizedBox(height: 2),
+                  ],
                   Text(
                     product.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                   ),
                   const Spacer(),
                   Row(
@@ -858,29 +860,30 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Customer Details', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A))),
+                    Text('Customer Details', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A))),
                     if (_billItems.isNotEmpty)
                       GestureDetector(
                         onTap: _clearCart,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: const Color(0xFFEF4444).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          child: Text('Clear Cart', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFFEF4444))),
+                          child: Text('Clear Cart', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFFEF4444))),
                         ),
                       ),
                   ],
                 ),
-                const SizedBox(height: 16),                RawAutocomplete<ApiCustomer>(
+                const SizedBox(height: 8),
+                RawAutocomplete<ApiCustomer>(
                   textEditingController: _customerNameController,
                   focusNode: FocusNode(),
                   displayStringForOption: (option) => option.name,
@@ -908,19 +911,19 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                         hintText: 'Customer Name (Optional)',
                         hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                         prefixIcon: const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF94A3B8)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
+                          borderRadius: BorderRadius.circular(20),
                           borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
                         ),
                       ),
@@ -952,7 +955,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _customerPhoneController,
                   keyboardType: TextInputType.phone,
@@ -961,24 +964,24 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     hintText: 'Customer Mobile (Optional)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _customerAddressController,
                   style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
@@ -986,24 +989,24 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     hintText: 'Customer Address (Optional)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _customerGstController,
                   style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
@@ -1011,19 +1014,19 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     hintText: 'Customer GSTIN (Optional)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.receipt_long_outlined, size: 18, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     filled: true,
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(20),
                       borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
                     ),
                   ),
@@ -1054,16 +1057,16 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       ),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       itemCount: _billItems.length,
                       itemBuilder: (context, index) {
                         final item = _billItems[index];
                         return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(14),
                             boxShadow: [
                               BoxShadow(
                                 color: const Color(0xFF0F172A).withValues(alpha: 0.04),
@@ -1073,56 +1076,56 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                             ],
                           ),
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item.product.name, style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15, color: const Color(0xFF0F172A))),
-                                    const SizedBox(height: 4),
-                                    Text('\u20B9${item.product.price.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 13, fontWeight: FontWeight.w500)),
+                                    Text(
+                                      item.product.name,
+                                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: const Color(0xFF0F172A)),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '\u20B9${item.product.price.toStringAsFixed(2)} x ${item.quantity} = \u20B9${item.total.toStringAsFixed(2)}',
+                                      style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontSize: 13, fontWeight: FontWeight.w600),
+                                    ),
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 10),
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   GestureDetector(
                                     onTap: () => _updateQuantity(index, -1),
                                     child: Container(
-                                      padding: const EdgeInsets.all(6),
+                                      padding: const EdgeInsets.all(5),
                                       decoration: const BoxDecoration(
                                         color: Color(0xFFF1F5F9),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.remove_rounded, size: 18, color: Color(0xFF0F172A)),
+                                      child: const Icon(Icons.remove_rounded, size: 16, color: Color(0xFF0F172A)),
                                     ),
                                   ),
                                   Container(
-                                    width: 32,
+                                    width: 28,
                                     alignment: Alignment.center,
-                                    child: Text('${item.quantity}', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15, color: const Color(0xFF0F172A))),
+                                    child: Text('${item.quantity}', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: const Color(0xFF0F172A))),
                                   ),
                                   GestureDetector(
                                     onTap: () => _updateQuantity(index, 1),
                                     child: Container(
-                                      padding: const EdgeInsets.all(6),
+                                      padding: const EdgeInsets.all(5),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.add_rounded, size: 18, color: Color(0xFF4F46E5)),
+                                      child: const Icon(Icons.add_rounded, size: 16, color: Color(0xFF4F46E5)),
                                     ),
                                   ),
                                 ],
-                              ),
-                              const SizedBox(width: 16),
-                              SizedBox(
-                                width: 70,
-                                child: Text(
-                                  '\u20B9${item.total.toStringAsFixed(2)}',
-                                  textAlign: TextAlign.right,
-                                  style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: const Color(0xFF0F172A)),
-                                ),
                               ),
                             ],
                           ),
