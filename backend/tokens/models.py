@@ -25,6 +25,8 @@ class Token(models.Model):
     table_number  = models.CharField(max_length=10, blank=True)
     customer_name = models.CharField(max_length=100, blank=True)
     customer_phone= models.CharField(max_length=15, blank=True)
+    customer_address= models.TextField(blank=True)
+    customer_gst_number= models.CharField(max_length=50, blank=True)
     status        = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     note          = models.TextField(blank=True)
 

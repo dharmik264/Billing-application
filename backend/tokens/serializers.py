@@ -23,8 +23,8 @@ class TokenSerializer(serializers.ModelSerializer):
         model  = Token
         fields = [
             'id', 'token_number', 'bill_number', 'date', 'order_type', 'table_number',
-            'customer_name', 'customer_phone', 'status', 'note',
-            'subtotal', 'gst_amount', 'service_charge', 'discount', 'total',
+            'customer_name', 'customer_phone', 'customer_address', 'customer_gst_number',
+            'status', 'note', 'subtotal', 'gst_amount', 'service_charge', 'discount', 'total',
             'is_paid', 'payment_mode', 'items', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'date', 'subtotal', 'gst_amount',
@@ -38,6 +38,8 @@ class CreateTokenSerializer(serializers.Serializer):
     table_number   = serializers.CharField(max_length=10, required=False, allow_blank=True)
     customer_name  = serializers.CharField(max_length=100, required=False, allow_blank=True)
     customer_phone = serializers.CharField(max_length=15, required=False, allow_blank=True)
+    customer_address = serializers.CharField(required=False, allow_blank=True)
+    customer_gst_number = serializers.CharField(max_length=50, required=False, allow_blank=True)
     note           = serializers.CharField(required=False, allow_blank=True)
     payment_mode   = serializers.CharField(max_length=50, required=False, allow_blank=True)
     is_paid        = serializers.BooleanField(required=False, default=False)
@@ -63,8 +65,8 @@ class TokenListSerializer(serializers.ModelSerializer):
         model  = Token
         fields = [
             'id', 'token_number', 'bill_number', 'date', 'order_type', 'table_number',
-            'customer_name', 'customer_phone', 'status', 'total', 'is_paid', 'payment_mode',
-            'item_count', 'created_at', 'items'
+            'customer_name', 'customer_phone', 'customer_address', 'customer_gst_number',
+            'status', 'total', 'is_paid', 'payment_mode', 'item_count', 'created_at', 'items'
         ]
 
     def get_item_count(self, obj):

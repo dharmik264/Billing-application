@@ -68,6 +68,8 @@ class CreateTokenView(APIView):
             table_number  = data.get('table_number', ''),
             customer_name = data.get('customer_name', ''),
             customer_phone= data.get('customer_phone', ''),
+            customer_address= data.get('customer_address', ''),
+            customer_gst_number= data.get('customer_gst_number', ''),
             note          = data.get('note', ''),
             payment_mode  = data.get('payment_mode', 'CASH'),
             is_paid       = True if data.get('payment_mode') else data.get('is_paid', False),
@@ -137,6 +139,8 @@ class TokenDetailView(generics.RetrieveUpdateDestroyAPIView):
         # Update basic token fields
         token.customer_name = data.get('customer_name', token.customer_name)
         token.customer_phone = data.get('customer_phone', token.customer_phone)
+        token.customer_address = data.get('customer_address', token.customer_address)
+        token.customer_gst_number = data.get('customer_gst_number', token.customer_gst_number)
         token.note = data.get('note', token.note)
         if 'payment_mode' in data:
             token.payment_mode = data['payment_mode']
