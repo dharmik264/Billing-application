@@ -18,6 +18,7 @@ class TokenListView(generics.ListAPIView):
     serializer_class   = TokenListSerializer
     filter_backends    = [filters.OrderingFilter]
     ordering_fields    = ['-created_at']
+    ordering           = ['-created_at']
 
     def get_queryset(self):
         from shop.models import Shop
