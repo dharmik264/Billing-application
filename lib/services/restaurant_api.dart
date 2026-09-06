@@ -15,7 +15,7 @@
           _baseUrl = baseUrl ??
               (const String.fromEnvironment('API_BASE_URL', defaultValue: '').isNotEmpty
                   ? const String.fromEnvironment('API_BASE_URL')
-                  : 'https://billing-application-wdss.onrender.com/api'),
+                  : 'https://billing-application-tk36.onrender.com/api'),
           _timeout = timeout;
 
     static final RestaurantApi instance = RestaurantApi(timeout: const Duration(seconds: 60));

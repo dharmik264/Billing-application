@@ -17,7 +17,7 @@ def seed():
     print("=" * 60)
 
     # 1. Create Super Admin
-    admin_phone = "9999999999"
+    admin_phone = "6351559728"
     admin_user, created_admin = User.objects.get_or_create(
         phone=admin_phone,
         defaults={
@@ -30,13 +30,13 @@ def seed():
             "is_active": True,
         }
     )
-    admin_user.set_password("AdminPassword123")
+    admin_user.set_password("Admin123")
     admin_user.is_staff = True
     admin_user.is_superuser = True
     admin_user.account_status = "approved"
     admin_user.is_active = True
     admin_user.save()
-    print(f"[SUCCESS] Super Admin Created/Updated: Phone={admin_phone}, Password=AdminPassword123")
+    print(f"[SUCCESS] Super Admin Created/Updated: Phone={admin_phone}, Password=Admin123")
 
     # 2. Create User / Shop Owner
     user_phone = "9845012345"
