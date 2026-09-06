@@ -3,6 +3,8 @@
 
   import 'package:http/http.dart' as http;
   import 'package:shared_preferences/shared_preferences.dart';
+  import 'local_database.dart';
+  import 'sync_service.dart';
 
   class RestaurantApi {
     RestaurantApi({
@@ -83,7 +85,7 @@
     // ── Auth ────────────────────────────────────────────────────
 
     Future<String?> requestOtp(String mobile) async {
-      final response = await _post('auth/send-otp/', {'phone': mobile});
+      final response = await post('auth/send-otp/', {'phone': mobile});
       if (response.containsKey('otp')) {
         return response['otp'].toString();
       }
@@ -91,7 +93,7 @@
     }
 
     Future<Map<String, dynamic>> verifyOtp(String mobile, String otp) async {
-      final response = await _post('auth/verify-otp/', {
+      final response = await post('auth/verify-otp/', {
         'phone': mobile,
         'code': otp,
       });
@@ -104,7 +106,7 @@
     }
 
     Future<Map<String, dynamic>> superAdminLogin(String username, String password) async {
-      final response = await _post('auth/super-admin/login/', {
+      final response = await post('auth/super-admin/login/', {
         'username': username,
         'password': password,
       });
@@ -115,7 +117,7 @@
     }
 
     Future<Map<String, dynamic>> login(String phone, String password) async {
-      final response = await _post('auth/login/', {
+      final response = await post('auth/login/', {
         'phone': phone,
         'password': password,
       });
@@ -132,7 +134,7 @@
       required String password,
       String? email,
     }) async {
-      return await _post('auth/register/', {
+      return await post('auth/register/', {
         'name': name,
         'phone': phone,
         'shop_name': shopName,
@@ -143,7 +145,7 @@
 
     /// Forgot Password Step 1 — sends OTP to registered phone
     Future<Map<String, dynamic>> forgotPasswordRequest(String phone) async {
-      return await _post('auth/forgot-password/', {'phone': phone});
+      return await post('auth/forgot-password/', {'phone': phone});
     }
 
     /// Forgot Password Step 2 — verify OTP + set new password
@@ -152,7 +154,7 @@
       required String otp,
       required String newPassword,
     }) async {
-      return await _post('auth/reset-password/', {
+      return await post('auth/reset-password/', {
         'phone': phone,
         'otp': otp,
         'new_password': newPassword,
@@ -165,7 +167,7 @@
     }
 
     Future<Map<String, dynamic>> devLogin(String phone) async {
-      final response = await _post('auth/dev/login/', {'phone': phone});
+      final response = await post('auth/dev/login/', {'phone': phone});
       if (response.containsKey('access') && response.containsKey('refresh')) {
         await saveTokens(response['access'], response['refresh']);
       }
@@ -188,13 +190,13 @@
     }
 
     Future<void> updateUserPermissions(String userId, Map<String, bool> permissions) async {
-      await _post('auth/super-admin/users/$userId/permissions/', {
+      await post('auth/super-admin/users/$userId/permissions/', {
         'permissions': permissions,
       });
     }
 
     Future<void> deleteSuperAdminUser(String userId) async {
-      await _delete('auth/super-admin/users/$userId/delete/');
+      await delete('auth/super-admin/users/$userId/delete/');
     }
 
     // Super Admin Plans
@@ -203,26 +205,26 @@
     }
 
     Future<Map<String, dynamic>> createPlan(Map<String, dynamic> data) async {
-      return await _post('auth/super-admin/plans/', data);
+      return await post('auth/super-admin/plans/', data);
     }
 
     Future<Map<String, dynamic>> updatePlan(String planId, Map<String, dynamic> data) async {
-      return await _put('auth/super-admin/plans/$planId/', data);
+      return await put('auth/super-admin/plans/$planId/', data);
     }
 
     Future<void> deletePlan(String planId) async {
-      await _delete('auth/super-admin/plans/$planId/');
+      await delete('auth/super-admin/plans/$planId/');
     }
 
     Future<void> approveShopRequest(String userId, String plan) async {
-      await _post('auth/shop-requests/$userId/action/', {
+      await post('auth/shop-requests/$userId/action/', {
         'action': 'approve',
         'plan': plan,
       });
     }
 
     Future<void> declineShopRequest(String userId) async {
-      await _post('auth/shop-requests/$userId/action/', {
+      await post('auth/shop-requests/$userId/action/', {
         'action': 'decline',
       });
     }
@@ -242,16 +244,26 @@
       if (_cachedShopData != null && !forceRefresh) {
         return _cachedShopData!;
       }
-      final data = await _get('shop/');
-      _cachedShopData = ApiShopData.fromJson(data);
-      return _cachedShopData!;
+      try {
+        final data = await _get('shop/');
+        _cachedShopData = ApiShopData.fromJson(data);
+        await LocalDatabase.instance.saveShopData(data);
+        return _cachedShopData!;
+      } catch (e) {
+        final localData = await LocalDatabase.instance.getShopData();
+        if (localData != null) {
+          _cachedShopData = ApiShopData.fromJson(localData);
+          return _cachedShopData!;
+        }
+        rethrow;
+      }
     }
 
     Future<ApiShopData> saveShop(
       ApiShopDraft shop, {
       String shopId = defaultShopId,
     }) async {
-      final data = await _patch('shop/', shop.toJson());
+      final data = await patch('shop/', shop.toJson());
       _cachedShopData = ApiShopData.fromJson(data);
       return _cachedShopData!;
     }
@@ -263,7 +275,7 @@
 
     Future<ApiBillTemplate> saveBillTemplate(
         ApiBillTemplateDraft template) async {
-      final data = await _patch('shop/bill-template/', template.toJson());
+      final data = await patch('shop/bill-template/', template.toJson());
       return ApiBillTemplate.fromJson(data);
     }
 
@@ -273,35 +285,67 @@
       if (_cachedItems != null && !forceRefresh) {
         return _cachedItems!;
       }
-      final data = await _getPaginatedList('menu/items/');
-      _cachedItems = data.map((item) => ApiItem.fromJson(item)).toList();
-      return _cachedItems!;
+      try {
+        final data = await _getPaginatedList('menu/items/');
+        _cachedItems = data.map((item) => ApiItem.fromJson(item)).toList();
+        await LocalDatabase.instance.saveItems(List<Map<String, dynamic>>.from(data));
+        return _cachedItems!;
+      } catch (e) {
+        final localData = await LocalDatabase.instance.getItems();
+        if (localData.isNotEmpty) {
+          _cachedItems = localData.map((item) => ApiItem.fromJson(item)).toList();
+          return _cachedItems!;
+        }
+        rethrow;
+      }
     }
 
     Future<ApiItem> createItem(ApiItemDraft item,
         {String shopId = defaultShopId}) async {
-      final data = await _postMultipart('menu/items/', {
-        ...item.toJson(),
-      });
-      _cachedItems = null;
-      return ApiItem.fromJson(data);
+      final payload = item.toJson();
+      if (!SyncService.instance.isOnline) {
+        final localItem = {
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+          ...payload,
+        };
+        await LocalDatabase.instance.saveItem(localItem);
+        await LocalDatabase.instance.addToQueue('menu/items/', 'POST_MULTIPART', payload);
+        _cachedItems = null;
+        return ApiItem.fromJson(localItem);
+      }
+      
+      try {
+        final data = await postMultipart('menu/items/', payload);
+        await LocalDatabase.instance.saveItem(data);
+        _cachedItems = null;
+        return ApiItem.fromJson(data);
+      } catch (e) {
+        final localItem = {
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+          ...payload,
+        };
+        await LocalDatabase.instance.saveItem(localItem);
+        await LocalDatabase.instance.addToQueue('menu/items/', 'POST_MULTIPART', payload);
+        _cachedItems = null;
+        return ApiItem.fromJson(localItem);
+      }
     }
 
     Future<ApiItem> updateItem(String id, ApiItemDraft item) async {
-      final data = await _putMultipart('menu/items/$id/', item.toJson());
+      final data = await putMultipart('menu/items/$id/', item.toJson());
       _cachedItems = null;
       return ApiItem.fromJson(data);
     }
 
     Future<ApiItem> updateItemStatus(String id, {required bool active}) async {
       final data =
-          await _patch('menu/items/$id/toggle/', {'is_available': active});
+          await patch('menu/items/$id/toggle/', {'is_available': active});
       _cachedItems = null;
       return ApiItem.fromJson(data);
     }
 
     Future<void> deleteItem(String id) async {
-      await _delete('menu/items/$id/');
+      await delete('menu/items/$id/');
       _cachedItems = null;
     }
 
@@ -314,31 +358,62 @@
       final query = <String, String>{};
       if (limit != null) query['limit'] = limit.toString();
       
-      List<ApiToken> apiTokens = [];
-      final data = await _getPaginatedList('tokens/', query);
-      apiTokens = data.map((token) => ApiToken.fromJson(token)).toList();
-
-      if (limit != null && apiTokens.length > limit) {
-        return apiTokens.sublist(0, limit);
+      try {
+        final data = await _getPaginatedList('tokens/', query);
+        final apiTokens = data.map((token) => ApiToken.fromJson(token)).toList();
+        await LocalDatabase.instance.saveTokens(List<Map<String, dynamic>>.from(data));
+        if (limit != null && apiTokens.length > limit) {
+          return apiTokens.sublist(0, limit);
+        }
+        return apiTokens;
+      } catch (e) {
+        final localData = await LocalDatabase.instance.getTokens(limit: limit);
+        if (localData.isNotEmpty) {
+          return localData.map((token) => ApiToken.fromJson(token)).toList();
+        }
+        rethrow;
       }
-      return apiTokens;
     }
 
     Future<ApiToken> createToken(ApiTokenDraft token,
         {String shopId = defaultShopId}) async {
-      final data = await _post('tokens/create/', {
-        ...token.toJson(),
-      });
-      return ApiToken.fromJson(data);
+      final payload = token.toJson();
+      if (!SyncService.instance.isOnline) {
+        final localToken = {
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+          ...payload,
+          'status': 'completed',
+          'created_at': DateTime.now().toIso8601String()
+        };
+        await LocalDatabase.instance.saveToken(localToken);
+        await LocalDatabase.instance.addToQueue('tokens/create/', 'POST', payload);
+        return ApiToken.fromJson(localToken);
+      }
+
+      try {
+        final data = await post('tokens/create/', payload);
+        await LocalDatabase.instance.saveToken(data);
+        return ApiToken.fromJson(data);
+      } catch (e) {
+        final localToken = {
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+          ...payload,
+          'status': 'completed',
+          'created_at': DateTime.now().toIso8601String()
+        };
+        await LocalDatabase.instance.saveToken(localToken);
+        await LocalDatabase.instance.addToQueue('tokens/create/', 'POST', payload);
+        return ApiToken.fromJson(localToken);
+      }
     }
 
     Future<ApiToken> updateToken(String id, ApiTokenDraft token) async {
-      final data = await _put('tokens/$id/', token.toJson());
+      final data = await put('tokens/$id/', token.toJson());
       return ApiToken.fromJson(data);
     }
 
     Future<void> processPayment(String id, String paymentMode) async {
-      await _post('tokens/$id/payment/', {
+      await post('tokens/$id/payment/', {
         'payment_mode': paymentMode.toLowerCase(),
       });
     }
@@ -355,7 +430,7 @@
     }
 
     Future<void> cancelToken(String id) async {
-      await _patch('tokens/$id/cancel/', {});
+      await patch('tokens/$id/cancel/', {});
     }
 
     Future<List<ApiCustomer>> searchCustomers(String query) async {
@@ -363,7 +438,7 @@
     }
 
     Future<void> deleteToken(String id) async {
-      await _delete('tokens/$id/');
+      await delete('tokens/$id/');
     }
 
     // ── Customers ────────────────────────────────────────────────
@@ -372,22 +447,54 @@
       final query = <String, String>{};
       if (search != null && search.isNotEmpty) query['search'] = search;
       if (status != null && status.isNotEmpty) query['status'] = status;
-      final data = await _getPaginatedList('customers/', query.isEmpty ? null : query);
-      return data.map((e) => ApiCustomer.fromJson(e)).toList();
+      
+      try {
+        final data = await _getPaginatedList('customers/', query.isEmpty ? null : query);
+        await LocalDatabase.instance.saveCustomers(List<Map<String, dynamic>>.from(data));
+        return data.map((e) => ApiCustomer.fromJson(e)).toList();
+      } catch (e) {
+        final localData = await LocalDatabase.instance.getCustomers(search: search);
+        if (localData.isNotEmpty) {
+          return localData.map((e) => ApiCustomer.fromJson(e)).toList();
+        }
+        rethrow;
+      }
     }
 
     Future<ApiCustomer> createCustomer(ApiCustomerDraft customer) async {
-      final data = await _post('customers/', customer.toJson());
-      return ApiCustomer.fromJson(data);
+      final payload = customer.toJson();
+      if (!SyncService.instance.isOnline) {
+        final localCustomer = {
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+          ...payload
+        };
+        await LocalDatabase.instance.saveCustomer(localCustomer);
+        await LocalDatabase.instance.addToQueue('customers/', 'POST', payload);
+        return ApiCustomer.fromJson(localCustomer);
+      }
+      
+      try {
+        final data = await post('customers/', payload);
+        await LocalDatabase.instance.saveCustomer(data);
+        return ApiCustomer.fromJson(data);
+      } catch (e) {
+        final localCustomer = {
+          'id': DateTime.now().millisecondsSinceEpoch.toString(),
+          ...payload
+        };
+        await LocalDatabase.instance.saveCustomer(localCustomer);
+        await LocalDatabase.instance.addToQueue('customers/', 'POST', payload);
+        return ApiCustomer.fromJson(localCustomer);
+      }
     }
 
     Future<ApiCustomer> updateCustomer(String id, ApiCustomerDraft customer) async {
-      final data = await _put('customers/$id/', customer.toJson());
+      final data = await put('customers/$id/', customer.toJson());
       return ApiCustomer.fromJson(data);
     }
 
     Future<void> deleteCustomer(String id) async {
-      await _delete('customers/$id/');
+      await delete('customers/$id/');
     }
 
     Future<ApiCustomer> fetchCustomer(String id) async {
@@ -448,7 +555,7 @@
       return decoded.cast<Map<String, dynamic>>();
     }
 
-    Future<Map<String, dynamic>> _post(
+    Future<Map<String, dynamic>> post(
         String path, Map<String, dynamic> body) async {
       final response = await _client
           .post(
@@ -460,7 +567,7 @@
       return _decodeMap(response);
     }
 
-    Future<Map<String, dynamic>> _put(
+    Future<Map<String, dynamic>> put(
         String path, Map<String, dynamic> body) async {
       final response = await _client
           .put(
@@ -472,7 +579,7 @@
       return _decodeMap(response);
     }
 
-    Future<Map<String, dynamic>> _patch(
+    Future<Map<String, dynamic>> patch(
         String path, Map<String, dynamic> body) async {
       final response = await _client
           .patch(
@@ -484,12 +591,12 @@
       return _decodeMap(response);
     }
 
-    Future<Map<String, dynamic>> _postMultipart(
+    Future<Map<String, dynamic>> postMultipart(
         String path, Map<String, dynamic> body) async {
       return _sendMultipart('POST', path, body);
     }
 
-    Future<Map<String, dynamic>> _putMultipart(
+    Future<Map<String, dynamic>> putMultipart(
         String path, Map<String, dynamic> body) async {
       return _sendMultipart('PUT', path, body);
     }
@@ -534,7 +641,7 @@
       return _decodeMap(response);
     }
 
-    Future<void> _delete(String path) async {
+    Future<void> delete(String path) async {
       final response =
           await _client.delete(_uri(path), headers: _headers()).timeout(_timeout);
       if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -642,10 +749,10 @@
       }
       Map<String, dynamic> data = {};
       try {
-        data = await _post('auth/system-settings/', body);
+        data = await post('auth/system-settings/', body);
       } catch (_) {
         try {
-          data = await _post('system-settings/', body);
+          data = await post('system-settings/', body);
         } catch (e) {
           // Return fallback instance if offline/error
           return ApiSystemSettings(
@@ -669,9 +776,9 @@
         'billing_cycle': billingCycle,
       };
       try {
-        await _post('auth/subscriptions/pay/', body);
+        await post('auth/subscriptions/pay/', body);
       } catch (_) {
-        await _post('subscriptions/pay/', body);
+        await post('subscriptions/pay/', body);
       }
     }
   }

@@ -7,11 +7,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../services/restaurant_api.dart';
 import '../utils/app_constants.dart';
 import '../widgets/stat_card.dart';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'password_login_screen.dart';
 import 'print_preview_screen.dart';
 import 'all_tokens_screen.dart';
 import 'token_generation_screen.dart';
+import '../widgets/custom_page_header.dart';
+import '../services/sync_service.dart';
 
 class _LiveToken {
   final ApiToken rawToken;
@@ -43,7 +46,6 @@ class DashboardScreen extends StatefulWidget {
 class DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
   String _shopName = 'My Shop';
-  Uint8List? _shopLogoBytes;
 
   int _tokenCount = 0;
   int _smsCredits = 0;
@@ -54,10 +56,24 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   List<_LiveToken> _recentTokens = [];
 
+  bool _isOnline = SyncService.instance.isOnline;
+  StreamSubscription<bool>? _syncSub;
+
   @override
   void initState() {
     super.initState();
     _loadDashboardData(forceRefresh: false);
+    _syncSub = SyncService.instance.onlineStatusStream.listen((isOnline) {
+      if (mounted) {
+        setState(() => _isOnline = isOnline);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _syncSub?.cancel();
+    super.dispose();
   }
 
   Future<void> refreshData() async {
@@ -73,12 +89,6 @@ class DashboardScreenState extends State<DashboardScreen> {
       if (cachedShop != null) {
         _shopName = cachedShop.name.isNotEmpty ? cachedShop.name : 'My Shop';
         _smsCredits = cachedShop.smsCredits;
-        if (cachedShop.logoUrl != null && cachedShop.logoUrl!.isNotEmpty) {
-          final uri = Uri.tryParse(cachedShop.logoUrl!);
-          if (uri != null && uri.scheme == 'data') {
-            _shopLogoBytes = base64Decode(cachedShop.logoUrl!.split(',').last);
-          }
-        }
         _isLoading = false;
       }
     }
@@ -103,12 +113,6 @@ class DashboardScreenState extends State<DashboardScreen> {
         setState(() {
           _shopName = shop.name.isNotEmpty ? shop.name : 'My Shop';
           _smsCredits = shop.smsCredits;
-          if (shop.logoUrl != null && shop.logoUrl!.isNotEmpty) {
-            final uri = Uri.tryParse(shop.logoUrl!);
-            if (uri != null && uri.scheme == 'data') {
-              _shopLogoBytes = base64Decode(shop.logoUrl!.split(',').last);
-            }
-          }
 
           _tokenCount = summary.totalTokens;
           _totalSales = summary.totalSales;
@@ -143,6 +147,79 @@ class DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: CustomAppBar(
+        title: _shopName,
+        icon: Icons.storefront_rounded,
+        subtitle: _isOnline ? 'Online' : 'Local',
+
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: GestureDetector(
+              onTap: () async {
+                bool? confirm = await showDialog(
+                    context: context,
+                    builder: (c) => AlertDialog(
+                          title: Text('Logout',
+                              style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.bold)),
+                          content: const Text(
+                              'Are you sure you want to logout?'),
+                          shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(16)),
+                          actions: [
+                            TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(c, false),
+                                child: const Text('Cancel')),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  Navigator.pop(c, true),
+                              style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red),
+                              child: const Text('Logout',
+                                  style: TextStyle(
+                                      color: Colors.white)),
+                            ),
+                          ],
+                        ));
+                if (confirm == true) {
+                  final prefs =
+                      await SharedPreferences.getInstance();
+                  await prefs.clear();
+                  await RestaurantApi.instance.clearTokens();
+                  if (context.mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                          builder: (_) =>
+                              const PasswordLoginScreen()),
+                      (route) => false,
+                    );
+                  }
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A)
+                          .withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: const Icon(Icons.logout_rounded,
+                    color: Color(0xFFEF4444), size: 16),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           RefreshIndicator(
@@ -151,148 +228,7 @@ class DashboardScreenState extends State<DashboardScreen> {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                SliverAppBar(
-                  expandedHeight: 100.0,
-                  floating: false,
-                  pinned: true,
-                  backgroundColor: const Color(0xFFEEF2FF),
-                  elevation: 0,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(24),
-                      bottomRight: Radius.circular(24),
-                    ),
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    titlePadding:
-                        const EdgeInsets.only(left: 20, right: 20, bottom: 12),
-                    title: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF4F46E5)
-                                    .withValues(alpha: 0.15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _shopLogoBytes != null
-                              ? Image.memory(_shopLogoBytes!, fit: BoxFit.cover)
-                              : const Icon(Icons.storefront_rounded,
-                                  color: Color(0xFF4F46E5), size: 24),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _shopName,
-                                style: GoogleFonts.inter(
-                                  color: const Color(0xFF0F172A),
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 17,
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF10B981),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'System Online',
-                                    style: GoogleFonts.inter(
-                                      color: const Color(0xFF64748B),
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () async {
-                            bool? confirm = await showDialog(
-                                context: context,
-                                builder: (c) => AlertDialog(
-                                      title: Text('Logout',
-                                          style: GoogleFonts.inter(
-                                              fontWeight: FontWeight.bold)),
-                                      content: const Text(
-                                          'Are you sure you want to logout?'),
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(16)),
-                                      actions: [
-                                        TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(c, false),
-                                            child: const Text('Cancel')),
-                                        ElevatedButton(
-                                          onPressed: () =>
-                                              Navigator.pop(c, true),
-                                          style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.red),
-                                          child: const Text('Logout',
-                                              style: TextStyle(
-                                                  color: Colors.white)),
-                                        ),
-                                      ],
-                                    ));
-                            if (confirm == true) {
-                              final prefs =
-                                  await SharedPreferences.getInstance();
-                              await prefs.clear();
-                              await RestaurantApi.instance.clearTokens();
-                              if (context.mounted) {
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          const PasswordLoginScreen()),
-                                  (route) => false,
-                                );
-                              }
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF0F172A)
-                                      .withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
-                            ),
-                            child: const Icon(Icons.logout_rounded,
-                                color: Color(0xFFEF4444), size: 16),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // SliverAppBar replaced by CustomAppBar
                 SliverToBoxAdapter(
                   child: _isLoading && _recentTokens.isEmpty
                       ? _buildShimmerLoading()

@@ -8,10 +8,14 @@ import 'screens/shop_setup_screen.dart';
 import 'screens/main_screen.dart';
 import 'screens/super_admin_main_screen.dart';
 import 'services/restaurant_api.dart';
+import 'services/local_database.dart';
+import 'services/sync_service.dart';
 import 'utils/bill_counter.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalDatabase.instance.database;
+  SyncService.instance.initialize();
 
   // Custom Error Handling
   FlutterError.onError = (FlutterErrorDetails details) {

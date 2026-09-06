@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
+import '../widgets/custom_page_header.dart';
 import 'add_customer_screen.dart';
 
 class CustomerManagementScreen extends StatefulWidget {
@@ -27,7 +28,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
   // ── Colours ────────────────────────────────────────────────────
   static const _indigo   = Color(0xFF4F46E5);
   static const _slate50  = Color(0xFFF8FAFC);
-  static const _slate100 = Color(0xFFF1F5F9);
   static const _slate200 = Color(0xFFE2E8F0);
   static const _slate400 = Color(0xFF94A3B8);
   static const _slate600 = Color(0xFF475569);
@@ -171,152 +171,71 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
   // ── Build ──────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _slate50,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          _buildSearchAndFilter(),
-          Expanded(child: _buildBody()),
-        ],
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
     final activeCount   = _customers.where((c) => c.isActive).length;
     final inactiveCount = _customers.where((c) => !c.isActive).length;
-
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Customer Management',
-            style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w700, color: _slate900)),
-          if (!_isLoading && _customers.isNotEmpty)
-            Text('$activeCount active · $inactiveCount inactive',
-              style: GoogleFonts.inter(fontSize: 11, color: _slate400)),
-        ],
+    
+    return Scaffold(
+      backgroundColor: _slate50,
+      appBar: CustomAppBar(
+        title: 'Customer Management',
+        icon: Icons.people_rounded,
+        subtitle: (!_isLoading && _customers.isNotEmpty) ? '$activeCount active · $inactiveCount inactive' : null,
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh_rounded, color: _slate600),
-          onPressed: _loadCustomers,
-          tooltip: 'Refresh',
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: ElevatedButton.icon(
-            onPressed: _openAdd,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _indigo,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            icon: const Icon(Icons.person_add_rounded, size: 18),
-            label: Text('Add', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
-          ),
-        ),
-      ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Container(height: 1, color: _slate200),
-      ),
-    );
-  }
-
-  Widget _buildSearchAndFilter() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Column(
+      body: Column(
         children: [
-          // Search bar
-          TextField(
-            controller: _searchCtrl,
-            onChanged: _onSearch,
-            style: GoogleFonts.inter(fontSize: 14, color: _slate900),
-            decoration: InputDecoration(
-              hintText: 'Search by name, mobile, GST...',
-              hintStyle: GoogleFonts.inter(fontSize: 14, color: _slate400),
-              prefixIcon: const Icon(Icons.search_rounded, color: _slate400, size: 20),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear_rounded, size: 18, color: _slate400),
-                      onPressed: () {
-                        _searchCtrl.clear();
-                        _onSearch('');
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: _slate50,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: _slate200, width: 1),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: _slate200, width: 1),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: _indigo, width: 2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          // Status filter chips
-          Row(
-            children: [
-              _filterChip('All', '', Icons.people_outline_rounded),
-              const SizedBox(width: 8),
-              _filterChip('Active', 'active', Icons.check_circle_outline_rounded),
-              const SizedBox(width: 8),
-              _filterChip('Inactive', 'inactive', Icons.cancel_outlined),
+          CustomSearchActionView(
+            searchHint: 'Search by name, mobile, GST...',
+            searchController: _searchCtrl,
+            onSearchChanged: _onSearch,
+            onSearchClear: () {
+              _searchCtrl.clear();
+              _onSearch('');
+            },
+            filterChips: [
+              FilterChipData(label: 'All', value: '', icon: Icons.people_outline_rounded),
+              FilterChipData(label: 'Active', value: 'active', icon: Icons.check_circle_outline_rounded),
+              FilterChipData(label: 'Inactive', value: 'inactive', icon: Icons.cancel_outlined),
             ],
+            selectedFilterValue: _statusFilter,
+            onFilterChanged: _onStatusFilter,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _filterChip(String label, String value, IconData icon) {
-    final selected = _statusFilter == value;
-    return GestureDetector(
-      onTap: () => _onStatusFilter(value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? _indigo : _slate100,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? _indigo : _slate200,
-            width: 1,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: selected ? Colors.white : _slate600),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : _slate600,
-              ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _openAdd,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _indigo,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.person_add_rounded, size: 18),
+                    label: Text('Add Customer', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded, color: _slate600),
+                  onPressed: _loadCustomers,
+                  tooltip: 'Refresh',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.all(12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: const BorderSide(color: _slate200, width: 1),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          Expanded(child: _buildBody()),
+        ],
       ),
     );
   }
@@ -380,78 +299,69 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(14),
-            child: Column(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Avatar
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: customer.isActive
-                              ? [const Color(0xFF4F46E5), const Color(0xFF6366F1)]
-                              : [const Color(0xFF94A3B8), const Color(0xFFCBD5E1)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Center(
-                        child: Text(
-                          initials,
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
+                // Avatar
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: customer.isActive
+                          ? [const Color(0xFF4F46E5), const Color(0xFF6366F1)]
+                          : [const Color(0xFF94A3B8), const Color(0xFFCBD5E1)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      initials,
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    // Info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  customer.name,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w700,
-                                    color: _slate900,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              _statusToggleBadge(customer),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          _infoRow(Icons.phone_outlined, customer.mobileNumber),
-                          if (customer.address.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            _infoRow(Icons.location_on_outlined, customer.address, maxLines: 1),
-                          ],
-                          if (customer.gstNumber.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            _infoRow(Icons.receipt_long_outlined, customer.gstNumber),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                const SizedBox(width: 12),
+                // Info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        customer.name,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _slate900,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      _infoRow(Icons.phone_outlined, customer.mobileNumber),
+                      if (customer.address.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        _infoRow(Icons.location_on_outlined, customer.address, maxLines: 1),
+                      ],
+                      if (customer.gstNumber.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        _infoRow(Icons.receipt_long_outlined, customer.gstNumber),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Actions Column
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     GestureDetector(
                       onTap: () => _openEdit(customer),
@@ -471,7 +381,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () => _deleteCustomer(customer),
                       child: Container(
@@ -490,6 +400,8 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                         ),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    _statusToggleBadge(customer),
                   ],
                 ),
               ],

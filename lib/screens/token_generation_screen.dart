@@ -9,7 +9,6 @@ import '../utils/bill_counter.dart';
 import '../utils/local_storage_helper.dart';
 
 import 'print_preview_screen.dart';
-import 'main_screen.dart';
 import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -19,6 +18,7 @@ import '../utils/bill_settings_helper.dart';
 import '../services/printer_service.dart';
 import '../services/pdf_receipt_service.dart';
 import 'success_screen.dart';
+import '../widgets/custom_page_header.dart';
 
 class _TokenProduct {
   final ApiItem rawItem;
@@ -96,8 +96,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   }
 
   void _onCartChanged() {
-    int totalItems = _billItems.fold(0, (sum, item) => sum + item.quantity);
-    MainScreen.hideNavbar.value = totalItems > 0;
+    // Navbar visibility is no longer changed when adding items
   }
 
   @override
@@ -111,7 +110,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     _cartTrigger
       ..removeListener(_onCartChanged)
       ..dispose();
-    MainScreen.hideNavbar.value = false;
     super.dispose();
   }
 
@@ -439,11 +437,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _panelBackground,
-      appBar: AppBar(
-        title: Text('Token Generation', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: const Color(0xFF0F172A), fontSize: 17)),
-        backgroundColor: const Color(0xFFEEF2FF),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+      appBar: CustomAppBar(
+        title: 'Token Generation',
+        icon: Icons.receipt_long_rounded,
         actions: [
           LayoutBuilder(
             builder: (context, constraints) {
@@ -549,77 +545,17 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Widget _buildProductsSection() {
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
-          decoration: const BoxDecoration(
-            color: Color(0xFFEEF2FF),
-            borderRadius: BorderRadius.only(
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
-            ),
-          ),
-          child: Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                )
-              ],
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    style: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF0F172A), fontWeight: FontWeight.w500),
-                    decoration: InputDecoration(
-                      hintText: 'Search items...',
-                      hintStyle: GoogleFonts.inter(fontSize: 15, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w400),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ),
-                if (_searchController.text.isNotEmpty)
-                  GestureDetector(
-                    onTap: _searchController.clear,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
-                      child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF64748B)),
-                    ),
-                  ),
-              ],
-            ),
-          ).animate().fadeIn().slideY(begin: -0.1),
-        ),
-        Container(
-          height: 48,
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            clipBehavior: Clip.none,
-            child: Row(
-              children: [
-                for (var i = 0; i < _categories.length; i++) ...[
-                  _categoryChip(_categories[i]),
-                  if (i != _categories.length - 1) const SizedBox(width: 8),
-                ],
-              ],
-            ),
-          ),
+        CustomSearchActionView(
+          searchHint: 'Search items...',
+          searchController: _searchController,
+          onSearchClear: _searchController.clear,
+          filterChips: _categories.map((cat) => FilterChipData(
+            label: cat,
+            value: cat,
+            icon: cat == 'All' ? Icons.apps_rounded : Icons.label_outline_rounded,
+          )).toList(),
+          selectedFilterValue: _selectedCategory,
+          onFilterChanged: (val) => setState(() => _selectedCategory = val),
         ),
         Expanded(
           child: _isLoading
@@ -629,7 +565,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 220,
-                    childAspectRatio: 0.85,
+                    childAspectRatio: 1.25,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -638,44 +574,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                 ),
         ),
       ],
-    );
-  }
-
-  Widget _categoryChip(String category) {
-    final selected = _selectedCategory == category;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedCategory = category),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF4F46E5) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : [
-                  BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  )
-                ],
-        ),
-        child: Text(
-          category,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-            color: selected ? Colors.white : const Color(0xFF64748B),
-          ),
-        ),
-      ),
     );
   }
 
@@ -696,7 +594,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       child: Column(
         children: [
           Container(
-            height: 75,
+            height: 60,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -722,11 +620,11 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   ],
                   Text(
                     product.name,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                   ),
-                  const Spacer(),
+                  const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -860,7 +758,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -955,7 +853,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     );
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 TextField(
                   controller: _customerPhoneController,
                   keyboardType: TextInputType.phone,
@@ -964,56 +862,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     hintText: 'Customer Mobile (Optional)',
                     hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
                     prefixIcon: const Icon(Icons.phone_android_rounded, size: 18, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _customerAddressController,
-                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
-                  decoration: InputDecoration(
-                    hintText: 'Customer Address (Optional)',
-                    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
-                    prefixIcon: const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF94A3B8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _customerGstController,
-                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
-                  decoration: InputDecoration(
-                    hintText: 'Customer GSTIN (Optional)',
-                    hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
-                    prefixIcon: const Icon(Icons.receipt_long_outlined, size: 18, color: Color(0xFF94A3B8)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     filled: true,
                     fillColor: Colors.white,
@@ -1075,29 +923,21 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                               ),
                             ],
                           ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text(
                                       item.product.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: const Color(0xFF0F172A)),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '\u20B9${item.product.price.toStringAsFixed(2)} x ${item.quantity} = \u20B9${item.total.toStringAsFixed(2)}',
-                                      style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontSize: 13, fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
+                                  ),
+                                  const SizedBox(width: 8),
                                   GestureDetector(
                                     onTap: () => _updateQuantity(index, -1),
                                     child: Container(
@@ -1124,6 +964,20 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                                       ),
                                       child: const Icon(Icons.add_rounded, size: 16, color: Color(0xFF4F46E5)),
                                     ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '₹${item.product.price.toStringAsFixed(2)} × ${item.quantity}',
+                                    style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w500),
+                                  ),
+                                  Text(
+                                    '₹${item.total.toStringAsFixed(2)}',
+                                    style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: const Color(0xFF4F46E5)),
                                   ),
                                 ],
                               ),

@@ -13,6 +13,7 @@ import 'token_prefix_screen.dart';
 import 'subscription_plans_screen.dart';
 import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
+import '../widgets/custom_page_header.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -26,7 +27,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static const Color _primary = Color(0xFF4F46E5);
   static const Color _textPrimary = Color(0xFF0F172A);
   static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _softBorder = Color(0xFFE2E8F0);
   static const Color _danger = Color(0xFFEF4444);
   ApiShopData? _shopData;
   ApiUser? _user;
@@ -58,6 +58,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _panelBackground,
+      appBar: const CustomAppBar(
+        title: 'Settings',
+        icon: Icons.settings_rounded,
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -73,7 +77,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       children: [
-          _buildHeader().animate().fadeIn(duration: 300.ms),
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
@@ -187,28 +190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(bottom: BorderSide(color: _softBorder, width: 1.0)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2))],
-      ),
-      child: Row(
-        children: [
-          Text(
-            'Settings',
-            style: GoogleFonts.inter(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: _textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _subscriptionCard() {
     bool isTrial = _user?.accountStatus == 'trial';

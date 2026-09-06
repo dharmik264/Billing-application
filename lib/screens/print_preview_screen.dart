@@ -13,6 +13,7 @@ import '../services/pdf_receipt_service.dart';
 import '../widgets/bill_receipt_widget.dart';
 
 import '../services/printer_service.dart';
+import '../utils/bill_settings_helper.dart';
 import 'success_screen.dart';
 
 class PrintPreviewScreen extends StatefulWidget {
@@ -74,6 +75,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   bool _isPrinting = false;
   bool _isCapturingForPrint = false;
   ApiToken? _savedToken;
+  String _billFormat = 'Bill Slip';
   
   final bool _printCustomerSlip = true;
   final bool _printKitchenSlip = true;
@@ -178,11 +180,14 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       } catch (_) {}
     }
 
+    final billFormat = await BillSettingsHelper.getBillFormat();
+
     setState(() {
       _logoBytes = logo;
       _qrBytes = qr;
       _billTemplate = finalTemplate;
       _shopData = finalShop;
+      _billFormat = billFormat;
       _isLoading = false;
     });
   }
@@ -331,9 +336,55 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
+  ApiToken _generatePreviewToken() {
+    return ApiToken(
+      id: widget.orderId,
+      shopId: _shopData?.id ?? '',
+      tokenNumber: _actualTokenNumber,
+      billNumber: widget.billNumber ?? '',
+      orderType: 'Walk-in',
+      paymentMode: widget.paymentMode,
+      status: 'completed',
+      subtotal: widget.subtotal,
+      tax: widget.tax,
+      discount: 0.0,
+      grandTotal: widget.grandTotal,
+      customerName: widget.customerName ?? '',
+      customerPhone: widget.customerPhone ?? '',
+      customerAddress: widget.customerAddress ?? '',
+      customerGstNumber: widget.customerGstNumber ?? '',
+      items: widget.items.map((e) => ApiTokenItem(
+        id: e.id ?? '',
+        name: e.name,
+        code: e.code,
+        rate: e.rate,
+        quantity: e.quantity,
+        subtotal: e.rate * e.quantity,
+      )).toList(),
+      createdAt: DateTime.now().toIso8601String(),
+      updatedAt: DateTime.now().toIso8601String(),
+    );
+  }
+
   Widget _buildReceipt() {
     if (_billTemplate == null) {
       return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_billFormat == 'Bill A4') {
+      final tokenToPreview = _savedToken ?? _generatePreviewToken();
+      return SizedBox(
+        height: 450,
+        width: double.infinity,
+        child: PdfPreview(
+          build: (format) => PdfReceiptService.generateReceipt(tokenToPreview, isThermal: false),
+          useActions: false,
+          allowPrinting: false,
+          allowSharing: false,
+          canChangeOrientation: false,
+          canChangePageFormat: false,
+        ),
+      );
     }
 
     return RepaintBoundary(
@@ -449,7 +500,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         updatedAt: DateTime.now().toIso8601String(),
       );
 
-      final pdfBytes = await PdfReceiptService.generateReceipt(token);
+      final isA4 = _billFormat == 'Bill A4';
+      final pdfBytes = await PdfReceiptService.generateReceipt(token, isThermal: !isA4);
       await Printing.sharePdf(
         bytes: pdfBytes,
         filename: 'Bill_${widget.billNumber ?? widget.tokenNumber}.pdf',
@@ -570,6 +622,21 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       }
     }
     
+    final tokenToPrint = _savedToken ?? _generatePreviewToken();
+
+    if (_billFormat == 'Bill A4') {
+      try {
+        await PdfReceiptService.printReceipt(tokenToPrint);
+      } catch (e) {
+        debugPrint('Print error: $e');
+        _showSnackBar('Unable to print A4 bill.');
+      } finally {
+        if (mounted) setState(() { _isPrinting = false; _isCapturingForPrint = false; });
+      }
+      _showPrintSuccessAnimationAndPrint();
+      return;
+    }
+    
     if (kIsWeb) {
       final pngBytes = await _captureReceiptPng();
       if (pngBytes != null) {
@@ -594,28 +661,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       _showPrintSuccessAnimationAndPrint();
       return;
     }
-    
-    final tokenToPrint = _savedToken ?? ApiToken(
-      id: '',
-      tokenNumber: _actualTokenNumber,
-      billNumber: widget.billNumber ?? '',
-      status: 'PENDING',
-      customerName: widget.customerName ?? '',
-      customerPhone: widget.customerPhone ?? '',
-      grandTotal: widget.grandTotal,
-      paymentMode: widget.paymentMode,
-      createdAt: DateTime.now().toIso8601String(),
-      items: widget.items
-          .map((i) => ApiTokenItem(
-              id: i.id ?? '',
-              name: i.name,
-              code: i.code,
-              rate: i.rate,
-              quantity: i.quantity,
-              subtotal: i.rate * i.quantity))
-          .toList(),
-      orderType: 'dine_in',
-    );
 
     try {
       if (_printCustomerSlip) {

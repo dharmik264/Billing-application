@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/restaurant_api.dart';
 import '../utils/pdf_export.dart';
+import '../utils/csv_export.dart';
+import '../widgets/custom_page_header.dart';
 
 class AnalyticsReportsScreen extends StatefulWidget {
   const AnalyticsReportsScreen({super.key});
@@ -15,7 +17,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   static const Color _panelBackground = Color(0xFFF8FAFC);
   static const Color _textPrimary = Color(0xFF0F172A);
   static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _softBorder = Color(0xFFE2E8F0);
 
   final TextEditingController _searchController = TextEditingController();
   final List<_HistoryToken> _tokens = [];
@@ -44,15 +45,44 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _panelBackground,
+      appBar: const CustomAppBar(
+        title: 'Analytics Reports',
+        icon: Icons.bar_chart_rounded,
+      ),
       body: SafeArea(
         child: Stack(
           children: [
             Column(
               children: [
-                _buildHeader(),
-                _searchBar(),
+                CustomSearchActionView(
+                  searchHint: 'Search token number or customer...',
+                  searchController: _searchController,
+                  onSearchClear: () {
+                    _searchController.clear();
+                    setState(() {});
+                  },
+                  filterChips: <String>['Today', 'Yesterday', 'This Week'].map((range) => FilterChipData(
+                    label: range,
+                    value: range,
+                    icon: Icons.calendar_month_rounded,
+                  )).toList(),
+                  selectedFilterValue: _selectedRange,
+                  onFilterChanged: (val) => setState(() => _selectedRange = val),
+                  actionButtons: [
+                    ElevatedButton(
+                      onPressed: _pickDateRange,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF1F5F9),
+                        foregroundColor: const Color(0xFF64748B),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Icon(Icons.calendar_today_outlined, size: 18),
+                    ),
+                  ],
+                ),
                 _reportTypeTabs(),
-                _rangeTabs(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
                   child: Column(
@@ -284,123 +314,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     return '$displayTitle (${token.title})';
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(bottom: BorderSide(color: _softBorder, width: 1.0)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2))],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Analytics Reports',
-                style: GoogleFonts.inter(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: _textPrimary,
-                ),
-              ),
-            ],
-          ),
-          InkWell(
-            onTap: _pickDateRange,
-            borderRadius: BorderRadius.circular(20),
-            child: const Padding(
-              padding: EdgeInsets.all(4.0),
-              child: Icon(Icons.calendar_today_outlined,
-                  size: 22, color: Color(0xFF555555)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _searchBar() {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: TextField(
-        controller: _searchController,
-        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: _textPrimary),
-        decoration: InputDecoration(
-          hintText: 'Search token number or customer...',
-          hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
-          prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF94A3B8)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          filled: true,
-          fillColor: const Color(0xFFF1F5F9),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(24),
-            borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 2),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _rangeTabs() {
-    const ranges = ['Today', 'Yesterday', 'This Week'];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _softBorder, width: 1.0)),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            for (var index = 0; index < ranges.length; index++) ...[
-              _rangeChip(ranges[index]),
-              if (index != ranges.length - 1) const SizedBox(width: 8),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _rangeChip(String range) {
-    final selected = _selectedRange == range;
-    return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: () => setState(() => _selectedRange = range),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: selected ? 20 : 16,
-          vertical: 10,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Text(
-          range,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? Colors.white : const Color(0xFF64748B),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _summaryHeader() {
     return Row(
@@ -438,31 +352,125 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   Widget _exportButton() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16, top: 4),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFDC2626),
-            foregroundColor: Colors.white,
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          ),
-          onPressed: _exportToPdf,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.picture_as_pdf_outlined, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Export PDF Report',
-                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFDC2626),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
               ),
-            ],
+              onPressed: _exportToPdf,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Export PDF',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF16A34A),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              ),
+              onPressed: _exportToCsv,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.table_view_outlined, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Export Excel',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _exportToCsv() async {
+    final filtered = _filteredTokens;
+    if (filtered.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No data to export')));
+      }
+      return;
+    }
+
+    try {
+      if (mounted) setState(() => _loading = true);
+
+      if (_activeReportType == 'Customer Summary') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Excel export for Customer Summary coming soon!')));
+        }
+        return;
+      }
+
+      final pdfTokens = filtered.map((t) {
+        String bNum = t.billNumber;
+        if (bNum.isEmpty) {
+          final digits = t.shortId.replaceAll(RegExp(r'[^0-9]'), '');
+          bNum = digits.padLeft(4, '0');
+        }
+
+        return PdfTokenRow(
+          billNumber: bNum,
+          tokenNumber: t.title.replaceFirst('Token ', ''),
+          orderType: t.orderType,
+          customerName: t.customerName,
+          customerPhone: t.customerPhone,
+          dateTime: t.dateTimeString,
+          amount: t.amount,
+          payment: t.payment,
+          status: t.status,
+          items: t.items.map((i) => '${i.name} x${i.quantity}').join(', '),
+        );
+      }).toList();
+
+      final totalAmount = filtered.fold(0.0, (sum, t) => sum + t.amount);
+
+      await CsvExport.exportReport(
+        tokens: pdfTokens,
+        rangeLabel: _selectedRange,
+        shopName: 'My Shop',
+        totalAmount: totalAmount,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Report exported to Excel successfully!'),
+          backgroundColor: Colors.green,
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Export failed: $e'),
+          backgroundColor: Colors.red,
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   List<_HistoryToken> get _filteredTokens {
@@ -825,8 +833,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   // ── Customer Detail List (Date Order wise) ──────────────────────
   Widget _buildCustomerDetailList() {
-    final list = _filteredTokens.where((t) => t.customerName.isNotEmpty || t.customerPhone.isNotEmpty).toList();
-    list.sort((a, b) => b.rawDate.compareTo(a.rawDate));
+    final list = _filteredTokens.where((t) => t.customerName.isNotEmpty || t.customerPhone.isNotEmpty).toList()..sort((a, b) => b.rawDate.compareTo(a.rawDate));
 
     if (list.isEmpty) {
       return Padding(

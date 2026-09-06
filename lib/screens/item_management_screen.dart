@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import '../utils/local_storage_helper.dart';
+import '../widgets/custom_page_header.dart';
 
 class ItemManagementScreen extends StatefulWidget {
   const ItemManagementScreen({super.key});
@@ -56,15 +57,76 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final categories = <String>['All Items'];
+    for (final item in _items) {
+      if (item.category.isNotEmpty && !categories.contains(item.category)) {
+        categories.add(item.category);
+      }
+    }
+    for (final custom in _customCategories) {
+      if (custom.isNotEmpty && !categories.contains(custom)) {
+        categories.add(custom);
+      }
+    }
+
     return Scaffold(
       backgroundColor: _panelBackground,
+      appBar: const CustomAppBar(
+        title: 'Item Management',
+        icon: Icons.inventory_2_rounded,
+      ),
       body: SafeArea(
         child: Stack(
           children: [
             Column(
               children: [
-                _buildHeader(),
-                _buildCategoryTabs(),
+                CustomSearchActionView(
+                  searchHint: 'Search items by name or code...',
+                  searchController: _searchController,
+                  onSearchClear: () {
+                    _searchController.clear();
+                    setState(() {});
+                  },
+                  filterChips: categories.map((cat) {
+                    final label = cat == 'All Items' ? 'All Items (${_items.length})' : cat;
+                    return FilterChipData(
+                      label: label,
+                      value: cat,
+                      icon: cat == 'All Items' ? Icons.apps_rounded : Icons.label_outline_rounded,
+                    );
+                  }).toList(),
+                  selectedFilterValue: _selectedCategory,
+                  onFilterChanged: (val) => setState(() => _selectedCategory = val),
+                  actionButtons: [
+                    ElevatedButton.icon(
+                      onPressed: _isProcessing ? null : _manageCategories,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF4F46E5),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: const BorderSide(color: Color(0xFF4F46E5), width: 1),
+                        ),
+                      ),
+                      icon: const Icon(Icons.category_rounded, size: 18),
+                      label: Text('Category', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _isProcessing ? null : _addItem,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.add_circle_outline, size: 18),
+                      label: Text('Item', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+                    ),
+                  ],
+                ),
                 Expanded(child: _buildItemList()),
               ],
             ),
@@ -85,214 +147,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     );
   }
 
-  // ── Header ─────────────────────────────────────────────────
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: const BoxDecoration(
-        color: Color(0xFFEEF2FF),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Item Management',
-            maxLines: 1,
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              GestureDetector(
-                onTap: _isProcessing ? null : _manageCategories,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.category_rounded, size: 14, color: Color(0xFF4F46E5)),
-                      const SizedBox(width: 6),
-                      Text('Category', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: _isProcessing ? null : _addItem,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4F46E5),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.add_circle_outline, size: 14, color: Colors.white),
-                      const SizedBox(width: 6),
-                      Text('Item', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          _buildSearch(),
-        ],
-      ),
-    );
-  }
-
-  // ── Search ─────────────────────────────────────────────────
-
-  Widget _buildSearch() {
-    return Container(
-      height: 42,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.search_rounded, size: 18, color: Color(0xFF94A3B8)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: _searchController,
-              style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF0F172A), fontWeight: FontWeight.w500),
-              decoration: InputDecoration(
-                hintText: 'Search items by name or code...',
-                hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w400),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-          if (_searchController.text.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                _searchController.clear();
-                setState(() {});
-              },
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
-                child: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF64748B)),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-  // ── Category tabs ──────────────────────────────────────────
-
-  Widget _buildCategoryTabs() {
-    final categories = <String>['All Items'];
-    for (final item in _items) {
-      if (item.category.isNotEmpty && !categories.contains(item.category)) {
-        categories.add(item.category);
-      }
-    }
-    for (final custom in _customCategories) {
-      if (custom.isNotEmpty && !categories.contains(custom)) {
-        categories.add(custom);
-      }
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        clipBehavior: Clip.none,
-        child: Row(
-          children: [
-            for (var i = 0; i < categories.length; i++) ...[
-              _categoryChip(categories[i]),
-              if (i != categories.length - 1) const SizedBox(width: 8),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _categoryChip(String value) {
-    final selected = _selectedCategory == value;
-    final label = value == 'All Items' ? 'All Items (${_items.length})' : value;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedCategory = value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFF4F46E5) : Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : [
-                  BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  )
-                ],
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-            color: selected ? Colors.white : const Color(0xFF64748B),
-          ),
-        ),
-      ),
-    );
-  }
 
   // ── Item list ──────────────────────────────────────────────
 
@@ -347,124 +202,122 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     final isActive = item.active;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           )
         ],
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: isActive ? const Color(0xFFEEF2FF) : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: _buildItemTileImage(item, isActive),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _compactToggleSwitch(
-                          label: 'Active',
-                          value: item.active,
-                          activeColor: const Color(0xFF10B981),
-                          onTap: () => _toggleActiveStatus(item),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${item.code} • ${item.category}',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF94A3B8),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      '₹${item.price.toStringAsFixed(2)}',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // Image
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: isActive ? const Color(0xFFEEF2FF) : const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: _buildItemTileImage(item, isActive),
           ),
-          const SizedBox(height: 16),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          const SizedBox(width: 12),
+          // Name + meta
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: isActive ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${item.code} • ${item.category}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '₹${item.price.toStringAsFixed(2)}',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Actions Column
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
               GestureDetector(
                 onTap: () => _editItem(item),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.edit_rounded, size: 14, color: Color(0xFF475569)),
-                      const SizedBox(width: 6),
-                      Text('Edit', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                      const Icon(Icons.edit_rounded, size: 12, color: Color(0xFF475569)),
+                      const SizedBox(width: 4),
+                      Text('Edit', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(height: 8),
               GestureDetector(
                 onTap: () => _deleteItem(item),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.delete_outline_rounded, size: 14, color: Color(0xFFEF4444)),
-                      const SizedBox(width: 6),
-                      Text('Delete', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444))),
+                      const Icon(Icons.delete_outline_rounded, size: 12, color: Color(0xFFEF4444)),
+                      const SizedBox(width: 4),
+                      Text('Delete', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444))),
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 8),
+              _compactToggleSwitch(
+                label: 'Active',
+                value: item.active,
+                activeColor: const Color(0xFF10B981),
+                onTap: () => _toggleActiveStatus(item),
               ),
             ],
           ),
@@ -977,16 +830,16 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     if (confirm == true) {
       final prefs = await SharedPreferences.getInstance();
       final customCategories = prefs.getStringList('custom_categories') ?? [];
-      customCategories.remove(categoryName);
-      await prefs.setStringList('custom_categories', customCategories);
+      await prefs.setStringList('custom_categories', customCategories..remove(categoryName));
 
-      if (_selectedCategory == categoryName) {
-        _selectedCategory = 'All Items';
-      }
+      setState(() {
+        if (_selectedCategory == categoryName) {
+          _selectedCategory = 'All Items';
+        }
+      });
 
       await _loadCustomCategories();
       _showSnackBar('Category "$categoryName" deleted');
-      setState(() {});
     }
   }
 

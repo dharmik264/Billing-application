@@ -30,6 +30,7 @@ Future<void> downloadCsv(String csvData, String fileName) async {
     final bytes = [0xEF, 0xBB, 0xBF, ...csvData.codeUnits];
     file.writeAsBytesSync(bytes);
     debugPrint('File exported successfully to: $path');
+    await OpenFilex.open(file.path);
   } catch (e) {
     debugPrint('Failed to export file: $e');
   }
