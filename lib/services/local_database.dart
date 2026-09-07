@@ -250,4 +250,15 @@ class LocalDatabase {
     if (db == null) return;
     await db.delete('sync_queue', where: 'id = ?', whereArgs: [id]);
   }
+
+  Future<void> clearAllData() async {
+    final db = await instance.database;
+    if (db == null) return;
+    await db.delete('shop_data');
+    await db.delete('items');
+    await db.delete('tokens');
+    await db.delete('customers');
+    await db.delete('sync_queue');
+  }
 }
+

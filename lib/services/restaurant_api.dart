@@ -65,6 +65,10 @@
       await prefs.remove('accessToken');
       await prefs.remove('refreshToken');
       _accessToken = null;
+      _cachedShopData = null;
+      _cachedItems = null;
+      _cachedSummary = null;
+      await LocalDatabase.instance.clearAllData();
     }
 
     Map<String, String> _headers() {
