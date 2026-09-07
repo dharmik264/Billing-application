@@ -8,8 +8,8 @@ Future<void> downloadCsv(String csvData, String fileName) async {
     String path = '';
 
     if (Platform.isAndroid) {
-      // Best-effort Android download folder without packages
-      path = '/storage/emulated/0/Download/$fileName';
+      final dir = await getApplicationDocumentsDirectory();
+      path = '${dir.path}/$fileName';
     } else if (Platform.isWindows) {
       final userProfile = Platform.environment['USERPROFILE'];
       path = '$userProfile\\Downloads\\$fileName';
@@ -39,10 +39,7 @@ Future<void> downloadCsv(String csvData, String fileName) async {
 Future<void> downloadPdf(Uint8List bytes, String fileName) async {
   Directory output;
   if (Platform.isAndroid) {
-    output = Directory('/storage/emulated/0/Download');
-    if (!output.existsSync()) {
-      output = await getApplicationDocumentsDirectory();
-    }
+    output = await getApplicationDocumentsDirectory();
   } else {
     output = await getApplicationDocumentsDirectory();
   }
