@@ -37,6 +37,7 @@ class Token(models.Model):
     total         = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_paid       = models.BooleanField(default=False)
     payment_mode  = models.CharField(max_length=20, blank=True)   # cash / upi / card
+    items_summary = models.TextField(blank=True, help_text="Summary of items for easy viewing in DB")
 
     created_at    = models.DateTimeField(auto_now_add=True)
     updated_at    = models.DateTimeField(auto_now=True)
@@ -57,6 +58,11 @@ class Token(models.Model):
         from decimal import Decimal
         self.subtotal = Decimal(str(sum(item.subtotal for item in self.items.all())))
         
+        summary_list = []
+        for item in self.items.all():
+            summary_list.append(f"{item.name} (x{item.quantity})")
+        self.items_summary = ", ".join(summary_list)
+        
         tax_percent = Decimal('0')
         from django.db import connection
         shop = connection.tenant
@@ -73,7 +79,7 @@ class Token(models.Model):
             
         self.service_charge = Decimal('0')
         self.total = self.subtotal + self.gst_amount + self.service_charge - Decimal(str(self.discount))
-        self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total'])
+        self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total', 'items_summary'])
 
 
 class TokenItem(models.Model):
