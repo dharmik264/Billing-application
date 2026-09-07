@@ -388,7 +388,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             );
             
             if (billFormat == 'Bill A4') {
-              await PdfReceiptService.printReceipt(savedToken);
+              // The user specifically requested not to automatically show the A4/PDF print dialog upon Save
+              // So we do nothing here for A4. The user can manually print from Print Preview if needed.
             } else {
               await PrinterService.instance.printReceipt(savedToken, shop, template);
               if (pickupSlipEnabled) {

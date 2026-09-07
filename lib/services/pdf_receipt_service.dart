@@ -472,8 +472,8 @@ class PdfReceiptService {
     );
   }
 
-  static Future<void> printReceipt(ApiToken token) async {
-    final bytes = await generateReceipt(token);
+  static Future<void> printReceipt(ApiToken token, {bool isThermal = true}) async {
+    final bytes = await generateReceipt(token, isThermal: isThermal);
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => bytes,
       name: 'Receipt_${token.id}',

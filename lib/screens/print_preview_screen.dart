@@ -626,7 +626,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
     if (_billFormat == 'Bill A4') {
       try {
-        await PdfReceiptService.printReceipt(tokenToPrint);
+        await PdfReceiptService.printReceipt(tokenToPrint, isThermal: false);
       } catch (e) {
         debugPrint('Print error: $e');
         _showSnackBar('Unable to print A4 bill.');
