@@ -21,9 +21,7 @@ class TokenListView(generics.ListAPIView):
     ordering           = ['-created_at']
 
     def get_queryset(self):
-        from shop.models import Shop
-        shop = Shop.get_shop(self.request.user)
-        qs     = Token.objects.filter(shop=shop).prefetch_related('items')
+        qs     = Token.objects.prefetch_related('items').all()
         status_filter = self.request.query_params.get('status')
         date   = self.request.query_params.get('date')
         today  = self.request.query_params.get('today')
@@ -52,17 +50,13 @@ class CreateTokenView(APIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         token_number = data.get('token_number')
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
-
         if token_number:
-            if Token.objects.filter(shop=shop, token_number=token_number, date=timezone.localdate()).exists():
-                token_number = Token.get_next_token_number(shop)
+            if Token.objects.filter(token_number=token_number, date=timezone.localdate()).exists():
+                token_number = Token.get_next_token_number()
         else:
-            token_number = Token.get_next_token_number(shop)
+            token_number = Token.get_next_token_number()
 
         token = Token.objects.create(
-            shop          = shop,
             token_number  = token_number,
             bill_number   = data.get('bill_number', ''),
             order_type    = data.get('order_type', 'dine_in'),
@@ -127,9 +121,7 @@ class TokenDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class   = TokenSerializer
     
     def get_queryset(self):
-        from shop.models import Shop
-        shop = Shop.get_shop(self.request.user)
-        return Token.objects.filter(shop=shop).prefetch_related('items')
+        return Token.objects.prefetch_related('items').all()
 
     @transaction.atomic
     def put(self, request, *args, **kwargs):
@@ -180,10 +172,8 @@ class UpdateTokenStatusView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         try:
-            token = Token.objects.get(pk=pk, shop=shop)
+            token = Token.objects.get(pk=pk)
         except Token.DoesNotExist:
             return Response({'error': 'Token not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -199,10 +189,8 @@ class AddItemToTokenView(APIView):
 
     @transaction.atomic
     def post(self, request, pk):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         try:
-            token = Token.objects.get(pk=pk, shop=shop)
+            token = Token.objects.get(pk=pk)
         except Token.DoesNotExist:
             return Response({'error': 'Token not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -237,10 +225,8 @@ class ProcessPaymentView(APIView):
 
     @transaction.atomic
     def post(self, request, pk):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         try:
-            token = Token.objects.get(pk=pk, shop=shop)
+            token = Token.objects.get(pk=pk)
         except Token.DoesNotExist:
             return Response({'error': 'Token not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -264,10 +250,8 @@ class CancelTokenView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         try:
-            token = Token.objects.get(pk=pk, shop=shop)
+            token = Token.objects.get(pk=pk)
         except Token.DoesNotExist:
             return Response({'error': 'Token not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -280,10 +264,7 @@ class KitchenView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         tokens = Token.objects.filter(
-            shop=shop,
             date=timezone.localdate(),
             status__in=['open', 'preparing']
         ).prefetch_related('items').order_by('created_at')
@@ -296,22 +277,20 @@ class TodaySummaryView(APIView):
 
     def get(self, request):
         from django.db.models import Sum, Count
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         today  = timezone.localdate()
         
         # All time
-        total_bills = Token.objects.filter(shop=shop).exclude(status='cancelled').count()
-        last_bill = Token.objects.filter(shop=shop).exclude(bill_number='').order_by('-created_at').first()
+        total_bills = Token.objects.exclude(status='cancelled').count()
+        last_bill = Token.objects.exclude(bill_number='').order_by('-created_at').first()
         last_bill_number = last_bill.bill_number if last_bill else "0"
         
         # Monthly
         start_of_month = today.replace(day=1)
-        monthly_paid = Token.objects.filter(shop=shop, date__gte=start_of_month, is_paid=True).exclude(status='cancelled')
+        monthly_paid = Token.objects.filter(date__gte=start_of_month, is_paid=True).exclude(status='cancelled')
         monthly_sales = monthly_paid.aggregate(s=Sum('total'))['s'] or 0
         
         # Today
-        tokens = Token.objects.filter(shop=shop, date=today).exclude(status='cancelled')
+        tokens = Token.objects.filter(date=today).exclude(status='cancelled')
         paid   = tokens.filter(is_paid=True)
         agg    = paid.aggregate(revenue=Sum('total'), count=Count('id'))
 
@@ -334,12 +313,10 @@ class CustomerSearchAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
         from django.db.models import Q
-        shop = Shop.get_shop(request.user)
         query = request.query_params.get('q', '').strip()
 
-        qs = Token.objects.filter(shop=shop).exclude(customer_name='').exclude(customer_phone='')
+        qs = Token.objects.exclude(customer_name='').exclude(customer_phone='')
         
         if query:
             qs = qs.filter(Q(customer_name__icontains=query) | Q(customer_phone__icontains=query))

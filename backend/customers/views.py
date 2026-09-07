@@ -6,11 +6,6 @@ from .models import Customer
 from .serializers import CustomerSerializer
 
 
-def _get_shop(user):
-    from shop.models import Shop
-    return Shop.get_shop(user)
-
-
 class CustomerListCreateView(generics.ListCreateAPIView):
     """
     GET  /api/customers/        — list all customers for the authenticated shop
@@ -25,10 +20,10 @@ class CustomerListCreateView(generics.ListCreateAPIView):
     ordering           = ['-created_at']
 
     def get_queryset(self):
-        return Customer.objects.filter(shop=_get_shop(self.request.user))
+        return Customer.objects.all()
 
     def perform_create(self, serializer):
-        serializer.save(shop=_get_shop(self.request.user))
+        serializer.save()
 
 
 class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -42,4 +37,4 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class   = CustomerSerializer
 
     def get_queryset(self):
-        return Customer.objects.filter(shop=_get_shop(self.request.user))
+        return Customer.objects.all()

@@ -13,9 +13,8 @@ class Customer(models.Model):
         ('inactive', 'Inactive'),
     ]
 
-    shop          = models.ForeignKey('shop.Shop', on_delete=models.CASCADE, related_name='customers', null=True)
     name          = models.CharField(max_length=200)
-    mobile_number = models.CharField(max_length=10)
+    mobile_number = models.CharField(max_length=10, unique=True)
     address       = models.TextField(blank=True, null=True)
     gst_number    = models.CharField(max_length=15, blank=True, default='')
     status        = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
@@ -24,8 +23,7 @@ class Customer(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        # Mobile must be unique per shop
-        unique_together = ['shop', 'mobile_number']
+        # Mobile is unique per tenant schema
 
     def __str__(self):
         return f"{self.name} ({self.mobile_number})"

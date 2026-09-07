@@ -10,29 +10,37 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me-in-production')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
 
-INSTALLED_APPS = [
+SHARED_APPS = (
+    'django_tenants',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Third party
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
     'django_celery_beat',
-    # Local
     'core',
-    'shop',
+    'shop', # Shop and Domain models will be here
+)
+
+TENANT_APPS = (
     'menu',
     'tokens',
     'reports',
     'printer',
     'customers',
-]
+)
+
+INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]
+
+TENANT_MODEL = "shop.Shop"
+TENANT_DOMAIN_MODEL = "shop.Domain"
 
 MIDDLEWARE = [
+    'django_tenants.middleware.main.TenantMainMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -42,7 +50,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'restaurant_pos.middleware.JWTAuthenticationTenantMiddleware', # We will create this
 ]
+
+DATABASE_ROUTERS = (
+    'django_tenants.routers.TenantSyncRouter',
+)
 
 ROOT_URLCONF = 'restaurant_pos.urls'
 
@@ -81,11 +94,13 @@ if db_url:
         use_sqlite = True
 
 if db_url and not use_sqlite:
+    db_config = dj_database_url.config(
+        default=db_url,
+        conn_max_age=600
+    )
+    db_config['ENGINE'] = 'django_tenants.postgresql_backend'
     DATABASES = {
-        'default': dj_database_url.config(
-            default=db_url,
-            conn_max_age=600
-        )
+        'default': db_config
     }
 else:
     DATABASES = {

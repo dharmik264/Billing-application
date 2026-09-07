@@ -17,7 +17,6 @@ class Token(models.Model):
         ('delivery',  'Delivery'),
     ]
 
-    shop          = models.ForeignKey('shop.Shop', on_delete=models.CASCADE, related_name='tokens', null=True)
     token_number  = models.PositiveIntegerField()
     bill_number   = models.CharField(max_length=20, blank=True)
     date          = models.DateField(default=timezone.localdate)
@@ -44,16 +43,14 @@ class Token(models.Model):
 
     class Meta:
         ordering             = ['-created_at']
-        unique_together      = ['shop', 'token_number', 'date']
+        unique_together      = ['token_number', 'date']
 
     def __str__(self):
         return f"Token #{self.token_number} ({self.bill_number})"
 
     @classmethod
-    def get_next_token_number(cls, shop):
-        if not shop:
-            raise ValueError("Shop is required")
-        last  = cls.objects.filter(shop=shop).order_by('-token_number').first()
+    def get_next_token_number(cls):
+        last  = cls.objects.order_by('-token_number').first()
         return (last.token_number + 1) if last else 1
 
     def calculate_totals(self):

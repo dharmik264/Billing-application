@@ -13,10 +13,8 @@ class DailyReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         report_date = request.query_params.get('date', str(timezone.localdate()))
-        tokens = Token.objects.filter(shop=shop, date=report_date, is_paid=True)
+        tokens = Token.objects.filter(date=report_date, is_paid=True)
 
         agg = tokens.aggregate(
             revenue     = Sum('total'),
@@ -47,9 +45,8 @@ class DailyReportView(APIView):
             report_date_obj = timezone.localdate()
             report_date = str(report_date_obj)
 
-        total_bills = Token.objects.filter(shop=shop).count()
+        total_bills = Token.objects.count()
         monthly_sales = Token.objects.filter(
-            shop=shop,
             date__year=report_date_obj.year, 
             date__month=report_date_obj.month, 
             is_paid=True
@@ -69,14 +66,12 @@ class WeeklyReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         end_date   = timezone.localdate()
         start_date = end_date - timedelta(days=6)
         result = []
         d = start_date
         while d <= end_date:
-            tokens = Token.objects.filter(shop=shop, date=d, is_paid=True)
+            tokens = Token.objects.filter(date=d, is_paid=True)
             agg = tokens.aggregate(revenue=Sum('total'), count=Count('id'))
             result.append({
                 'date':    str(d),
@@ -92,15 +87,13 @@ class MonthlyReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         try:
             year  = int(request.query_params.get('year',  timezone.now().year))
             month = int(request.query_params.get('month', timezone.now().month))
         except (ValueError, TypeError):
             year  = timezone.now().year
             month = timezone.now().month
-        tokens = Token.objects.filter(shop=shop, date__year=year, date__month=month, is_paid=True)
+        tokens = Token.objects.filter(date__year=year, date__month=month, is_paid=True)
 
         agg = tokens.aggregate(
             revenue  = Sum('total'),
@@ -130,8 +123,6 @@ class TopItemsReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         try:
             days  = int(request.query_params.get('days', 7))
             limit = int(request.query_params.get('limit', 10))
@@ -142,7 +133,7 @@ class TopItemsReportView(APIView):
 
         top_items = (
             TokenItem.objects
-            .filter(token__shop=shop, token__date__gte=start, token__is_paid=True)
+            .filter(token__date__gte=start, token__is_paid=True)
             .values('name')
             .annotate(
                 total_qty     = Sum('quantity'),
@@ -159,8 +150,6 @@ class CategoryReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         try:
             days  = int(request.query_params.get('days', 7))
         except (ValueError, TypeError):
@@ -169,7 +158,7 @@ class CategoryReportView(APIView):
 
         data = (
             TokenItem.objects
-            .filter(token__shop=shop, token__date__gte=start, token__is_paid=True, menu_item__isnull=False)
+            .filter(token__date__gte=start, token__is_paid=True, menu_item__isnull=False)
             .values(category_name=F('menu_item__category__name'))
             .annotate(
                 total_qty     = Sum('quantity'),
@@ -185,14 +174,12 @@ class DateRangeReportView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         start = request.query_params.get('start')
         end   = request.query_params.get('end', str(timezone.localdate()))
         if not start:
             return Response({'error': 'start date required'}, status=400)
 
-        tokens = Token.objects.filter(shop=shop, date__range=[start, end], is_paid=True)
+        tokens = Token.objects.filter(date__range=[start, end], is_paid=True)
         agg = tokens.aggregate(
             revenue   = Sum('total'),
             count     = Count('id'),

@@ -2,8 +2,7 @@ from django.db import models
 
 
 class Category(models.Model):
-    shop       = models.ForeignKey('shop.Shop', on_delete=models.CASCADE, related_name='categories', null=True)
-    name       = models.CharField(max_length=100)
+    name       = models.CharField(max_length=100, unique=True)
     icon       = models.CharField(max_length=50, blank=True)   # emoji or icon name
     sort_order = models.PositiveIntegerField(default=0)
     is_active  = models.BooleanField(default=True)
@@ -12,7 +11,6 @@ class Category(models.Model):
     class Meta:
         ordering    = ['sort_order', 'name']
         verbose_name_plural = 'Categories'
-        unique_together = ['shop', 'name']
 
     def __str__(self):
         return self.name
@@ -25,7 +23,6 @@ class MenuItem(models.Model):
         ('egg',     'Egg'),
     ]
 
-    shop        = models.ForeignKey('shop.Shop', on_delete=models.CASCADE, related_name='menu_items', null=True)
     category    = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='items')
     name        = models.CharField(max_length=200)
     description = models.TextField(blank=True)

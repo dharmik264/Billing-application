@@ -1,9 +1,8 @@
 from django.db import models
-
-
 from django.conf import settings
+from django_tenants.models import TenantMixin, DomainMixin
 
-class Shop(models.Model):
+class Shop(TenantMixin):
     owner                = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shop', null=True)
     name                 = models.CharField(max_length=200)
     tagline              = models.CharField(max_length=200, blank=True)
@@ -25,6 +24,8 @@ class Shop(models.Model):
     created_at           = models.DateTimeField(auto_now_add=True)
     updated_at           = models.DateTimeField(auto_now=True)
 
+    auto_create_schema = True
+
     class Meta:
         verbose_name = 'Shop'
 
@@ -35,8 +36,12 @@ class Shop(models.Model):
     def get_shop(cls, user):
         if not user:
             raise ValueError("User is required")
-        obj, _ = cls.objects.get_or_create(owner=user, defaults={'name': 'My Restaurant'})
+        obj, _ = cls.objects.get_or_create(owner=user, defaults={'name': 'My Restaurant', 'schema_name': f'tenant_{user.id}'})
         return obj
+
+
+class Domain(DomainMixin):
+    pass
 
 
 class BillTemplate(models.Model):

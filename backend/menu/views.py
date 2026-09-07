@@ -13,19 +13,16 @@ class CategoryListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class   = CategorySerializer
     def get_queryset(self):
-        from shop.models import Shop
-        return Category.objects.filter(shop=Shop.get_shop(self.request.user))
+        return Category.objects.all()
         
     def perform_create(self, serializer):
-        from shop.models import Shop
-        serializer.save(shop=Shop.get_shop(self.request.user))
+        serializer.save()
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class   = CategorySerializer
     def get_queryset(self):
-        from shop.models import Shop
-        return Category.objects.filter(shop=Shop.get_shop(self.request.user))
+        return Category.objects.all()
 
 class MenuItemListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -35,8 +32,7 @@ class MenuItemListCreateView(generics.ListCreateAPIView):
     ordering_fields    = ['name', 'price', 'sort_order', 'created_at']
 
     def get_queryset(self):
-        from shop.models import Shop
-        qs = MenuItem.objects.select_related('category').filter(shop=Shop.get_shop(self.request.user))
+        qs = MenuItem.objects.select_related('category').all()
         category = self.request.query_params.get('category')
         available = self.request.query_params.get('available')
         item_type = self.request.query_params.get('type')
@@ -54,8 +50,7 @@ class MenuItemListCreateView(generics.ListCreateAPIView):
         return MenuItemSerializer
 
     def perform_create(self, serializer):
-        from shop.models import Shop
-        serializer.save(shop=Shop.get_shop(self.request.user))
+        serializer.save()
 
 class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
@@ -63,18 +58,15 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     parser_classes     = [MultiPartParser, FormParser, JSONParser]
     
     def get_queryset(self):
-        from shop.models import Shop
-        return MenuItem.objects.select_related('category').filter(shop=Shop.get_shop(self.request.user))
+        return MenuItem.objects.select_related('category').all()
 
 
 class ToggleItemAvailabilityView(APIView):
     permission_classes = [IsAuthenticated]
 
     def patch(self, request, pk):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
         try:
-            item = MenuItem.objects.get(pk=pk, shop=shop)
+            item = MenuItem.objects.get(pk=pk)
         except MenuItem.DoesNotExist:
             return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
         item.is_available = not item.is_available
@@ -87,9 +79,7 @@ class MenuByCategoryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        from shop.models import Shop
-        shop = Shop.get_shop(request.user)
-        categories = Category.objects.filter(shop=shop, is_active=True).prefetch_related('items')
+        categories = Category.objects.filter(is_active=True).prefetch_related('items')
         result = []
         for cat in categories:
             items = cat.items.filter(is_available=True)
