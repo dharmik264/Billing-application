@@ -282,7 +282,7 @@ class TodaySummaryView(APIView):
         
         # All time
         total_bills = Token.objects.exclude(status='cancelled').count()
-        last_bill = Token.objects.exclude(bill_number='').order_by('-created_at').first()
+        last_bill = Token.objects.filter(date=today).exclude(bill_number='').order_by('-created_at').first()
         last_bill_number = last_bill.bill_number if last_bill else "0"
         
         # Monthly
