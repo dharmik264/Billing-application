@@ -78,22 +78,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'restaurant_pos.wsgi.application'
 
 import dj_database_url
-import socket
-import urllib.parse
 
 db_url = os.getenv('DATABASE_URL')
-use_sqlite = False
 
 if db_url:
-    try:
-        parsed = urllib.parse.urlparse(db_url)
-        if parsed.hostname:
-            socket.gethostbyname(parsed.hostname)
-    except Exception as e:
-        print(f"[WARNING] Database host unreachable: {e}. Falling back to SQLite.")
-        use_sqlite = True
-
-if db_url and not use_sqlite:
     db_config = dj_database_url.config(
         default=db_url,
         conn_max_age=600
