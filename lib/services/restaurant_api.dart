@@ -10,7 +10,7 @@
     RestaurantApi({
       http.Client? client,
       String? baseUrl,
-      Duration timeout = const Duration(seconds: 0),
+      Duration timeout = const Duration(seconds: 30),
     })  : _client = client ?? http.Client(),
           _baseUrl = baseUrl ??
               (const String.fromEnvironment('API_BASE_URL', defaultValue: '').isNotEmpty
