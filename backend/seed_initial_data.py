@@ -98,8 +98,8 @@ def seed():
         )
 
     # Link user to shop
-    user.shop = shop
-    user.save()
+    shop.owner = user
+    shop.save()
 
     print(f"[SUCCESS] Shop Configured (Tenant: {shop.schema_name}): '{shop.name}'")
 
