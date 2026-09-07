@@ -58,9 +58,11 @@ class Token(models.Model):
         self.subtotal = Decimal(str(sum(item.subtotal for item in self.items.all())))
         
         tax_percent = Decimal('0')
-        if self.shop and isinstance(self.shop.bill_settings, dict):
+        from django.db import connection
+        shop = connection.tenant
+        if shop and hasattr(shop, 'bill_settings') and isinstance(shop.bill_settings, dict):
             try:
-                tax_percent = Decimal(str(self.shop.bill_settings.get('tax_percent', 0.0)))
+                tax_percent = Decimal(str(shop.bill_settings.get('tax_percent', 0.0)))
             except (ValueError, TypeError, AttributeError):
                 pass
                 

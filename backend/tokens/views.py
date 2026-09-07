@@ -93,7 +93,8 @@ class CreateTokenView(APIView):
         token.calculate_totals()
         
         # ── SMS Integration (Simulated) ───────────────────────────
-        if token.customer_phone and shop.sms_credits > 0:
+        shop = getattr(request, 'tenant', None)
+        if token.customer_phone and shop and hasattr(shop, 'sms_credits') and shop.sms_credits > 0:
             import logging
             logger = logging.getLogger(__name__)
             # Deduct 1 credit for finalized bill SMS
