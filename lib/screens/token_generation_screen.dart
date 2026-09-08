@@ -171,7 +171,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             
             _billItems.clear();
             for (var item in widget.editToken!.items) {
-              final prod = products.firstWhere((p) => p.code == item.code, orElse: () => _TokenProduct(
+              final prod = products.firstWhere((p) => (item.code.isNotEmpty && p.code == item.code) || p.name == item.name, orElse: () => _TokenProduct(
                 rawItem: ApiItem(id: '', name: item.name, code: item.code, category: 'Imported', rate: item.rate, active: true, availableOnline: true),
                 id: '', name: item.name, code: item.code, price: item.rate, category: 'Imported', accent: const Color(0xFF3B82F6)
               ));
