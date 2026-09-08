@@ -70,7 +70,7 @@ class PdfReceiptService {
               ],
               pw.Center(
                 child: pw.Text(
-                  shop.name.toUpperCase(),
+                  shop.name,
                   style: const pw.TextStyle(
                     fontSize: 20,
                     fontWeight: pw.FontWeight.bold,
@@ -291,7 +291,7 @@ class PdfReceiptService {
                 ),
                 pw.SizedBox(height: 6),
               ],
-              pw.Text(shop.name.toUpperCase(), style: const pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              pw.Text(shop.name, style: const pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 6),
               if (shop.address != null && shop.address!.isNotEmpty)
                 pw.Text(shop.address!, style: const pw.TextStyle(fontSize: 12)),

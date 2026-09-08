@@ -69,16 +69,21 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   selectedFilterValue: _selectedRange,
                   onFilterChanged: (val) => setState(() => _selectedRange = val),
                   actionButtons: [
-                    ElevatedButton(
-                      onPressed: _pickDateRange,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF1F5F9),
-                        foregroundColor: const Color(0xFF64748B),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Icon(Icons.calendar_today_outlined, size: 18),
+                    Builder(
+                      builder: (context) {
+                        final isCustom = !['Today', 'Yesterday', 'This Week'].contains(_selectedRange);
+                        return ElevatedButton(
+                          onPressed: _pickDateRange,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isCustom ? const Color(0xFF4F46E5) : const Color(0xFFF1F5F9),
+                            foregroundColor: isCustom ? Colors.white : const Color(0xFF64748B),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          child: const Icon(Icons.calendar_today_outlined, size: 18),
+                        );
+                      }
                     ),
                   ],
                 ),
