@@ -221,14 +221,38 @@ class _SuperAdminPaymentSettingsScreenState
                                       _currentQrUrl!.isNotEmpty)
                                   ? ClipRRect(
                                       borderRadius: BorderRadius.circular(16),
-                                      child: Image.network(
-                                        RestaurantApi.instance
-                                            .getMediaUrl(_currentQrUrl!),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (c, e, s) => const Icon(
-                                            Icons.qr_code_2_rounded,
-                                            size: 80,
-                                            color: Color(0xFF94A3B8)),
+                                      child: Builder(
+                                        builder: (context) {
+                                          final qrData = _currentQrUrl!.trim();
+                                          String? base64Str;
+                                          if (qrData.startsWith('data:image')) {
+                                            final parts = qrData.split(',');
+                                            if (parts.length > 1) base64Str = parts[1].trim();
+                                          } else if (!qrData.startsWith('http://') && !qrData.startsWith('https://')) {
+                                            base64Str = qrData;
+                                          }
+
+                                          if (base64Str != null && base64Str.isNotEmpty) {
+                                            try {
+                                              final bytes = base64Decode(base64Str.replaceAll(RegExp(r'\s+'), ''));
+                                              return Image.memory(
+                                                bytes,
+                                                fit: BoxFit.cover,
+                                              );
+                                            } catch (e) {
+                                              return const Icon(Icons.broken_image_rounded, size: 80, color: Color(0xFF94A3B8));
+                                            }
+                                          }
+                                          // Fallback if somehow it's a real URL (legacy data)
+                                          return Image.network(
+                                            RestaurantApi.instance.getMediaUrl(qrData),
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (c, e, s) => const Icon(
+                                                Icons.qr_code_2_rounded,
+                                                size: 80,
+                                                color: Color(0xFF94A3B8)),
+                                          );
+                                        },
                                       ),
                                     )
                                   : const Icon(Icons.qr_code_2_rounded,
