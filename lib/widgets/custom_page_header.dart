@@ -84,6 +84,7 @@ class CustomSearchActionView extends StatelessWidget {
   final void Function(String)? onFilterChanged;
 
   final List<Widget>? actionButtons;
+  final bool actionButtonsOnNewLine;
 
   const CustomSearchActionView({
     super.key,
@@ -95,6 +96,7 @@ class CustomSearchActionView extends StatelessWidget {
     this.selectedFilterValue,
     this.onFilterChanged,
     this.actionButtons,
+    this.actionButtonsOnNewLine = false,
   });
 
   static const _indigo = Color(0xFF4F46E5);
@@ -152,66 +154,118 @@ class CustomSearchActionView extends StatelessWidget {
             const SizedBox(height: 10),
           ],
           
-          if (filterChips != null && filterChips!.isNotEmpty) ...[
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  ...filterChips!.map((chip) {
-                    final selected = selectedFilterValue == chip.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: GestureDetector(
-                        onTap: () => onFilterChanged?.call(chip.value),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: selected ? _indigo : _slate100,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: selected ? _indigo : _slate200,
-                              width: 1,
+          if (actionButtonsOnNewLine) ...[
+            if (filterChips != null && filterChips!.isNotEmpty) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ...filterChips!.map((chip) {
+                      final selected = selectedFilterValue == chip.value;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: GestureDetector(
+                          onTap: () => onFilterChanged?.call(chip.value),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: selected ? _indigo : _slate100,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: selected ? _indigo : _slate200,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(chip.icon, size: 14, color: selected ? Colors.white : _slate600),
+                                const SizedBox(width: 4),
+                                Text(
+                                  chip.label,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: selected ? Colors.white : _slate600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(chip.icon, size: 14, color: selected ? Colors.white : _slate600),
-                              const SizedBox(width: 4),
-                              Text(
-                                chip.label,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: selected ? Colors.white : _slate600,
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (actionButtons != null && actionButtons!.isNotEmpty) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ...actionButtons!.map((btn) => Padding(
+                      padding: const EdgeInsets.only(right: 12.0),
+                      child: btn,
+                    )),
+                  ],
+                ),
+              ),
+            ],
+          ] else ...[
+            if ((filterChips != null && filterChips!.isNotEmpty) || (actionButtons != null && actionButtons!.isNotEmpty)) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    if (filterChips != null && filterChips!.isNotEmpty)
+                      ...filterChips!.map((chip) {
+                        final selected = selectedFilterValue == chip.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: GestureDetector(
+                            onTap: () => onFilterChanged?.call(chip.value),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: selected ? _indigo : _slate100,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: selected ? _indigo : _slate200,
+                                  width: 1,
                                 ),
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(chip.icon, size: 14, color: selected ? Colors.white : _slate600),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    chip.label,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: selected ? Colors.white : _slate600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
+                        );
+                      }),
+                    if (actionButtons != null && actionButtons!.isNotEmpty)
+                      ...actionButtons!.map((btn) => Padding(
+                        padding: const EdgeInsets.only(right: 12.0),
+                        child: btn,
+                      )),
+                  ],
+                ),
               ),
-            ),
-          ],
-          
-          if (actionButtons != null && actionButtons!.isNotEmpty) ...[
-            if (filterChips != null && filterChips!.isNotEmpty)
-              const SizedBox(height: 12),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: [
-                  ...actionButtons!.map((btn) => Padding(
-                    padding: const EdgeInsets.only(right: 12.0),
-                    child: btn,
-                  )),
-                ],
-              ),
-            ),
+            ],
           ],
         ],
       ),

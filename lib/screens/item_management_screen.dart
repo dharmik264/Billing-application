@@ -97,6 +97,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                   }).toList(),
                   selectedFilterValue: _selectedCategory,
                   onFilterChanged: (val) => setState(() => _selectedCategory = val),
+                  actionButtonsOnNewLine: true,
                   actionButtons: [
                     ElevatedButton.icon(
                       onPressed: _isProcessing ? null : _manageCategories,
