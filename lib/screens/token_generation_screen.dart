@@ -566,7 +566,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 220,
-                    childAspectRatio: 1.25,
+                    childAspectRatio: 1.10,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
                   ),
@@ -625,7 +625,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                   ),
-                  const SizedBox(height: 6),
+                  const Spacer(),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
