@@ -310,10 +310,11 @@ class ShopRequestActionView(APIView):
             
         if action in ['approve', 'activate']:
             from .models import SubscriptionPlan, SubscriptionPayment
+            import datetime
             
             # Check for valid payment; if none, default to Basic Plan
-            has_valid_payment = SubscriptionPayment.objects.filter(user=user, status__in=['pending', 'approved']).exists()
-            if not has_valid_payment:
+            payment = SubscriptionPayment.objects.filter(user=user, status__in=['pending', 'approved']).order_by('-created_at').first()
+            if not payment:
                 plan = 'Basic Plan'
 
             user.account_status = 'approved'
@@ -321,6 +322,13 @@ class ShopRequestActionView(APIView):
             if plan:
                 user.approved_plan = plan
             user.approved_at = timezone.now()
+            
+            # Set valid till date (using trial_end) based on billing cycle if payment exists
+            if payment:
+                if payment.billing_cycle == 'yearly':
+                    user.trial_end = timezone.now() + datetime.timedelta(days=365)
+                else:
+                    user.trial_end = timezone.now() + datetime.timedelta(days=30)
             
             if plan:
                 plan_obj = SubscriptionPlan.objects.filter(name__iexact=plan).first()
