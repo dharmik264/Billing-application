@@ -51,7 +51,7 @@ class CreateTokenView(APIView):
         data = serializer.validated_data
         token_number = data.get('token_number')
         if token_number:
-            if Token.objects.filter(token_number=token_number).exists():
+            if Token.objects.filter(token_number=token_number, date=timezone.localdate()).exists():
                 token_number = Token.get_next_token_number()
         else:
             token_number = Token.get_next_token_number()

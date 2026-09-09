@@ -51,22 +51,24 @@ class Token(models.Model):
 
     @classmethod
     def get_next_token_number(cls):
-        last  = cls.objects.order_by('-token_number').first()
+        from django.utils import timezone
+        today = timezone.localdate()
+        last  = cls.objects.filter(date=today).order_by('-token_number').first()
         return (last.token_number + 1) if last else 1
 
     @classmethod
     def get_next_bill_number(cls):
-        from django.utils import timezone
-        today = timezone.localdate()
-        date_str = today.strftime('%Y%m%d')
-        last = cls.objects.filter(date=today, bill_number__startswith=f"INV-{date_str}-").order_by('-id').first()
-        if last:
+        last = cls.objects.order_by('-id').first()
+        if last and last.bill_number:
             try:
-                seq = int(last.bill_number.split('-')[-1])
-                return f"INV-{date_str}-{seq + 1:03d}"
+                # Try to parse the existing bill number as an integer
+                seq = int(last.bill_number)
+                return f"{seq + 1:04d}"
             except ValueError:
                 pass
-        return f"INV-{date_str}-001"
+        
+        count = cls.objects.count()
+        return f"{count + 1:04d}"
 
     def calculate_totals(self):
         from decimal import Decimal
