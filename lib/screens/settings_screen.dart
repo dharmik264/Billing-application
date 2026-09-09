@@ -247,7 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 4),
           if (_user?.trialEnd != null)
             Text(
-              'Valid until: ',
+              'Valid until: ${_user!.trialEnd!.split('T')[0]}',
               style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
             ),
           const SizedBox(height: 16),

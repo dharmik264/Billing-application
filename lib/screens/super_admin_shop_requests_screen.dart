@@ -154,7 +154,7 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '$location • ${status.toString().toUpperCase()} • $plan',
+                        '$location • ${status.toString().toUpperCase()} • $plan${req['trial_end'] != null ? ' • Valid Until: ${req['trial_end'].toString().split('T')[0]}' : ''}',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
