@@ -78,7 +78,7 @@ class PasswordLoginView(APIView):
 
 
 from django.db import transaction
-from shop.models import Shop, Domain, BillTemplate
+from shop.models import Shop, Domain, BillTemplate, generate_schema_name
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -116,7 +116,7 @@ class RegisterView(APIView):
                 user.set_password(password)
                 user.save()
                 
-                schema_name = f"tenant_{user.id}"
+                schema_name = generate_schema_name(shop_name, user.id)
                 shop = Shop.objects.create(
                     owner=user,
                     name=shop_name,

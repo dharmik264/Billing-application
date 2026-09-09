@@ -2,6 +2,15 @@ from django.db import models
 from django.conf import settings
 from django_tenants.models import TenantMixin, DomainMixin
 
+import re
+
+def generate_schema_name(shop_name, user_id):
+    cleaned = re.sub(r'[^a-zA-Z0-9]', '_', str(shop_name or '').lower()).strip('_')
+    cleaned = re.sub(r'_+', '_', cleaned)[:30]
+    if not cleaned:
+        cleaned = "shop"
+    return f"tenant_{cleaned}_{user_id}"
+
 class Shop(TenantMixin):
     owner                = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shop', null=True)
     name                 = models.CharField(max_length=200)
@@ -36,10 +45,11 @@ class Shop(TenantMixin):
     def get_shop(cls, user):
         if not user:
             raise ValueError("User is required")
-        schema_name = f"tenant_{user.id}"
+        shop_name = getattr(user, 'shop_name', None) or 'My Restaurant'
+        schema_name = generate_schema_name(shop_name, user.id)
         obj, created = cls.objects.get_or_create(
             owner=user,
-            defaults={'name': getattr(user, 'shop_name', None) or 'My Restaurant', 'schema_name': schema_name}
+            defaults={'name': shop_name, 'schema_name': schema_name}
         )
         if not obj.schema_name:
             obj.schema_name = schema_name
