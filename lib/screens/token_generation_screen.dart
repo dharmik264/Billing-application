@@ -315,11 +315,16 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         )).toList(),
       );
 
+      ApiToken? savedApiToken;
       if (isEdit) {
-        await RestaurantApi.instance.updateToken(widget.editToken!.id, apiToken);
+        savedApiToken = await RestaurantApi.instance.updateToken(widget.editToken!.id, apiToken);
       } else {
-        await RestaurantApi.instance.createToken(apiToken);
+        savedApiToken = await RestaurantApi.instance.createToken(apiToken);
       }
+
+      // Use the backend-generated numbers for printing
+      final finalTokenNum = savedApiToken.tokenNumber;
+      final finalBillNum = savedApiToken.billNumber;
       
       final sendSmsEnabled = await BillSettingsHelper.getSendSms();
       final billPrintEnabled = await BillSettingsHelper.getBillPrint();
@@ -368,8 +373,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             
             final savedToken = ApiToken(
               id: '',
-              tokenNumber: tokenNum,
-              billNumber: billNum,
+              tokenNumber: finalTokenNum,
+              billNumber: finalBillNum,
               status: 'PENDING',
               customerName: name,
               customerPhone: phone,
@@ -406,8 +411,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         if (printPreviewEnabled) {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => PrintPreviewScreen(
-              tokenNumber: tokenNum,
-              billNumber: billNum,
+              tokenNumber: finalTokenNum,
+              billNumber: finalBillNum,
               customerName: name.isNotEmpty ? name : null,
               customerPhone: phone.isNotEmpty ? phone : null,
               customerAddress: _customerAddressController.text.trim().isNotEmpty ? _customerAddressController.text.trim() : null,

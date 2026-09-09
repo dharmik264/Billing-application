@@ -51,14 +51,21 @@ class CreateTokenView(APIView):
         data = serializer.validated_data
         token_number = data.get('token_number')
         if token_number:
-            if Token.objects.filter(token_number=token_number, date=timezone.localdate()).exists():
+            if Token.objects.filter(token_number=token_number).exists():
                 token_number = Token.get_next_token_number()
         else:
             token_number = Token.get_next_token_number()
 
+        bill_number = data.get('bill_number')
+        if bill_number:
+            if Token.objects.filter(bill_number=bill_number).exists():
+                bill_number = Token.get_next_bill_number()
+        else:
+            bill_number = Token.get_next_bill_number()
+
         token = Token.objects.create(
             token_number  = token_number,
-            bill_number   = data.get('bill_number', ''),
+            bill_number   = bill_number,
             order_type    = data.get('order_type', 'dine_in'),
             table_number  = data.get('table_number', ''),
             customer_name = data.get('customer_name', ''),
