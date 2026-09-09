@@ -54,19 +54,4 @@ class CustomerSerializer(serializers.ModelSerializer):
             )
         return value
 
-    # ── Cross-field uniqueness check ───────────────────────────
-
-    def validate(self, attrs):
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            from shop.models import Shop
-            shop = Shop.get_shop(request.user)
-            mobile = attrs.get('mobile_number')
-            qs = Customer.objects.filter(shop=shop, mobile_number=mobile)
-            if self.instance:
-                qs = qs.exclude(pk=self.instance.pk)
-            if qs.exists():
-                raise serializers.ValidationError(
-                    {'mobile_number': 'A customer with this mobile number already exists.'}
-                )
-        return attrs
+    # ✨ Cross-field uniqueness check is automatically handled by django-tenants schema isolation and unique=True

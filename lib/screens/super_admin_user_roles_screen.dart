@@ -134,6 +134,7 @@ class _SuperAdminUserRolesScreenState extends State<SuperAdminUserRolesScreen> {
                         ),
                         child: Column(
                           children: [
+                            _buildDetailRow('Plan', user['approved_plan'] ?? 'Unknown Plan'),
                             _buildDetailRow('Address', shopSetup?['address']),
                             _buildDetailRow('Phone', shopSetup?['phone']),
                             _buildDetailRow('Alt Phone', shopSetup?['alternate_phone']),
@@ -374,7 +375,20 @@ class _SuperAdminUserRolesScreenState extends State<SuperAdminUserRolesScreen> {
                                   children: [
                                     Text(name, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
                                     const SizedBox(height: 4),
-                                    Text(phone, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                                    Row(
+                                      children: [
+                                        Text(phone, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF1F5F9),
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                          child: Text(user['approved_plan'] ?? 'Unknown Plan', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF475569))),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),

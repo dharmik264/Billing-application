@@ -154,7 +154,7 @@ class _SuperAdminShopRequestsScreenState extends State<SuperAdminShopRequestsScr
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '$location • ${status.toString().toUpperCase()}',
+                        '$location • ${status.toString().toUpperCase()} • $plan',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
