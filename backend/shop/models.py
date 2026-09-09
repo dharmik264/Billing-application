@@ -36,7 +36,21 @@ class Shop(TenantMixin):
     def get_shop(cls, user):
         if not user:
             raise ValueError("User is required")
-        obj, _ = cls.objects.get_or_create(owner=user, defaults={'name': 'My Restaurant', 'schema_name': f'tenant_{user.id}'})
+        schema_name = f"tenant_{user.id}"
+        obj, created = cls.objects.get_or_create(
+            owner=user,
+            defaults={'name': getattr(user, 'shop_name', None) or 'My Restaurant', 'schema_name': schema_name}
+        )
+        if not obj.schema_name:
+            obj.schema_name = schema_name
+            obj.save(update_fields=['schema_name'])
+        try:
+            Domain.objects.get_or_create(
+                domain=f"{obj.schema_name}.local",
+                defaults={'tenant': obj, 'is_primary': True}
+            )
+        except Exception:
+            pass
         return obj
 
 

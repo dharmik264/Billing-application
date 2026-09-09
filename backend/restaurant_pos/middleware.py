@@ -28,9 +28,11 @@ class JWTAuthenticationTenantMiddleware(MiddlewareMixin):
             validated_token = jwt_authenticator.get_validated_token(auth_header.split(' ')[1])
             user = jwt_authenticator.get_user(validated_token)
             
-            if hasattr(user, 'shop') and user.shop:
-                shop = user.shop
-                connection.set_schema(shop.schema_name)
-                request.tenant = shop
+            if user:
+                from shop.models import Shop
+                shop = getattr(user, 'shop', None) or Shop.get_shop(user)
+                if shop and shop.schema_name:
+                    connection.set_schema(shop.schema_name)
+                    request.tenant = shop
         except Exception as e:
-            pass
+            logger.error(f"Tenant schema middleware error: {e}")
