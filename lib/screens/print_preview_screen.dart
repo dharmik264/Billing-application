@@ -633,7 +633,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       } finally {
         if (mounted) setState(() { _isPrinting = false; _isCapturingForPrint = false; });
       }
-      _showPrintSuccessAnimationAndPrint();
       return;
     }
     
@@ -643,7 +642,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         await PrinterService.instance.printWebReceipt(pngBytes, is80mm: PrinterService.instance.is80mm);
       }
       if (mounted) setState(() => _isPrinting = false);
-      _showPrintSuccessAnimationAndPrint();
       return;
     }
 
@@ -657,8 +655,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     
     if (isConnected != true) {
       if (mounted) setState(() => _isPrinting = false);
-      _showSnackBar('Printer is not connected. Bill saved successfully!');
-      _showPrintSuccessAnimationAndPrint();
+      _showSnackBar('Printer is not connected.');
       return;
     }
 
@@ -690,8 +687,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         });
       }
     }
-
-    _showPrintSuccessAnimationAndPrint();
   }
 
 
