@@ -121,12 +121,18 @@ class DashboardScreenState extends State<DashboardScreen> {
 
           _recentTokens = tokens.map((t) {
             final date = DateTime.parse(t.createdAt).toLocal();
+            final day = date.day.toString().padLeft(2, '0');
+            final month = date.month.toString().padLeft(2, '0');
+            final year = date.year;
+            final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+            final minute = date.minute.toString().padLeft(2, '0');
+            final period = date.hour >= 12 ? 'PM' : 'AM';
+            final formattedTime = '$day/$month/$year, $hour:$minute $period';
             return _LiveToken(
               rawToken: t,
               orderId: '#${t.billNumber}',
               tokenNumber: t.tokenNumber,
-              time:
-                  '${date.hour > 12 ? date.hour - 12 : date.hour == 0 ? 12 : date.hour}:${date.minute.toString().padLeft(2, '0')} ${date.hour >= 12 ? 'PM' : 'AM'}',
+              time: formattedTime,
               amount: t.grandTotal,
               status: t.status,
               paymentMode: t.paymentMode,
