@@ -523,8 +523,15 @@
       return ApiSummaryReport.fromJson(data);
     }
 
+    void invalidateSummaryCache() {
+      _cachedSummary = null;
+    }
+
     Future<ApiSummaryReport> fetchAllTimeSummary(
         {String shopId = defaultShopId, bool useCache = false}) async {
+      if (!useCache) {
+        _cachedSummary = null;
+      }
       if (useCache && _cachedSummary != null) {
         return _cachedSummary!;
       }
