@@ -5,6 +5,7 @@ import '../services/restaurant_api.dart';
 import '../utils/pdf_export.dart';
 import '../utils/csv_export.dart';
 import '../widgets/custom_page_header.dart';
+import '../utils/bill_event_notifier.dart';
 
 class AnalyticsReportsScreen extends StatefulWidget {
   const AnalyticsReportsScreen({super.key});
@@ -33,10 +34,18 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     super.initState();
     _searchController.addListener(() => setState(() {}));
     _loadTokensFromDatabase();
+    BillEventNotifier.billRefreshNotifier.addListener(_onBillChanged);
+  }
+
+  void _onBillChanged() {
+    if (mounted) {
+      _loadTokensFromDatabase();
+    }
   }
 
   @override
   void dispose() {
+    BillEventNotifier.billRefreshNotifier.removeListener(_onBillChanged);
     _searchController.dispose();
     super.dispose();
   }

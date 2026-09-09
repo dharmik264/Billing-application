@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../services/restaurant_api.dart';
 import 'print_preview_screen.dart';
 import 'token_generation_screen.dart';
+import '../utils/bill_event_notifier.dart';
 
 class AllTokensScreen extends StatefulWidget {
   const AllTokensScreen({super.key});
@@ -25,6 +26,19 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
   void initState() {
     super.initState();
     _loadTokens();
+    BillEventNotifier.billRefreshNotifier.addListener(_onBillChanged);
+  }
+
+  void _onBillChanged() {
+    if (mounted) {
+      _loadTokens();
+    }
+  }
+
+  @override
+  void dispose() {
+    BillEventNotifier.billRefreshNotifier.removeListener(_onBillChanged);
+    super.dispose();
   }
 
   Future<void> _loadTokens() async {

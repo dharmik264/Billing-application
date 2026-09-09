@@ -5,6 +5,7 @@
   import 'package:shared_preferences/shared_preferences.dart';
   import 'local_database.dart';
   import 'sync_service.dart';
+  import '../utils/bill_event_notifier.dart';
 
   class RestaurantApi {
     RestaurantApi({
@@ -382,6 +383,7 @@
     Future<ApiToken> createToken(ApiTokenDraft token,
         {String shopId = defaultShopId}) async {
       final payload = token.toJson();
+      ApiToken resultToken;
       if (!SyncService.instance.isOnline) {
         final localToken = {
           'id': DateTime.now().millisecondsSinceEpoch.toString(),
@@ -391,28 +393,31 @@
         };
         await LocalDatabase.instance.saveToken(localToken);
         await LocalDatabase.instance.addToQueue('tokens/create/', 'POST', payload);
-        return ApiToken.fromJson(localToken);
+        resultToken = ApiToken.fromJson(localToken);
+      } else {
+        try {
+          final data = await post('tokens/create/', payload);
+          await LocalDatabase.instance.saveToken(data);
+          resultToken = ApiToken.fromJson(data);
+        } catch (e) {
+          final localToken = {
+            'id': DateTime.now().millisecondsSinceEpoch.toString(),
+            ...payload,
+            'status': 'completed',
+            'created_at': DateTime.now().toIso8601String()
+          };
+          await LocalDatabase.instance.saveToken(localToken);
+          await LocalDatabase.instance.addToQueue('tokens/create/', 'POST', payload);
+          resultToken = ApiToken.fromJson(localToken);
+        }
       }
-
-      try {
-        final data = await post('tokens/create/', payload);
-        await LocalDatabase.instance.saveToken(data);
-        return ApiToken.fromJson(data);
-      } catch (e) {
-        final localToken = {
-          'id': DateTime.now().millisecondsSinceEpoch.toString(),
-          ...payload,
-          'status': 'completed',
-          'created_at': DateTime.now().toIso8601String()
-        };
-        await LocalDatabase.instance.saveToken(localToken);
-        await LocalDatabase.instance.addToQueue('tokens/create/', 'POST', payload);
-        return ApiToken.fromJson(localToken);
-      }
+      BillEventNotifier.notifyBillChanged();
+      return resultToken;
     }
 
     Future<ApiToken> updateToken(String id, ApiTokenDraft token) async {
       final data = await put('tokens/$id/', token.toJson());
+      BillEventNotifier.notifyBillChanged();
       return ApiToken.fromJson(data);
     }
 
@@ -420,6 +425,7 @@
       await post('tokens/$id/payment/', {
         'payment_mode': paymentMode.toLowerCase(),
       });
+      BillEventNotifier.notifyBillChanged();
     }
 
     Future<void> updateTokenPaymentMode(String id, String paymentMode) async {
@@ -431,10 +437,12 @@
       if (response.statusCode != 200) {
         throw Exception('Failed to update payment mode: ${response.body}');
       }
+      BillEventNotifier.notifyBillChanged();
     }
 
     Future<void> cancelToken(String id) async {
       await patch('tokens/$id/cancel/', {});
+      BillEventNotifier.notifyBillChanged();
     }
 
     Future<List<ApiCustomer>> searchCustomers(String query) async {
@@ -443,6 +451,7 @@
 
     Future<void> deleteToken(String id) async {
       await delete('tokens/$id/');
+      BillEventNotifier.notifyBillChanged();
     }
 
     // ── Customers ────────────────────────────────────────────────

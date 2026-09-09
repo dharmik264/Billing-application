@@ -15,6 +15,7 @@ import 'all_tokens_screen.dart';
 import 'token_generation_screen.dart';
 import '../widgets/custom_page_header.dart';
 import '../services/sync_service.dart';
+import '../utils/bill_event_notifier.dart';
 
 class _LiveToken {
   final ApiToken rawToken;
@@ -68,10 +69,18 @@ class DashboardScreenState extends State<DashboardScreen> {
         setState(() => _isOnline = isOnline);
       }
     });
+    BillEventNotifier.billRefreshNotifier.addListener(_onBillChanged);
+  }
+
+  void _onBillChanged() {
+    if (mounted) {
+      _loadDashboardData(forceRefresh: true);
+    }
   }
 
   @override
   void dispose() {
+    BillEventNotifier.billRefreshNotifier.removeListener(_onBillChanged);
     _syncSub?.cancel();
     super.dispose();
   }
