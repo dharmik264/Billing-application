@@ -6,6 +6,9 @@
     <!-- SMS Permissions -->
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
+    
+    <!-- Contacts Permission -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <application
         android:label="Billing App"

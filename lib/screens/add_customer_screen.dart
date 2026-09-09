@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
 
@@ -65,6 +66,60 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
     _addressCtrl.dispose();
     _gstCtrl.dispose();
     super.dispose();
+  }
+
+  // ── Contact Picker ─────────────────────────────────────────────
+  Future<void> _pickContact() async {
+    try {
+      final status = await FlutterContacts.permissions.request(PermissionType.read);
+      if (status == PermissionStatus.granted || status == PermissionStatus.limited) {
+        final contact = await FlutterContacts.native.showPicker(
+          properties: {ContactProperty.phone, ContactProperty.name},
+        );
+        if (contact != null) {
+          final displayName = (contact.displayName ?? '').trim();
+          String rawPhone = '';
+          if (contact.phones.isNotEmpty) {
+            rawPhone = contact.phones.first.number;
+          }
+          final digitsOnly = rawPhone.replaceAll(RegExp(r'\D'), '');
+          final cleanPhone = digitsOnly.length >= 10
+              ? digitsOnly.substring(digitsOnly.length - 10)
+              : digitsOnly;
+
+          setState(() {
+            if (displayName.isNotEmpty) {
+              _nameCtrl.text = displayName;
+            }
+            if (cleanPhone.isNotEmpty) {
+              _mobileCtrl.text = cleanPhone;
+            }
+          });
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Permission to access contacts was denied.'),
+              backgroundColor: _red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to select contact: $e'),
+            backgroundColor: _red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   // ── Validation ─────────────────────────────────────────────────
@@ -183,6 +238,11 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
                   icon: Icons.person_outline_rounded,
                   validator: _validateName,
                   textCapitalization: TextCapitalization.words,
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.contacts_rounded, color: _indigo),
+                    tooltip: 'Pick from contacts',
+                    onPressed: _pickContact,
+                  ),
                 ),
                 const SizedBox(height: 20),
 
@@ -199,6 +259,11 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(10),
                   ],
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.contacts_rounded, color: _indigo),
+                    tooltip: 'Pick from contacts',
+                    onPressed: _pickContact,
+                  ),
                 ),
                 const SizedBox(height: 20),
 
@@ -283,6 +348,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
     required TextEditingController controller,
     required String hint,
     required IconData icon,
+    Widget? suffixIcon,
     String? Function(String?)? validator,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
@@ -308,6 +374,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
           color: _slate300,
         ),
         prefixIcon: Icon(icon, size: 20, color: _slate300),
+        suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

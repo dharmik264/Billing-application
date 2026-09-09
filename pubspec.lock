@@ -238,6 +238,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.2"
+  flutter_contacts:
+    dependency: "direct main"
+    description:
+      name: flutter_contacts
+      sha256: ce3c44323502f6e687195812b4b32679a381bb49e7c60bfb0558027fdc94a175
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.1"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
