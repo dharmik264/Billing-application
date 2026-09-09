@@ -309,6 +309,13 @@ class ShopRequestActionView(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
             
         if action in ['approve', 'activate']:
+            from .models import SubscriptionPlan, SubscriptionPayment
+            
+            # Check for valid payment; if none, default to Basic Plan
+            has_valid_payment = SubscriptionPayment.objects.filter(user=user, status__in=['pending', 'approved']).exists()
+            if not has_valid_payment:
+                plan = 'Basic Plan'
+
             user.account_status = 'approved'
             user.is_active = True
             if plan:
@@ -316,7 +323,6 @@ class ShopRequestActionView(APIView):
             user.approved_at = timezone.now()
             
             if plan:
-                from .models import SubscriptionPlan, SubscriptionPayment
                 plan_obj = SubscriptionPlan.objects.filter(name__iexact=plan).first()
                 if not plan_obj and str(plan).isdigit():
                     plan_obj = SubscriptionPlan.objects.filter(id=int(plan)).first()
