@@ -61,12 +61,23 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def can_login(self):
-        """User can login if active and not rejected"""
+        """User can login if active, not rejected, and not past grace period"""
         if self.phone == '9999999999':  # Super Admin bypass
             return True
         if not self.is_active:
             return False
-        return self.account_status != 'rejected'
+        if self.account_status == 'rejected':
+            return False
+            
+        # Check for 7-day grace period for approved accounts
+        if self.account_status == 'approved' and self.trial_end:
+            import datetime
+            from django.utils import timezone
+            grace_period_end = self.trial_end + datetime.timedelta(days=7)
+            if timezone.now() > grace_period_end:
+                return False
+                
+        return True
 
 
 class OTP(models.Model):

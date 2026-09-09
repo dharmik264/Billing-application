@@ -119,18 +119,29 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
-      // Check Trial Expiry
+      // Check Trial/Plan Expiry
       if (isLoggedIn) {
         final status = prefs.getString('account_status');
-        if (status == 'trial') {
-          final trialEndStr = prefs.getString('trial_end');
-          if (trialEndStr != null && trialEndStr.isNotEmpty) {
-            final trialEnd = DateTime.tryParse(trialEndStr);
-            if (trialEnd != null && DateTime.now().isAfter(trialEnd)) {
+        final trialEndStr = prefs.getString('trial_end');
+        if (trialEndStr != null && trialEndStr.isNotEmpty) {
+          final trialEnd = DateTime.tryParse(trialEndStr);
+          if (trialEnd != null) {
+            bool isExpired = false;
+            if (status == 'trial' && DateTime.now().isAfter(trialEnd)) {
+              isExpired = true;
+            } else if (status == 'approved') {
+              // 7 days grace period for approved plans
+              final graceEnd = trialEnd.add(const Duration(days: 7));
+              if (DateTime.now().isAfter(graceEnd)) {
+                isExpired = true;
+              }
+            }
+            
+            if (isExpired) {
               isLoggedIn = false;
               await prefs.setBool('isLoggedIn', false);
               // In a real app, clear token from secure storage here
-              debugPrint('Trial expired. Logging out.');
+              debugPrint('Plan/Trial expired. Logging out.');
             }
           }
         }
