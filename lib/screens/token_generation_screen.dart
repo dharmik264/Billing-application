@@ -418,11 +418,19 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               tax: currentTax,
               grandTotal: currentGrandTotal,
             ),
-          ));
+          )).then((_) {
+            if (isEdit && mounted) {
+              Navigator.of(context).pop(true);
+            }
+          });
         } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => SuccessScreen(isPrinted: billPrintEnabled)),
-          );
+          if (isEdit) {
+            Navigator.of(context).pop(true);
+          } else {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => SuccessScreen(isPrinted: billPrintEnabled)),
+            );
+          }
         }
       }
     } catch (e) {
