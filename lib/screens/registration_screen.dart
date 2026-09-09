@@ -39,7 +39,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     
     setState(() => _isLoading = true);
     
-    final phone = _phoneController.text.replaceAll(RegExp(r'[^\d]'), '');
+    String phone = _phoneController.text.replaceAll(RegExp(r'[^\d]'), '');
+    if (phone.length > 10 && phone.startsWith('91')) {
+      phone = phone.substring(phone.length - 10);
+    }
     
     try {
       final response = await RestaurantApi.instance.registerUser(
@@ -61,6 +64,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         SnackBar(
           content: Text(response['message'] ?? 'Registration successful, OTP sent.'),
           backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       
@@ -75,10 +80,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       
     } catch (e) {
       if (!mounted) return;
+      String errMsg = e.toString().replaceAll('Exception: ', '').replaceAll('ApiException: ', '');
+      if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup') || errMsg.contains('TimeoutException')) {
+        errMsg = 'Unable to connect to server. Please check internet connection.';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString().replaceAll('Exception: ', '')),
+          content: Text(errMsg),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     } finally {

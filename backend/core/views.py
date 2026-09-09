@@ -77,6 +77,9 @@ class PasswordLoginView(APIView):
 
 
 
+from django.db import transaction
+from shop.models import Shop, Domain, BillTemplate
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -84,35 +87,58 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        phone = serializer.validated_data['phone']
-        name = serializer.validated_data['name']
-        email = serializer.validated_data.get('email', '')
-        shop_name = serializer.validated_data['shop_name']
+        phone = serializer.validated_data['phone'].strip()
+        name = serializer.validated_data['name'].strip()
+        email = serializer.validated_data.get('email', '').strip()
+        shop_name = serializer.validated_data['shop_name'].strip()
         
         if User.objects.filter(phone=phone).exists():
             return Response({'error': 'Phone number already registered'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if email and User.objects.filter(email__iexact=email).exists():
+            return Response({'error': 'Email address already registered'}, status=status.HTTP_400_BAD_REQUEST)
             
         now = timezone.now()
         trial_end = now + timedelta(days=7)
-        user = User.objects.create(
-            phone=phone,
-            name=name,
-            email=email,
-            shop_name=shop_name,
-            account_status='trial',
-            trial_start=now,
-            trial_end=trial_end
-        )
-        password = serializer.validated_data['password']
-        user.set_password(password)
-        user.save()
-        
-        Shop.objects.create(owner=user, name=shop_name, email=email, phone=phone)
-        
-        code = OTP.generate_code()
-        OTP.objects.create(phone=phone, code=code)
-        
-        send_sms_otp(phone, code)
+
+        try:
+            with transaction.atomic():
+                user = User.objects.create(
+                    phone=phone,
+                    name=name,
+                    email=email,
+                    shop_name=shop_name,
+                    account_status='trial',
+                    trial_start=now,
+                    trial_end=trial_end
+                )
+                password = serializer.validated_data['password']
+                user.set_password(password)
+                user.save()
+                
+                schema_name = f"tenant_{user.id}"
+                shop = Shop.objects.create(
+                    owner=user,
+                    name=shop_name,
+                    email=email,
+                    phone=phone,
+                    schema_name=schema_name
+                )
+
+                Domain.objects.get_or_create(
+                    domain=f"{schema_name}.local",
+                    defaults={'tenant': shop, 'is_primary': True}
+                )
+
+                BillTemplate.get_template(shop)
+                
+                code = OTP.generate_code()
+                OTP.objects.create(phone=phone, code=code)
+                
+                send_sms_otp(phone, code)
+        except Exception as e:
+            logger.error(f"Error during registration: {e}")
+            return Response({'error': f'Registration failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         response_data = {'message': 'Registration successful, OTP sent', 'phone': phone}
         if __import__('django.conf', fromlist=['settings']).settings.DEBUG:
