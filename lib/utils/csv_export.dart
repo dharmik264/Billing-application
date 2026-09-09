@@ -47,7 +47,8 @@ class CsvExport {
       ..writeln('Real Online Collection:,${onlineTotal.toStringAsFixed(2)}')
       ..writeln('Real Total Collection:,${realTotal.toStringAsFixed(2)}')
       ..writeln('') // Empty line
-      ..writeln('Bill No,Token No,Customer Name,Customer Phone,Date & Time,Amount (INR),Payment Mode,Status,Order Type,Items');
+      ..writeln('') // Empty line
+      ..writeln('Bill No,Token No,Customer Name,Customer Phone,Date & Time,Subtotal (INR),GST (INR),Final Amount (INR),Payment Mode,Status,Order Type,Items');
 
     // Write Rows
     for (var token in tokens) {
@@ -57,7 +58,9 @@ class CsvExport {
         ..write('${escapeField(token.customerName)},')
         ..write('${escapeField(token.customerPhone)},')
         ..write('${escapeField(token.dateTime)},')
-        ..write('${token.amount.toStringAsFixed(2)},')
+        ..write('${token.subtotal.toStringAsFixed(2)},')
+        ..write('${token.gstAmount.toStringAsFixed(2)},')
+        ..write('${token.finalAmount.toStringAsFixed(2)},')
         ..write('${escapeField(token.payment)},')
         ..write('${escapeField(token.status)},')
         ..write('${escapeField(token.orderType)},')

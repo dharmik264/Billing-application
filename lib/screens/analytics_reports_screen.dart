@@ -437,6 +437,10 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
           bNum = digits.padLeft(4, '0');
         }
 
+        final subtotal = t.items.fold(0.0, (sum, i) => sum + i.subtotal);
+        final finalAmt = t.amount;
+        final gstAmt = (finalAmt - subtotal) > 0 ? (finalAmt - subtotal) : 0.0;
+
         return PdfTokenRow(
           billNumber: bNum,
           tokenNumber: t.title.replaceFirst('Token ', ''),
@@ -444,7 +448,10 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
           customerName: t.customerName,
           customerPhone: t.customerPhone,
           dateTime: t.dateTimeString,
-          amount: t.amount,
+          subtotal: subtotal > 0 ? subtotal : finalAmt,
+          gstAmount: gstAmt,
+          finalAmount: finalAmt,
+          amount: finalAmt,
           payment: t.payment,
           status: t.status,
           items: t.items.map((i) => '${i.name} x${i.quantity}').join(', '),
@@ -646,6 +653,10 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
             bNum = digits.padLeft(4, '0');
           }
 
+          final subtotal = t.items.fold(0.0, (sum, i) => sum + i.subtotal);
+          final finalAmt = t.amount;
+          final gstAmt = (finalAmt - subtotal) > 0 ? (finalAmt - subtotal) : 0.0;
+
           return PdfTokenRow(
             billNumber: bNum,
             tokenNumber: t.title.replaceFirst('Token ', ''),
@@ -653,7 +664,10 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
             customerName: t.customerName,
             customerPhone: t.customerPhone,
             dateTime: t.dateTimeString,
-            amount: t.amount,
+            subtotal: subtotal > 0 ? subtotal : finalAmt,
+            gstAmount: gstAmt,
+            finalAmount: finalAmt,
+            amount: finalAmt,
             payment: t.payment,
             status: t.status,
             items: t.items.map((i) => '${i.name} x${i.quantity}').join(', '),

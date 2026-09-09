@@ -10,7 +10,9 @@ class PdfTokenRow {
   final String customerName;
   final String customerPhone;
   final String dateTime;
-  final double amount;
+  final double subtotal;
+  final double gstAmount;
+  final double finalAmount;
   final String payment;
   final String status;
   final String items;
@@ -22,12 +24,19 @@ class PdfTokenRow {
     required this.customerName,
     required this.customerPhone,
     required this.dateTime,
-    required this.amount,
+    double? subtotal,
+    double? gstAmount,
+    double? finalAmount,
+    double amount = 0.0,
     required this.payment,
     required this.status,
     required this.items,
     this.orderType = '',
-  });
+  })  : subtotal = subtotal ?? (amount > 0 ? amount : 0.0),
+        gstAmount = gstAmount ?? 0.0,
+        finalAmount = finalAmount ?? (amount > 0 ? amount : (subtotal ?? 0.0) + (gstAmount ?? 0.0));
+
+  double get amount => finalAmount;
 }
 
 class PdfExport {
@@ -236,15 +245,17 @@ class PdfExport {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey300),
       columnWidths: const {
-        0: pw.FlexColumnWidth(1.2), // Bill No
-        1: pw.FlexColumnWidth(1.2), // Token No
-        2: pw.FlexColumnWidth(1.5), // Type
-        3: pw.FlexColumnWidth(2.0), // Customer
-        4: pw.FlexColumnWidth(2.0), // Date
-        5: pw.FlexColumnWidth(3.5), // Items (given more width for full bill)
-        6: pw.FlexColumnWidth(1.5), // Amount
-        7: pw.FlexColumnWidth(1.5), // Payment
-        8: pw.FlexColumnWidth(1.2), // Status
+        0: pw.FlexColumnWidth(1.1), // Bill No
+        1: pw.FlexColumnWidth(1.0), // Token No
+        2: pw.FlexColumnWidth(1.2), // Type
+        3: pw.FlexColumnWidth(1.8), // Customer
+        4: pw.FlexColumnWidth(1.8), // Date
+        5: pw.FlexColumnWidth(2.8), // Items
+        6: pw.FlexColumnWidth(1.3), // Subtotal
+        7: pw.FlexColumnWidth(1.1), // GST
+        8: pw.FlexColumnWidth(1.4), // Final Amount
+        9: pw.FlexColumnWidth(1.3), // Payment
+        10: pw.FlexColumnWidth(1.2), // Status
       },
       children: [
         pw.TableRow(
@@ -256,7 +267,9 @@ class PdfExport {
             _headerCell('Customer'),
             _headerCell('Date & Time'),
             _headerCell('Items'),
-            _headerCell('Amount (Rs.)', align: pw.TextAlign.right),
+            _headerCell('Subtotal (Rs.)', align: pw.TextAlign.right),
+            _headerCell('GST (Rs.)', align: pw.TextAlign.right),
+            _headerCell('Final Amt (Rs.)', align: pw.TextAlign.right),
             _headerCell('Payment Mode', align: pw.TextAlign.center),
             _headerCell('Status', align: pw.TextAlign.center),
           ],
@@ -272,7 +285,11 @@ class PdfExport {
                   : '${t.customerName}\n${t.customerPhone}'),
               _dataCell(t.dateTime),
               _dataCell(t.items.isEmpty ? '-' : t.items),
-              _dataCell(t.amount.toStringAsFixed(2),
+              _dataCell(t.subtotal.toStringAsFixed(2),
+                  align: pw.TextAlign.right),
+              _dataCell(t.gstAmount.toStringAsFixed(2),
+                  align: pw.TextAlign.right),
+              _dataCell(t.finalAmount.toStringAsFixed(2),
                   align: pw.TextAlign.right),
               _dataCell(t.payment, align: pw.TextAlign.center),
               _statusBadge(t.status),

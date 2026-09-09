@@ -32,7 +32,7 @@ class BillingApplication extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Billing Application',
+      title: 'Easy Bill',
       theme: ThemeData(
         useMaterial3: true,
         textTheme: GoogleFonts.interTextTheme(
@@ -279,7 +279,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
               // Animated App Title
               Text(
-                'BillEase POS',
+                'Easy Bill',
                 style: GoogleFonts.outfit(
                   fontSize: 34,
                   fontWeight: FontWeight.w900,

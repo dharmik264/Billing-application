@@ -378,6 +378,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               status: 'PENDING',
               customerName: name,
               customerPhone: phone,
+              subtotal: currentSubtotal,
+              tax: currentTax,
               grandTotal: currentGrandTotal,
               paymentMode: _paymentMode,
               createdAt: DateTime.now().toIso8601String(),

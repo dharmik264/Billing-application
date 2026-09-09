@@ -72,15 +72,15 @@ class PdfReceiptService {
                 child: pw.Text(
                   shop.name,
                   style: const pw.TextStyle(
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: pw.FontWeight.bold,
-                    letterSpacing: 1.5,
+                    letterSpacing: 1.2,
                   ),
                 ),
               ),
               pw.SizedBox(height: 4),
               pw.Center(
-                child: pw.Text('TAX INVOICE', style: const pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, letterSpacing: 1.2)),
+                child: pw.Text('TAX INVOICE', style: const pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, letterSpacing: 1.2)),
               ),
               if (shop.tagline.isNotEmpty) ...[
                 pw.SizedBox(height: 4),
@@ -117,7 +117,7 @@ class PdfReceiptService {
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Text(token.customerName.isNotEmpty ? 'Customer: ${token.customerName}' : ''),
-                  pw.Text('Date: ${token.createdAt.split('T').first}'),
+                  pw.Text('Date: ${_formatDateTime(token.createdAt)}'),
                 ],
               ),
               if (token.customerPhone.isNotEmpty) ...[
@@ -239,6 +239,20 @@ class PdfReceiptService {
     return pdf.save();
   }
 
+  static String _formatDateTime(String rawIso) {
+    if (rawIso.isEmpty) return '';
+    try {
+      final dt = DateTime.parse(rawIso).toLocal();
+      final dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+      final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
+      final period = dt.hour >= 12 ? 'PM' : 'AM';
+      final timeStr = '${hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $period';
+      return '$dateStr $timeStr';
+    } catch (_) {
+      return rawIso.replaceAll('T', ' ');
+    }
+  }
+
   static String _amountToWords(double amount) {
     if (amount == 0) return 'Zero Only';
     
@@ -291,7 +305,7 @@ class PdfReceiptService {
                 ),
                 pw.SizedBox(height: 6),
               ],
-              pw.Text(shop.name, style: const pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              pw.Text(shop.name, style: const pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 6),
               if (shop.address != null && shop.address!.isNotEmpty)
                 pw.Text(shop.address!, style: const pw.TextStyle(fontSize: 12)),
@@ -337,7 +351,7 @@ class PdfReceiptService {
                   pw.SizedBox(height: 8),
                   pw.Text('Bill No: ${token.billNumber}'),
                   pw.SizedBox(height: 3),
-                  pw.Text('Date: ${token.createdAt.split('T').first}'),
+                  pw.Text('Date & Time: ${_formatDateTime(token.createdAt)}'),
                   pw.SizedBox(height: 3),
                   pw.Text('Token No: ${token.tokenNumber}'),
                 ]

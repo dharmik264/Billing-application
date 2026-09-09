@@ -273,9 +273,9 @@
       debugPrint('🖨️ [PRINTER LOG] Printing via Native Bluetooth Direct Text Stream...');
       
       try {
-        // 1. Shop Name Header (Large Size 2)
+        // 1. Shop Name Header (Size 1)
         bluetooth
-          ..printCustom(shopData.name.toUpperCase(), 2, 1) // Large Bold (Size 2)
+          ..printCustom(shopData.name.toUpperCase(), 1, 1) // Medium Bold (Size 1)
           ..printCustom('TAX INVOICE', 1, 1); // Medium (Size 1)
         
         if (shopData.tagline.isNotEmpty) {
@@ -297,8 +297,16 @@
         String tokenStr = 'TOKEN: #${token.tokenNumber}';
         bluetooth.printCustom(_justify(invStr, tokenStr, 32), 2, 0);
 
-        final dtParts = token.createdAt.split('T');
-        final dateStr = dtParts.isNotEmpty ? dtParts.first : '';
+        String dateStr = '';
+        try {
+          final dt = DateTime.parse(token.createdAt).toLocal();
+          final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
+          final period = dt.hour >= 12 ? 'PM' : 'AM';
+          final timeStr = '${hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} $period';
+          dateStr = '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} $timeStr';
+        } catch (_) {
+          dateStr = token.createdAt.replaceAll('T', ' ');
+        }
         bluetooth.printCustom('Date: $dateStr', 1, 0);
 
         if (token.customerName.isNotEmpty ||
