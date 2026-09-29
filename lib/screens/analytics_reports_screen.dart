@@ -1012,15 +1012,34 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   // ── Customer Ledger List ─────────────────────────────────────────
   Widget _buildCustomerLedgerList() {
     final map = <String, _CustomerLedgerSummary>{};
+    final query = _searchController.text.trim().toLowerCase();
+
     for (final token in _filteredTokens) {
-      final key = token.customerPhone.isNotEmpty
-          ? token.customerPhone
-          : (token.customerName.isNotEmpty ? token.customerName : 'Walk-in');
+      final name = token.customerName.trim();
+      final phone = token.customerPhone.trim();
+
+      // Skip unnamed / walk-in bills without a customer name or mobile number
+      final lowerName = name.toLowerCase();
+      final isUnnamed = phone.isEmpty && (name.isEmpty || lowerName == 'walk-in' || lowerName == 'walk-in customer' || lowerName == 'walkin');
+      if (isUnnamed) {
+        continue;
+      }
+
+      // If search query is present, strictly filter to customer matching name or mobile number
+      if (query.isNotEmpty) {
+        final matchesName = name.toLowerCase().contains(query);
+        final matchesPhone = phone.toLowerCase().contains(query);
+        if (!matchesName && !matchesPhone) {
+          continue;
+        }
+      }
+
+      final key = phone.isNotEmpty ? phone : name;
 
       if (!map.containsKey(key)) {
         map[key] = _CustomerLedgerSummary(
-          customerName: token.customerName.isNotEmpty ? token.customerName : (token.customerPhone.isNotEmpty ? token.customerPhone : 'Walk-in Customer'),
-          customerPhone: token.customerPhone,
+          customerName: name.isNotEmpty ? name : phone,
+          customerPhone: phone,
           totalOrders: 0,
           totalBilled: 0.0,
           totalPaid: 0.0,
@@ -1039,8 +1058,8 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
       existing.tokens.add(token);
       map[key] = _CustomerLedgerSummary(
-        customerName: token.customerName.isNotEmpty ? token.customerName : existing.customerName,
-        customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : existing.customerPhone,
+        customerName: name.isNotEmpty ? name : existing.customerName,
+        customerPhone: phone.isNotEmpty ? phone : existing.customerPhone,
         totalOrders: existing.totalOrders + 1,
         totalBilled: existing.totalBilled + billed,
         totalPaid: existing.totalPaid + paid,
