@@ -618,6 +618,119 @@ class PdfExport {
     await downloadPdf(await pdf.save(), fileName);
     return fileName;
   }
+
+  static Future<String> exportCustomerLedgerReport({
+    required String customerName,
+    required String customerPhone,
+    required List<PdfCustomerLedgerRow> ledgerRows,
+    required String rangeLabel,
+    required String shopName,
+    required double totalDebit,
+    required double totalCredit,
+    required double netBalance,
+  }) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) => [
+          _buildHeader(shopName, 'CUSTOMER LEDGER STATEMENT ($rangeLabel)'),
+          pw.SizedBox(height: 12),
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.grey100,
+              borderRadius: pw.BorderRadius.circular(6),
+              border: pw.Border.all(color: PdfColors.grey300),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('Customer Name: ${customerName.isEmpty ? "Walk-in Customer" : customerName}',
+                        style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                    pw.SizedBox(height: 4),
+                    pw.Text('Phone: ${customerPhone.isEmpty ? "N/A" : customerPhone}',
+                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                  ],
+                ),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text('Statement Period: $rangeLabel',
+                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                    pw.SizedBox(height: 4),
+                    pw.Text('Net Outstanding: Rs. ${netBalance.toStringAsFixed(2)}',
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          fontWeight: pw.FontWeight.bold,
+                          color: netBalance > 0 ? PdfColors.red800 : PdfColors.green800,
+                        )),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 14),
+          pw.Row(
+            children: [
+              _summaryCard('Total Billed (Debit)', 'Rs. ${totalDebit.toStringAsFixed(2)}', PdfColors.blue50),
+              _summaryCard('Total Received (Credit)', 'Rs. ${totalCredit.toStringAsFixed(2)}', PdfColors.green50),
+              _summaryCard('Net Balance', 'Rs. ${netBalance.toStringAsFixed(2)}', netBalance > 0 ? PdfColors.amber50 : PdfColors.green50),
+            ],
+          ),
+          pw.SizedBox(height: 16),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(2),
+              1: pw.FlexColumnWidth(1.5),
+              2: pw.FlexColumnWidth(3),
+              3: pw.FlexColumnWidth(1.8),
+              4: pw.FlexColumnWidth(1.8),
+              5: pw.FlexColumnWidth(2),
+              6: pw.FlexColumnWidth(1.5),
+            },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.blue800),
+                children: [
+                  _headerCell('Date / Time'),
+                  _headerCell('Bill No'),
+                  _headerCell('Particulars'),
+                  _headerCell('Debit (+)', align: pw.TextAlign.right),
+                  _headerCell('Credit (-)', align: pw.TextAlign.right),
+                  _headerCell('Balance', align: pw.TextAlign.right),
+                  _headerCell('Mode', align: pw.TextAlign.center),
+                ],
+              ),
+              for (final row in ledgerRows)
+                pw.TableRow(
+                  children: [
+                    _dataCell(row.date),
+                    _dataCell(row.billNumber),
+                    _dataCell(row.particulars),
+                    _dataCell(row.debit > 0 ? row.debit.toStringAsFixed(2) : '-', align: pw.TextAlign.right),
+                    _dataCell(row.credit > 0 ? row.credit.toStringAsFixed(2) : '-', align: pw.TextAlign.right),
+                    _dataCell(row.runningBalance.toStringAsFixed(2), align: pw.TextAlign.right),
+                    _dataCell(row.paymentMode, align: pw.TextAlign.center),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final safeName = customerName.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_').toLowerCase();
+    final fileName = 'customer_ledger_${safeName.isEmpty ? "walkin" : safeName}_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    await downloadPdf(await pdf.save(), fileName);
+    return fileName;
+  }
 }
 
 class PdfItemDetailRow {
@@ -674,6 +787,28 @@ class PdfCustomerDetailRow {
   });
 }
 
+class PdfCustomerLedgerRow {
+  final String date;
+  final String billNumber;
+  final String particulars;
+  final double debit;
+  final double credit;
+  final double runningBalance;
+  final String paymentMode;
+  final String status;
+
+  PdfCustomerLedgerRow({
+    required this.date,
+    required this.billNumber,
+    required this.particulars,
+    required this.debit,
+    required this.credit,
+    required this.runningBalance,
+    required this.paymentMode,
+    required this.status,
+  });
+}
+
 class PdfCustomerSummaryRow {
   final String customerName;
   final String customerPhone;
@@ -689,3 +824,5 @@ class PdfCustomerSummaryRow {
     required this.lastPurchaseDate,
   });
 }
+
+

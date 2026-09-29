@@ -129,7 +129,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   }
 
   Widget _reportTypeTabs() {
-    const reportTypes = ['Bills', 'Item Detail', 'Item Summary', 'Customer Detail', 'Customer Summary'];
+    const reportTypes = ['Bills', 'Item Detail', 'Item Summary', 'Customer Detail', 'Customer Summary', 'Customer Ledger'];
 
     return Container(
       width: double.infinity,
@@ -183,6 +183,8 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         return _buildCustomerDetailList();
       case 'Customer Summary':
         return _buildCustomerSummaryList();
+      case 'Customer Ledger':
+        return _buildCustomerLedgerList();
       case 'Bills':
       default:
         return _buildTokenList();
@@ -1007,6 +1009,498 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     );
   }
 
+  // ── Customer Ledger List ─────────────────────────────────────────
+  Widget _buildCustomerLedgerList() {
+    final map = <String, _CustomerLedgerSummary>{};
+    for (final token in _filteredTokens) {
+      final key = token.customerPhone.isNotEmpty
+          ? token.customerPhone
+          : (token.customerName.isNotEmpty ? token.customerName : 'Walk-in');
+
+      if (!map.containsKey(key)) {
+        map[key] = _CustomerLedgerSummary(
+          customerName: token.customerName.isNotEmpty ? token.customerName : (token.customerPhone.isNotEmpty ? token.customerPhone : 'Walk-in Customer'),
+          customerPhone: token.customerPhone,
+          totalOrders: 0,
+          totalBilled: 0.0,
+          totalPaid: 0.0,
+          dueBalance: 0.0,
+          lastTransactionDate: token.dateTimeString,
+          tokens: [],
+        );
+      }
+
+      final existing = map[key]!;
+      final isPaid = token.payment.isNotEmpty && token.payment.toLowerCase() != 'credit' && token.payment.toLowerCase() != 'due' && token.status.toLowerCase() != 'cancelled';
+      final isCancelled = token.status.toLowerCase() == 'cancelled';
+
+      final billed = isCancelled ? 0.0 : token.amount;
+      final paid = (isCancelled || !isPaid) ? 0.0 : token.amount;
+
+      existing.tokens.add(token);
+      map[key] = _CustomerLedgerSummary(
+        customerName: token.customerName.isNotEmpty ? token.customerName : existing.customerName,
+        customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : existing.customerPhone,
+        totalOrders: existing.totalOrders + 1,
+        totalBilled: existing.totalBilled + billed,
+        totalPaid: existing.totalPaid + paid,
+        dueBalance: (existing.totalBilled + billed) - (existing.totalPaid + paid),
+        lastTransactionDate: token.dateTimeString,
+        tokens: existing.tokens,
+      );
+    }
+
+    final summaries = map.values.toList()..sort((a, b) => b.totalBilled.compareTo(a.totalBilled));
+
+    if (summaries.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(40),
+        child: Center(
+          child: Text(
+            'No customer ledger records found.',
+            style: GoogleFonts.inter(color: _textSecondary, fontSize: 16),
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      itemCount: summaries.length,
+      itemBuilder: (context, index) {
+        final summary = summaries[index];
+        final isDue = summary.dueBalance > 0;
+
+        return InkWell(
+          onTap: () => _openCustomerLedgerSheet(summary),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                )
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: isDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isDue ? Icons.account_balance_wallet_outlined : Icons.check_circle_outline,
+                    color: isDue ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        summary.customerName,
+                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${summary.customerPhone.isNotEmpty ? summary.customerPhone : "No Phone"} · ${summary.totalOrders} Orders',
+                        style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _money(summary.totalBilled),
+                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        isDue ? 'Due: ${_money(summary.dueBalance)}' : 'Paid in Full',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: isDue ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8), size: 20),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _openCustomerLedgerSheet(_CustomerLedgerSummary summary) {
+    // Sort customer tokens chronologically (oldest to newest) to compute running balance
+    final sortedTokens = [...summary.tokens]..sort((a, b) => a.rawDate.compareTo(b.rawDate));
+
+    double runningBalance = 0.0;
+    final ledgerEntries = <_CustomerLedgerEntry>[];
+
+    for (final t in sortedTokens) {
+      final isCancelled = t.status.toLowerCase() == 'cancelled';
+      final isPaid = t.payment.isNotEmpty && t.payment.toLowerCase() != 'credit' && t.payment.toLowerCase() != 'due' && !isCancelled;
+
+      final debit = isCancelled ? 0.0 : t.amount;
+      final credit = (isCancelled || !isPaid) ? 0.0 : t.amount;
+
+      runningBalance += (debit - credit);
+
+      final itemsSummary = t.items.map((i) => '${i.name} x${i.quantity}').join(', ');
+      final particulars = itemsSummary.isNotEmpty ? itemsSummary : 'Sales Invoice';
+
+      ledgerEntries.add(_CustomerLedgerEntry(
+        date: t.dateTimeString,
+        rawDate: t.rawDate,
+        billNumber: t.billNumber.isNotEmpty ? t.billNumber : t.shortId,
+        particulars: particulars,
+        debit: debit,
+        credit: credit,
+        runningBalance: runningBalance,
+        paymentMode: t.payment.isNotEmpty ? t.payment : 'N/A',
+        status: t.status,
+      ));
+    }
+
+    // Reverse for UI display (newest transaction on top)
+    final displayEntries = ledgerEntries.reversed.toList();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            children: [
+              // Sheet Drag handle
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFEEF2FF),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.menu_book_rounded, color: Color(0xFF4F46E5), size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            summary.customerName,
+                            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: _textPrimary),
+                          ),
+                          Text(
+                            'Phone: ${summary.customerPhone.isNotEmpty ? summary.customerPhone : "N/A"} · Ledger Statement',
+                            style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 24),
+
+              // Metric Cards Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEFF6FF),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFBFDBFE)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Total Billed', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF1E40AF), fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            FittedBox(child: Text(_money(summary.totalBilled), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF1E3A8A)))),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFBBF7D0)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Total Paid', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF166534), fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            FittedBox(child: Text(_money(summary.totalPaid), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF14532D)))),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: summary.dueBalance > 0 ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: summary.dueBalance > 0 ? const Color(0xFFFECACA) : const Color(0xFFBBF7D0)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Net Due', style: GoogleFonts.inter(fontSize: 11, color: summary.dueBalance > 0 ? const Color(0xFF991B1B) : const Color(0xFF166534), fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            FittedBox(child: Text(_money(summary.dueBalance), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: summary.dueBalance > 0 ? const Color(0xFF991B1B) : const Color(0xFF14532D)))),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Export Actions Bar inside sheet
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.picture_as_pdf_outlined, size: 16, color: Color(0xFFDC2626)),
+                        label: Text('Statement PDF', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFFDC2626))),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFFECACA)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () async {
+                          final pdfRows = ledgerEntries.map((e) => PdfCustomerLedgerRow(
+                            date: e.date,
+                            billNumber: e.billNumber,
+                            particulars: e.particulars,
+                            debit: e.debit,
+                            credit: e.credit,
+                            runningBalance: e.runningBalance,
+                            paymentMode: e.paymentMode,
+                            status: e.status,
+                          )).toList();
+
+                          await PdfExport.exportCustomerLedgerReport(
+                            customerName: summary.customerName,
+                            customerPhone: summary.customerPhone,
+                            ledgerRows: pdfRows,
+                            rangeLabel: _selectedRange,
+                            shopName: 'My Shop',
+                            totalDebit: summary.totalBilled,
+                            totalCredit: summary.totalPaid,
+                            netBalance: summary.dueBalance,
+                          );
+                          if (mounted) {
+                            _showSnackBar('Customer Ledger PDF statement downloaded!');
+                          }
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.table_view_outlined, size: 16, color: Color(0xFF16A34A)),
+                        label: Text('Statement Excel', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF16A34A))),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFBBF7D0)),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: () async {
+                          final pdfRows = ledgerEntries.map((e) => PdfCustomerLedgerRow(
+                            date: e.date,
+                            billNumber: e.billNumber,
+                            particulars: e.particulars,
+                            debit: e.debit,
+                            credit: e.credit,
+                            runningBalance: e.runningBalance,
+                            paymentMode: e.paymentMode,
+                            status: e.status,
+                          )).toList();
+
+                          await CsvExport.exportCustomerLedgerReport(
+                            customerName: summary.customerName,
+                            customerPhone: summary.customerPhone,
+                            ledgerRows: pdfRows,
+                            rangeLabel: _selectedRange,
+                            shopName: 'My Shop',
+                            totalDebit: summary.totalBilled,
+                            totalCredit: summary.totalPaid,
+                            netBalance: summary.dueBalance,
+                          );
+                          if (mounted) {
+                            _showSnackBar('Customer Ledger Excel downloaded!');
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Ledger Transactions List
+              Expanded(
+                child: Container(
+                  color: const Color(0xFFF8FAFC),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    itemCount: displayEntries.length,
+                    itemBuilder: (context, index) {
+                      final entry = displayEntries[index];
+                      final isCancelled = entry.status.toLowerCase() == 'cancelled';
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Bill #${entry.billNumber}',
+                                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14, color: _textPrimary),
+                                ),
+                                Text(
+                                  entry.date,
+                                  style: GoogleFonts.inter(fontSize: 11, color: _textSecondary),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              entry.particulars,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF334155)),
+                            ),
+                            const SizedBox(height: 8),
+                            const Divider(height: 1),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Debit: ${_money(entry.debit)}',
+                                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1E3A8A)),
+                                    ),
+                                    Text(
+                                      'Credit: ${_money(entry.credit)}',
+                                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF166534)),
+                                    ),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Balance: ${_money(entry.runningBalance)}',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        color: entry.runningBalance > 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${entry.paymentMode} · ${isCancelled ? "Cancelled" : entry.status}',
+                                      style: GoogleFonts.inter(fontSize: 10, color: _textSecondary, fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   String _money(double amount) => '\u20B9${amount.toStringAsFixed(2)}';
 
   Future<void> _loadTokensFromDatabase() async {
@@ -1213,3 +1707,50 @@ class _CustomerSummaryEntry {
     required this.lastPurchaseDate,
   });
 }
+
+class _CustomerLedgerSummary {
+  final String customerName;
+  final String customerPhone;
+  final int totalOrders;
+  final double totalBilled;
+  final double totalPaid;
+  final double dueBalance;
+  final String lastTransactionDate;
+  final List<_HistoryToken> tokens;
+
+  _CustomerLedgerSummary({
+    required this.customerName,
+    required this.customerPhone,
+    required this.totalOrders,
+    required this.totalBilled,
+    required this.totalPaid,
+    required this.dueBalance,
+    required this.lastTransactionDate,
+    required this.tokens,
+  });
+}
+
+class _CustomerLedgerEntry {
+  final String date;
+  final DateTime rawDate;
+  final String billNumber;
+  final String particulars;
+  final double debit;
+  final double credit;
+  final double runningBalance;
+  final String paymentMode;
+  final String status;
+
+  _CustomerLedgerEntry({
+    required this.date,
+    required this.rawDate,
+    required this.billNumber,
+    required this.particulars,
+    required this.debit,
+    required this.credit,
+    required this.runningBalance,
+    required this.paymentMode,
+    required this.status,
+  });
+}
+
