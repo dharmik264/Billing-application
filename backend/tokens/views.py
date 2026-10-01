@@ -63,6 +63,12 @@ class CreateTokenView(APIView):
         else:
             bill_number = Token.get_next_bill_number()
 
+        received_amount = data.get('received_amount', 0) or 0
+        payment_mode    = data.get('payment_mode', 'CASH')
+        is_credit       = str(payment_mode).lower() == 'credit'
+        # A credit bill is not fully paid even if a partial amount was received.
+        is_paid = (not is_credit) and bool(payment_mode)
+
         token = Token.objects.create(
             token_number  = token_number,
             bill_number   = bill_number,
@@ -73,9 +79,11 @@ class CreateTokenView(APIView):
             customer_address= data.get('customer_address', ''),
             customer_gst_number= data.get('customer_gst_number', ''),
             note          = data.get('note', ''),
-            payment_mode  = data.get('payment_mode', 'CASH'),
-            is_paid       = True if data.get('payment_mode') else data.get('is_paid', False),
-            status        = 'completed' if data.get('payment_mode') else 'open',
+            payment_mode  = payment_mode,
+            is_paid       = is_paid,
+            status        = 'completed' if is_paid else 'open',
+            received_amount = received_amount,
+            # balance_due will be set accurately after calculate_totals()
         )
 
         for item_data in data['items']:

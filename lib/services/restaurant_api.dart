@@ -1192,6 +1192,7 @@
       this.tokenNumber,
       this.billNumber,
       this.orderType,
+      this.receivedAmount,
     });
 
     factory ApiTokenDraft.fromJson(Map<String, dynamic> json) {
@@ -1220,6 +1221,7 @@
     final String? tokenNumber;
     final String? billNumber;
     final String? orderType;
+    final double? receivedAmount;
 
     Map<String, dynamic> toJson() {
       return {
@@ -1239,6 +1241,8 @@
               int.tryParse(tokenNumber!.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
         if (billNumber != null && billNumber!.isNotEmpty)
           'bill_number': billNumber,
+        if (receivedAmount != null && receivedAmount! > 0)
+          'received_amount': receivedAmount,
       };
     }
   }

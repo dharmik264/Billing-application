@@ -35,8 +35,12 @@ class Token(models.Model):
     service_charge= models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount      = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total         = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    received_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                          help_text="Amount paid today for an UDHAR bill")
+    balance_due   = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                                        help_text="Remaining balance for UDHAR bills")
     is_paid       = models.BooleanField(default=False)
-    payment_mode  = models.CharField(max_length=20, blank=True)   # cash / upi / card
+    payment_mode  = models.CharField(max_length=20, blank=True)   # cash / upi / card / credit
     items_summary = models.TextField(blank=True, help_text="Summary of items for easy viewing in DB")
 
     created_at    = models.DateTimeField(auto_now_add=True)
@@ -95,7 +99,11 @@ class Token(models.Model):
             
         self.service_charge = Decimal('0')
         self.total = self.subtotal + self.gst_amount + self.service_charge - Decimal(str(self.discount))
-        self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total', 'items_summary'])
+        # For UDHAR/credit bills compute the outstanding balance.
+        recv = Decimal(str(self.received_amount or 0))
+        self.balance_due = max(Decimal('0'), self.total - recv)
+        self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total',
+                                 'received_amount', 'balance_due', 'items_summary'])
 
 
 class TokenItem(models.Model):

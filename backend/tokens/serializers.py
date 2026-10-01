@@ -25,10 +25,11 @@ class TokenSerializer(serializers.ModelSerializer):
             'id', 'token_number', 'bill_number', 'date', 'order_type', 'table_number',
             'customer_name', 'customer_phone', 'customer_address', 'customer_gst_number',
             'status', 'note', 'subtotal', 'gst_amount', 'service_charge', 'discount', 'total',
+            'received_amount', 'balance_due',
             'is_paid', 'payment_mode', 'items', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'date', 'subtotal', 'gst_amount',
-                            'service_charge', 'total', 'created_at', 'updated_at']
+                            'service_charge', 'total', 'balance_due', 'created_at', 'updated_at']
 
 
 class CreateTokenSerializer(serializers.Serializer):
@@ -43,6 +44,9 @@ class CreateTokenSerializer(serializers.Serializer):
     note           = serializers.CharField(required=False, allow_blank=True)
     payment_mode   = serializers.CharField(max_length=50, required=False, allow_blank=True)
     is_paid        = serializers.BooleanField(required=False, default=False)
+    received_amount = serializers.DecimalField(
+        max_digits=10, decimal_places=2, required=False, default=0
+    )
     items          = serializers.ListField(
         child=serializers.DictField(), min_length=1
     )
@@ -66,7 +70,8 @@ class TokenListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'token_number', 'bill_number', 'date', 'order_type', 'table_number',
             'customer_name', 'customer_phone', 'customer_address', 'customer_gst_number',
-            'status', 'total', 'is_paid', 'payment_mode', 'item_count', 'created_at', 'items'
+            'status', 'total', 'received_amount', 'balance_due',
+            'is_paid', 'payment_mode', 'item_count', 'created_at', 'items'
         ]
 
     def get_item_count(self, obj):

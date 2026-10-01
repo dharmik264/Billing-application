@@ -79,6 +79,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   final ValueNotifier<int> _cartTrigger = ValueNotifier<int>(0);
   String _selectedCategory = 'All';
   String _paymentMode = 'CASH';
+  // Holds the partial amount received for an UDHAR bill; survives _clearCart().
+  double _udharReceivedAmount = 0.0;
 
   List<_TokenProduct> _allProducts = [];
   final List<_CartItem> _billItems = [];
@@ -260,6 +262,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       _customerNameController.clear();
       _customerPhoneController.clear();
       _receivedAmountController.clear();
+      _udharReceivedAmount = 0.0;
       _paymentMode = 'CASH';
     });
     _cartTrigger.value++;
@@ -300,7 +303,10 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
 
     final double receivedAmount = result['amount'] ?? 0.0;
 
+    // Capture into a state field so _saveBill() can use it
+    // even after _clearCart() discards _receivedAmountController.
     setState(() {
+      _udharReceivedAmount = receivedAmount;
       _paymentMode = 'CREDIT';
       if (receivedAmount > 0) {
         _receivedAmountController.text = receivedAmount.toStringAsFixed(2);
@@ -316,6 +322,11 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Future<bool> _promptCustomerInfoForUdhar() async {
     final nameCtrl = TextEditingController(text: _customerNameController.text);
     final phoneCtrl = TextEditingController(text: _customerPhoneController.text);
+    // Local variables to hold address/GST selected from autocomplete.
+    // These are only copied to screen controllers when Proceed succeeds,
+    // so Cancel leaves the screen values unchanged.
+    String dialogAddress = _customerAddressController.text;
+    String dialogGst = _customerGstController.text;
 
     final result = await showDialog<bool>(
       context: context,
@@ -366,8 +377,10 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   onSelected: (option) {
                     nameCtrl.text = option.name;
                     phoneCtrl.text = option.mobileNumber;
-                    _customerAddressController.text = option.address;
-                    _customerGstController.text = option.gstNumber;
+                    // Keep address/GST local to the dialog; do NOT write to
+                    // screen controllers here — Cancel must leave them unchanged.
+                    dialogAddress = option.address;
+                    dialogGst = option.gstNumber;
                   },
                   fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
                     return TextField(
@@ -439,8 +452,11 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   );
                   return;
                 }
+                // Proceed: now safe to commit all values to screen controllers.
                 _customerNameController.text = nameCtrl.text.trim();
                 _customerPhoneController.text = phoneCtrl.text.trim();
+                _customerAddressController.text = dialogAddress;
+                _customerGstController.text = dialogGst;
                 Navigator.pop(context, true);
               },
               child: Text('Proceed', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
@@ -565,6 +581,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       final billNum = isEdit ? widget.editToken!.billNumber : await BillCounter.nextBillNumber();
       final tokenNum = isEdit ? widget.editToken!.tokenNumber : await BillCounter.nextTokenNumber();
 
+      // Snapshot received amount before _clearCart() can discard it.
+      final double snapshotReceived = _udharReceivedAmount;
+
       final apiToken = ApiTokenDraft(
         billNumber: billNum,
         tokenNumber: tokenNum,
@@ -573,6 +592,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         customerAddress: _customerAddressController.text.trim(),
         customerGstNumber: _customerGstController.text.trim(),
         paymentMode: _paymentMode.toLowerCase(),
+        receivedAmount: snapshotReceived > 0 ? snapshotReceived : null,
         items: _billItems.map((c) => ApiTokenItemDraft(
           name: c.product.name,
           code: c.product.code,
