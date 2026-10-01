@@ -16,7 +16,6 @@ import 'edit_item_screen.dart';
 import '../services/native_sms_service.dart';
 import '../utils/bill_settings_helper.dart';
 import '../services/printer_service.dart';
-import '../services/pdf_receipt_service.dart';
 import 'success_screen.dart';
 import '../widgets/custom_page_header.dart';
 
@@ -271,6 +270,274 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         Navigator.pop(context);
       }
     }
+  }
+
+  Future<void> _onUdharClicked() async {
+    if (_billItems.isEmpty || _isSaving) return;
+    if (_grandTotal <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cannot save a bill with amount 0')),
+      );
+      return;
+    }
+
+    // Check 1: Ensure customer name and phone are filled
+    String name = _customerNameController.text.trim();
+    String phone = _customerPhoneController.text.trim();
+
+    if (name.isEmpty && phone.isEmpty) {
+      final filled = await _promptCustomerInfoForUdhar();
+      if (!filled) return;
+      name = _customerNameController.text.trim();
+      phone = _customerPhoneController.text.trim();
+    }
+
+    if (!mounted) return;
+
+    // Check 2: Prompt for today's received payment amount
+    final result = await _promptPartialPaymentForUdhar();
+    if (result == null) return; // Cancelled
+
+    final double receivedAmount = result['amount'] ?? 0.0;
+
+    setState(() {
+      _paymentMode = 'CREDIT';
+      if (receivedAmount > 0) {
+        _receivedAmountController.text = receivedAmount.toStringAsFixed(2);
+      } else {
+        _receivedAmountController.clear();
+      }
+    });
+
+    _cartTrigger.value++;
+    await _saveBill();
+  }
+
+  Future<bool> _promptCustomerInfoForUdhar() async {
+    final nameCtrl = TextEditingController(text: _customerNameController.text);
+    final phoneCtrl = TextEditingController(text: _customerPhoneController.text);
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFEF3C7),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.account_circle_outlined, color: Color(0xFFD97706), size: 24),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Customer Details Required', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('ઉધાર બિલ માટે કસ્ટમર નામ/ફોન જરૂરી છે', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RawAutocomplete<ApiCustomer>(
+                  textEditingController: nameCtrl,
+                  focusNode: FocusNode(),
+                  displayStringForOption: (option) => option.name,
+                  optionsBuilder: (textEditingValue) async {
+                    if (textEditingValue.text.length < 2) {
+                      return const Iterable<ApiCustomer>.empty();
+                    }
+                    try {
+                      return await RestaurantApi.instance.searchCustomers(textEditingValue.text);
+                    } catch (_) {
+                      return const Iterable<ApiCustomer>.empty();
+                    }
+                  },
+                  onSelected: (option) {
+                    nameCtrl.text = option.name;
+                    phoneCtrl.text = option.mobileNumber;
+                    _customerAddressController.text = option.address;
+                    _customerGstController.text = option.gstNumber;
+                  },
+                  fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                    return TextField(
+                      controller: controller,
+                      focusNode: focusNode,
+                      decoration: InputDecoration(
+                        labelText: 'Customer Name *',
+                        hintText: 'e.g. Raju Patel',
+                        prefixIcon: const Icon(Icons.person_outline),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  },
+                  optionsViewBuilder: (context, onSelected, options) {
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: Material(
+                        elevation: 4,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          width: 280,
+                          constraints: const BoxConstraints(maxHeight: 180),
+                          child: ListView.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: options.length,
+                            itemBuilder: (context, index) {
+                              final option = options.elementAt(index);
+                              return ListTile(
+                                title: Text(option.name, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                                subtitle: Text(option.mobileNumber),
+                                onTap: () => onSelected(option),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    labelText: 'Mobile Number *',
+                    hintText: '10-digit mobile number',
+                    prefixIcon: const Icon(Icons.phone_android_outlined),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD97706),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                if (nameCtrl.text.trim().isEmpty && phoneCtrl.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter Customer Name or Mobile Number')),
+                  );
+                  return;
+                }
+                _customerNameController.text = nameCtrl.text.trim();
+                _customerPhoneController.text = phoneCtrl.text.trim();
+                Navigator.pop(context, true);
+              },
+              child: Text('Proceed', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  Future<Map<String, dynamic>?> _promptPartialPaymentForUdhar() async {
+    final amtCtrl = TextEditingController();
+
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Udhar Billing (ઉધાર બિલ)', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text('Total: \u20B9${_grandTotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFFD97706))),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text('Today how much money paid? (હાલે કેટલી રકમ જમા કરી?)', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: amtCtrl,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                autofocus: true,
+                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
+                decoration: InputDecoration(
+                  labelText: 'Received Amount / જમા રકમ (Optional)',
+                  hintText: 'Leave empty for 100% Udhar',
+                  prefixText: '\u20B9 ',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFD97706), width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text('If empty or 0, total amount (\u20B9${_grandTotal.toStringAsFixed(2)}) will be recorded as 100% Udhar in customer ledger.', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8))),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
+            ),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFD97706)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                Navigator.pop(context, {'amount': 0.0, 'mode': 'CASH'});
+              },
+              child: Text('Full Udhar (\u20B90 Paid)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFFD97706))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF10B981),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () {
+                final input = amtCtrl.text.trim();
+                final double amt = double.tryParse(input) ?? 0.0;
+                Navigator.pop(context, {'amount': amt, 'mode': 'CASH'});
+              },
+              child: Text('Save Bill', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _saveBill() async {
@@ -1073,11 +1340,11 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                           alignment: Alignment.center,
                           child: _isSaving && _paymentMode == 'CASH'
                               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Text('CASH', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: _paymentMode == 'CASH' ? Colors.white : const Color(0xFF64748B))),
+                              : Text('CASH', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 14, color: _paymentMode == 'CASH' ? Colors.white : const Color(0xFF64748B))),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: GestureDetector(
                         onTap: _billItems.isEmpty || _isSaving ? null : () {
@@ -1096,7 +1363,26 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                           alignment: Alignment.center,
                           child: _isSaving && _paymentMode == 'ONLINE'
                               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Text('ONLINE', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: _paymentMode == 'ONLINE' ? Colors.white : const Color(0xFF64748B))),
+                              : Text('ONLINE', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 14, color: _paymentMode == 'ONLINE' ? Colors.white : const Color(0xFF64748B))),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: _billItems.isEmpty || _isSaving ? null : _onUdharClicked,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(
+                            color: _paymentMode == 'CREDIT' ? const Color(0xFFF59E0B) : Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: _paymentMode == 'CREDIT' ? const Color(0xFFF59E0B) : const Color(0xFFE2E8F0)),
+                            boxShadow: _paymentMode == 'CREDIT' ? [BoxShadow(color: const Color(0xFFF59E0B).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: _isSaving && _paymentMode == 'CREDIT'
+                              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : Text('UDHAR', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 14, color: _paymentMode == 'CREDIT' ? Colors.white : const Color(0xFF64748B))),
                         ),
                       ),
                     ),
