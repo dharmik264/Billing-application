@@ -291,7 +291,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      if (!token.isPaid) ...[
+                      if (!token.isPaid && token.status.toLowerCase() != 'cancelled') ...[
                         GestureDetector(
                           onTap: () => _showTokenJamaDialog(token),
                           child: Container(

@@ -274,22 +274,34 @@ class ProcessPaymentView(APIView):
         if token.is_paid:
             return Response({'error': 'Token already paid'}, status=status.HTTP_400_BAD_REQUEST)
 
+        if token.status and token.status.lower() == 'cancelled':
+            return Response({'error': 'Cannot process payment for a cancelled token'}, status=status.HTTP_400_BAD_REQUEST)
+
         serializer = PaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         raw_amount = request.data.get('amount') if 'amount' in request.data else request.data.get('received_amount')
-        payment_mode = serializer.validated_data['payment_mode']
+        payment_mode = serializer.validated_data['payment_mode'].strip().lower()
 
         if raw_amount is not None:
             from decimal import Decimal, InvalidOperation
             try:
-                amt = Decimal(str(raw_amount))
-                if not amt.is_finite() or amt <= 0:
+                amt = Decimal(str(raw_amount)).quantize(Decimal('0.01'))
+                if not amt.is_finite() or amt <= Decimal('0.00'):
                     raise InvalidOperation
             except (ValueError, TypeError, InvalidOperation):
                 return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
 
-            token.received_amount = Decimal(str(token.received_amount or 0)) + amt
+            token.calculate_totals()
+            current_recv = Decimal(str(token.received_amount or 0))
+            remaining_due = max(Decimal('0.00'), token.total - current_recv)
+            pay_amt = min(amt, remaining_due)
+            new_received = current_recv + pay_amt
+
+            if new_received > Decimal('99999999.99'):
+                return Response({'error': 'Received amount exceeds maximum limit'}, status=status.HTTP_400_BAD_REQUEST)
+
+            token.received_amount = new_received
             token.payment_mode = payment_mode
             if token.received_amount >= token.total:
                 token.is_paid = True
@@ -403,17 +415,18 @@ class CustomerJamaPaymentView(APIView):
         customer_phone = str(request.data.get('customer_phone', '')).strip()
         customer_name  = str(request.data.get('customer_name', '')).strip()
         raw_amount     = request.data.get('amount', 0)
-        payment_mode   = str(request.data.get('payment_mode', 'CASH')).upper()
+        payment_mode   = str(request.data.get('payment_mode', 'cash')).strip().lower()
+
+        valid_modes = {'cash', 'upi', 'card', 'online', 'credit'}
+        if payment_mode not in valid_modes:
+            return Response({'error': 'Invalid payment mode'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            amount = Decimal(str(raw_amount))
-            if not amount.is_finite():
+            amount = Decimal(str(raw_amount)).quantize(Decimal('0.01'))
+            if not amount.is_finite() or amount <= Decimal('0.00'):
                 raise InvalidOperation
         except (ValueError, TypeError, InvalidOperation):
             return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if amount <= 0:
-            return Response({'error': 'Amount must be greater than zero'}, status=status.HTTP_400_BAD_REQUEST)
 
         from django.db.models import Q
         tokens = Token.objects.filter(is_paid=False).exclude(status='cancelled')
