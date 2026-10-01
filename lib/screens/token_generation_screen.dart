@@ -545,8 +545,31 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               ),
               onPressed: () {
                 final input = amtCtrl.text.trim();
-                final double amt = double.tryParse(input) ?? 0.0;
-                Navigator.pop(context, {'amount': amt, 'mode': 'CASH'});
+                // Blank input is treated as ₹0 (full udhar).
+                if (input.isEmpty) {
+                  Navigator.pop(context, {'amount': 0.0, 'mode': 'CASH'});
+                  return;
+                }
+                final double? parsed = double.tryParse(input);
+                if (parsed == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter a valid numeric amount')),
+                  );
+                  return;
+                }
+                if (parsed < 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Amount cannot be negative')),
+                  );
+                  return;
+                }
+                if (parsed > _grandTotal) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Amount cannot exceed total ₹${_grandTotal.toStringAsFixed(2)}')),
+                  );
+                  return;
+                }
+                Navigator.pop(context, {'amount': parsed, 'mode': 'CASH'});
               },
               child: Text('Save Bill', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
             ),

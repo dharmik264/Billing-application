@@ -45,7 +45,7 @@ class CreateTokenSerializer(serializers.Serializer):
     payment_mode   = serializers.CharField(max_length=50, required=False, allow_blank=True)
     is_paid        = serializers.BooleanField(required=False, default=False)
     received_amount = serializers.DecimalField(
-        max_digits=10, decimal_places=2, required=False, default=0
+        max_digits=10, decimal_places=2, required=False, default=0, min_value=0
     )
     items          = serializers.ListField(
         child=serializers.DictField(), min_length=1

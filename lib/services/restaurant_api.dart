@@ -1209,6 +1209,9 @@
         tokenNumber: json['token_number']?.toString(),
         billNumber: json['bill_number']?.toString(),
         orderType: json['order_type']?.toString(),
+        receivedAmount: json['received_amount'] != null
+            ? double.tryParse(json['received_amount'].toString())
+            : null,
       );
     }
 

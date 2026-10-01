@@ -99,9 +99,13 @@ class Token(models.Model):
             
         self.service_charge = Decimal('0')
         self.total = self.subtotal + self.gst_amount + self.service_charge - Decimal(str(self.discount))
-        # For UDHAR/credit bills compute the outstanding balance.
-        recv = Decimal(str(self.received_amount or 0))
-        self.balance_due = max(Decimal('0'), self.total - recv)
+        # For UDHAR/credit bills compute the outstanding balance;
+        # fully-paid tokens always have zero balance.
+        if self.is_paid:
+            self.balance_due = Decimal('0')
+        else:
+            recv = Decimal(str(self.received_amount or 0))
+            self.balance_due = max(Decimal('0'), self.total - recv)
         self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total',
                                  'received_amount', 'balance_due', 'items_summary'])
 

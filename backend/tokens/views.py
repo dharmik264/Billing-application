@@ -64,10 +64,16 @@ class CreateTokenView(APIView):
             bill_number = Token.get_next_bill_number()
 
         received_amount = data.get('received_amount', 0) or 0
-        payment_mode    = data.get('payment_mode', 'CASH')
-        is_credit       = str(payment_mode).lower() == 'credit'
-        # A credit bill is not fully paid even if a partial amount was received.
-        is_paid = (not is_credit) and bool(payment_mode)
+        payment_mode    = data.get('payment_mode', '') or ''
+        is_credit       = payment_mode.lower() == 'credit'
+        # Credit bills are never fully paid; blank payment_mode defers to the
+        # caller's explicit is_paid value declared by CreateTokenSerializer.
+        if is_credit:
+            is_paid = False
+        elif payment_mode:
+            is_paid = True
+        else:
+            is_paid = data.get('is_paid', False)
 
         token = Token.objects.create(
             token_number  = token_number,
