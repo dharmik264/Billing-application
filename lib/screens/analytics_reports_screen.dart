@@ -70,7 +70,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                     _searchController.clear();
                     setState(() {});
                   },
-                  filterChips: <String>['Today', 'Yesterday', 'This Week'].map((range) => FilterChipData(
+                  filterChips: <String>['All', 'Today', 'Yesterday', 'This Week'].map((range) => FilterChipData(
                     label: range,
                     value: range,
                     icon: Icons.calendar_month_rounded,
@@ -80,7 +80,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   actionButtons: [
                     Builder(
                       builder: (context) {
-                        final isCustom = !['Today', 'Yesterday', 'This Week'].contains(_selectedRange);
+                        final isCustom = !['All', 'Today', 'Yesterday', 'This Week'].contains(_selectedRange);
                         return ElevatedButton(
                           onPressed: _pickDateRange,
                           style: ElevatedButton.styleFrom(
@@ -504,7 +504,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    if (_selectedRange == 'Today') {
+    if (_selectedRange == 'All') {
+      rangeFiltered = _tokens.toList();
+    } else if (_selectedRange == 'Today') {
       rangeFiltered = _tokens
           .where((t) =>
               t.rawDate.year == today.year &&
