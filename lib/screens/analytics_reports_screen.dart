@@ -1016,7 +1016,8 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     final map = <String, _CustomerLedgerSummary>{};
     final query = _searchController.text.trim().toLowerCase();
 
-    for (final token in _filteredTokens) {
+    // Iterate over _tokens (all-time records) so a customer's entire transaction history is aggregated in 1 ledger
+    for (final token in _tokens) {
       final name = token.customerName.trim();
       final phone = token.customerPhone.trim();
 
@@ -1036,7 +1037,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         }
       }
 
-      final key = phone.isNotEmpty ? phone : name;
+      final key = phone.isNotEmpty ? phone : name.toLowerCase();
 
       if (!map.containsKey(key)) {
         map[key] = _CustomerLedgerSummary(
