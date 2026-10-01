@@ -593,10 +593,20 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     );
 
     if (result != null && result is Map<String, dynamic>) {
+      final int updatedCount = (result['updated_tokens_count'] as num?)?.toInt() ?? 0;
       final double unused = (result['remaining_unused'] as num?)?.toDouble() ?? 0.0;
       final double applied = (result['amount_applied'] as num?)?.toDouble() ?? 0.0;
       if (mounted) {
-        if (unused > 0) {
+        if (updatedCount == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('No pending unpaid bills found for ${customer.name}.'),
+              backgroundColor: _red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        } else if (unused > 0) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('\u20B9${applied.toStringAsFixed(2)} applied for ${customer.name}. Warning: \u20B9${unused.toStringAsFixed(2)} remains unused (no pending due).'),

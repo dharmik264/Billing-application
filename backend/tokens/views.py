@@ -280,8 +280,20 @@ class ProcessPaymentView(APIView):
         serializer = PaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        update_fields = ['payment_mode', 'is_paid', 'status']
+
+        if 'discount' in request.data:
+            from decimal import Decimal
+            try:
+                disc = Decimal(str(serializer.validated_data.get('discount', 0)))
+                token.discount = max(Decimal('0.00'), disc)
+                update_fields.append('discount')
+            except (ValueError, TypeError):
+                pass
+
         raw_amount = request.data.get('amount') if 'amount' in request.data else request.data.get('received_amount')
         payment_mode = serializer.validated_data['payment_mode'].strip().lower()
+        token.payment_mode = payment_mode
 
         if raw_amount is not None:
             from decimal import Decimal, InvalidOperation
@@ -302,18 +314,16 @@ class ProcessPaymentView(APIView):
                 return Response({'error': 'Received amount exceeds maximum limit'}, status=status.HTTP_400_BAD_REQUEST)
 
             token.received_amount = new_received
-            token.payment_mode = payment_mode
+            update_fields.append('received_amount')
+
             if token.received_amount >= token.total:
                 token.is_paid = True
                 token.status = 'completed'
-            token.save(update_fields=['payment_mode', 'is_paid', 'status', 'received_amount'])
         else:
-            token.payment_mode = payment_mode
-            token.discount     = serializer.validated_data.get('discount', 0)
-            token.is_paid      = True
-            token.status       = 'completed'
-            token.save(update_fields=['payment_mode', 'discount', 'is_paid', 'status'])
+            token.is_paid = True
+            token.status = 'completed'
 
+        token.save(update_fields=list(set(update_fields)))
         token.calculate_totals()
         return Response(TokenSerializer(token).data)
 
@@ -411,7 +421,9 @@ class CustomerJamaPaymentView(APIView):
 
     @transaction.atomic
     def post(self, request):
+        import re
         from decimal import Decimal, InvalidOperation
+
         customer_phone = str(request.data.get('customer_phone', '')).strip()
         customer_name  = str(request.data.get('customer_name', '')).strip()
         raw_amount     = request.data.get('amount', 0)
@@ -428,10 +440,16 @@ class CustomerJamaPaymentView(APIView):
         except (ValueError, TypeError, InvalidOperation):
             return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
 
+        def normalize_phone(p):
+            digits = re.sub(r'\D', '', str(p or ''))
+            return digits[-10:] if len(digits) >= 10 else digits
+
+        clean_phone = normalize_phone(customer_phone)
+
         from django.db.models import Q
         tokens = Token.objects.filter(is_paid=False).exclude(status='cancelled')
-        if customer_phone:
-            tokens = tokens.filter(customer_phone=customer_phone)
+        if clean_phone:
+            tokens = tokens.filter(Q(customer_phone__icontains=clean_phone) | Q(customer_phone=customer_phone))
         elif customer_name:
             tokens = tokens.filter(customer_name__iexact=customer_name)
         else:
@@ -443,6 +461,9 @@ class CustomerJamaPaymentView(APIView):
         updated_tokens = []
 
         for token in tokens:
+            if clean_phone and normalize_phone(token.customer_phone) != clean_phone and token.customer_phone != customer_phone:
+                continue
+
             token.calculate_totals()
             due = token.balance_due
             if due <= 0:
@@ -463,6 +484,14 @@ class CustomerJamaPaymentView(APIView):
             remaining -= pay_this
             if remaining <= 0:
                 break
+
+        if not updated_tokens:
+            return Response({
+                'error': 'No pending unpaid bills found for this customer',
+                'amount_applied': 0.0,
+                'remaining_unused': float(amount),
+                'updated_tokens_count': 0
+            }, status=status.HTTP_404_NOT_FOUND)
 
         return Response({
             'message': f'Successfully applied payment of \u20b9{amount - remaining}',
