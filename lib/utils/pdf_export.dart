@@ -629,9 +629,8 @@ class PdfExport {
     required double totalCredit,
     required double netBalance,
   }) async {
-    final pdf = pw.Document();
-
-    pdf.addPage(
+    final pdf = pw.Document()
+      ..addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
@@ -652,7 +651,7 @@ class PdfExport {
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     pw.Text('Customer Name: ${customerName.isEmpty ? "Walk-in Customer" : customerName}',
-                        style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                        style: const pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
                     pw.SizedBox(height: 4),
                     pw.Text('Phone: ${customerPhone.isEmpty ? "N/A" : customerPhone}',
                         style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),

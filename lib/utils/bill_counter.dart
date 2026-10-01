@@ -4,7 +4,6 @@ import '../services/restaurant_api.dart';
 class BillCounter {
   static const String _tokenCountKey = 'token_count';
   static const String _billCountKey = 'bill_count';
-  static const String _lastBillDateKey = 'last_bill_date';
 
   static Future<int> _initTokens() async {
     final prefs = await SharedPreferences.getInstance();

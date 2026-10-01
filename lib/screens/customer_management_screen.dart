@@ -364,6 +364,26 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     GestureDetector(
+                      onTap: () => _showJamaDialog(customer),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: _green.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: _green.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.account_balance_wallet_rounded, size: 14, color: _green),
+                            const SizedBox(width: 4),
+                            Text('Jama (\u20B9 જમા)', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: _green)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    GestureDetector(
                       onTap: () => _openEdit(customer),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -381,7 +401,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     GestureDetector(
                       onTap: () => _deleteCustomer(customer),
                       child: Container(
@@ -400,7 +420,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     _statusToggleBadge(customer),
                   ],
                 ),
@@ -410,6 +430,194 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _showJamaDialog(ApiCustomer customer) async {
+    final amountCtrl = TextEditingController();
+    String selectedMode = 'CASH';
+    bool submitting = false;
+
+    final result = await showDialog<dynamic>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.account_balance_wallet_rounded, color: _green, size: 24),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Jama / Payment (નાણાં જમા)',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: _slate900),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _slate50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _slate200),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(customer.name, style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: _slate900)),
+                          const SizedBox(height: 2),
+                          Text('Phone: ${customer.mobileNumber}', style: GoogleFonts.inter(fontSize: 12, color: _slate600)),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Jama Amount (\u20B9 જમા રકમ)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: amountCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      autofocus: true,
+                      style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+                      decoration: InputDecoration(
+                        prefixText: '\u20B9 ',
+                        hintText: 'Enter amount to credit...',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _green, width: 2)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Payment Mode (ચૂકવણી મોડ)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('Cash'),
+                            selected: selectedMode == 'CASH',
+                            selectedColor: _green.withValues(alpha: 0.2),
+                            onSelected: (val) {
+                              if (val) setDialogState(() => selectedMode = 'CASH');
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('UPI'),
+                            selected: selectedMode == 'ONLINE',
+                            selectedColor: _indigo.withValues(alpha: 0.2),
+                            onSelected: (val) {
+                              if (val) setDialogState(() => selectedMode = 'ONLINE');
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('Card'),
+                            selected: selectedMode == 'CARD',
+                            selectedColor: Colors.amber.withValues(alpha: 0.2),
+                            onSelected: (val) {
+                              if (val) setDialogState(() => selectedMode = 'CARD');
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting ? null : () => Navigator.pop(ctx, false),
+                  child: Text('Cancel', style: GoogleFonts.inter(color: _slate600)),
+                ),
+                ElevatedButton(
+                  onPressed: submitting ? null : () async {
+                    final text = amountCtrl.text.trim();
+                    final amt = double.tryParse(text);
+                    if (amt == null || amt <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a valid amount greater than zero')),
+                      );
+                      return;
+                    }
+                    setDialogState(() => submitting = true);
+                    try {
+                      final response = await RestaurantApi.instance.recordCustomerJama(
+                        customerPhone: customer.mobileNumber,
+                        amount: amt,
+                        paymentMode: selectedMode,
+                        customerName: customer.name,
+                      );
+                      if (context.mounted) Navigator.pop(ctx, response);
+                    } catch (e) {
+                      setDialogState(() => submitting = false);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Jama failed: $e'), backgroundColor: _red),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _green,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: submitting
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text('Submit Jama (\u20B9 જમા)', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result != null && result is Map<String, dynamic>) {
+      final double unused = (result['remaining_unused'] as num?)?.toDouble() ?? 0.0;
+      final double applied = (result['amount_applied'] as num?)?.toDouble() ?? 0.0;
+      if (mounted) {
+        if (unused > 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('\u20B9${applied.toStringAsFixed(2)} applied for ${customer.name}. Warning: \u20B9${unused.toStringAsFixed(2)} remains unused (no pending due).'),
+              backgroundColor: Colors.amber.shade800,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Jama recorded successfully for ${customer.name}!'),
+              backgroundColor: _green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
+        _loadCustomers();
+      }
+    }
   }
 
   Widget _infoRow(IconData icon, String text, {int maxLines = 2}) {

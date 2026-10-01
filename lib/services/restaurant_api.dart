@@ -421,9 +421,10 @@
       return ApiToken.fromJson(data);
     }
 
-    Future<void> processPayment(String id, String paymentMode) async {
+    Future<void> processPayment(String id, String paymentMode, {double? amount}) async {
       await post('tokens/$id/payment/', {
         'payment_mode': paymentMode.toLowerCase(),
+        if (amount != null && amount > 0) 'amount': amount,
       });
       BillEventNotifier.notifyBillChanged();
     }
@@ -447,6 +448,22 @@
 
     Future<List<ApiCustomer>> searchCustomers(String query) async {
       return fetchCustomers(search: query);
+    }
+
+    Future<Map<String, dynamic>> recordCustomerJama({
+      required String customerPhone,
+      required double amount,
+      String paymentMode = 'CASH',
+      String? customerName,
+    }) async {
+      final response = await post('tokens/customer-jama/', {
+        'customer_phone': customerPhone,
+        'amount': amount,
+        'payment_mode': paymentMode,
+        if (customerName != null && customerName.isNotEmpty) 'customer_name': customerName,
+      });
+      BillEventNotifier.notifyBillChanged();
+      return response;
     }
 
     Future<void> deleteToken(String id) async {
@@ -975,11 +992,22 @@
       this.subtotal = 0.0,
       this.tax = 0.0,
       this.discount = 0.0,
+      this.receivedAmount = 0.0,
+      this.balanceDue = 0.0,
+      this.isPaid = false,
       this.shopId = '',
       this.updatedAt = '',
     });
 
     factory ApiToken.fromJson(Map<String, dynamic> json) {
+      final mode = json['payment_mode']?.toString() ??
+          json['paymentMode']?.toString() ??
+          'CASH';
+      final paid = json['is_paid'] == true || json['isPaid'] == true;
+      final recv = _toDouble(json['received_amount'] ?? json['receivedAmount']);
+      final totalVal = _toDouble(json['total'] ?? json['grand_total'] ?? json['grandTotal']);
+      final due = _toDouble(json['balance_due'] ?? json['balanceDue'] ?? (paid ? 0.0 : (totalVal - recv)));
+
       return ApiToken(
         id: json['id']?.toString() ?? '',
         tokenNumber: json['token_number']?.toString() ??
@@ -1001,14 +1029,14 @@
         customerGstNumber: json['customer_gst_number']?.toString() ??
             json['customerGstNumber']?.toString() ??
             '',
-        grandTotal:
-            _toDouble(json['total'] ?? json['grand_total'] ?? json['grandTotal']),
+        grandTotal: totalVal,
         subtotal: _toDouble(json['subtotal']),
         tax: _toDouble(json['tax']),
         discount: _toDouble(json['discount']),
-        paymentMode: json['payment_mode']?.toString() ??
-            json['paymentMode']?.toString() ??
-            'CASH',
+        receivedAmount: recv,
+        balanceDue: due,
+        isPaid: paid,
+        paymentMode: mode,
         createdAt:
             json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
         updatedAt:
@@ -1034,6 +1062,9 @@
     final double subtotal;
     final double tax;
     final double discount;
+    final double receivedAmount;
+    final double balanceDue;
+    final bool isPaid;
     final String paymentMode;
     final String createdAt;
     final String updatedAt;

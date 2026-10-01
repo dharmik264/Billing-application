@@ -14,7 +14,6 @@ import '../widgets/bill_receipt_widget.dart';
 
 import '../services/printer_service.dart';
 import '../utils/bill_settings_helper.dart';
-import 'success_screen.dart';
 
 class PrintPreviewScreen extends StatefulWidget {
   const PrintPreviewScreen({
@@ -702,86 +701,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       return null;
     }
   }
-
-  void _showPrintSuccessAnimationAndPrint() async {
-    final overlay = Overlay.of(context);
-    late OverlayEntry overlayEntry;
-
-    overlayEntry = OverlayEntry(
-      builder: (context) => Positioned.fill(
-        child: TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 300),
-          tween: Tween(begin: 0.0, end: 1.0),
-          builder: (context, value, child) {
-            return Material(
-              color: Colors.black.withValues(alpha: 0.6 * value),
-              child: Center(
-                child: Transform.scale(
-                  scale: Curves.easeOutBack.transform(value),
-                  child: Opacity(
-                    opacity: value,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 10,
-                              offset: Offset(0, 4))
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 64,
-                            height: 64,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF4F46E5),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.print,
-                                color: Colors.white, size: 36),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Bill Generated\nSuccessfully',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-
-    overlay.insert(overlayEntry);
-
-    // Added artificial delay to allow user to see the animation
-    await Future.delayed(const Duration(milliseconds: 1500));
-    
-    if (!mounted) return;
-    overlayEntry.remove();
-
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-          builder: (context) => const SuccessScreen(isPrinted: true)),
-    );
-  }
-
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)

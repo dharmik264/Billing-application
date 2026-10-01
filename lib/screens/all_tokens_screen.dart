@@ -291,6 +291,27 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      if (!token.isPaid) ...[
+                        GestureDetector(
+                          onTap: () => _showTokenJamaDialog(token),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFECFDF5),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFFA7F3D0)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.account_balance_wallet, size: 12, color: Color(0xFF10B981)),
+                                const SizedBox(width: 4),
+                                Text('Jama (\u20B9 જમા)', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       GestureDetector(
                         onTap: () => _editToken(token),
                         child: Container(
@@ -335,6 +356,184 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _showTokenJamaDialog(ApiToken token) async {
+    final amountCtrl = TextEditingController(
+      text: token.balanceDue > 0 ? token.balanceDue.toStringAsFixed(2) : token.grandTotal.toStringAsFixed(2),
+    );
+    String selectedMode = 'CASH';
+    bool submitting = false;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF10B981), size: 24),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Bill #${token.billNumber} Jama',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: const Color(0xFF0F172A)),
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (token.customerName.isNotEmpty)
+                            Text(token.customerName, style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: const Color(0xFF0F172A))),
+                          Text('Bill Total: \u20B9${token.grandTotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF475569))),
+                          if (token.receivedAmount > 0)
+                            Text('Already Paid: \u20B9${token.receivedAmount.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF10B981))),
+                          if (token.balanceDue > 0)
+                            Text('Remaining Due: \u20B9${token.balanceDue.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFFEF4444))),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Jama Amount (\u20B9 જમા રકમ)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF334155))),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: amountCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      autofocus: true,
+                      style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+                      decoration: InputDecoration(
+                        prefixText: '\u20B9 ',
+                        hintText: 'Enter amount...',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF10B981), width: 2)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Payment Mode (ચૂકવણી મોડ)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF334155))),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('Cash'),
+                            selected: selectedMode == 'CASH',
+                            selectedColor: const Color(0xFF10B981).withValues(alpha: 0.2),
+                            onSelected: (val) {
+                              if (val) setDialogState(() => selectedMode = 'CASH');
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('UPI'),
+                            selected: selectedMode == 'ONLINE',
+                            selectedColor: const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                            onSelected: (val) {
+                              if (val) setDialogState(() => selectedMode = 'ONLINE');
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Text('Card'),
+                            selected: selectedMode == 'CARD',
+                            selectedColor: Colors.amber.withValues(alpha: 0.2),
+                            onSelected: (val) {
+                              if (val) setDialogState(() => selectedMode = 'CARD');
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting ? null : () => Navigator.pop(ctx, false),
+                  child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF475569))),
+                ),
+                ElevatedButton(
+                  onPressed: submitting ? null : () async {
+                    final text = amountCtrl.text.trim();
+                    final amt = double.tryParse(text);
+                    if (amt == null || amt <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a valid amount greater than zero')),
+                      );
+                      return;
+                    }
+                    setDialogState(() => submitting = true);
+                    try {
+                      await RestaurantApi.instance.processPayment(
+                        token.id,
+                        selectedMode,
+                        amount: amt,
+                      );
+                      if (context.mounted) Navigator.pop(ctx, true);
+                    } catch (e) {
+                      setDialogState(() => submitting = false);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Jama failed: $e'), backgroundColor: Colors.red),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF10B981),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: submitting
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text('Submit Jama (\u20B9 જમા)', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (result == true) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Jama recorded for Bill #${token.billNumber}!'),
+            backgroundColor: const Color(0xFF10B981),
+          ),
+        );
+        _loadTokens();
+      }
+    }
   }
 
   Future<void> _changePaymentMode(ApiToken token) async {

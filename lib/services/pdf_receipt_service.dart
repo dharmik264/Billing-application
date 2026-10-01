@@ -182,7 +182,7 @@ class PdfReceiptService {
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('GST (${gstPercentStr}%):'),
+                  pw.Text('GST ($gstPercentStr%):'),
                   pw.Text('Rs. ${computedTax.toStringAsFixed(2)}'),
                 ],
               ),

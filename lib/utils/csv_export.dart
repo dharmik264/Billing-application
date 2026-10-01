@@ -93,18 +93,16 @@ class CsvExport {
       return field;
     }
 
+    final now = DateTime.now();
+    final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
     csvBuffer
       ..writeln('Shop Name:,${escapeField(shopName)}')
       ..writeln('Report Type:,Customer Ledger Statement')
       ..writeln('Customer Name:,${escapeField(customerName.isEmpty ? "Walk-in Customer" : customerName)}')
       ..writeln('Customer Phone:,${escapeField(customerPhone.isEmpty ? "N/A" : customerPhone)}')
-      ..writeln('Report Range:,${escapeField(rangeLabel)}');
-
-    final now = DateTime.now();
-    final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    csvBuffer.writeln('Generated On:,${escapeField(dateStr)}');
-
-    csvBuffer
+      ..writeln('Report Range:,${escapeField(rangeLabel)}')
+      ..writeln('Generated On:,${escapeField(dateStr)}')
       ..writeln('Total Billed (Debit):,${totalDebit.toStringAsFixed(2)}')
       ..writeln('Total Received (Credit):,${totalCredit.toStringAsFixed(2)}')
       ..writeln('Net Outstanding Balance:,${netBalance.toStringAsFixed(2)}')

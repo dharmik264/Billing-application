@@ -3,7 +3,8 @@ from .views import (
     TokenListView, CreateTokenView, TokenDetailView,
     UpdateTokenStatusView, AddItemToTokenView,
     ProcessPaymentView, CancelTokenView,
-    KitchenView, TodaySummaryView, CustomerSearchAPIView
+    KitchenView, TodaySummaryView, CustomerSearchAPIView,
+    CustomerJamaPaymentView
 )
 
 urlpatterns = [
@@ -17,4 +18,5 @@ urlpatterns = [
     path('kitchen/',                   KitchenView.as_view(),             name='kitchen'),
     path('summary/today/',             TodaySummaryView.as_view(),        name='today-summary'),
     path('customers/search/',          CustomerSearchAPIView.as_view(),   name='customer-search'),
+    path('customer-jama/',             CustomerJamaPaymentView.as_view(), name='customer-jama'),
 ]

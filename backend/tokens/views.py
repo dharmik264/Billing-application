@@ -267,7 +267,7 @@ class ProcessPaymentView(APIView):
     @transaction.atomic
     def post(self, request, pk):
         try:
-            token = Token.objects.get(pk=pk)
+            token = Token.objects.select_for_update().get(pk=pk)
         except Token.DoesNotExist:
             return Response({'error': 'Token not found'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -277,13 +277,32 @@ class ProcessPaymentView(APIView):
         serializer = PaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        token.payment_mode = serializer.validated_data['payment_mode']
-        token.discount     = serializer.validated_data.get('discount', 0)
-        token.is_paid      = True
-        token.status       = 'completed'
-        token.save(update_fields=['payment_mode', 'discount', 'is_paid', 'status'])
-        token.calculate_totals()
+        raw_amount = request.data.get('amount') if 'amount' in request.data else request.data.get('received_amount')
+        payment_mode = serializer.validated_data['payment_mode']
 
+        if raw_amount is not None:
+            from decimal import Decimal, InvalidOperation
+            try:
+                amt = Decimal(str(raw_amount))
+                if not amt.is_finite() or amt <= 0:
+                    raise InvalidOperation
+            except (ValueError, TypeError, InvalidOperation):
+                return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
+
+            token.received_amount = Decimal(str(token.received_amount or 0)) + amt
+            token.payment_mode = payment_mode
+            if token.received_amount >= token.total:
+                token.is_paid = True
+                token.status = 'completed'
+            token.save(update_fields=['payment_mode', 'is_paid', 'status', 'received_amount'])
+        else:
+            token.payment_mode = payment_mode
+            token.discount     = serializer.validated_data.get('discount', 0)
+            token.is_paid      = True
+            token.status       = 'completed'
+            token.save(update_fields=['payment_mode', 'discount', 'is_paid', 'status'])
+
+        token.calculate_totals()
         return Response(TokenSerializer(token).data)
 
 
@@ -368,3 +387,74 @@ class CustomerSearchAPIView(APIView):
             'name': c['customer_name'],
             'phone': c['customer_phone']
         } for c in customers])
+
+
+class CustomerJamaPaymentView(APIView):
+    """
+    POST /api/tokens/customer-jama/
+    Body: { "customer_phone": "...", "amount": 500.0, "payment_mode": "cash" }
+    Applies the payment towards unpaid tokens for this customer (oldest first).
+    """
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request):
+        from decimal import Decimal, InvalidOperation
+        customer_phone = str(request.data.get('customer_phone', '')).strip()
+        customer_name  = str(request.data.get('customer_name', '')).strip()
+        raw_amount     = request.data.get('amount', 0)
+        payment_mode   = str(request.data.get('payment_mode', 'CASH')).upper()
+
+        try:
+            amount = Decimal(str(raw_amount))
+            if not amount.is_finite():
+                raise InvalidOperation
+        except (ValueError, TypeError, InvalidOperation):
+            return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if amount <= 0:
+            return Response({'error': 'Amount must be greater than zero'}, status=status.HTTP_400_BAD_REQUEST)
+
+        from django.db.models import Q
+        tokens = Token.objects.filter(is_paid=False).exclude(status='cancelled')
+        if customer_phone:
+            tokens = tokens.filter(customer_phone=customer_phone)
+        elif customer_name:
+            tokens = tokens.filter(customer_name__iexact=customer_name)
+        else:
+            return Response({'error': 'customer_phone or customer_name required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        tokens = tokens.order_by('created_at').select_for_update()
+
+        remaining = amount
+        updated_tokens = []
+
+        for token in tokens:
+            token.calculate_totals()
+            due = token.balance_due
+            if due <= 0:
+                continue
+
+            pay_this = min(due, remaining)
+            token.received_amount = Decimal(str(token.received_amount or 0)) + pay_this
+            token.payment_mode = payment_mode
+
+            if token.received_amount >= token.total:
+                token.is_paid = True
+                token.status = 'completed'
+
+            token.save(update_fields=['received_amount', 'payment_mode', 'is_paid', 'status'])
+            token.calculate_totals()
+            updated_tokens.append(token)
+
+            remaining -= pay_this
+            if remaining <= 0:
+                break
+
+        return Response({
+            'message': f'Successfully applied payment of \u20b9{amount - remaining}',
+            'amount_applied': float(amount - remaining),
+            'remaining_unused': float(remaining),
+            'updated_tokens_count': len(updated_tokens)
+        }, status=status.HTTP_200_OK)
+
