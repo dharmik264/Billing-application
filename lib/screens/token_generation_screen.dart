@@ -615,7 +615,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         customerAddress: _customerAddressController.text.trim(),
         customerGstNumber: _customerGstController.text.trim(),
         paymentMode: _paymentMode.toLowerCase(),
-        receivedAmount: snapshotReceived > 0 ? snapshotReceived : null,
+        receivedAmount: (_paymentMode == 'CREDIT' && snapshotReceived > 0)
+            ? snapshotReceived
+            : null,
         items: _billItems.map((c) => ApiTokenItemDraft(
           name: c.product.name,
           code: c.product.code,

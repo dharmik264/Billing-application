@@ -75,6 +75,11 @@ class CreateTokenView(APIView):
         else:
             is_paid = data.get('is_paid', False)
 
+        # Paid (non-credit) tokens are settled in full; zero out any
+        # received_amount so balance_due is not erroneously computed.
+        if is_paid:
+            received_amount = 0
+
         token = Token.objects.create(
             token_number  = token_number,
             bill_number   = bill_number,
@@ -112,6 +117,20 @@ class CreateTokenView(APIView):
                 continue
 
         token.calculate_totals()
+
+        # Reject received_amount that exceeds the computed bill total;
+        # the real total is only known after calculate_totals().
+        if not is_paid and received_amount and token.total > 0:
+            from decimal import Decimal
+            if Decimal(str(received_amount)) > token.total:
+                token.delete()
+                return Response(
+                    {'received_amount': [
+                        f'Received amount cannot exceed bill total '
+                        f'(\u20b9{token.total}).'
+                    ]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         
         # ── SMS Integration (Simulated) ───────────────────────────
         shop = getattr(request, 'tenant', None)
