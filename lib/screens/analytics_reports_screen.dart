@@ -1630,17 +1630,12 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   double _getNetDueForCustomer(String name, String phone, double fallbackDue) {
     final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
-    final last10 = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
 
     if (cleanPhone.isNotEmpty) {
       for (final c in _customers) {
-        final cClean = c.mobileNumber.replaceAll(RegExp(r'\D'), '');
-        final cLast10 = cClean.length >= 10 ? cClean.substring(cClean.length - 10) : cClean;
-
-        if (cClean.isNotEmpty && cleanPhone.length >= 7 && cClean.length >= 7) {
-          if (cLast10 == last10 || cClean.endsWith(cleanPhone) || cleanPhone.endsWith(cClean)) {
-            return c.hasNetDue ? c.netDue : fallbackDue;
-          }
+        final cPhone = c.mobileNumber.replaceAll(RegExp(r'\D'), '');
+        if (cPhone.isNotEmpty && cPhone == cleanPhone) {
+          return c.hasNetDue ? c.netDue : fallbackDue;
         }
       }
       return fallbackDue;
