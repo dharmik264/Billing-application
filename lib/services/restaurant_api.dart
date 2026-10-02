@@ -1745,11 +1745,14 @@
       required this.gstNumber,
       required this.status,
       this.netDue = 0.0,
+      this.hasNetDue = false,
       required this.createdAt,
       required this.updatedAt,
     });
 
     factory ApiCustomer.fromJson(Map<String, dynamic> json) {
+      final containsNetDue = json.containsKey('net_due') || json.containsKey('netDue');
+      final val = json['net_due'] ?? json['netDue'];
       return ApiCustomer(
         id: json['id']?.toString() ?? '',
         name: json['name']?.toString() ?? '',
@@ -1757,7 +1760,8 @@
         address: json['address']?.toString() ?? '',
         gstNumber: json['gst_number']?.toString() ?? '',
         status: json['status']?.toString() ?? 'active',
-        netDue: _toDouble(json['net_due'] ?? json['netDue']),
+        netDue: _toDouble(val),
+        hasNetDue: containsNetDue && val != null,
         createdAt: json['created_at']?.toString() ?? '',
         updatedAt: json['updated_at']?.toString() ?? '',
       );
@@ -1770,6 +1774,7 @@
     final String gstNumber;
     final String status;
     final double netDue;
+    final bool hasNetDue;
     final String createdAt;
     final String updatedAt;
 

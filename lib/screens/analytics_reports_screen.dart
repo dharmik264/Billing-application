@@ -1039,7 +1039,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         }
       }
 
-      final key = phone.isNotEmpty ? phone : name.toLowerCase();
+      final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+      final normPhone = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
+      final key = normPhone.isNotEmpty ? 'phone_$normPhone' : 'name_${name.trim().toLowerCase()}';
 
       if (!map.containsKey(key)) {
         map[key] = _CustomerLedgerSummary(
@@ -1250,6 +1252,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   }
 
   void _openCustomerLedgerSheet(_CustomerLedgerSummary summary) {
+    final sheetNetDue = _getNetDueForCustomer(summary.customerName, summary.customerPhone, summary.dueBalance);
+    final isSheetDue = sheetNetDue > 0;
+
     // Sort customer tokens chronologically (oldest to newest) to compute running balance
     final sortedTokens = [...summary.tokens]..sort((a, b) => a.rawDate.compareTo(b.rawDate));
 
@@ -1406,29 +1411,23 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Builder(
-                      builder: (context) {
-                        final sheetNetDue = _getNetDueForCustomer(summary.customerName, summary.customerPhone, summary.dueBalance);
-                        final isSheetDue = sheetNetDue > 0;
-                        return Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isSheetDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: isSheetDue ? const Color(0xFFFECACA) : const Color(0xFFBBF7D0)),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Net Due', style: GoogleFonts.inter(fontSize: 11, color: isSheetDue ? const Color(0xFF991B1B) : const Color(0xFF166534), fontWeight: FontWeight.w600)),
-                                const SizedBox(height: 4),
-                                FittedBox(child: Text(_money(sheetNetDue), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: isSheetDue ? const Color(0xFF991B1B) : const Color(0xFF14532D)))),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isSheetDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: isSheetDue ? const Color(0xFFFECACA) : const Color(0xFFBBF7D0)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Net Due', style: GoogleFonts.inter(fontSize: 11, color: isSheetDue ? const Color(0xFF991B1B) : const Color(0xFF166534), fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            FittedBox(child: Text(_money(sheetNetDue), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: isSheetDue ? const Color(0xFF991B1B) : const Color(0xFF14532D)))),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1470,7 +1469,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                             shopName: 'My Shop',
                             totalDebit: summary.totalBilled,
                             totalCredit: summary.totalPaid,
-                            netBalance: summary.dueBalance,
+                            netBalance: sheetNetDue,
                           );
                           if (mounted) {
                             _showSnackBar('Customer Ledger PDF statement downloaded!');
@@ -1508,7 +1507,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                             shopName: 'My Shop',
                             totalDebit: summary.totalBilled,
                             totalCredit: summary.totalPaid,
-                            netBalance: summary.dueBalance,
+                            netBalance: sheetNetDue,
                           );
                           if (mounted) {
                             _showSnackBar('Customer Ledger Excel downloaded!');
@@ -1621,19 +1620,27 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   double _getNetDueForCustomer(String name, String phone, double fallbackDue) {
     final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+    final last10 = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
+
     if (cleanPhone.isNotEmpty) {
       for (final c in _customers) {
-        final cPhone = c.mobileNumber.replaceAll(RegExp(r'\D'), '');
-        if (cPhone.isNotEmpty && (cPhone.endsWith(cleanPhone) || cleanPhone.endsWith(cPhone))) {
-          return c.netDue;
+        final cClean = c.mobileNumber.replaceAll(RegExp(r'\D'), '');
+        final cLast10 = cClean.length >= 10 ? cClean.substring(cClean.length - 10) : cClean;
+
+        if (cClean.isNotEmpty && cleanPhone.length >= 7 && cClean.length >= 7) {
+          if (cLast10 == last10 || cClean.endsWith(cleanPhone) || cleanPhone.endsWith(cClean)) {
+            return c.hasNetDue ? c.netDue : fallbackDue;
+          }
         }
       }
+      return fallbackDue;
     }
+
     final lowerName = name.trim().toLowerCase();
     if (lowerName.isNotEmpty) {
       for (final c in _customers) {
         if (c.name.trim().toLowerCase() == lowerName) {
-          return c.netDue;
+          return c.hasNetDue ? c.netDue : fallbackDue;
         }
       }
     }
@@ -1643,12 +1650,18 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   Future<void> _loadTokensFromDatabase() async {
     setState(() => _loading = true);
     try {
-      final results = await Future.wait([
-        RestaurantApi.instance.fetchTokens(),
-        RestaurantApi.instance.fetchCustomers(),
-      ]);
-      final tokens = results[0] as List<ApiToken>;
-      final customers = results[1] as List<ApiCustomer>;
+      final tokenListFuture = RestaurantApi.instance.fetchTokens().catchError((e) {
+        debugPrint('Analytics: failed to load tokens: $e');
+        return <ApiToken>[];
+      });
+      final customerListFuture = RestaurantApi.instance.fetchCustomers().catchError((e) {
+        debugPrint('Analytics: failed to load customers: $e');
+        return <ApiCustomer>[];
+      });
+
+      final tokens = await tokenListFuture;
+      final customers = await customerListFuture;
+
       if (!mounted) return;
       setState(() {
         _tokens
