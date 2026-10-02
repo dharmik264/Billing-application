@@ -549,57 +549,60 @@ class DashboardScreenState extends State<DashboardScreen> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: () => _changePaymentMode(token),
-                      child: Container(
+                Expanded(
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _changePaymentMode(token),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                token.paymentMode.isNotEmpty
+                                    ? token.paymentMode.toUpperCase()
+                                    : 'CASH',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF475569),
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              const Icon(Icons.edit,
+                                  size: 9, color: Color(0xFF64748B)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: statusColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              token.paymentMode.isNotEmpty
-                                  ? token.paymentMode.toUpperCase()
-                                  : 'CASH',
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF475569),
-                              ),
-                            ),
-                            const SizedBox(width: 3),
-                            const Icon(Icons.edit,
-                                size: 9, color: Color(0xFF64748B)),
-                          ],
+                        child: Text(
+                          statusText,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: statusColor,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        statusText,
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
