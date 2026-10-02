@@ -141,7 +141,8 @@ class RegisterView(APIView):
             return Response({'error': f'Registration failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         response_data = {'message': 'Registration successful, OTP sent', 'phone': phone}
-        if __import__('django.conf', fromlist=['settings']).settings.DEBUG:
+        _show_otp = __import__('django.conf', fromlist=['settings']).settings.DEBUG or os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True'
+        if _show_otp:
             response_data['otp'] = code
             
         return Response(response_data, status=status.HTTP_201_CREATED)
@@ -166,10 +167,11 @@ class SendOTPView(APIView):
 
         send_sms_otp(phone, code)
 
-        # For dev, return OTP in response if DEBUG is True
+        # For dev/testing, return OTP in response if DEBUG or RETURN_OTP_IN_RESPONSE is True
         response_data = {'message': 'OTP sent successfully', 'phone': phone}
-        if __import__('django.conf', fromlist=['settings']).settings.DEBUG:
-            response_data['otp'] = code  # Remove in production!
+        _show_otp = __import__('django.conf', fromlist=['settings']).settings.DEBUG or os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True'
+        if _show_otp:
+            response_data['otp'] = code  # Disable RETURN_OTP_IN_RESPONSE in true production!
 
         return Response(response_data, status=status.HTTP_200_OK)
 
