@@ -6,6 +6,7 @@ import '../utils/pdf_export.dart';
 import '../utils/csv_export.dart';
 import '../widgets/custom_page_header.dart';
 import '../utils/bill_event_notifier.dart';
+import 'customer_ledger_screen.dart';
 
 class AnalyticsReportsScreen extends StatefulWidget {
   const AnalyticsReportsScreen({super.key});
@@ -1094,7 +1095,8 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         final isDue = summary.dueBalance > 0;
 
         return InkWell(
-          onTap: () => _openCustomerLedgerSheet(summary),
+          onTap: () => _openFullLedgerForSummary(summary),
+          onLongPress: () => _openCustomerLedgerSheet(summary),
           borderRadius: BorderRadius.circular(16),
           child: Container(
             margin: const EdgeInsets.only(bottom: 10),
@@ -1174,6 +1176,61 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _openFullLedgerForSummary(_CustomerLedgerSummary summary) async {
+    try {
+      final searchParam = summary.customerPhone.isNotEmpty ? summary.customerPhone : summary.customerName;
+      final customers = await RestaurantApi.instance.fetchCustomers(search: searchParam);
+
+      ApiCustomer? match;
+      if (summary.customerPhone.isNotEmpty) {
+        final cleanPhone = summary.customerPhone.replaceAll(RegExp(r'\D'), '');
+        match = customers.firstWhere(
+          (c) => c.mobileNumber.replaceAll(RegExp(r'\D'), '').endsWith(cleanPhone) ||
+                 cleanPhone.endsWith(c.mobileNumber.replaceAll(RegExp(r'\D'), '')),
+          orElse: () => customers.firstWhere(
+            (c) => c.name.toLowerCase() == summary.customerName.toLowerCase(),
+            orElse: () => customers.isNotEmpty ? customers.first : _createDummyCustomer(summary),
+          ),
+        );
+      } else {
+        match = customers.firstWhere(
+          (c) => c.name.toLowerCase() == summary.customerName.toLowerCase(),
+          orElse: () => customers.isNotEmpty ? customers.first : _createDummyCustomer(summary),
+        );
+      }
+
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CustomerLedgerScreen(customer: match!),
+        ),
+      );
+      _loadTokensFromDatabase();
+    } catch (e) {
+      final fallback = _createDummyCustomer(summary);
+      if (!mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CustomerLedgerScreen(customer: fallback),
+        ),
+      );
+      _loadTokensFromDatabase();
+    }
+  }
+
+  ApiCustomer _createDummyCustomer(_CustomerLedgerSummary summary) {
+    return ApiCustomer(
+      id: '0',
+      name: summary.customerName,
+      mobileNumber: summary.customerPhone,
+      address: '',
+      gstNumber: '',
+      status: 'active',
+      createdAt: '',
+      updatedAt: '',
     );
   }
 
@@ -1266,6 +1323,22 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                         ],
                       ),
                     ),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _openFullLedgerForSummary(summary);
+                      },
+                      icon: const Icon(Icons.account_balance_wallet_outlined, size: 16),
+                      label: Text('Ledger', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B)),
                       onPressed: () => Navigator.pop(context),
