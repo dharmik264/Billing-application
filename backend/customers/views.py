@@ -45,21 +45,20 @@ def compute_customer_ledger_summary(customer):
     bills = get_customer_bills(customer)
     total_billed = bills.aggregate(s=Sum('total'))['s'] or Decimal('0.00')
 
-    payments = CustomerPayment.objects.filter(customer=customer)
-    recorded_paid = payments.aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
-
-    unlinked_paid = Decimal('0.00')
-    recorded_token_ids = set(payments.exclude(token__isnull=True).values_list('token_id', flat=True))
+    bills_paid = Decimal('0.00')
     for bill in bills:
-        if bill.id not in recorded_token_ids:
-            recv = Decimal(str(bill.received_amount or 0))
-            if bill.is_paid and recv == 0 and bill.total > 0:
-                recv = Decimal(str(bill.total))
-            unlinked_paid += recv
+        recv = Decimal(str(bill.received_amount or 0))
+        if bill.is_paid and recv == 0 and bill.total > 0:
+            recv = Decimal(str(bill.total))
+        bills_paid += recv
 
-    total_paid = recorded_paid + unlinked_paid
+    advance_paid = CustomerPayment.objects.filter(customer=customer, token__isnull=True).aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
+
+    total_paid = bills_paid + advance_paid
     net_due = max(Decimal('0.00'), total_billed - total_paid)
     payment_status = 'PAID IN FULL' if net_due == 0 else 'UDHAR'
+
+    payments = CustomerPayment.objects.filter(customer=customer)
 
     return {
         'total_billed': total_billed,

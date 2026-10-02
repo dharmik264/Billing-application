@@ -75,10 +75,9 @@ class CreateTokenView(APIView):
         else:
             is_paid = data.get('is_paid', False)
 
-        # Paid (non-credit) tokens are settled in full; zero out any
-        # received_amount so balance_due is not erroneously computed.
-        if is_paid:
-            received_amount = 0
+        # For non-credit tokens, if is_paid is set, calculate_totals() will auto-fill
+        # received_amount = total if it is 0.
+        pass
 
         token = Token.objects.create(
             token_number  = token_number,
@@ -455,6 +454,13 @@ class CustomerJamaPaymentView(APIView):
         else:
             return Response({'error': 'customer_phone or customer_name required'}, status=status.HTTP_400_BAD_REQUEST)
 
+        from customers.models import Customer, CustomerPayment
+        req_cust = None
+        if clean_phone:
+            req_cust = Customer.objects.filter(mobile_number=clean_phone).first()
+        elif customer_name:
+            req_cust = Customer.objects.filter(name__iexact=customer_name).first()
+
         tokens = tokens.order_by('created_at').select_for_update()
 
         remaining = amount
@@ -481,16 +487,16 @@ class CustomerJamaPaymentView(APIView):
             token.calculate_totals()
             updated_tokens.append(token)
 
-            from customers.models import Customer, CustomerPayment
             token_cust = None
             if token.customer_phone:
                 token_cust = Customer.objects.filter(mobile_number=normalize_phone(token.customer_phone)).first()
             elif token.customer_name:
                 token_cust = Customer.objects.filter(name__iexact=token.customer_name).first()
 
-            if token_cust:
+            target_cust = token_cust or req_cust
+            if target_cust:
                 CustomerPayment.objects.create(
-                    customer=token_cust,
+                    customer=target_cust,
                     token=token,
                     amount=pay_this,
                     payment_mode=payment_mode,
