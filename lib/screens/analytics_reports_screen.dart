@@ -1054,20 +1054,33 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
       }
 
       final existing = map[key]!;
-      final isPaid = token.payment.isNotEmpty && token.payment.toLowerCase() != 'credit' && token.payment.toLowerCase() != 'due' && token.status.toLowerCase() != 'cancelled';
       final isCancelled = token.status.toLowerCase() == 'cancelled';
+      final isPaid = token.isPaid || (token.payment.isNotEmpty && token.payment.toLowerCase() != 'credit' && token.payment.toLowerCase() != 'due' && !isCancelled);
 
       final billed = isCancelled ? 0.0 : token.amount;
-      final paid = (isCancelled || !isPaid) ? 0.0 : token.amount;
+      double paid = 0.0;
+      if (!isCancelled) {
+        if (isPaid) {
+          paid = token.amount;
+        } else if (token.receivedAmount > 0) {
+          paid = token.receivedAmount;
+        } else {
+          paid = 0.0;
+        }
+      }
 
       existing.tokens.add(token);
+      final newBilled = existing.totalBilled + billed;
+      final newPaid = existing.totalPaid + paid;
+      final netDue = (newBilled - newPaid) > 0 ? (newBilled - newPaid) : 0.0;
+
       map[key] = _CustomerLedgerSummary(
         customerName: name.isNotEmpty ? name : existing.customerName,
         customerPhone: phone.isNotEmpty ? phone : existing.customerPhone,
         totalOrders: existing.totalOrders + 1,
-        totalBilled: existing.totalBilled + billed,
-        totalPaid: existing.totalPaid + paid,
-        dueBalance: (existing.totalBilled + billed) - (existing.totalPaid + paid),
+        totalBilled: newBilled,
+        totalPaid: newPaid,
+        dueBalance: netDue,
         lastTransactionDate: token.dateTimeString,
         tokens: existing.tokens,
       );
@@ -1159,7 +1172,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        isDue ? 'Due: ${_money(summary.dueBalance)}' : 'Paid in Full',
+                        isDue ? 'Net Due: ${_money(summary.dueBalance)}' : 'Paid in Full',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1684,8 +1697,11 @@ class _HistoryToken {
     this.status,
     this.rawDate,
     this.items,
-    this.orderType,
-  );
+    this.orderType, {
+    this.receivedAmount = 0.0,
+    this.balanceDue = 0.0,
+    this.isPaid = false,
+  });
 
   factory _HistoryToken.fromApiToken(ApiToken token) {
     final number = token.tokenNumber.startsWith('#')
@@ -1705,6 +1721,9 @@ class _HistoryToken {
       DateTime.tryParse(token.createdAt)?.toLocal() ?? DateTime.now(),
       token.items,
       token.orderType,
+      receivedAmount: token.receivedAmount,
+      balanceDue: token.balanceDue,
+      isPaid: token.isPaid,
     );
   }
 
@@ -1721,6 +1740,9 @@ class _HistoryToken {
   final DateTime rawDate;
   final List<ApiTokenItem> items;
   final String orderType;
+  final double receivedAmount;
+  final double balanceDue;
+  final bool isPaid;
 }
 
 String _formatStatus(String status) {
