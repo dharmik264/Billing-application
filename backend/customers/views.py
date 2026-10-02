@@ -45,15 +45,17 @@ def compute_customer_ledger_summary(customer):
     bills = get_customer_bills(customer)
     total_billed = bills.aggregate(s=Sum('total'))['s'] or Decimal('0.00')
 
-    sum_received = bills.aggregate(s=Sum('received_amount'))['s'] or Decimal('0.00')
-    fallback_paid = bills.filter(is_paid=True, received_amount=0, total__gt=0).aggregate(s=Sum('total'))['s'] or Decimal('0.00')
-    bills_paid = sum_received + fallback_paid
+    # Sum full total for paid bills, and received_amount for unpaid bills
+    paid_bills_sum = bills.filter(is_paid=True).aggregate(s=Sum('total'))['s'] or Decimal('0.00')
+    unpaid_bills_recv_sum = bills.filter(is_paid=False).aggregate(s=Sum('received_amount'))['s'] or Decimal('0.00')
+    bills_paid = paid_bills_sum + unpaid_bills_recv_sum
 
+    # Advance payments not tied to any bill
     advance_paid = CustomerPayment.objects.filter(customer=customer, token__isnull=True).aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
 
     total_paid = bills_paid + advance_paid
     net_due = max(Decimal('0.00'), total_billed - total_paid)
-    payment_status = 'PAID IN FULL' if net_due == 0 else 'UDHAR'
+    payment_status = 'PAID IN FULL' if net_due == Decimal('0.00') else 'UDHAR'
 
     payments = CustomerPayment.objects.filter(customer=customer)
 

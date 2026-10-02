@@ -555,7 +555,7 @@
 
         for (var token in customerTokens) {
           totalBilled += token.grandTotal;
-          final pAmt = token.receivedAmount > 0 ? token.receivedAmount : (token.isPaid ? token.grandTotal : 0.0);
+          final pAmt = token.isPaid ? token.grandTotal : (token.receivedAmount > 0 ? token.receivedAmount : 0.0);
           totalPaid += pAmt;
           if (pAmt > 0) {
             payments.add(ApiCustomerPayment(

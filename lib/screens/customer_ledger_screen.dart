@@ -929,7 +929,9 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         final dateStr = DateFormat('dd/MM/yyyy').format(dateTime);
         final timeStr = DateFormat('hh:mm a').format(dateTime);
 
-        final double dueAmt = bill.balanceDue;
+        final double billTotal = bill.grandTotal;
+        final double paidAmt = bill.isPaid ? billTotal : (bill.receivedAmount > 0 ? bill.receivedAmount : 0.0);
+        final double dueAmt = bill.isPaid ? 0.0 : (billTotal > paidAmt ? (billTotal - paidAmt) : 0.0);
         final bool billPaid = bill.isPaid || dueAmt <= 0;
 
         return Container(
@@ -1040,8 +1042,8 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _tableMetric('Bill Amount', _formatAmount(bill.grandTotal), _slate900),
-                        _tableMetric('Paid Amount', _formatAmount(bill.receivedAmount > 0 ? bill.receivedAmount : (bill.isPaid ? bill.grandTotal : 0.0)), _green),
+                        _tableMetric('Bill Amount', _formatAmount(billTotal), _slate900),
+                        _tableMetric('Paid Amount', _formatAmount(paidAmt), _green),
                         _tableMetric('Due Amount', _formatAmount(dueAmt), dueAmt > 0 ? _red : _slate600, isBold: dueAmt > 0),
                       ],
                     ),
