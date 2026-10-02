@@ -129,6 +129,40 @@ class CreateTokenView(APIView):
                     ]},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
+        # ── Auto-create Customer & Record Payment Log ───────────
+        from customers.models import Customer, CustomerPayment
+        c_phone = normalize_phone(token.customer_phone)
+        c_name = token.customer_name.strip()
+        cust_obj = None
+        if c_phone:
+            cust_obj, _ = Customer.objects.get_or_create(
+                mobile_number=c_phone,
+                defaults={
+                    'name': c_name or f"Customer {c_phone}",
+                    'address': token.customer_address or '',
+                    'gst_number': token.customer_gst_number or '',
+                    'status': 'active'
+                }
+            )
+            if c_name and cust_obj.name != c_name:
+                cust_obj.name = c_name
+                cust_obj.save(update_fields=['name'])
+        elif c_name:
+            cust_obj = Customer.objects.filter(name__iexact=c_name).first()
+
+        paid_amt = Decimal(str(token.received_amount or 0))
+        if token.is_paid and paid_amt == Decimal('0'):
+            paid_amt = Decimal(str(token.total or 0))
+
+        if cust_obj and paid_amt > Decimal('0'):
+            CustomerPayment.objects.create(
+                customer=cust_obj,
+                token=token,
+                amount=paid_amt,
+                payment_mode=payment_mode or ('cash' if token.is_paid else 'due'),
+                note=f"Bill #{token.bill_number} initial payment"
+            )
         
         # ── SMS Integration (Simulated) ───────────────────────────
         shop = getattr(request, 'tenant', None)
@@ -457,9 +491,16 @@ class CustomerJamaPaymentView(APIView):
         req_cust = None
         if clean_phone:
             req_cust = Customer.objects.filter(mobile_number=clean_phone).first()
+            if not req_cust:
+                c_name = customer_name or f"Customer {clean_phone}"
+                req_cust = Customer.objects.create(
+                    mobile_number=clean_phone,
+                    name=c_name,
+                    status='active'
+                )
         elif customer_name:
             cust_matches = Customer.objects.filter(name__iexact=customer_name)
-            if cust_matches.count() == 1:
+            if cust_matches.exists():
                 req_cust = cust_matches.first()
 
         tokens = tokens.order_by('created_at').select_for_update()
@@ -490,10 +531,15 @@ class CustomerJamaPaymentView(APIView):
 
             token_cust = None
             if token.customer_phone:
-                token_cust = Customer.objects.filter(mobile_number=normalize_phone(token.customer_phone)).first()
+                t_phone = normalize_phone(token.customer_phone)
+                if t_phone:
+                    token_cust, _ = Customer.objects.get_or_create(
+                        mobile_number=t_phone,
+                        defaults={'name': token.customer_name or f"Customer {t_phone}", 'status': 'active'}
+                    )
             elif token.customer_name:
                 cust_matches = Customer.objects.filter(name__iexact=token.customer_name)
-                if cust_matches.count() == 1:
+                if cust_matches.exists():
                     token_cust = cust_matches.first()
 
             target_cust = token_cust or req_cust
@@ -510,13 +556,15 @@ class CustomerJamaPaymentView(APIView):
             if remaining <= 0:
                 break
 
-        if not updated_tokens:
-            return Response({
-                'message': 'No pending unpaid bills found for this customer',
-                'amount_applied': 0.0,
-                'remaining_unused': float(amount),
-                'updated_tokens_count': 0
-            }, status=status.HTTP_200_OK)
+        # Handle remaining/advance payment if any unused amount remains
+        if remaining > 0 and req_cust:
+            CustomerPayment.objects.create(
+                customer=req_cust,
+                token=None,
+                amount=remaining,
+                payment_mode=payment_mode,
+                note='Advance Jama payment'
+            )
 
         applied_amount = amount - remaining
 

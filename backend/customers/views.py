@@ -180,7 +180,12 @@ class CustomerPayDueView(APIView):
                 return Response({'error': 'A valid customer mobile number is required.'}, status=status.HTTP_400_BAD_REQUEST)
             customer = Customer.objects.select_for_update().filter(mobile_number=clean_phone).first()
             if not customer:
-                return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+                c_name = request.data.get('name') or request.data.get('customer_name') or f"Customer {clean_phone}"
+                customer = Customer.objects.create(
+                    mobile_number=clean_phone,
+                    name=c_name,
+                    status='active'
+                )
 
         raw_amount = request.data.get('amount')
         payment_mode = str(request.data.get('payment_mode', 'cash')).strip().lower()
