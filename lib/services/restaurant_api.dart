@@ -1751,8 +1751,8 @@
     });
 
     factory ApiCustomer.fromJson(Map<String, dynamic> json) {
-      final containsNetDue = json.containsKey('net_due') || json.containsKey('netDue');
-      final val = json['net_due'] ?? json['netDue'];
+      final val = json.containsKey('net_due') ? json['net_due'] : json['netDue'];
+      final isNumeric = val != null && (val is num || num.tryParse(val.toString()) != null);
       return ApiCustomer(
         id: json['id']?.toString() ?? '',
         name: json['name']?.toString() ?? '',
@@ -1761,7 +1761,7 @@
         gstNumber: json['gst_number']?.toString() ?? '',
         status: json['status']?.toString() ?? 'active',
         netDue: _toDouble(val),
-        hasNetDue: containsNetDue && val != null,
+        hasNetDue: isNumeric,
         createdAt: json['created_at']?.toString() ?? '',
         updatedAt: json['updated_at']?.toString() ?? '',
       );

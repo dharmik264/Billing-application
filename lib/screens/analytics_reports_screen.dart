@@ -1461,14 +1461,19 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                             status: e.status,
                           )).toList();
 
+                          final totalBilled = summary.totalBilled;
+                          final effectivePaid = (totalBilled >= sheetNetDue)
+                              ? (totalBilled - sheetNetDue)
+                              : summary.totalPaid;
+
                           await PdfExport.exportCustomerLedgerReport(
                             customerName: summary.customerName,
                             customerPhone: summary.customerPhone,
                             ledgerRows: pdfRows,
                             rangeLabel: _selectedRange,
                             shopName: 'My Shop',
-                            totalDebit: summary.totalBilled,
-                            totalCredit: summary.totalPaid,
+                            totalDebit: totalBilled,
+                            totalCredit: effectivePaid,
                             netBalance: sheetNetDue,
                           );
                           if (mounted) {
@@ -1499,14 +1504,19 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                             status: e.status,
                           )).toList();
 
+                          final totalBilled = summary.totalBilled;
+                          final effectivePaid = (totalBilled >= sheetNetDue)
+                              ? (totalBilled - sheetNetDue)
+                              : summary.totalPaid;
+
                           await CsvExport.exportCustomerLedgerReport(
                             customerName: summary.customerName,
                             customerPhone: summary.customerPhone,
                             ledgerRows: pdfRows,
                             rangeLabel: _selectedRange,
                             shopName: 'My Shop',
-                            totalDebit: summary.totalBilled,
-                            totalCredit: summary.totalPaid,
+                            totalDebit: totalBilled,
+                            totalCredit: effectivePaid,
                             netBalance: sheetNetDue,
                           );
                           if (mounted) {
@@ -1650,13 +1660,13 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   Future<void> _loadTokensFromDatabase() async {
     setState(() => _loading = true);
     try {
-      final tokenListFuture = RestaurantApi.instance.fetchTokens().catchError((e) {
+      final tokenListFuture = RestaurantApi.instance.fetchTokens().then<List<ApiToken>?>((t) => t).catchError((e) {
         debugPrint('Analytics: failed to load tokens: $e');
-        return <ApiToken>[];
+        return null;
       });
-      final customerListFuture = RestaurantApi.instance.fetchCustomers().catchError((e) {
+      final customerListFuture = RestaurantApi.instance.fetchCustomers().then<List<ApiCustomer>?>((c) => c).catchError((e) {
         debugPrint('Analytics: failed to load customers: $e');
-        return <ApiCustomer>[];
+        return null;
       });
 
       final tokens = await tokenListFuture;
@@ -1664,12 +1674,16 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
       if (!mounted) return;
       setState(() {
-        _tokens
-          ..clear()
-          ..addAll(tokens.map(_HistoryToken.fromApiToken));
-        _customers
-          ..clear()
-          ..addAll(customers);
+        if (tokens != null) {
+          _tokens
+            ..clear()
+            ..addAll(tokens.map(_HistoryToken.fromApiToken));
+        }
+        if (customers != null) {
+          _customers
+            ..clear()
+            ..addAll(customers);
+        }
       });
     } catch (e) {
       debugPrint('Analytics: failed to load tokens/customers: $e');
