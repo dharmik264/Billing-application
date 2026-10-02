@@ -1,0 +1,228 @@
+﻿Commit Hash,Date,Time,Author,Commit Message
+794428d,09/09/2026,09:42:47 PM,Balkanji Bari,Invalidate summary cache on bill changes to force real-time token card and price updates
+3a68c24,09/09/2026,09:30:35 PM,Balkanji Bari,"Implement global real-time screen auto-refresh on bill creation, edit, and deletion"
+7da5445,09/09/2026,09:13:59 PM,Balkanji Bari,"Fix registration error handling, schema creation, and phone number normalization"
+60453fc,09/09/2026,08:45:27 PM,Balkanji Bari,Show both Date and Time on recent tokens on Dashboard screen
+d3f9e9a,09/09/2026,08:29:30 PM,Balkanji Bari,"Add conditional GST, Excel/PDF GST columns, smaller shop name, token timestamp, and rename app to Easy Bill"
+6cd1a47,09/09/2026,07:12:37 PM,Balkanji Bari,Add contact picker feature to Add Customer screen
+df29ccd,09/09/2026,06:58:44 PM,Balkanji Bari,Display actual Valid Until date in user settings and super admin shop requests screen
+ca9aadd,09/09/2026,06:21:56 PM,Balkanji Bari,Implement 7-day grace period for approved plans before deactivation
+7626e9b,09/09/2026,02:12:58 PM,Balkanji Bari,Fix token number to restart daily and bill number to be continuous
+c009026,09/09/2026,01:48:46 PM,Balkanji Bari,Fix token and bill number sequence logic for multi-device sync
+89635bb,09/09/2026,01:29:56 PM,Balkanji Bari,Auto refresh dashboard after updating a bill
+44c9f7a,09/09/2026,01:15:11 PM,Balkanji Bari,"Fix print preview to only print without navigating to SuccessScreen, and update printer disconnected message"
+4d500b0,09/09/2026,12:36:15 PM,Balkanji Bari,"Fix customer save error, show approved plan on super admin screens"
+108c3de,08/09/2026,04:54:45 PM,Balkanji Bari,Fix Super Admin Payment Settings QR Code image rendering bug
+a938895,08/09/2026,03:12:04 PM,Balkanji Bari,Fix UI layout: Revert calendar button position but keep Item category and add buttons on a separate line
+7340c72,08/09/2026,02:45:46 PM,Balkanji Bari,"Move CustomSearchActionView actionButtons (e.g. Category, Add Item) to a separate line below filter chips for better mobile layout"
+13f8808,08/09/2026,12:30:39 PM,Balkanji Bari,Fix edit bill cart item duplication bug (match by name instead of empty code)
+bf0e802,08/09/2026,12:14:26 PM,Balkanji Bari,"Fix edit bill item loading, update PDF report currency formatting, remove shop name upper case in receipts, highlight calendar button on custom date"
+050832d,08/09/2026,11:33:53 AM,Balkanji Bari,"Fix UI cutting in product cards, align + button to bottom, and show GST in PDF bills"
+0ff5997,08/09/2026,02:14:06 AM,Balkanji Bari,Fix Android CSV/PDF export permission issues by using app docs dir
+0236110,08/09/2026,02:08:17 AM,Balkanji Bari,Fix A4 bill printing and save flow
+40ccaea,08/09/2026,12:54:19 AM,Balkanji Bari,Feature: Reset bill number daily while continuing token number
+04bb69f,07/09/2026,11:33:36 PM,Balkanji Bari,Fix API timeout zero seconds bug
+5ec69f7,07/09/2026,12:17:15 PM,Balkanji Bari,Update build.sh to use migrate_schemas for django-tenants
+5ab9610,07/09/2026,02:56:57 AM,Balkanji Bari,Update seed script with new Super Admin credentials
+b0369a1,07/09/2026,02:42:53 AM,Balkanji Bari,Fix offline data persistence typecast errors and update backend database configuration
+f9312bf,03/09/2026,03:43:48 PM,Balkanji Bari,"Update UI layouts, spacing, and customer address options"
+cef80da,03/09/2026,03:17:35 PM,Balkanji Bari,Update shop title font size on dashboard
+b6bcce1,03/09/2026,03:11:35 PM,Balkanji Bari,"Update item card layout, remove online toggle, add dynamic customer address and GSTIN printing support"
+5b311be,25/08/2026,05:29:39 PM,Balkanji Bari,"Add category edit/delete, item/customer status toggles, app exit prompt, print format fixes, bill share & analytics reports"
+1ca65f8,11/08/2026,03:41:08 PM,Balkanji Bari,"Remove white splash screen flash, optimize app startup speed to 1.2s, and remove backend test result dumps"
+fe90b0f,11/08/2026,03:29:27 PM,Balkanji Bari,"Security hardening, release APK build v1.0.6+7, item image display fix, and workspace cleanup"
+df2e036,10/08/2026,12:05:20 PM,Balkanji Bari,Update Gradle configuration and build release APK
+a0d0e9b,10/08/2026,11:57:24 AM,Balkanji Bari,Fix item image assignment per product and backend image support
+7655488,04/08/2026,04:05:57 PM,Balkanji Bari,fix: resolve linter cascade warning in edit_item_screen and update release APK
+730dc82,04/08/2026,02:53:34 PM,Balkanji Bari,feat: show all old and new categories on Add Item page with on-the-fly category creation and update release APK
+4cb1b61,04/08/2026,02:33:47 PM,Balkanji Bari,style: expand login white card container to fill full screen height to the bottom
+330ef3b,04/08/2026,02:11:14 PM,Balkanji Bari,feat: set splash screen duration to 5s and update release APK
+aa47471,30/07/2026,12:46:49 AM,Balkanji Bari,Move Add Customer button from floating action button to AppBar header in CustomerManagementScreen.
+b874be8,30/07/2026,12:35:50 AM,Balkanji Bari,Fix login screen mobile keyboard layout visibility issue and ensure immediate live printer list rendering on scan.
+a5c32b1,30/07/2026,12:09:19 AM,Balkanji Bari,"UI-only updates: Optimize bottom navbar margin, reduce Dashboard section spacing, and refine layout bounds."
+a53238d,29/07/2026,04:32:36 PM,Balkanji Bari,Handle network SocketException gracefully in User Roles screen with user-friendly floating snackbar.
+9f91b76,29/07/2026,04:11:19 PM,Balkanji Bari,Replace coming soon User Management tab in Super Admin screen with fully functional SuperAdminUserRolesScreen.
+8d98f19,29/07/2026,03:56:24 PM,Balkanji Bari,Reduce upper margin spacing on Dashboard header for a more compact UI.
+5f249cb,29/07/2026,03:51:12 PM,Balkanji Bari,Show live bluetooth searching indicator and immediately display scanned devices without needing to reopen screen.
+57e6cd5,29/07/2026,03:33:22 PM,Balkanji Bari,Make Customer Address and GST Number fields completely optional in Add Customer screen.
+c1a2c99,29/07/2026,01:13:08 AM,Balkanji Bari,Auto-connect to last paired Bluetooth printer device immediately when discovered in scanned list.
+b349327,29/07/2026,01:05:13 AM,Balkanji Bari,Enhance Bluetooth printer persistent connection handling and enable automatic device listing on scan completion.
+c8bdf14,29/07/2026,12:45:49 AM,Balkanji Bari,Completely remove font size controls from both Admin and User settings to lock in standard crisp print layout.
+add3df8,29/07/2026,12:35:31 AM,Balkanji Bari,"Fix print preview raster fallback and kitchen slip to use native direct text stream, completely solving garbage value issues."
+945a8d9,29/07/2026,12:26:16 AM,Balkanji Bari,Replace Jumbo font size (Size 3) with Large font size (Size 2) for Shop Name and Grand Total in printReceipt.
+bd4a623,29/07/2026,12:18:19 AM,Balkanji Bari,Upgrade printReceipt font scale across all bill sections to match Test Print large and jumbo sizes.
+f6f205c,29/07/2026,12:07:28 AM,Balkanji Bari,"Configure Jumbo Max font (Size 3, 20mm-24mm) for test print feature via native bluetooth stream."
+9cdb345,28/07/2026,11:49:55 PM,Balkanji Bari,"Comprehensive codebase audit: Clean all lints, verify Django backend checks, and finalize printer pipeline."
+94ccf49,28/07/2026,05:02:47 PM,Balkanji Bari,Remove strict 5s print timeouts to fix TimeoutException gray snackbar popup and update printer error messaging.
+44051d0,28/07/2026,04:55:52 PM,Balkanji Bari,Fix continuous paper feed issue by removing paperCut command and wrapping native bluetooth print in try-catch block.
+e177c74,28/07/2026,04:48:53 PM,Balkanji Bari,Completely rewrite printReceipt using native bluetooth.printCustom for 100% clean string printing without ESC/POS byte conversion issues.
+f389a83,28/07/2026,04:40:01 PM,Balkanji Bari,Fix thermal printer binary QR command issue by switching to clean text representation and load default capability profile.
+c13e23b,28/07/2026,04:32:42 PM,Balkanji Bari,Add detailed printer execution and byte transfer logs in PrinterService for real-time debugging.
+9a5129b,28/07/2026,04:23:09 PM,Balkanji Bari,Implement 512-byte Bluetooth packet chunking with 20ms pacing to eliminate thermal printer Bluetooth buffer overflow garbage output.
+1384650,28/07/2026,04:14:18 PM,Balkanji Bari,Add ESC/POS hardware reset command to clear printer buffer garbage characters before print payload.
+5c94390,28/07/2026,04:06:54 PM,Balkanji Bari,Fix thermal receipt width wrapping for Grand Total font and optimize font height scaling for 58mm printer compatibility.
+f032c2b,28/07/2026,01:22:32 PM,Balkanji Bari,"Configure 5 global bill font size controls (Title: 20mm, Body: 6mm, Subtotal: 7mm, Grand Total: 10mm, Footer: 5mm) in Admin settings and sync live."
+9a3a7e8,28/07/2026,01:03:07 PM,Balkanji Bari,Redirect save actions explicitly to SuperAdminDashboardScreen.
+792b2c6,28/07/2026,11:23:45 AM,Balkanji Bari,Auto-navigate back to dashboard/home after settings save successfully.
+d2b81c9,28/07/2026,11:18:59 AM,Balkanji Bari,Fix 404 gray bar error in System Settings fetch/save by fallback logic and keep original layout/location for Title & Body Font Size fields.
+dfb2bfb,28/07/2026,11:15:51 AM,Balkanji Bari,Move Global Bill Font Size controls to standalone card on Super Admin Dashboard as per requirement.
+c586546,28/07/2026,11:14:02 AM,Balkanji Bari,Refactor Super Admin page to isolate Global Printable Bill Font Settings into a separate card below Payment & QR card.
+ca5b32f,28/07/2026,10:13:19 AM,Balkanji Bari,Add Super Admin Global Printable Bill Font Size controls (Title mm & Body mm) synced live across all users.
+21d459c,28/07/2026,10:05:26 AM,Balkanji Bari,Configure 4.0mm font height for all bill body elements while keeping Shop Name at 20.0mm Jumbo size.
+9d9b5e8,28/07/2026,09:57:00 AM,Balkanji Bari,"Optimize thermal receipt font hierarchy: Shop Name 20mm, crisp size1 body font for 100% item visibility without line wrapping, and bold double-height Grand Total."
+341ee57,27/07/2026,11:33:33 PM,Balkanji Bari,Set Shop Name / Bill Title font height to maximum ESC/POS quad size (PosTextSize.size4 / ~20mm equivalent) and update visual bill preview font size.
+eb92d59,27/07/2026,11:25:50 PM,Balkanji Bari,Increase bill printing paper height by adding line spacing and bottom feed lines for thermal printers.
+9236c40,27/07/2026,03:14:59 AM,Balkanji Bari,Add automatic dynamic UPI QR code generator in Plan Payment screen if Super Admin enters UPI ID without uploading custom QR image.
+8c9aafd,27/07/2026,02:58:05 AM,Balkanji Bari,Fix system-settings update API call to use standard JSON payload instead of multipart request.
+dc4726b,27/07/2026,02:48:34 AM,Balkanji Bari,Fix 404 Server Error on Payment QR & UPI Settings save by updating primary API route path to /api/auth/system-settings/
+b1ff2cc,27/07/2026,02:40:55 AM,Balkanji Bari,Fix robust Base64 and URL QR code rendering in Subscription Payment Screen so Super Admin uploaded QR code displays for every user without fail.
+271113c,27/07/2026,02:29:45 AM,Balkanji Bari,Add newly created app icon (assets/icon/app_icon.png) to Splash Screen with pulse glow effect.
+3fb905a,27/07/2026,01:41:58 AM,Balkanji Bari,"Add modern dark-gradient animated Splash Screen with glowing logo pulse, shimmer title, and sleek tagline pill."
+91ae4fb,27/07/2026,01:36:25 AM,Balkanji Bari,"Add full application animations: splash screen pulse/fade, smooth tab slide transitions, dashboard shimmer & card entry stagger, interactive stat cards, and settings row entrance animations."
+e3f3310,27/07/2026,01:27:30 AM,Balkanji Bari,Add Forgot Password feature â€” 3-step OTP flow (backend + Flutter screen + login link)
+3da7601,25/07/2026,12:09:02 AM,Balkanji Bari,Store QR code as base64 data URI in PostgreSQL DB for permanent persistence on Render cloud server
+fc1a771,24/07/2026,11:44:52 PM,Balkanji Bari,Add web browser print notification and handle kIsWeb in printer setup screen
+8dc187c,24/07/2026,11:26:32 PM,Balkanji Bari,Ensure global system QR code loads for every user on payment page
+8dd2124,24/07/2026,11:22:38 PM,Balkanji Bari,Remove UTR ID text field from user subscription payment screen and simplify request button
+e4038d3,24/07/2026,11:09:16 PM,Balkanji Bari,Allow active users with pending/trial/approved status to log in and remove web Platform.isAndroid UnsupportedOperation exception
+4a3905f,24/07/2026,02:43:01 PM,Balkanji Bari,Enhance Test Print and Kitchen Slip text sizes to giant bold fonts displaying set font px size
+fb75df7,24/07/2026,12:26:40 PM,Balkanji Bari,Fix payment QR code image display for all users by building absolute URL in backend and adding base64 image resolver in Flutter
+5e057b8,24/07/2026,12:23:04 PM,Balkanji Bari,Enable PNG receipt capturing on mobile print execution to print exact custom font sizes on thermal paper
+6cb4c97,24/07/2026,12:06:22 PM,Balkanji Bari,Auto scale thermal bill print images to full paper width and double ESC/POS font heights for crystal clear text
+8e37e20,24/07/2026,01:22:39 AM,Balkanji Bari,Enhance Subscription Payment screen with Super Admin QR & UPI ID display and professional fallback notice when payment details are pending
+81eca86,24/07/2026,01:19:05 AM,Balkanji Bari,"Fix Super Admin Dashboard header overlap, grid card aspect ratio, and bottom navigation bar spacing"
+9125b7b,24/07/2026,12:57:10 AM,Balkanji Bari,Add shop activation and deactivation toggle switch on All Shop Requests screen
+550f15f,24/07/2026,12:43:06 AM,Balkanji Bari,Fix UI clipping of edit/delete icons and floating button overlap on Plan Settings screen
+da0a71d,23/07/2026,11:59:35 PM,Balkanji Bari,Add Super Admin User Payments screen and backend endpoint for UTR transaction verification
+c1988c7,23/07/2026,07:51:14 PM,Balkanji Bari,Fix Subscription Plan JSON endpoint error and enable automatic background printer auto-connect
+37d390b,23/07/2026,02:09:19 PM,Balkanji Bari,"Add Laptop Chrome Web printing support for USB, Network, and Bluetooth Thermal Printers"
+695cc5c,22/07/2026,11:44:42 PM,Balkanji Bari,Proportionally scale Shop Name and Tax Invoice headers with dynamic print font size
+bcff40c,22/07/2026,11:25:44 PM,Balkanji Bari,Add dynamic Bill Print Text & Font Size setting with live preview slider in Printer & Font Settings
+a20b5b4,22/07/2026,11:05:08 PM,Balkanji Bari,Clean up unused temporary zip files and finalize modular project structure
+4026b4b,22/07/2026,08:20:00 PM,Balkanji Bari,Add Super Admin Payment QR Code and UPI ID settings management screen
+03a4818,22/07/2026,08:07:57 PM,Balkanji Bari,"Fix all code quality, static analysis, and linter issues across the project"
+e8158e0,22/07/2026,05:46:37 AM,Balkanji Bari,Fix PosTextSize enum values for header text
+ac6c945,22/07/2026,05:31:01 AM,Balkanji Bari,Update printer layout and font size options for 100mm paper
+50c5bcf,22/07/2026,05:12:42 AM,Balkanji Bari,Set 55px font size for 100mm paper width mode in bill layout and print service
+1fd8db0,22/07/2026,03:47:41 AM,Balkanji Bari,Apply 75px height x 52px width large bold font style to Shop Name for maximum visibility
+6c8dcb9,22/07/2026,03:36:13 AM,Balkanji Bari,"Configure 100mm paper width (720px raster, 22px font size, 60 char width) with improved margins and padding"
+dbb5424,22/07/2026,03:27:31 AM,Balkanji Bari,Configure 80mm paper size option to format for 120mm print width (72 characters per line)
+af77827,22/07/2026,02:16:38 AM,Balkanji Bari,Update printer layout to match photo sample: Double Height and Single Width with 32 character line length
+d414333,22/07/2026,02:00:31 AM,Balkanji Bari,Update printer service layout with 24x48 px font size
+8d9433a,22/07/2026,01:33:55 AM,Balkanji Bari,Set printed bill raster width to exact 384 pixels for 58mm thermal printers
+ef10e0d,22/07/2026,12:55:39 AM,Balkanji Bari,Set font to ESC POS 24x48 pixels per character (PosTextSize.size2) with 16 character width
+3a06594,22/07/2026,12:50:58 AM,Balkanji Bari,Set paper line width to 26 characters for test print and 58mm receipts
+100ea90,22/07/2026,12:42:17 AM,Balkanji Bari,Fix printer layout: remove unsupported ESC POS size bytes and set line width to 32 to eliminate right side whitespace
+863490b,22/07/2026,12:27:05 AM,Balkanji Bari,"Update printer layout: Shop Name, Token Number, and Grand Total to Size 5"
+49f1102,22/07/2026,12:02:50 AM,Balkanji Bari,Update thermal printer layout to 20-character width with size 2 font for better readability
+eaca880,21/07/2026,01:40:30 AM,Balkanji Bari,Double font size of all thermal print components to force 100% width on high DPI printers
+6b718ef,21/07/2026,01:27:04 AM,Balkanji Bari,Use 42 characters and normal font size for thermal printer layout
+5fbb723,21/07/2026,01:06:37 AM,Balkanji Bari,Fix invalid font weight and rebuild release APK
+3e50130,21/07/2026,12:51:55 AM,Balkanji Bari,Maximize shop name and grand total size in thermal printer
+878ffc5,21/07/2026,12:44:35 AM,Balkanji Bari,Change shop name and grand total size to 10 in preview and normal size in thermal print
+9a59cbb,20/07/2026,11:49:39 PM,Balkanji Bari,Optimize thermal printing for 48mm width using fontB
+7c90b23,20/07/2026,11:26:24 PM,Balkanji Bari,Update thermal bill layout to use 42 characters per line
+a589702,19/07/2026,12:27:27 PM,Balkanji Bari,Support 80mm thermal receipt scaling in image capture
+52d4cc2,19/07/2026,12:18:17 PM,Balkanji Bari,Double all hardcoded receipt font sizes for maximum readability
+78d7209,19/07/2026,12:36:49 AM,Balkanji Bari,"Fix all linting issues (prefer_const_constructors, unused_imports) reported by IDE"
+b996aeb,19/07/2026,12:18:50 AM,Balkanji Bari,Massively boost printed font sizes and black contrast
+1e97dbe,19/07/2026,12:00:29 AM,Balkanji Bari,Optimize printed image capture for max width and font visibility
+94ccab6,18/07/2026,11:47:53 PM,Balkanji Bari,Fix print receipt formatting logic
+36dfe50,18/07/2026,11:34:28 PM,Balkanji Bari,Capture Bill Preview Widget to print EXACT image on thermal printer
+cb0b6d9,18/07/2026,11:19:17 PM,Balkanji Bari,Optimize ESC/POS printer layout for 58mm/80mm thermal receipts
+53dc2ed,18/07/2026,02:55:27 PM,Balkanji Bari,"Fix UI, optimization, and advanced search features"
+2f21657,18/07/2026,01:54:11 PM,Balkanji Bari,Adjusted thermal printer font sizes and layout for 58mm readability
+0fe075d,18/07/2026,01:27:29 PM,Balkanji Bari,Printer layout overhaul: aligned thermal and A4 prints to match preview exactly
+b5b6268,17/07/2026,04:15:32 PM,Balkanji Bari,"Final fixes completed, full testing passed, release APK generated"
+7acdf1c,17/07/2026,03:19:23 PM,Balkanji Bari,"Final fixes for Bill Preview, Print, and A4 formatting"
+499c6a3,17/07/2026,02:21:51 PM,Balkanji Bari,"Final fixes, testing completed, release build ready"
+97e47dc,16/07/2026,03:02:10 PM,Balkanji Bari,Remove Address and GST fields from token generation and save customer automatically
+40a4812,15/07/2026,11:29:38 PM,Balkanji Bari,Change package ID to com.dharmik.billingapp to avoid Google Play Protect template block and install conflicts
+61e12ce,15/07/2026,11:06:42 PM,Balkanji Bari,"Fix UI lints, replace withOpacity with withValues, remove unused variables"
+d201e08,15/07/2026,12:51:12 PM,Balkanji Bari,fix: Implement production APK signing to resolve Play Protect blocks
+75177b5,15/07/2026,11:08:44 AM,Balkanji Bari,feat: Add Android native SMS sending via MethodChannel
+c4f38db,15/07/2026,10:51:14 AM,Balkanji Bari,fix: replace deprecated telephony package with robust native MethodChannel for SMS
+35b8907,15/07/2026,10:45:29 AM,Balkanji Bari,fix: replace deprecated background_sms with telephony for robust SMS delivery
+5481d48,15/07/2026,10:44:34 AM,Balkanji Bari,feat: integrate native background SMS sending with permission handling
+396f96b,15/07/2026,10:43:44 AM,Balkanji Bari,feat: complete UI enhancements and add native SMS integration
+7ded89d,15/07/2026,09:39:17 AM,Balkanji Bari,Update Navbar UI to icon-only layout with tooltips and gradient active state
+31a2007,15/07/2026,09:23:44 AM,Balkanji Bari,Implement Glassmorphic Lifted Sonar Navbar with Premium Animations
+04035b9,15/07/2026,08:40:38 AM,Balkanji Bari,Switch to Floating Dock Navigation UI
+d8f4708,15/07/2026,06:15:16 AM,Balkanji Bari,Redesign navbar UI without changing existing functionality
+cc25642,15/07/2026,06:01:37 AM,Balkanji Bari,Integrated Customer Management into Current Bill & UI fixes
+cb7fd3b,15/07/2026,12:19:01 AM,Balkanji Bari,"feat: Production readiness - SMS, S3, Security configurations"
+edc6ff4,11/07/2026,04:40:42 PM,Balkanji Bari,fix: enforce full session clear and redirect to password login on logout
+4bdb56c,11/07/2026,04:09:34 PM,Balkanji Bari,feat: integrate subscription plan and QR payment workflow
+de3a6cc,11/07/2026,02:30:39 PM,Balkanji Bari,fix: resolve customer search autocomplete failing on names
+dc3b4d4,11/07/2026,02:08:36 PM,Balkanji Bari,chore: bump version to 1.0.3+4 for release
+69ae92e,11/07/2026,02:06:39 PM,Balkanji Bari,feat: redirect user to token generation screen after clearing cart
+248c0e6,11/07/2026,01:06:07 PM,Balkanji Bari,feat: add validation before navigating to token generation
+c7edbd0,11/07/2026,11:25:15 AM,Balkanji Bari,chore: bump version to 1.0.1+2 for release update
+fabc579,11/07/2026,01:46:53 AM,Balkanji Bari,fix: compilation errors for search customers and print preview
+a412ac8,11/07/2026,01:45:22 AM,Balkanji Bari,"feat: complete print options, cart state clear, and customer autocomplete"
+560d6fe,11/07/2026,01:03:06 AM,Balkanji Bari,Fix item deletion syncing bug in item management
+e5f02e6,10/07/2026,07:26:54 PM,Balkanji Bari,"Fix login bugs, session persistence, and IDE import errors"
+11e9397,09/07/2026,12:51:15 AM,Balkanji Bari,fix: Remove all remaining 6 lint warnings from shop_setup and local_storage_helper
+5255334,09/07/2026,12:45:18 AM,Balkanji Bari,fix: Resolve all 30 IDE warnings and lint issues
+f8c1c0e,08/07/2026,07:01:51 AM,Balkanji Bari,fix: Unify all screens to Indigo Friendly & Vibrant theme
+00c16c4,08/07/2026,06:38:37 AM,Balkanji Bari,feat: Add local image caching and redesign print preview screen
+e9ed5b9,08/07/2026,01:59:49 AM,Balkanji Bari,feat: redesign unified floating navbar with center FAB and move print button to header
+aef2821,08/07/2026,01:41:01 AM,Balkanji Bari,feat: redesign user dashboard to Option 2 with sticky bottom actions
+ca7ea85,08/07/2026,01:10:51 AM,Balkanji Bari,feat: redesign otp login screen to friendly illustration-based split-screen UI
+c3f1db6,08/07/2026,12:35:12 AM,Balkanji Bari,feat: make customer name and mobile number compulsory before generating a bill
+e90565a,08/07/2026,12:19:06 AM,Balkanji Bari,fix: adjust padding and tab bar divider for edit item screen mobile ui
+6919c5d,08/07/2026,12:00:24 AM,Balkanji Bari,feat: implement tabbed mobile layout for edit item screen to eliminate scrolling
+a587d2c,07/07/2026,11:24:24 PM,Balkanji Bari,feat: redesign add and edit item screen to match modern ui
+a2171c4,07/07/2026,11:14:02 PM,Balkanji Bari,feat: redirect to item creation if no items exist on token generation
+caa1028,07/07/2026,10:50:49 PM,Balkanji Bari,feat: convert shop setup screen to 4-step wizard
+bd5316c,07/07/2026,10:45:54 PM,Balkanji Bari,feat: remove bill configuration and preview from shop setup screen
+797bac1,07/07/2026,10:43:41 PM,Balkanji Bari,feat: remove bill configuration card from shop setup page
+9aba7ba,07/07/2026,10:34:33 PM,Balkanji Bari,feat: complete structural redesign of shop setup screen
+79f65ea,07/07/2026,10:23:34 PM,Balkanji Bari,feat: revamp shop setup UI and add text to save button
+03ff650,07/07/2026,10:03:12 PM,Balkanji Bari,fix: route to MainScreen instead of DashboardScreen after login to show navbar
+6eae00f,07/07/2026,09:40:43 PM,Balkanji Bari,refactor: extract StatCard widget and add UI animations
+2598bcc,07/07/2026,08:43:54 PM,Balkanji Bari,fix: show user friendly error message on network failure during dev login
+e63824d,07/07/2026,08:40:41 PM,Balkanji Bari,feat: show admin id field with password bypass in dev mode
+62b250e,07/07/2026,07:55:28 PM,Balkanji Bari,fix: resolve dart analysis warnings
+9138282,07/07/2026,07:44:25 PM,Balkanji Bari,fix: resolve syntax errors in dev mode toggle logic
+480529f,07/07/2026,07:40:37 PM,Balkanji Bari,feat: add developer mode login bypass
+cae5eea,07/07/2026,06:43:11 PM,Balkanji Bari,feat: add delete user option in shop approvals screen
+dead441,07/07/2026,06:36:26 PM,Balkanji Bari,feat: implement Plan Settings page for Super Admin
+0c9ac05,07/07/2026,06:08:11 PM,Balkanji Bari,style: improve UI of shop details and permissions dialogs
+32cd4be,07/07/2026,05:56:52 PM,Balkanji Bari,feat: add shop details view and delete profile in super admin
+836a259,07/07/2026,05:36:37 PM,Balkanji Bari,fix: analyzer warnings in dart files
+1357716,07/07/2026,05:12:39 PM,Balkanji Bari,feat: complete user roles and dashboard updates
+3a7d2e4,07/07/2026,03:23:30 PM,Balkanji Bari,feat: add super admin shop requests view all screen
+b718f67,07/07/2026,03:04:50 PM,Balkanji Bari,fix: resolve expected object response error in fetchShopRequests
+cca03dc,07/07/2026,02:51:34 PM,Balkanji Bari,fix: resolve super admin dashboard layout overflow and stats api path
+5660445,07/07/2026,02:37:07 PM,Balkanji Bari,feat: add pull-to-refresh to super admin dashboard
+3feb87f,07/07/2026,02:20:39 PM,Balkanji Bari,feat: implement dedicated super admin login screen with admin/admin credentials
+bef5bae,07/07/2026,01:33:44 PM,Balkanji Bari,feat: implement live dynamic data for super admin dashboard stats
+50d9dc8,07/07/2026,01:20:56 PM,Balkanji Bari,feat: add logout button to super admin dashboard
+a8f0c38,07/07/2026,12:38:07 PM,Balkanji Bari,"feat: implement user registration, 7-day trial, and super admin approval flow"
+c0052e4,07/07/2026,11:53:26 AM,Balkanji Bari,fix: resolve all lint warnings and info issues
+f4ffb2a,07/07/2026,11:21:19 AM,Balkanji Bari,"feat: add Super Admin Dashboard with growth chart, shop approvals, and nav wrapper"
+084c7d2,02/07/2026,02:59:04 PM,Balkanji Bari,Fix navbar hiding trigger logic
+31ffa7e,02/07/2026,09:35:26 AM,Balkanji Bari,Clear cart correctly after saving bill to restore navbar visibility
+88bf87b,02/07/2026,07:06:19 AM,Balkanji Bari,Pass paymentMode to PrintPreviewScreen from Dashboard recent tokens
+b111420,02/07/2026,06:42:39 AM,Balkanji Bari,Hide mobile navbar when View Bill button is visible
+2c3858d,02/07/2026,06:30:58 AM,Balkanji Bari,Fix token card overflow and FAB positioning on mobile
+ace0766,02/07/2026,05:03:40 AM,Balkanji Bari,Increase API timeout to 60s for Render cold start
+5bdd630,02/07/2026,03:49:08 AM,Balkanji Bari,Fix all IDE problems
+cd69222,02/07/2026,03:47:55 AM,Balkanji Bari,Fix bill counter reset by tracking actual last bill number from API
+43e3dd1,02/07/2026,03:42:46 AM,Balkanji Bari,Pass customerPhone from recent tokens to bill preview
+9c0f576,02/07/2026,03:37:19 AM,Balkanji Bari,Show customer mobile number on printed bill
+1079a8f,02/07/2026,03:35:01 AM,Balkanji Bari,Add View Bill button to Token Generation page for mobile
+64ef0ec,02/07/2026,03:29:32 AM,Balkanji Bari,Comment out WhatsApp redirection for now
+ce77075,02/07/2026,03:18:56 AM,Balkanji Bari,Add customer mobile input field and send WhatsApp Thank You message
+bf1964b,02/07/2026,03:13:19 AM,Balkanji Bari,Fix syntax error in dashboard_screen
+662c089,02/07/2026,03:08:05 AM,Balkanji Bari,Allow changing payment mode of a token from Recent Tokens / All Tokens
+98668e8,02/07/2026,03:00:58 AM,Balkanji Bari,Remove Save Bill button and trigger bill saving directly from Cash/Online buttons
+dbd97f1,02/07/2026,02:53:14 AM,Balkanji Bari,Add Add Category button and persist custom categories using SharedPreferences
+9094867,02/07/2026,02:39:51 AM,Balkanji Bari,Fix bill preview to accurately display grand total with tax instead of defaulting to subtotal
+006a7e5,02/07/2026,02:37:11 AM,Balkanji Bari,Calculate and display dynamic GST based on shop settings in tokens and receipt
+8bf828f,02/07/2026,02:33:29 AM,Balkanji Bari,Fix item list not updating by clearing cache after mutations
+1420100,02/07/2026,02:25:33 AM,Balkanji Bari,Fix missing bottom navbar by navigating to MainScreen instead of DashboardScreen after shop setup
+92e9e50,02/07/2026,01:53:58 AM,Balkanji Bari,Update API base URL to point to live Render backend
+4aa30ca,02/07/2026,12:30:40 AM,Balkanji Bari,Cleanup backend and prepare for Render deployment
+4e34ff6,17/06/2026,01:00:59 PM,Balkanji Bari,Initial commit with Flutter frontend and Django backend

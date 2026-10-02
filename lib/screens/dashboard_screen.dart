@@ -121,7 +121,9 @@ class DashboardScreenState extends State<DashboardScreen> {
           _shopName = shop.name.isNotEmpty ? shop.name : 'My Shop';
           _smsCredits = shop.smsCredits;
 
-          _tokenCount = summary.totalTokens;
+          _tokenCount = summary.totalTokens > 0
+              ? summary.totalTokens
+              : tokens.where((t) => t.status.toLowerCase() != 'cancelled').length;
           _totalSales = summary.totalSales;
           _cashSales = summary.cashTotal;
           _onlineSales = summary.onlineTotal;

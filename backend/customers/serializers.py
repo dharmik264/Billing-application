@@ -1,6 +1,6 @@
 import re
 from rest_framework import serializers
-from .models import Customer
+from .models import Customer, CustomerPayment
 
 GST_REGEX = re.compile(
     r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$'
@@ -55,3 +55,14 @@ class CustomerSerializer(serializers.ModelSerializer):
         return value
 
     # ✨ Cross-field uniqueness check is automatically handled by django-tenants schema isolation and unique=True
+
+
+class CustomerPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = CustomerPayment
+        fields = [
+            'id', 'payment_number', 'customer', 'token',
+            'amount', 'payment_mode', 'date', 'note', 'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
+

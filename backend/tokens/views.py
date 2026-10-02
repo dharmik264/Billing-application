@@ -481,22 +481,41 @@ class CustomerJamaPaymentView(APIView):
             token.calculate_totals()
             updated_tokens.append(token)
 
+            from customers.models import Customer, CustomerPayment
+            token_cust = None
+            if token.customer_phone:
+                token_cust = Customer.objects.filter(mobile_number=normalize_phone(token.customer_phone)).first()
+            elif token.customer_name:
+                token_cust = Customer.objects.filter(name__iexact=token.customer_name).first()
+
+            if token_cust:
+                CustomerPayment.objects.create(
+                    customer=token_cust,
+                    token=token,
+                    amount=pay_this,
+                    payment_mode=payment_mode,
+                    note='Jama payment'
+                )
+
             remaining -= pay_this
             if remaining <= 0:
                 break
 
         if not updated_tokens:
             return Response({
-                'error': 'No pending unpaid bills found for this customer',
+                'message': 'No pending unpaid bills found for this customer',
                 'amount_applied': 0.0,
                 'remaining_unused': float(amount),
                 'updated_tokens_count': 0
-            }, status=status.HTTP_404_NOT_FOUND)
+            }, status=status.HTTP_200_OK)
+
+        applied_amount = amount - remaining
 
         return Response({
-            'message': f'Successfully applied payment of \u20b9{amount - remaining}',
-            'amount_applied': float(amount - remaining),
+            'message': f'Successfully applied payment of \u20b9{applied_amount}',
+            'amount_applied': float(applied_amount),
             'remaining_unused': float(remaining),
             'updated_tokens_count': len(updated_tokens)
         }, status=status.HTTP_200_OK)
+
 

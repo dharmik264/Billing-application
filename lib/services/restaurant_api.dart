@@ -532,6 +532,79 @@
       return ApiCustomer.fromJson(data);
     }
 
+    Future<ApiCustomerLedger> fetchCustomerLedger(String customerId) async {
+      try {
+        final data = await _get('customers/$customerId/ledger/');
+        return ApiCustomerLedger.fromJson(data);
+      } catch (e) {
+        if (e is ApiException) {
+          rethrow;
+        }
+        final customer = await fetchCustomer(customerId);
+        final tokens = await fetchTokens();
+        final customerTokens = tokens.where((t) =>
+          t.status.toLowerCase() != 'cancelled' &&
+          (t.customerPhone.contains(customer.mobileNumber) ||
+           customer.mobileNumber.contains(t.customerPhone) ||
+           t.customerName.toLowerCase() == customer.name.toLowerCase())
+        ).toList();
+
+        double totalBilled = 0.0;
+        double totalPaid = 0.0;
+        List<ApiCustomerPayment> payments = [];
+
+        for (var token in customerTokens) {
+          totalBilled += token.grandTotal;
+          final pAmt = token.receivedAmount > 0 ? token.receivedAmount : (token.isPaid ? token.grandTotal : 0.0);
+          totalPaid += pAmt;
+          if (pAmt > 0) {
+            payments.add(ApiCustomerPayment(
+              id: token.id,
+              paymentNumber: 'P${token.billNumber}',
+              amount: pAmt,
+              paymentMode: token.paymentMode.isNotEmpty ? token.paymentMode : 'cash',
+              date: token.createdAt.contains('T') ? token.createdAt.split('T').first : token.createdAt,
+              createdAt: token.createdAt,
+              note: 'Bill Payment',
+            ));
+          }
+        }
+
+        double netDue = totalBilled - totalPaid;
+        if (netDue < 0) netDue = 0.0;
+
+        final summary = ApiCustomerLedgerSummary(
+          totalBilled: totalBilled,
+          totalPaid: totalPaid,
+          netDue: netDue,
+          paymentStatus: netDue <= 0 ? 'PAID IN FULL' : 'UDHAR',
+        );
+
+        return ApiCustomerLedger(
+          customer: customer,
+          summary: summary,
+          bills: customerTokens,
+          payments: payments,
+        );
+      }
+    }
+
+    Future<Map<String, dynamic>> payCustomerDue({
+      required String customerId,
+      required double amount,
+      String paymentMode = 'CASH',
+      String? note,
+    }) async {
+      final response = await post('customers/$customerId/pay-due/', {
+        'amount': amount,
+        'payment_mode': paymentMode,
+        if (note != null && note.isNotEmpty) 'note': note,
+      });
+      BillEventNotifier.notifyBillChanged();
+      return response;
+    }
+
+
     // ── Reports ──────────────────────────────────────────────────
 
     Future<ApiSummaryReport> fetchTodayReport(
@@ -1723,5 +1796,90 @@
       'status': status,
     };
   }
+
+  class ApiCustomerPayment {
+    const ApiCustomerPayment({
+      required this.id,
+      required this.paymentNumber,
+      required this.amount,
+      required this.paymentMode,
+      required this.date,
+      required this.createdAt,
+      required this.note,
+    });
+
+    factory ApiCustomerPayment.fromJson(Map<String, dynamic> json) {
+      return ApiCustomerPayment(
+        id: json['id']?.toString() ?? '',
+        paymentNumber: json['payment_number']?.toString() ?? '',
+        amount: _toDouble(json['amount']),
+        paymentMode: json['payment_mode']?.toString() ?? 'cash',
+        date: json['date']?.toString() ?? '',
+        createdAt: json['created_at']?.toString() ?? '',
+        note: json['note']?.toString() ?? '',
+      );
+    }
+
+    final String id;
+    final String paymentNumber;
+    final double amount;
+    final String paymentMode;
+    final String date;
+    final String createdAt;
+    final String note;
+  }
+
+  class ApiCustomerLedgerSummary {
+    const ApiCustomerLedgerSummary({
+      required this.totalBilled,
+      required this.totalPaid,
+      required this.netDue,
+      required this.paymentStatus,
+    });
+
+    factory ApiCustomerLedgerSummary.fromJson(Map<String, dynamic> json) {
+      final billed = _toDouble(json['total_billed']);
+      final paid = _toDouble(json['total_paid']);
+      final due = _toDouble(json['net_due']);
+      final status = json['payment_status']?.toString() ?? (due <= 0 ? 'PAID IN FULL' : 'UDHAR');
+      return ApiCustomerLedgerSummary(
+        totalBilled: billed,
+        totalPaid: paid,
+        netDue: due <= 0 ? 0.0 : due,
+        paymentStatus: due <= 0 ? 'PAID IN FULL' : status,
+      );
+    }
+
+    final double totalBilled;
+    final double totalPaid;
+    final double netDue;
+    final String paymentStatus;
+
+    bool get isPaidInFull => netDue <= 0;
+  }
+
+  class ApiCustomerLedger {
+    const ApiCustomerLedger({
+      required this.customer,
+      required this.summary,
+      required this.bills,
+      required this.payments,
+    });
+
+    factory ApiCustomerLedger.fromJson(Map<String, dynamic> json) {
+      return ApiCustomerLedger(
+        customer: ApiCustomer.fromJson(json['customer'] is Map<String, dynamic> ? json['customer'] : {}),
+        summary: ApiCustomerLedgerSummary.fromJson(json['summary'] is Map<String, dynamic> ? json['summary'] : {}),
+        bills: (json['bills'] as List? ?? []).map((e) => ApiToken.fromJson(e as Map<String, dynamic>)).toList(),
+        payments: (json['payments'] as List? ?? []).map((e) => ApiCustomerPayment.fromJson(e as Map<String, dynamic>)).toList(),
+      );
+    }
+
+    final ApiCustomer customer;
+    final ApiCustomerLedgerSummary summary;
+    final List<ApiToken> bills;
+    final List<ApiCustomerPayment> payments;
+  }
+
 
 

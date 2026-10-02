@@ -76,36 +76,45 @@ class Token(models.Model):
 
     def calculate_totals(self):
         from decimal import Decimal
-        self.subtotal = Decimal(str(sum(item.subtotal for item in self.items.all())))
-        
-        summary_list = []
-        for item in self.items.all():
-            summary_list.append(f"{item.name} (x{item.quantity})")
-        self.items_summary = ", ".join(summary_list)
-        
-        tax_percent = Decimal('0')
-        from django.db import connection
-        shop = connection.tenant
-        if shop and hasattr(shop, 'bill_settings') and isinstance(shop.bill_settings, dict):
-            try:
-                tax_percent = Decimal(str(shop.bill_settings.get('tax_percent', 0.0)))
-            except (ValueError, TypeError, AttributeError):
-                pass
-                
-        if tax_percent > 0:
-            self.gst_amount = self.subtotal * tax_percent / Decimal('100')
-        else:
-            self.gst_amount = Decimal('0')
+        if self.items.exists():
+            self.subtotal = Decimal(str(sum(item.subtotal for item in self.items.all())))
             
-        self.service_charge = Decimal('0')
-        self.total = self.subtotal + self.gst_amount + self.service_charge - Decimal(str(self.discount))
+            summary_list = []
+            for item in self.items.all():
+                summary_list.append(f"{item.name} (x{item.quantity})")
+            self.items_summary = ", ".join(summary_list)
+            
+            tax_percent = Decimal('0')
+            try:
+                from django.db import connection
+                shop = getattr(connection, 'tenant', None)
+                if shop and hasattr(shop, 'bill_settings') and isinstance(shop.bill_settings, dict):
+                    tax_percent = Decimal(str(shop.bill_settings.get('tax_percent', 0.0)))
+            except Exception:
+                pass
+                    
+            if tax_percent > 0:
+                self.gst_amount = self.subtotal * tax_percent / Decimal('100')
+            else:
+                self.gst_amount = Decimal('0')
+                
+            self.service_charge = Decimal('0')
+            self.total = self.subtotal + self.gst_amount + self.service_charge - Decimal(str(self.discount or 0))
+        else:
+            self.subtotal = Decimal('0')
+            self.items_summary = ''
+            self.gst_amount = Decimal('0')
+            self.service_charge = Decimal('0')
+            if not (self.total and Decimal(str(self.total)) > 0):
+                self.total = Decimal('0')
+            
         # For UDHAR/credit bills compute the outstanding balance;
         # fully-paid tokens always have zero balance.
         if self.is_paid:
             self.balance_due = Decimal('0')
         else:
             recv = Decimal(str(self.received_amount or 0))
-            self.balance_due = max(Decimal('0'), self.total - recv)
+            self.balance_due = max(Decimal('0'), Decimal(str(self.total or 0)) - recv)
         self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total',
                                  'received_amount', 'balance_due', 'items_summary'])
 
