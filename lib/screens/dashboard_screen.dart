@@ -250,15 +250,15 @@ class DashboardScreenState extends State<DashboardScreen> {
                       : Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             _buildStatCards()
                                 .animate()
-                                .fadeIn(duration: 500.ms)
+                                .fadeIn(duration: 400.ms)
                                 .slideX(begin: -0.05, curve: Curves.easeOut),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
                             Padding(
                               padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
+                                  const EdgeInsets.symmetric(horizontal: 16),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -266,7 +266,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                                   Text(
                                     'Recent Tokens',
                                     style: GoogleFonts.inter(
-                                      fontSize: 18,
+                                      fontSize: 17,
                                       fontWeight: FontWeight.w800,
                                       color: const Color(0xFF0F172A),
                                     ),
@@ -280,14 +280,14 @@ class DashboardScreenState extends State<DashboardScreen> {
                                                 const AllTokensScreen()),
                                       );
                                     },
-                                    borderRadius: BorderRadius.circular(20),
+                                    borderRadius: BorderRadius.circular(16),
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 6),
+                                          horizontal: 8, vertical: 4),
                                       child: Text(
                                         'View All',
                                         style: GoogleFonts.inter(
-                                          fontSize: 14,
+                                          fontSize: 13,
                                           fontWeight: FontWeight.w700,
                                           color: const Color(0xFF4F46E5),
                                         ),
@@ -297,22 +297,22 @@ class DashboardScreenState extends State<DashboardScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
                           ],
                         ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 90),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
                   sliver: _recentTokens.isEmpty && !_isLoading
                       ? SliverToBoxAdapter(
                           child: Center(
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 40),
+                              padding: const EdgeInsets.only(top: 30),
                               child: Text(
                                 'No recent tokens found',
                                 style: GoogleFonts.inter(
                                     color: const Color(0xFF94A3B8),
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w500),
                               ),
                             ),
@@ -324,10 +324,10 @@ class DashboardScreenState extends State<DashboardScreen> {
                               return _buildTokenCard(_recentTokens[index])
                                   .animate()
                                   .fadeIn()
-                                  .slideX(begin: 0.05, delay: (index * 50).ms);
+                                  .slideX(begin: 0.04, delay: (index * 40).ms);
                             },
-                            childCount: _recentTokens.length > 3
-                                ? 3
+                            childCount: _recentTokens.length > 5
+                                ? 5
                                 : _recentTokens.length,
                           ),
                         ),
@@ -481,185 +481,183 @@ class DashboardScreenState extends State<DashboardScreen> {
         ));
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            )
+          ],
         ),
-        child: Row(
+        child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'TOKEN',
-                    style: GoogleFonts.inter(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF64748B)),
+            // Top Row: Token Badge & Bill Number | Amount
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEF2FF),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  Text(
-                    token.tokenNumber,
+                  child: Text(
+                    'TOKEN ${token.tokenNumber}',
                     style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF4F46E5)),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF4F46E5),
+                    ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  token.orderId,
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF334155),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '\u20B9${token.amount.toStringAsFixed(2)}',
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        token.orderId,
-                        style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF0F172A)),
-                      ),
-                      Text(
-                        '\u20B9${token.amount.toStringAsFixed(2)}',
-                        style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A)),
-                      ),
-                    ],
+            const SizedBox(height: 6),
+            // Middle Row: Date & Time | Badges (Payment & Status)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  token.time,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        token.time,
-                        style: GoogleFonts.inter(
-                            fontSize: 12, color: const Color(0xFF64748B)),
-                      ),
-                      Expanded(
-                        child: Wrap(
-                          alignment: WrapAlignment.end,
-                          crossAxisAlignment: WrapCrossAlignment.center,
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () => _changePaymentMode(token),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            GestureDetector(
-                              onTap: () => _changePaymentMode(token),
-                              child: Container(
-                                margin: const EdgeInsets.only(
-                                    right: 4, bottom: 2, top: 2),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE2E8F0),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      token.paymentMode.isNotEmpty
-                                          ? token.paymentMode.toUpperCase()
-                                          : 'CASH',
-                                      style: GoogleFonts.inter(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF475569)),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.edit,
-                                        size: 10, color: Color(0xFF475569)),
-                                  ],
-                                ),
+                            Text(
+                              token.paymentMode.isNotEmpty
+                                  ? token.paymentMode.toUpperCase()
+                                  : 'CASH',
+                              style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF475569),
                               ),
                             ),
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 2, top: 2),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                statusText,
-                                style: GoogleFonts.inter(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: statusColor),
-                              ),
-                            ),
+                            const SizedBox(width: 3),
+                            const Icon(Icons.edit, size: 9, color: Color(0xFF64748B)),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Action buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      GestureDetector(
-                        onTap: () => _editToken(token),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.edit_document,
-                                  size: 12, color: Color(0xFF3B82F6)),
-                              const SizedBox(width: 4),
-                              Text('Edit',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF3B82F6))),
-                            ],
-                          ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        statusText,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: statusColor,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => _deleteToken(token),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF2F2),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.delete_outline,
-                                  size: 12, color: Color(0xFFEF4444)),
-                              const SizedBox(width: 4),
-                              Text('Delete',
-                                  style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFFEF4444))),
-                            ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 6),
+            // Action Buttons Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: () => _editToken(token),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.edit_document, size: 11, color: Color(0xFF3B82F6)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Edit',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF3B82F6),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => _deleteToken(token),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.delete_outline, size: 11, color: Color(0xFFEF4444)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Delete',
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFEF4444),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

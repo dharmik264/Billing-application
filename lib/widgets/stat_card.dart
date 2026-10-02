@@ -80,16 +80,16 @@ class _StatCardState extends State<StatCard> {
       onTapUp: (_) => setState(() => _pressed = false),
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedScale(
-        scale: _pressed ? 0.95 : 1.0,
+        scale: _pressed ? 0.96 : 1.0,
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: widget.width ?? 130,
-          padding: const EdgeInsets.all(14),
+          width: widget.width ?? 122,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             color: AppColors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: _pressed ? widget.color.withValues(alpha: 0.3) : AppColors.slate200,
               width: _pressed ? 1.5 : 1.0,
@@ -97,29 +97,30 @@ class _StatCardState extends State<StatCard> {
             boxShadow: [
               BoxShadow(
                 color: _pressed
-                    ? widget.color.withValues(alpha: 0.15)
-                    : AppColors.slate900.withValues(alpha: 0.04),
-                blurRadius: _pressed ? 20 : 10,
-                spreadRadius: _pressed ? 2 : 0,
-                offset: const Offset(0, 6),
+                    ? widget.color.withValues(alpha: 0.12)
+                    : AppColors.slate900.withValues(alpha: 0.03),
+                blurRadius: _pressed ? 14 : 8,
+                spreadRadius: _pressed ? 1 : 0,
+                offset: const Offset(0, 3),
               )
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               if (widget.icon != null) ...[
                 Container(
-                  padding: const EdgeInsets.all(7),
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: widget.color.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
+                    color: widget.color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(widget.icon, color: widget.color, size: 17),
+                  child: Icon(widget.icon, color: widget.color, size: 15),
                 )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scaleXY(begin: 1.0, end: 1.08, duration: 2000.ms, curve: Curves.easeInOut),
-                const SizedBox(height: 10),
+                    .scaleXY(begin: 1.0, end: 1.06, duration: 2000.ms, curve: Curves.easeInOut),
+                const SizedBox(height: 6),
               ],
               FittedBox(
                 fit: BoxFit.scaleDown,
@@ -134,7 +135,7 @@ class _StatCardState extends State<StatCard> {
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
@@ -143,7 +144,7 @@ class _StatCardState extends State<StatCard> {
                   maxLines: 1,
                   style: GoogleFonts.inter(
                     color: AppColors.slate900,
-                    fontSize: 17,
+                    fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -154,9 +155,9 @@ class _StatCardState extends State<StatCard> {
       ),
     )
         .animate()
-        .fadeIn(duration: 450.ms)
-        .scaleXY(begin: 0.85, curve: Curves.easeOutBack)
-        .slideY(begin: 0.1, end: 0);
+        .fadeIn(duration: 400.ms)
+        .scaleXY(begin: 0.9, curve: Curves.easeOutBack)
+        .slideY(begin: 0.08, end: 0);
   }
 }
 

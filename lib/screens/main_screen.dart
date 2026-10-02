@@ -318,7 +318,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildUnifiedNavbar() {
     return SizedBox(
-      height: 90, // Taller to allow lifted tabs to break out of the 72px navbar
+      height: 76,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.bottomCenter,
@@ -328,24 +328,24 @@ class _MainScreenState extends State<MainScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            height: 72,
+            height: 60,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(36),
+              borderRadius: BorderRadius.circular(30),
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.65),
-                    borderRadius: BorderRadius.circular(36),
+                    color: Colors.white.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: Colors.white.withValues(alpha: 0.9),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 30,
-                        offset: const Offset(0, 10),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
                       )
                     ],
                   ),
@@ -358,7 +358,7 @@ class _MainScreenState extends State<MainScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            height: 90,
+            height: 76,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
@@ -381,20 +381,20 @@ class _MainScreenState extends State<MainScreen> {
     return Tooltip(
       message: label,
       preferBelow: false,
-      textStyle: GoogleFonts.inter(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600),
+      textStyle: GoogleFonts.inter(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 350),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutBack,
-        margin: EdgeInsets.only(bottom: isSelected ? 24 : 12),
+        margin: EdgeInsets.only(bottom: isSelected ? 16 : 8),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 350),
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutBack,
-          height: isSelected ? 56 : 48,
-          width: isSelected ? 56 : 48,
+          height: isSelected ? 48 : 42,
+          width: isSelected ? 48 : 42,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: isSelected
@@ -408,9 +408,9 @@ class _MainScreenState extends State<MainScreen> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
-                      blurRadius: 16,
-                      spreadRadius: 4, // Soft shadow
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      spreadRadius: 2,
                     ),
                   ]
                 : [],
@@ -425,13 +425,13 @@ class _MainScreenState extends State<MainScreen> {
               highlightColor: Colors.transparent,
               child: Center(
                 child: AnimatedScale(
-                  scale: isSelected ? 1.15 : 1.0,
-                  duration: const Duration(milliseconds: 300),
+                  scale: isSelected ? 1.1 : 1.0,
+                  duration: const Duration(milliseconds: 250),
                   curve: Curves.easeOutQuint,
                   child: Icon(
                     isSelected ? activeIcon : inactiveIcon,
                     color: isSelected ? Colors.white : const Color(0xFF94A3B8),
-                    size: 26,
+                    size: 22,
                   ),
                 ),
               ),
