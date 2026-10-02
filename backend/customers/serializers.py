@@ -9,14 +9,23 @@ GST_REGEX = re.compile(
 
 class CustomerSerializer(serializers.ModelSerializer):
     address = serializers.CharField(required=False, allow_blank=True, default='')
+    net_due = serializers.SerializerMethodField()
 
     class Meta:
         model  = Customer
         fields = [
             'id', 'name', 'mobile_number', 'address',
-            'gst_number', 'status', 'created_at', 'updated_at',
+            'gst_number', 'status', 'net_due', 'created_at', 'updated_at',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'net_due', 'created_at', 'updated_at']
+
+    def get_net_due(self, obj):
+        try:
+            from .views import compute_customer_ledger_summary
+            summary = compute_customer_ledger_summary(obj)
+            return float(summary['net_due'])
+        except Exception:
+            return 0.0
 
     # ── Field-level validation ─────────────────────────────────
 

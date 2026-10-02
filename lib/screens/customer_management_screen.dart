@@ -362,6 +362,31 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                         const SizedBox(height: 2),
                         _infoRow(Icons.receipt_long_outlined, customer.gstNumber),
                       ],
+                      if (customer.netDue > 0) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.account_balance_wallet_outlined, size: 13, color: _red),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Due: \u20B9${customer.netDue.toStringAsFixed(2)}',
+                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: _red),
+                            ),
+                          ],
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.check_circle_outline_rounded, size: 13, color: _green),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Paid in Full',
+                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: _green),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

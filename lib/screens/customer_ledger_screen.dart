@@ -1009,7 +1009,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            billPaid ? 'PAID' : 'DUE',
+                            billPaid ? 'PAID' : 'DUE: ${_formatAmount(dueAmt)}',
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -1042,7 +1042,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                       children: [
                         _tableMetric('Bill Amount', _formatAmount(bill.grandTotal), _slate900),
                         _tableMetric('Paid Amount', _formatAmount(bill.receivedAmount > 0 ? bill.receivedAmount : (bill.isPaid ? bill.grandTotal : 0.0)), _green),
-                        _tableMetric('Remaining', _formatAmount(dueAmt), dueAmt > 0 ? _red : _slate600, isBold: dueAmt > 0),
+                        _tableMetric('Due Amount', _formatAmount(dueAmt), dueAmt > 0 ? _red : _slate600, isBold: dueAmt > 0),
                       ],
                     ),
                   ],

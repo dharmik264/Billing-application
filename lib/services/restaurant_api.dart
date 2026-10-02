@@ -1744,6 +1744,7 @@
       required this.address,
       required this.gstNumber,
       required this.status,
+      this.netDue = 0.0,
       required this.createdAt,
       required this.updatedAt,
     });
@@ -1756,6 +1757,7 @@
         address: json['address']?.toString() ?? '',
         gstNumber: json['gst_number']?.toString() ?? '',
         status: json['status']?.toString() ?? 'active',
+        netDue: _toDouble(json['net_due'] ?? json['netDue']),
         createdAt: json['created_at']?.toString() ?? '',
         updatedAt: json['updated_at']?.toString() ?? '',
       );
@@ -1767,6 +1769,7 @@
     final String address;
     final String gstNumber;
     final String status;
+    final double netDue;
     final String createdAt;
     final String updatedAt;
 
