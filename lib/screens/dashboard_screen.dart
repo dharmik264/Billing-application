@@ -123,7 +123,9 @@ class DashboardScreenState extends State<DashboardScreen> {
 
           _tokenCount = summary.totalTokens > 0
               ? summary.totalTokens
-              : tokens.where((t) => t.status.toLowerCase() != 'cancelled').length;
+              : tokens
+                  .where((t) => t.status.toLowerCase() != 'cancelled')
+                  .length;
           _totalSales = summary.totalSales;
           _cashSales = summary.cashTotal;
           _onlineSales = summary.onlineTotal;
@@ -133,7 +135,9 @@ class DashboardScreenState extends State<DashboardScreen> {
             final day = date.day.toString().padLeft(2, '0');
             final month = date.month.toString().padLeft(2, '0');
             final year = date.year;
-            final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+            final hour = date.hour > 12
+                ? date.hour - 12
+                : (date.hour == 0 ? 12 : date.hour);
             final minute = date.minute.toString().padLeft(2, '0');
             final period = date.hour >= 12 ? 'PM' : 'AM';
             final formattedTime = '$day/$month/$year, $hour:$minute $period';
@@ -166,7 +170,6 @@ class DashboardScreenState extends State<DashboardScreen> {
         title: _shopName,
         icon: Icons.storefront_rounded,
         subtitle: _isOnline ? 'Online' : 'Local',
-
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -178,37 +181,31 @@ class DashboardScreenState extends State<DashboardScreen> {
                           title: Text('Logout',
                               style: GoogleFonts.inter(
                                   fontWeight: FontWeight.bold)),
-                          content: const Text(
-                              'Are you sure you want to logout?'),
+                          content:
+                              const Text('Are you sure you want to logout?'),
                           shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(16)),
+                              borderRadius: BorderRadius.circular(16)),
                           actions: [
                             TextButton(
-                                onPressed: () =>
-                                    Navigator.pop(c, false),
+                                onPressed: () => Navigator.pop(c, false),
                                 child: const Text('Cancel')),
                             ElevatedButton(
-                              onPressed: () =>
-                                  Navigator.pop(c, true),
+                              onPressed: () => Navigator.pop(c, true),
                               style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.red),
                               child: const Text('Logout',
-                                  style: TextStyle(
-                                      color: Colors.white)),
+                                  style: TextStyle(color: Colors.white)),
                             ),
                           ],
                         ));
                 if (confirm == true) {
-                  final prefs =
-                      await SharedPreferences.getInstance();
+                  final prefs = await SharedPreferences.getInstance();
                   await prefs.clear();
                   await RestaurantApi.instance.clearTokens();
                   if (context.mounted) {
                     Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
-                          builder: (_) =>
-                              const PasswordLoginScreen()),
+                          builder: (_) => const PasswordLoginScreen()),
                       (route) => false,
                     );
                   }
@@ -221,8 +218,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0F172A)
-                          .withValues(alpha: 0.05),
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     )
@@ -501,7 +497,8 @@ class DashboardScreenState extends State<DashboardScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEEF2FF),
                     borderRadius: BorderRadius.circular(6),
@@ -516,15 +513,19 @@ class DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  token.orderId,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF334155),
+                Expanded(
+                  child: Text(
+                    token.orderId,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF0F172A),
+                    ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Text(
                   '\u20B9${token.amount.toStringAsFixed(2)}',
                   style: GoogleFonts.inter(
@@ -554,7 +555,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                     GestureDetector(
                       onTap: () => _changePaymentMode(token),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(6),
@@ -574,14 +576,16 @@ class DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ),
                             const SizedBox(width: 3),
-                            const Icon(Icons.edit, size: 9, color: Color(0xFF64748B)),
+                            const Icon(Icons.edit,
+                                size: 9, color: Color(0xFF64748B)),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 7, vertical: 2),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -609,7 +613,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                 GestureDetector(
                   onTap: () => _editToken(token),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(6),
@@ -617,7 +622,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.edit_document, size: 11, color: Color(0xFF3B82F6)),
+                        const Icon(Icons.edit_document,
+                            size: 11, color: Color(0xFF3B82F6)),
                         const SizedBox(width: 4),
                         Text(
                           'Edit',
@@ -635,7 +641,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                 GestureDetector(
                   onTap: () => _deleteToken(token),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEF2F2),
                       borderRadius: BorderRadius.circular(6),
@@ -643,7 +650,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.delete_outline, size: 11, color: Color(0xFFEF4444)),
+                        const Icon(Icons.delete_outline,
+                            size: 11, color: Color(0xFFEF4444)),
                         const SizedBox(width: 4),
                         Text(
                           'Delete',

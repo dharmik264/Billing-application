@@ -64,7 +64,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       final day = dt.day.toString().padLeft(2, '0');
       final month = dt.month.toString().padLeft(2, '0');
       final year = dt.year.toString().substring(2);
-      
+
       final hour = dt.hour == 0 ? 12 : (dt.hour > 12 ? dt.hour - 12 : dt.hour);
       final minute = dt.minute.toString().padLeft(2, '0');
       final suffix = dt.hour >= 12 ? 'PM' : 'AM';
@@ -84,18 +84,25 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         builder: (context) => PrintPreviewScreen(
           tokenNumber: token.tokenNumber,
           billNumber: token.billNumber,
-          customerName: token.customerName.isNotEmpty ? token.customerName : null,
-          customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : null,
-          customerAddress: token.customerAddress.isNotEmpty ? token.customerAddress : null,
-          customerGstNumber: token.customerGstNumber.isNotEmpty ? token.customerGstNumber : null,
+          customerName:
+              token.customerName.isNotEmpty ? token.customerName : null,
+          customerPhone:
+              token.customerPhone.isNotEmpty ? token.customerPhone : null,
+          customerAddress:
+              token.customerAddress.isNotEmpty ? token.customerAddress : null,
+          customerGstNumber: token.customerGstNumber.isNotEmpty
+              ? token.customerGstNumber
+              : null,
           paymentMode: token.paymentMode,
-          items: token.items.map((e) => ApiTokenItemDraft(
-            id: e.id,
-            name: e.name,
-            code: e.code,
-            rate: e.rate,
-            quantity: e.quantity,
-          )).toList(),
+          items: token.items
+              .map((e) => ApiTokenItemDraft(
+                    id: e.id,
+                    name: e.name,
+                    code: e.code,
+                    rate: e.rate,
+                    quantity: e.quantity,
+                  ))
+              .toList(),
           subtotal: subtotal,
           tax: tax > 0 ? tax : 0.0,
           grandTotal: token.grandTotal,
@@ -109,7 +116,11 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     return Scaffold(
       backgroundColor: _panelBackground,
       appBar: AppBar(
-        title: Text('Token History', style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _textPrimary, fontSize: 17)),
+        title: Text('Token History',
+            style: GoogleFonts.inter(
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+                fontSize: 17)),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: _textPrimary),
@@ -133,7 +144,8 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)));
+      return const Center(
+          child: CircularProgressIndicator(color: Color(0xFF4F46E5)));
     }
 
     if (_error != null) {
@@ -141,9 +153,13 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 48, color: Color(0xFF94A3B8)),
+            const Icon(Icons.cloud_off_outlined,
+                size: 48, color: Color(0xFF94A3B8)),
             const SizedBox(height: 16),
-            Text(_error!, textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B))),
+            Text(_error!,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                    fontSize: 14, color: const Color(0xFF64748B))),
           ],
         ),
       );
@@ -151,7 +167,9 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
 
     if (_tokens.isEmpty) {
       return Center(
-        child: Text('No tokens found.', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B))),
+        child: Text('No tokens found.',
+            style: GoogleFonts.inter(
+                fontSize: 14, color: const Color(0xFF64748B))),
       );
     }
 
@@ -163,7 +181,10 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         itemCount: _tokens.length,
         itemBuilder: (context, index) {
           final token = _tokens[index];
-          return _buildTokenCard(token).animate().fadeIn(delay: (50 * index).ms).slideX(begin: 0.1);
+          return _buildTokenCard(token)
+              .animate()
+              .fadeIn(delay: (50 * index).ms)
+              .slideX(begin: 0.1);
         },
       ),
     );
@@ -216,7 +237,8 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEEF2FF),
                     borderRadius: BorderRadius.circular(6),
@@ -262,57 +284,75 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                 Text(
                   _formatTime(token.createdAt),
                   style: GoogleFonts.inter(
-                    fontSize: 11,
+                    fontSize: 12,
                     color: const Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: () => _changePaymentMode(token),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              token.paymentMode.isNotEmpty ? token.paymentMode.toUpperCase() : 'CASH',
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF475569),
+                Expanded(
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 4),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => _changePaymentMode(token),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE2E8F0),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      token.paymentMode.isNotEmpty
+                                          ? token.paymentMode.toUpperCase()
+                                          : 'CASH',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF475569),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(Icons.edit,
+                                        size: 10, color: Color(0xFF475569)),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 3),
-                            const Icon(Icons.edit, size: 9, color: Color(0xFF64748B)),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        statusText,
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          statusText,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: statusColor,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -321,11 +361,13 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (!token.isPaid && token.status.toLowerCase() != 'cancelled') ...[
+                if (!token.isPaid &&
+                    token.status.toLowerCase() != 'cancelled') ...[
                   GestureDetector(
                     onTap: () => _showTokenJamaDialog(token),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(6),
@@ -333,9 +375,14 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.account_balance_wallet, size: 11, color: Color(0xFF10B981)),
+                          const Icon(Icons.account_balance_wallet,
+                              size: 11, color: Color(0xFF10B981)),
                           const SizedBox(width: 3),
-                          Text('Jama (\u20B9 જમા)', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF10B981))),
+                          Text('Jama (\u20B9 જમા)',
+                              style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF10B981))),
                         ],
                       ),
                     ),
@@ -345,16 +392,22 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                 GestureDetector(
                   onTap: () => _editToken(token),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.edit_document, size: 11, color: Color(0xFF3B82F6)),
+                        const Icon(Icons.edit_document,
+                            size: 11, color: Color(0xFF3B82F6)),
                         const SizedBox(width: 3),
-                        Text('Edit', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF3B82F6))),
+                        Text('Edit',
+                            style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF3B82F6))),
                       ],
                     ),
                   ),
@@ -363,16 +416,22 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                 GestureDetector(
                   onTap: () => _deleteToken(token),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFEF2F2),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.delete_outline, size: 11, color: Color(0xFFEF4444)),
+                        const Icon(Icons.delete_outline,
+                            size: 11, color: Color(0xFFEF4444)),
                         const SizedBox(width: 3),
-                        Text('Delete', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFFEF4444))),
+                        Text('Delete',
+                            style: GoogleFonts.inter(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFFEF4444))),
                       ],
                     ),
                   ),
@@ -387,7 +446,9 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
 
   Future<void> _showTokenJamaDialog(ApiToken token) async {
     final amountCtrl = TextEditingController(
-      text: token.balanceDue > 0 ? token.balanceDue.toStringAsFixed(2) : token.grandTotal.toStringAsFixed(2),
+      text: token.balanceDue > 0
+          ? token.balanceDue.toStringAsFixed(2)
+          : token.grandTotal.toStringAsFixed(2),
     );
     String selectedMode = 'CASH';
     bool submitting = false;
@@ -398,7 +459,8 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
               title: Row(
                 children: [
                   Container(
@@ -407,13 +469,17 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                       color: const Color(0xFF10B981).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFF10B981), size: 24),
+                    child: const Icon(Icons.account_balance_wallet_rounded,
+                        color: Color(0xFF10B981), size: 24),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       'Bill #${token.billNumber} Jama',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: const Color(0xFF0F172A)),
+                      style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                          color: const Color(0xFF0F172A)),
                     ),
                   ),
                 ],
@@ -435,33 +501,65 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (token.customerName.isNotEmpty)
-                            Text(token.customerName, style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: const Color(0xFF0F172A))),
-                          Text('Bill Total: \u20B9${token.grandTotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF475569))),
+                            Text(token.customerName,
+                                style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 14,
+                                    color: const Color(0xFF0F172A))),
+                          Text(
+                              'Bill Total: \u20B9${token.grandTotal.toStringAsFixed(2)}',
+                              style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: const Color(0xFF475569))),
                           if (token.receivedAmount > 0)
-                            Text('Already Paid: \u20B9${token.receivedAmount.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF10B981))),
+                            Text(
+                                'Already Paid: \u20B9${token.receivedAmount.toStringAsFixed(2)}',
+                                style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: const Color(0xFF10B981))),
                           if (token.balanceDue > 0)
-                            Text('Remaining Due: \u20B9${token.balanceDue.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFFEF4444))),
+                            Text(
+                                'Remaining Due: \u20B9${token.balanceDue.toStringAsFixed(2)}',
+                                style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFEF4444))),
                         ],
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text('Jama Amount (\u20B9 જમા રકમ)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF334155))),
+                    Text('Jama Amount (\u20B9 જમા રકમ)',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: const Color(0xFF334155))),
                     const SizedBox(height: 6),
                     TextField(
                       controller: amountCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       autofocus: true,
-                      style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+                      style: GoogleFonts.inter(
+                          fontSize: 16, fontWeight: FontWeight.w700),
                       decoration: InputDecoration(
                         prefixText: '\u20B9 ',
                         hintText: 'Enter amount...',
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF10B981), width: 2)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFF10B981), width: 2)),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text('Payment Mode (ચૂકવણી મોડ)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF334155))),
+                    Text('Payment Mode (ચૂકવણી મોડ)',
+                        style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                            color: const Color(0xFF334155))),
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -469,9 +567,12 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                           child: ChoiceChip(
                             label: const Text('Cash'),
                             selected: selectedMode == 'CASH',
-                            selectedColor: const Color(0xFF10B981).withValues(alpha: 0.2),
+                            selectedColor:
+                                const Color(0xFF10B981).withValues(alpha: 0.2),
                             onSelected: (val) {
-                              if (val) setDialogState(() => selectedMode = 'CASH');
+                              if (val) {
+                                setDialogState(() => selectedMode = 'CASH');
+                              }
                             },
                           ),
                         ),
@@ -480,9 +581,12 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                           child: ChoiceChip(
                             label: const Text('UPI'),
                             selected: selectedMode == 'ONLINE',
-                            selectedColor: const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                            selectedColor:
+                                const Color(0xFF4F46E5).withValues(alpha: 0.2),
                             onSelected: (val) {
-                              if (val) setDialogState(() => selectedMode = 'ONLINE');
+                              if (val) {
+                                setDialogState(() => selectedMode = 'ONLINE');
+                              }
                             },
                           ),
                         ),
@@ -493,7 +597,9 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                             selected: selectedMode == 'CARD',
                             selectedColor: Colors.amber.withValues(alpha: 0.2),
                             onSelected: (val) {
-                              if (val) setDialogState(() => selectedMode = 'CARD');
+                              if (val) {
+                                setDialogState(() => selectedMode = 'CARD');
+                              }
                             },
                           ),
                         ),
@@ -504,44 +610,59 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
               ),
               actions: [
                 TextButton(
-                  onPressed: submitting ? null : () => Navigator.pop(ctx, false),
-                  child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF475569))),
+                  onPressed:
+                      submitting ? null : () => Navigator.pop(ctx, false),
+                  child: Text('Cancel',
+                      style: GoogleFonts.inter(color: const Color(0xFF475569))),
                 ),
                 ElevatedButton(
-                  onPressed: submitting ? null : () async {
-                    final text = amountCtrl.text.trim();
-                    final amt = double.tryParse(text);
-                    if (amt == null || amt <= 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a valid amount greater than zero')),
-                      );
-                      return;
-                    }
-                    setDialogState(() => submitting = true);
-                    try {
-                      await RestaurantApi.instance.processPayment(
-                        token.id,
-                        selectedMode,
-                        amount: amt,
-                      );
-                      if (context.mounted) Navigator.pop(ctx, true);
-                    } catch (e) {
-                      setDialogState(() => submitting = false);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Jama failed: $e'), backgroundColor: Colors.red),
-                        );
-                      }
-                    }
-                  },
+                  onPressed: submitting
+                      ? null
+                      : () async {
+                          final text = amountCtrl.text.trim();
+                          final amt = double.tryParse(text);
+                          if (amt == null || amt <= 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Please enter a valid amount greater than zero')),
+                            );
+                            return;
+                          }
+                          setDialogState(() => submitting = true);
+                          try {
+                            await RestaurantApi.instance.processPayment(
+                              token.id,
+                              selectedMode,
+                              amount: amt,
+                            );
+                            if (context.mounted) Navigator.pop(ctx, true);
+                          } catch (e) {
+                            setDialogState(() => submitting = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Jama failed: $e'),
+                                    backgroundColor: Colors.red),
+                              );
+                            }
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
                   child: submitting
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('Submit Jama (\u20B9 જમા)', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : Text('Submit Jama (\u20B9 જમા)',
+                          style:
+                              GoogleFonts.inter(fontWeight: FontWeight.w700)),
                 ),
               ],
             );
@@ -567,13 +688,16 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     final newMode = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Change Payment Mode', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('Change Payment Mode',
+            style:
+                GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               title: Text('Cash', style: GoogleFonts.inter()),
-              leading: const Icon(Icons.payments_outlined, color: Color(0xFF10B981)),
+              leading:
+                  const Icon(Icons.payments_outlined, color: Color(0xFF10B981)),
               onTap: () => Navigator.pop(context, 'CASH'),
             ),
             ListTile(
@@ -586,15 +710,18 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       ),
     );
 
-    if (newMode != null && newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
+    if (newMode != null &&
+        newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
       try {
         await RestaurantApi.instance.updateTokenPaymentMode(token.id, newMode);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment mode updated successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Payment mode updated successfully!')));
         _loadTokens();
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
       }
     }
   }
@@ -603,10 +730,14 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Delete Bill', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete this bill (#${token.billNumber})? This action cannot be undone.'),
+        title: Text('Delete Bill',
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        content: Text(
+            'Are you sure you want to delete this bill (#${token.billNumber})? This action cannot be undone.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -619,12 +750,14 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       try {
         await RestaurantApi.instance.deleteToken(token.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill deleted successfully')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Bill deleted successfully')));
           _loadTokens();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
         }
       }
     }
