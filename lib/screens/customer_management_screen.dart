@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
+import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
 import 'add_customer_screen.dart';
 import 'customer_ledger_screen.dart';
@@ -45,14 +46,22 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
       duration: const Duration(milliseconds: 500),
     );
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
+    BillEventNotifier.billRefreshNotifier.addListener(_onBillChanged);
     _loadCustomers();
   }
 
   @override
   void dispose() {
+    BillEventNotifier.billRefreshNotifier.removeListener(_onBillChanged);
     _animCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  void _onBillChanged() {
+    if (mounted) {
+      _loadCustomers();
+    }
   }
 
   // ── Data Loading ───────────────────────────────────────────────

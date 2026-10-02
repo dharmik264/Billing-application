@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../services/restaurant_api.dart';
+import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
 import 'print_preview_screen.dart';
 
@@ -47,13 +48,21 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    BillEventNotifier.billRefreshNotifier.addListener(_onBillChanged);
     _loadLedger();
   }
 
   @override
   void dispose() {
+    BillEventNotifier.billRefreshNotifier.removeListener(_onBillChanged);
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onBillChanged() {
+    if (mounted) {
+      _loadLedger();
+    }
   }
 
   Future<void> _loadLedger() async {
