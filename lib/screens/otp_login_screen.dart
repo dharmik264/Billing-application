@@ -14,7 +14,8 @@ import 'super_admin_login_screen.dart';
 
 class OTPLoginScreen extends StatefulWidget {
   final bool prefilledPhone;
-  const OTPLoginScreen({Key? key, this.prefilledPhone = false}) : super(key: key);
+  final String? prefilledOtp; // OTP from registration response
+  const OTPLoginScreen({Key? key, this.prefilledPhone = false, this.prefilledOtp}) : super(key: key);
 
   @override
   State<OTPLoginScreen> createState() => _OTPLoginScreenState();
@@ -43,6 +44,18 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     _otpControllers = List.generate(4, (_) => TextEditingController());
     _otpFocusNodes = List.generate(4, (_) => FocusNode());
     _checkPrefilledPhone();
+    // Auto-fill OTP digits if passed from registration
+    if (widget.prefilledOtp != null && widget.prefilledOtp!.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fillOtpDigits(widget.prefilledOtp!));
+    }
+  }
+
+  void _fillOtpDigits(String otp) {
+    final digits = otp.replaceAll(RegExp(r'[^0-9]'), '');
+    for (int i = 0; i < _otpControllers.length && i < digits.length; i++) {
+      _otpControllers[i].text = digits[i];
+    }
+    setState(() {});
   }
 
   Future<void> _fetchDevUsers() async {

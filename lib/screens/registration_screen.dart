@@ -83,11 +83,16 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       }
 
       
-      // Wait a moment then show the OTP screen, prepopulated
-      Future.delayed(const Duration(milliseconds: 500), () {
+      // Wait a moment then show the OTP screen, prepopulated with OTP
+      Future.delayed(const Duration(milliseconds: 800), () {
         if (mounted) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const OTPLoginScreen(prefilledPhone: true)),
+            MaterialPageRoute(
+              builder: (context) => OTPLoginScreen(
+                prefilledPhone: true,
+                prefilledOtp: devOtp, // Auto-fill OTP digits in fields
+              ),
+            ),
           );
         }
       });
