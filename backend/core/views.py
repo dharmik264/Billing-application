@@ -100,7 +100,7 @@ class RegisterView(APIView):
             return Response({'error': 'Email address already registered'}, status=status.HTTP_400_BAD_REQUEST)
             
         now = timezone.now()
-        trial_end = now + timedelta(days=7)
+
 
         try:
             with transaction.atomic():
@@ -109,9 +109,8 @@ class RegisterView(APIView):
                     name=name,
                     email=email,
                     shop_name=shop_name,
-                    account_status='trial',
-                    trial_start=now,
-                    trial_end=trial_end
+                    account_status='pending_verification',  # Activated after OTP verify
+                    is_active=False,  # Cannot login until OTP verified
                 )
                 password = serializer.validated_data['password']
                 user.set_password(password)
@@ -200,12 +199,22 @@ class VerifyOTPView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'Please register first'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not user.can_login:
+        # If user was pending OTP verification, activate them now
+        if user.account_status == 'pending_verification':
+            now = timezone.now()
+            trial_end = now + timedelta(days=7)
+            user.account_status = 'trial'
+            user.is_active = True
+            user.trial_start = now
+            user.trial_end = trial_end
+            user.is_staff = True
+            user.save()
+        elif not user.can_login:
             return Response({'error': 'Trial expired or account not approved'}, status=status.HTTP_403_FORBIDDEN)
-        
-        # Grant admin panel access
-        user.is_staff = True
-        user.save()
+        else:
+            # Grant admin panel access for existing users
+            user.is_staff = True
+            user.save()
         
         refresh = RefreshToken.for_user(user)
 

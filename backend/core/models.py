@@ -5,6 +5,7 @@ import random, string
 
 
 ACCOUNT_STATUS_CHOICES = [
+    ('pending_verification', 'Pending OTP Verification'),
     ('pending', 'Pending Approval'),
     ('trial', 'Trial Period'),
     ('approved', 'Approved'),
@@ -66,7 +67,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         if not self.is_active:
             return False
-        if self.account_status == 'rejected':
+        if self.account_status in ('rejected', 'pending_verification'):
             return False
             
         # Check for 7-day grace period for approved accounts
