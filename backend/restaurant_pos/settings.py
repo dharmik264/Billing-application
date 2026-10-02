@@ -41,6 +41,10 @@ INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in S
 TENANT_MODEL = "shop.Shop"
 TENANT_DOMAIN_MODEL = "shop.Domain"
 
+# Allow public schema (auth APIs) to be served from the root Render domain
+PUBLIC_SCHEMA_URLCONF = 'restaurant_pos.urls'
+SHOW_PUBLIC_IF_NO_TENANT_FOUND = True
+
 MIDDLEWARE = [
     'django_tenants.middleware.main.TenantMainMiddleware',
     'corsheaders.middleware.CorsMiddleware',
