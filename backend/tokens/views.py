@@ -77,7 +77,6 @@ class CreateTokenView(APIView):
 
         # For non-credit tokens, if is_paid is set, calculate_totals() will auto-fill
         # received_amount = total if it is 0.
-        pass
 
         token = Token.objects.create(
             token_number  = token_number,
@@ -459,7 +458,9 @@ class CustomerJamaPaymentView(APIView):
         if clean_phone:
             req_cust = Customer.objects.filter(mobile_number=clean_phone).first()
         elif customer_name:
-            req_cust = Customer.objects.filter(name__iexact=customer_name).first()
+            cust_matches = Customer.objects.filter(name__iexact=customer_name)
+            if cust_matches.count() == 1:
+                req_cust = cust_matches.first()
 
         tokens = tokens.order_by('created_at').select_for_update()
 
@@ -491,7 +492,9 @@ class CustomerJamaPaymentView(APIView):
             if token.customer_phone:
                 token_cust = Customer.objects.filter(mobile_number=normalize_phone(token.customer_phone)).first()
             elif token.customer_name:
-                token_cust = Customer.objects.filter(name__iexact=token.customer_name).first()
+                cust_matches = Customer.objects.filter(name__iexact=token.customer_name)
+                if cust_matches.count() == 1:
+                    token_cust = cust_matches.first()
 
             target_cust = token_cust or req_cust
             if target_cust:

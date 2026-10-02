@@ -45,12 +45,9 @@ def compute_customer_ledger_summary(customer):
     bills = get_customer_bills(customer)
     total_billed = bills.aggregate(s=Sum('total'))['s'] or Decimal('0.00')
 
-    bills_paid = Decimal('0.00')
-    for bill in bills:
-        recv = Decimal(str(bill.received_amount or 0))
-        if bill.is_paid and recv == 0 and bill.total > 0:
-            recv = Decimal(str(bill.total))
-        bills_paid += recv
+    sum_received = bills.aggregate(s=Sum('received_amount'))['s'] or Decimal('0.00')
+    fallback_paid = bills.filter(is_paid=True, received_amount=0, total__gt=0).aggregate(s=Sum('total'))['s'] or Decimal('0.00')
+    bills_paid = sum_received + fallback_paid
 
     advance_paid = CustomerPayment.objects.filter(customer=customer, token__isnull=True).aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
 

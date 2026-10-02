@@ -19,15 +19,18 @@ def check(section, name, passed, detail=""):
 
 def run_tests():
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        # ── Setup test user ────────────────────────────────────────────────
+    connection.set_schema_to_public()
     try:
         u = User.objects.get(phone="9111111111")
     except User.DoesNotExist:
         u = User.objects.create_user(phone="9111111111")
         u.account_status = "approved"; u.is_active = True; u.save()
 
-    from shop.models import Shop
+    from shop.models import Shop, Domain
     shop = Shop.get_shop(u)
+    Domain.objects.get_or_create(domain="testserver", defaults={"tenant": shop, "is_primary": True})
+    connection.set_schema(shop.schema_name)
+
     token = str(RefreshToken.for_user(u).access_token)
     client = APIClient()
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")

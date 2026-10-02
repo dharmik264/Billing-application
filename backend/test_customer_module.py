@@ -57,9 +57,10 @@ def run_tests():
     print("  2. MODEL CRUD TESTS (Direct DB)")
     print("="*60)
 
-    from shop.models import Shop
+    from shop.models import Shop, Domain
     from customers.models import Customer
 
+    connection.set_schema_to_public()
     # Get or create test shop user
     try:
         test_user = User.objects.get(phone="9000000001")
@@ -73,14 +74,15 @@ def run_tests():
         test_shop = Shop.get_shop(test_user)
     except Exception:
         test_shop = Shop.objects.create(owner=test_user, name="Test Shop")
+    Domain.objects.get_or_create(domain="testserver", defaults={"tenant": test_shop, "is_primary": True})
+    connection.set_schema(test_shop.schema_name)
 
     # Clean old test data
-    Customer.objects.filter(shop=test_shop, mobile_number__in=["9876543210","9876543211"]).delete()
+    Customer.objects.filter(mobile_number__in=["9876543210","9876543211"]).delete()
 
     # CREATE
     try:
         c = Customer.objects.create(
-            shop=test_shop,
             name="Rajesh Kumar",
             mobile_number="9876543210",
             address="123 MG Road, Bangalore",
@@ -122,7 +124,7 @@ def run_tests():
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(refresh.access_token)}")
 
     # Clean before API tests
-    Customer.objects.filter(shop=test_shop, mobile_number="9000000099").delete()
+    Customer.objects.filter(mobile_number="9000000099").delete()
 
     # POST — create
     response = client.post("/api/customers/", {
@@ -192,7 +194,7 @@ def run_tests():
               f"got {response2.status_code}")
 
     # GET with search
-    Customer.objects.filter(shop=test_shop, mobile_number="9000000088").delete()
+    Customer.objects.filter(mobile_number="9000000088").delete()
     client.post("/api/customers/", {
         "name": "Searchable Kumar",
         "mobile_number": "9000000088",
@@ -243,7 +245,7 @@ def run_tests():
     check("Validation: Non-digit mobile rejected (400)", r.status_code == 400)
 
     # Duplicate mobile
-    Customer.objects.filter(shop=test_shop, mobile_number="9000000077").delete()
+    Customer.objects.filter(mobile_number="9000000077").delete()
     client.post("/api/customers/", {
         "name": "First Customer",
         "mobile_number": "9000000077",
@@ -257,7 +259,7 @@ def run_tests():
     # GST validations
     r = post_customer(mobile_number="9000000076", gst_number="INVALIDGST")
     check("Validation: Invalid GST rejected (400)", r.status_code == 400)
-    Customer.objects.filter(shop=test_shop, mobile_number="9000000076").delete()
+    Customer.objects.filter(mobile_number="9000000076").delete()
     r = post_customer(mobile_number="9000000076", gst_number="29AAPFU0939F1ZV")
     check("Validation: Valid GST accepted (201)", r.status_code == 201)
 
