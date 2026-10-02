@@ -50,8 +50,9 @@ def send_sms_otp(phone, code):
             logger.info(f"FALLBACK OTP FOR {phone}: {code}")
     else:
         # Development / Server log fallback
-        logger.info(f"DEVELOPMENT OTP FOR {phone}: {code}")
-        print(f"\n{'='*45}\nDEVELOPMENT OTP FOR {phone}: {code}\n{'='*45}\n", flush=True)
+        logger.warning(f"[OTP] DEVELOPMENT OTP FOR {phone}: {code}")
+        import sys; sys.stderr.write(f"\n{'='*45}\n[OTP] DEVELOPMENT OTP FOR {phone}: {code}\n{'='*45}\n"); sys.stderr.flush()
+
 
 
 class PasswordLoginView(APIView):
