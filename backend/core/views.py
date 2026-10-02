@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 def send_sms_otp(phone, code):
     """
     Sends an OTP via a configured SMS gateway.
-    Falls back to console print in local development if no API key is provided.
+    Falls back to console print and logger in local development/server logs.
     """
     sms_url = os.getenv('SMS_API_URL')
     sms_key = os.getenv('SMS_API_KEY')
@@ -47,11 +47,11 @@ def send_sms_otp(phone, code):
             logger.info(f"OTP sent to {phone} via SMS.")
         except Exception as e:
             logger.error(f"Failed to send SMS to {phone}: {str(e)}")
+            logger.info(f"FALLBACK OTP FOR {phone}: {code}")
     else:
-        # Development fallback
-        print(f"\n{'='*45}")
-        print(f"DEVELOPMENT OTP FOR {phone}: {code}")
-        print(f"{'='*45}\n")
+        # Development / Server log fallback
+        logger.info(f"DEVELOPMENT OTP FOR {phone}: {code}")
+        print(f"\n{'='*45}\nDEVELOPMENT OTP FOR {phone}: {code}\n{'='*45}\n", flush=True)
 
 
 class PasswordLoginView(APIView):
