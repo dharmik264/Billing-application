@@ -411,6 +411,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                               return ListTile(
                                 title: Text(option.name, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                                 subtitle: Text(option.mobileNumber),
+                                trailing: option.netDue > 0
+                                    ? Text('Due: \u20B9${option.netDue.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 12))
+                                    : Text('Paid', style: GoogleFonts.inter(color: const Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.w600)),
                                 onTap: () => onSelected(option),
                               );
                             },
@@ -1172,6 +1175,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                               return ListTile(
                                 title: Text(option.name, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
                                 subtitle: Text(option.mobileNumber, style: GoogleFonts.inter(color: Colors.grey)),
+                                trailing: option.netDue > 0
+                                    ? Text('Due: \u20B9${option.netDue.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 12))
+                                    : Text('Paid', style: GoogleFonts.inter(color: const Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.w600)),
                                 onTap: () => onSelected(option),
                               );
                             },
