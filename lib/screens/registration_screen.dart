@@ -59,15 +59,29 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('loginPhone', phone);
       
+      final devOtp = response['otp']?.toString();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response['message'] ?? 'Registration successful, OTP sent.'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
+      if (devOtp != null && devOtp.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Registration successful! Your OTP is: $devOtp'),
+            backgroundColor: Colors.blue,
+            duration: const Duration(seconds: 15),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(response['message'] ?? 'Registration successful, OTP sent.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+
       
       // Wait a moment then show the OTP screen, prepopulated
       Future.delayed(const Duration(milliseconds: 500), () {
