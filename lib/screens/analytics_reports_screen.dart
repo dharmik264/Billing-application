@@ -22,6 +22,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   final List<_HistoryToken> _tokens = [];
+  final List<ApiCustomer> _customers = [];
 
   String _selectedRange = 'Today';
   String _activeReportType = 'Bills';
@@ -1105,7 +1106,8 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
       itemCount: summaries.length,
       itemBuilder: (context, index) {
         final summary = summaries[index];
-        final isDue = summary.dueBalance > 0;
+        final netDueAmount = _getNetDueForCustomer(summary.customerName, summary.customerPhone, summary.dueBalance);
+        final isDue = netDueAmount > 0;
 
         return InkWell(
           onTap: () => _openFullLedgerForSummary(summary),
@@ -1172,7 +1174,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        isDue ? 'Net Due: ${_money(summary.dueBalance)}' : 'Paid in Full',
+                        isDue ? 'Net Due: ${_money(netDueAmount)}' : 'Paid in Full',
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -1404,23 +1406,29 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: summary.dueBalance > 0 ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: summary.dueBalance > 0 ? const Color(0xFFFECACA) : const Color(0xFFBBF7D0)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Net Due', style: GoogleFonts.inter(fontSize: 11, color: summary.dueBalance > 0 ? const Color(0xFF991B1B) : const Color(0xFF166534), fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
-                            FittedBox(child: Text(_money(summary.dueBalance), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: summary.dueBalance > 0 ? const Color(0xFF991B1B) : const Color(0xFF14532D)))),
-                          ],
-                        ),
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final sheetNetDue = _getNetDueForCustomer(summary.customerName, summary.customerPhone, summary.dueBalance);
+                        final isSheetDue = sheetNetDue > 0;
+                        return Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isSheetDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: isSheetDue ? const Color(0xFFFECACA) : const Color(0xFFBBF7D0)),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Net Due', style: GoogleFonts.inter(fontSize: 11, color: isSheetDue ? const Color(0xFF991B1B) : const Color(0xFF166534), fontWeight: FontWeight.w600)),
+                                const SizedBox(height: 4),
+                                FittedBox(child: Text(_money(sheetNetDue), style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: isSheetDue ? const Color(0xFF991B1B) : const Color(0xFF14532D)))),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
                     ),
                   ],
                 ),
@@ -1611,18 +1619,47 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   String _money(double amount) => '\u20B9${amount.toStringAsFixed(2)}';
 
+  double _getNetDueForCustomer(String name, String phone, double fallbackDue) {
+    final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+    if (cleanPhone.isNotEmpty) {
+      for (final c in _customers) {
+        final cPhone = c.mobileNumber.replaceAll(RegExp(r'\D'), '');
+        if (cPhone.isNotEmpty && (cPhone.endsWith(cleanPhone) || cleanPhone.endsWith(cPhone))) {
+          return c.netDue;
+        }
+      }
+    }
+    final lowerName = name.trim().toLowerCase();
+    if (lowerName.isNotEmpty) {
+      for (final c in _customers) {
+        if (c.name.trim().toLowerCase() == lowerName) {
+          return c.netDue;
+        }
+      }
+    }
+    return fallbackDue;
+  }
+
   Future<void> _loadTokensFromDatabase() async {
     setState(() => _loading = true);
     try {
-      final tokens = await RestaurantApi.instance.fetchTokens();
+      final results = await Future.wait([
+        RestaurantApi.instance.fetchTokens(),
+        RestaurantApi.instance.fetchCustomers(),
+      ]);
+      final tokens = results[0] as List<ApiToken>;
+      final customers = results[1] as List<ApiCustomer>;
       if (!mounted) return;
       setState(() {
         _tokens
           ..clear()
           ..addAll(tokens.map(_HistoryToken.fromApiToken));
+        _customers
+          ..clear()
+          ..addAll(customers);
       });
     } catch (e) {
-      debugPrint('Analytics: failed to load tokens: $e');
+      debugPrint('Analytics: failed to load tokens/customers: $e');
       if (mounted) {
         _showSnackBar('Network error. Using cached/demo data.');
       }
