@@ -400,13 +400,12 @@ class TodaySummaryView(APIView):
         
         # Monthly
         start_of_month = today.replace(day=1)
-        monthly_paid = Token.objects.filter(date__gte=start_of_month, is_paid=True).exclude(status='cancelled')
-        monthly_sales = monthly_paid.aggregate(s=Sum('total'))['s'] or 0
+        monthly_tokens = Token.objects.filter(date__gte=start_of_month).exclude(status='cancelled')
+        monthly_sales = monthly_tokens.aggregate(s=Sum('total'))['s'] or 0
         
         # Today
         tokens = Token.objects.filter(date=today).exclude(status='cancelled')
-        paid   = tokens.filter(is_paid=True)
-        agg    = paid.aggregate(revenue=Sum('total'), count=Count('id'))
+        agg    = tokens.aggregate(revenue=Sum('total'), count=Count('id'))
 
         return Response({
             'date':          str(today),
@@ -414,12 +413,13 @@ class TodaySummaryView(APIView):
             'total_bills':   total_bills,    # All time bills
             'last_bill_number': last_bill_number,
             'monthly_sales': monthly_sales,  # Monthly sales
-            'paid_tokens':   paid.count(),
+            'paid_tokens':   tokens.filter(is_paid=True).count(),
             'open_tokens':   tokens.filter(status__in=['open', 'preparing']).count(),
-            'revenue':       agg['revenue'] or 0, # Today sales
-            'cash':          paid.filter(payment_mode__iexact='cash').aggregate(s=Sum('total'))['s'] or 0,
-            'upi':           paid.filter(payment_mode__in=['online / upi', 'upi', 'online']).aggregate(s=Sum('total'))['s'] or 0,
-            'card':          paid.filter(payment_mode__iexact='card').aggregate(s=Sum('total'))['s'] or 0,
+            'revenue':       agg['revenue'] or 0, # Today sales (includes all bills)
+            'cash':          tokens.filter(payment_mode__iexact='cash').aggregate(s=Sum('total'))['s'] or 0,
+            'upi':           tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI']).aggregate(s=Sum('total'))['s'] or 0,
+            'card':          tokens.filter(payment_mode__iexact='card').aggregate(s=Sum('total'))['s'] or 0,
+            'credit':        tokens.filter(payment_mode__in=['credit', 'udhar', 'due', 'CREDIT', 'UDHAR']).aggregate(s=Sum('total'))['s'] or 0,
         })
 
 class CustomerSearchAPIView(APIView):

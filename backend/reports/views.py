@@ -14,7 +14,7 @@ class DailyReportView(APIView):
 
     def get(self, request):
         report_date = request.query_params.get('date', str(timezone.localdate()))
-        tokens = Token.objects.filter(date=report_date, is_paid=True)
+        tokens = Token.objects.filter(date=report_date).exclude(status='cancelled')
 
         agg = tokens.aggregate(
             revenue     = Sum('total'),
@@ -27,9 +27,10 @@ class DailyReportView(APIView):
         )
 
         by_payment = {
-            'cash': tokens.filter(payment_mode='cash').aggregate(s=Sum('total'))['s'] or 0,
-            'upi':  tokens.filter(payment_mode='upi').aggregate(s=Sum('total'))['s'] or 0,
-            'card': tokens.filter(payment_mode='card').aggregate(s=Sum('total'))['s'] or 0,
+            'cash':   tokens.filter(payment_mode__iexact='cash').aggregate(s=Sum('total'))['s'] or 0,
+            'upi':    tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI']).aggregate(s=Sum('total'))['s'] or 0,
+            'card':   tokens.filter(payment_mode__iexact='card').aggregate(s=Sum('total'))['s'] or 0,
+            'credit': tokens.filter(payment_mode__in=['credit', 'udhar', 'due', 'CREDIT', 'UDHAR']).aggregate(s=Sum('total'))['s'] or 0,
         }
 
         by_order_type = {}
@@ -45,12 +46,11 @@ class DailyReportView(APIView):
             report_date_obj = timezone.localdate()
             report_date = str(report_date_obj)
 
-        total_bills = Token.objects.count()
+        total_bills = Token.objects.exclude(status='cancelled').count()
         monthly_sales = Token.objects.filter(
             date__year=report_date_obj.year, 
             date__month=report_date_obj.month, 
-            is_paid=True
-        ).aggregate(s=Sum('total'))['s'] or 0
+        ).exclude(status='cancelled').aggregate(s=Sum('total'))['s'] or 0
 
         return Response({
             'date':         report_date,

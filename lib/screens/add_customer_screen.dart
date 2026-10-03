@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
+import '../services/data_service.dart';
+import '../services/sync_service.dart';
+import '../widgets/offline_banner.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final ApiCustomer? customer; // null = Add mode, non-null = Edit mode
@@ -158,21 +161,48 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
     );
 
     try {
+      final SaveResult<ApiCustomer> result;
       if (_isEdit) {
-        await RestaurantApi.instance.updateCustomer(widget.customer!.id, draft);
+        result = await DataService.updateCustomer(widget.customer!.id, draft);
       } else {
-        await RestaurantApi.instance.createCustomer(draft);
+        result = await DataService.createCustomer(draft);
       }
+
       if (mounted) {
+        final isOffline = !SyncService.instance.isOnline;
+        final label = _isEdit ? 'Customer updated' : 'Customer added';
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_isEdit ? 'Customer updated successfully!' : 'Customer added successfully!'),
-            backgroundColor: const Color(0xFF10B981),
+            content: Row(
+              children: [
+                Icon(
+                  isOffline ? Icons.cloud_queue_rounded : Icons.check_circle_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    isOffline
+                        ? '$label locally. Will sync when online.'
+                        : '$label successfully!',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor:
+                isOffline ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
-        Navigator.of(context).pop(true); // signal refresh
+        Navigator.of(context).pop(result.data); // pass the new/updated customer back
       }
     } catch (e) {
       if (mounted) {
@@ -218,93 +248,102 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
           child: Container(height: 1, color: _slate300.withValues(alpha: 0.5)),
         ),
       ),
-      body: FadeTransition(
-        opacity: _fadeAnim,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
+      body: Column(
+        children: [
+          // Offline banner — slides in automatically when connectivity drops.
+          OfflineBanner(scaffoldContext: context),
+          // Main form
+          Expanded(
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
 
 
-                // ── Customer Name ──────────────────────────────
-                _buildSectionTitle('Customer Name'),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller: _nameCtrl,
-                  hint: 'Enter customer name',
-                  icon: Icons.person_outline_rounded,
-                  validator: _validateName,
-                  textCapitalization: TextCapitalization.words,
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.contacts_rounded, color: _indigo),
-                    tooltip: 'Pick from contacts',
-                    onPressed: _pickContact,
+                      // ── Customer Name ──────────────────────────────
+                      _buildSectionTitle('Customer Name'),
+                      const SizedBox(height: 8),
+                      _buildTextField(
+                        controller: _nameCtrl,
+                        hint: 'Enter customer name',
+                        icon: Icons.person_outline_rounded,
+                        validator: _validateName,
+                        textCapitalization: TextCapitalization.words,
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.contacts_rounded, color: _indigo),
+                          tooltip: 'Pick from contacts',
+                          onPressed: _pickContact,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── Mobile Number ──────────────────────────────
+                      _buildSectionTitle('Mobile Number'),
+                      const SizedBox(height: 8),
+                      _buildTextField(
+                        controller: _mobileCtrl,
+                        hint: '10-digit mobile number',
+                        icon: Icons.phone_outlined,
+                        validator: _validateMobile,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(10),
+                        ],
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.contacts_rounded, color: _indigo),
+                          tooltip: 'Pick from contacts',
+                          onPressed: _pickContact,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── Address (optional) ─────────────────────────
+                      _buildSectionTitle('Address', optional: true),
+                      const SizedBox(height: 8),
+                      _buildTextField(
+                        controller: _addressCtrl,
+                        hint: 'Enter full address',
+                        icon: Icons.location_on_outlined,
+                        validator: _validateAddress,
+                        maxLines: 3,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── GST Number (optional) ──────────────────────
+                      _buildSectionTitle('GST Number', optional: true),
+                      const SizedBox(height: 8),
+                      _buildTextField(
+                        controller: _gstCtrl,
+                        hint: 'e.g. 22AAAAA0000A1Z5 (optional)',
+                        icon: Icons.receipt_long_outlined,
+                        validator: _validateGst,
+                        textCapitalization: TextCapitalization.characters,
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── Status ─────────────────────────────────────
+                      _buildSectionTitle('Status'),
+                      const SizedBox(height: 8),
+                      _buildStatusToggle(),
+                      const SizedBox(height: 32),
+
+                      // ── Buttons ─────────────────────────────────────
+                      _buildActionButtons(),
+                      const SizedBox(height: 16),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // ── Mobile Number ──────────────────────────────
-                _buildSectionTitle('Mobile Number'),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller: _mobileCtrl,
-                  hint: '10-digit mobile number',
-                  icon: Icons.phone_outlined,
-                  validator: _validateMobile,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.contacts_rounded, color: _indigo),
-                    tooltip: 'Pick from contacts',
-                    onPressed: _pickContact,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // ── Address (optional) ─────────────────────────
-                _buildSectionTitle('Address', optional: true),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller: _addressCtrl,
-                  hint: 'Enter full address',
-                  icon: Icons.location_on_outlined,
-                  validator: _validateAddress,
-                  maxLines: 3,
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-                const SizedBox(height: 20),
-
-                // ── GST Number (optional) ──────────────────────
-                _buildSectionTitle('GST Number', optional: true),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller: _gstCtrl,
-                  hint: 'e.g. 22AAAAA0000A1Z5 (optional)',
-                  icon: Icons.receipt_long_outlined,
-                  validator: _validateGst,
-                  textCapitalization: TextCapitalization.characters,
-                ),
-                const SizedBox(height: 20),
-
-                // ── Status ─────────────────────────────────────
-                _buildSectionTitle('Status'),
-                const SizedBox(height: 8),
-                _buildStatusToggle(),
-                const SizedBox(height: 32),
-
-                // ── Buttons ─────────────────────────────────────
-                _buildActionButtons(),
-                const SizedBox(height: 16),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

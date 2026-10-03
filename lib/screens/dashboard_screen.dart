@@ -121,14 +121,32 @@ class DashboardScreenState extends State<DashboardScreen> {
           _shopName = shop.name.isNotEmpty ? shop.name : 'My Shop';
           _smsCredits = shop.smsCredits;
 
+          final now = DateTime.now();
+          final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+          final todayTokens = tokens.where((t) {
+            if (t.status.toLowerCase() == 'cancelled') return false;
+            return t.createdAt.startsWith(todayStr);
+          }).toList();
+
+          double calcTotal = 0.0;
+          double calcCash = 0.0;
+          double calcOnline = 0.0;
+          for (var t in todayTokens) {
+            calcTotal += t.grandTotal;
+            final pm = t.paymentMode.toLowerCase();
+            if (pm == 'cash') {
+              calcCash += t.grandTotal;
+            } else if (pm == 'online' || pm == 'upi' || pm == 'online / upi') {
+              calcOnline += t.grandTotal;
+            }
+          }
+
           _tokenCount = summary.totalTokens > 0
               ? summary.totalTokens
-              : tokens
-                  .where((t) => t.status.toLowerCase() != 'cancelled')
-                  .length;
-          _totalSales = summary.totalSales;
-          _cashSales = summary.cashTotal;
-          _onlineSales = summary.onlineTotal;
+              : todayTokens.length;
+          _totalSales = summary.totalSales > 0 ? summary.totalSales : calcTotal;
+          _cashSales = summary.cashTotal > 0 ? summary.cashTotal : calcCash;
+          _onlineSales = summary.onlineTotal > 0 ? summary.onlineTotal : calcOnline;
 
           _recentTokens = tokens.map((t) {
             final date = DateTime.parse(t.createdAt).toLocal();

@@ -393,8 +393,8 @@ class _MainScreenState extends State<MainScreen> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutBack,
-          height: isSelected ? 48 : 42,
-          width: isSelected ? 48 : 42,
+          height: 48,
+          width: 48,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: isSelected

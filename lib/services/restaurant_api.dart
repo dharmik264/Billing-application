@@ -630,9 +630,68 @@
         _cachedSummary = ApiSummaryReport.fromJson(data);
         return _cachedSummary!;
       } catch (_) {
-        final data = await _get('reports/daily/');
-        _cachedSummary = ApiSummaryReport.fromJson(data);
-        return _cachedSummary!;
+        try {
+          final data = await _get('reports/daily/');
+          _cachedSummary = ApiSummaryReport.fromJson(data);
+          return _cachedSummary!;
+        } catch (_) {
+          final localTokens = await LocalDatabase.instance.getTokens();
+          final now = DateTime.now();
+          final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+          double totalSales = 0.0;
+          double cashTotal = 0.0;
+          double onlineTotal = 0.0;
+          double monthlySales = 0.0;
+          int todayCount = 0;
+
+          for (var t in localTokens) {
+            final status = (t['status'] ?? '').toString().toLowerCase();
+            if (status == 'cancelled') continue;
+
+            final createdAt = (t['createdAt'] ?? t['created_at'] ?? '').toString();
+            final isToday = createdAt.startsWith(todayStr);
+
+            double amount = 0.0;
+            if (t['grandTotal'] != null) {
+              amount = (t['grandTotal'] as num).toDouble();
+            } else if (t['total'] != null) {
+              amount = (t['total'] as num).toDouble();
+            }
+
+            final paymentMode = (t['paymentMode'] ?? t['payment_mode'] ?? '').toString().toLowerCase();
+
+            if (isToday) {
+              todayCount++;
+              totalSales += amount;
+              if (paymentMode == 'cash') {
+                cashTotal += amount;
+              } else if (paymentMode == 'online' || paymentMode == 'upi' || paymentMode == 'online / upi') {
+                onlineTotal += amount;
+              }
+            }
+
+            try {
+              final dt = DateTime.parse(createdAt);
+              if (dt.year == now.year && dt.month == now.month) {
+                monthlySales += amount;
+              }
+            } catch (_) {}
+          }
+
+          _cachedSummary = ApiSummaryReport(
+            totalTokens: todayCount,
+            totalSales: totalSales,
+            cashTotal: cashTotal,
+            onlineTotal: onlineTotal,
+            totalBills: localTokens.length,
+            monthlySales: monthlySales,
+            lastBillNumber: localTokens.isNotEmpty
+                ? (localTokens.first['billNumber'] ?? localTokens.first['bill_number'] ?? '0').toString()
+                : '0',
+          );
+          return _cachedSummary!;
+        }
       }
     }
 
