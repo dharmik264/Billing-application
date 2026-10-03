@@ -116,8 +116,11 @@ class Token(models.Model):
         else:
             recv = Decimal(str(self.received_amount or 0))
             self.balance_due = max(Decimal('0'), Decimal(str(self.total or 0)) - recv)
-        self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total',
-                                 'received_amount', 'balance_due', 'items_summary'])
+        try:
+            self.save(update_fields=['subtotal', 'gst_amount', 'service_charge', 'total',
+                                     'received_amount', 'balance_due', 'items_summary'])
+        except Exception:
+            self.save()
 
 
 class TokenItem(models.Model):

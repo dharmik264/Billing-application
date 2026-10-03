@@ -30,7 +30,18 @@ class JWTAuthenticationTenantMiddleware(MiddlewareMixin):
             
             if user:
                 from shop.models import Shop
-                shop = getattr(user, 'shop', None) or Shop.get_shop(user)
+                shop = None
+                try:
+                    shop = user.shop
+                except Exception:
+                    shop = Shop.objects.filter(owner=user).first()
+
+                if not shop:
+                    try:
+                        shop = Shop.get_shop(user)
+                    except Exception as err:
+                        logger.error(f"Error in Shop.get_shop for user {user.id}: {err}")
+
                 if shop and shop.schema_name:
                     connection.set_schema(shop.schema_name)
                     request.tenant = shop
