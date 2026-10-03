@@ -15,8 +15,24 @@ from .serializers import CustomerSerializer, CustomerPaymentSerializer
 
 
 def normalize_phone(p):
-    digits = re.sub(r'\D', '', str(p or ''))
-    return digits[-10:] if len(digits) >= 10 else digits
+    if not p:
+        return ''
+    s = str(p).strip()
+    digits = re.sub(r'\D', '', s)
+    if not digits:
+        return ''
+
+    # Standard Indian mobile numbers: 12 digits starting with '91', 11 digits starting with '0', or 10 digits
+    if len(digits) == 12 and digits.startswith('91'):
+        return digits[2:]
+    if len(digits) == 11 and digits.startswith('0'):
+        return digits[1:]
+    if len(digits) == 10:
+        return digits
+
+    # Preserve full canonical digits for international numbers with other country codes
+    # (e.g. +19876543210 -> 19876543210) so different country codes do not collapse to the same key.
+    return digits
 
 
 ALLOWED_PAYMENT_MODES = {'cash', 'upi', 'card', 'online', 'net_banking', 'due', 'jama', 'other'}

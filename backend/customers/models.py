@@ -16,7 +16,7 @@ class Customer(models.Model):
     ]
 
     name          = models.CharField(max_length=200)
-    mobile_number = models.CharField(max_length=10, unique=True)
+    mobile_number = models.CharField(max_length=20, unique=True)
     address       = models.TextField(blank=True, null=True)
     gst_number    = models.CharField(max_length=15, blank=True, default='')
     status        = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')

@@ -44,15 +44,16 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     def validate_mobile_number(self, value):
         value = value.strip()
-        if not value.isdigit():
+        digits = re.sub(r'\D', '', value)
+        if not digits:
             raise serializers.ValidationError(
-                'Mobile number must contain only digits.'
+                'Mobile number must contain digits.'
             )
-        if len(value) != 10:
+        if len(digits) < 10 or len(digits) > 15:
             raise serializers.ValidationError(
-                'Mobile number must be exactly 10 digits.'
+                'Mobile number must be between 10 and 15 digits.'
             )
-        return value
+        return digits
 
     def validate_gst_number(self, value):
         value = value.strip().upper()
