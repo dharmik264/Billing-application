@@ -1287,6 +1287,7 @@
       required this.totalBills,
       required this.monthlySales,
       required this.lastBillNumber,
+      this.creditTotal = 0.0,
     });
 
     factory ApiSummaryReport.fromJson(Map<String, dynamic> json) {
@@ -1308,6 +1309,10 @@
             _toDouble(byPayment['cash'] ?? json['cash'] ?? json['cashTotal']),
         onlineTotal:
             _toDouble(byPayment['upi'] ?? json['upi'] ?? json['onlineTotal']),
+        creditTotal: _toDouble(byPayment['credit'] ??
+            json['credit'] ??
+            json['creditTotal'] ??
+            json['udhar']),
         totalBills: int.tryParse(json['total_bills']?.toString() ?? '') ?? 0,
         monthlySales: _toDouble(json['monthly_sales']),
         lastBillNumber: json['last_bill_number']?.toString() ?? "0",
@@ -1318,6 +1323,7 @@
     final double totalSales;
     final double cashTotal;
     final double onlineTotal;
+    final double creditTotal;
     final int totalBills;
     final double monthlySales;
     final String lastBillNumber;

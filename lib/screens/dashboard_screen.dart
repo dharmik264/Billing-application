@@ -52,6 +52,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   double _cashSales = 0.0;
   double _onlineSales = 0.0;
+  double _udharSales = 0.0;
 
   List<_LiveToken> _recentTokens = [];
 
@@ -131,6 +132,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           double calcTotal = 0.0;
           double calcCash = 0.0;
           double calcOnline = 0.0;
+          double calcUdhar = 0.0;
           for (var t in todayTokens) {
             calcTotal += t.grandTotal;
             final pm = t.paymentMode.toLowerCase();
@@ -138,6 +140,8 @@ class DashboardScreenState extends State<DashboardScreen> {
               calcCash += t.grandTotal;
             } else if (pm == 'online' || pm == 'upi' || pm == 'online / upi') {
               calcOnline += t.grandTotal;
+            } else if (pm == 'credit' || pm == 'udhar' || pm == 'due' || !t.isPaid) {
+              calcUdhar += t.balanceDue > 0 ? t.balanceDue : (t.grandTotal - t.receivedAmount);
             }
           }
 
@@ -147,6 +151,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           _totalSales = summary.totalSales > 0 ? summary.totalSales : calcTotal;
           _cashSales = summary.cashTotal > 0 ? summary.cashTotal : calcCash;
           _onlineSales = summary.onlineTotal > 0 ? summary.onlineTotal : calcOnline;
+          _udharSales = summary.creditTotal > 0 ? summary.creditTotal : calcUdhar;
 
           _recentTokens = tokens.map((t) {
             final date = DateTime.parse(t.createdAt).toLocal();
@@ -360,12 +365,12 @@ class DashboardScreenState extends State<DashboardScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 24),
-        // Shimmer stat cards row
+        // Shimmer stat cards row 1
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
-            children: List.generate(4, (i) {
+            children: List.generate(3, (i) {
               return Container(
                 width: 140,
                 height: 90,
@@ -382,7 +387,30 @@ class DashboardScreenState extends State<DashboardScreen> {
             }),
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 10),
+        // Shimmer stat cards row 2
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: List.generate(3, (i) {
+              return Container(
+                width: 140,
+                height: 90,
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ).animate(onPlay: (c) => c.repeat()).shimmer(
+                    delay: ((i + 3) * 100).ms,
+                    duration: 1200.ms,
+                    color: Colors.white.withValues(alpha: 0.6),
+                  );
+            }),
+          ),
+        ),
+        const SizedBox(height: 24),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
@@ -407,46 +435,67 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildStatCards() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: [
-          StatCard(
-              title: "Today's Sales",
-              value: '\u20B9${_totalSales.toStringAsFixed(0)}',
-              icon: Icons.trending_up_rounded,
-              color: AppColors.indigo600),
-          const SizedBox(width: 10),
-          StatCard(
-              title: 'Tokens',
-              value: _tokenCount.toString(),
-              icon: Icons.receipt_long_rounded,
-              color: AppColors.emerald500),
-          const SizedBox(width: 10),
-          StatCard(
-            title: 'SMS Credits',
-            value: _smsCredits.toString(),
-            icon: Icons.message_rounded,
-            color: _smsCredits > 10
-                ? const Color(0xFF3B82F6)
-                : const Color(0xFFEF4444),
+    return Column(
+      children: [
+        // Line 1: Today's Sales, Tokens, SMS Credits
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              StatCard(
+                  title: "Today's Sales",
+                  value: '\u20B9${_totalSales.toStringAsFixed(0)}',
+                  icon: Icons.trending_up_rounded,
+                  color: AppColors.indigo600),
+              const SizedBox(width: 10),
+              StatCard(
+                  title: 'Tokens',
+                  value: _tokenCount.toString(),
+                  icon: Icons.receipt_long_rounded,
+                  color: AppColors.emerald500),
+              const SizedBox(width: 10),
+              StatCard(
+                title: 'SMS Credits',
+                value: _smsCredits.toString(),
+                icon: Icons.message_rounded,
+                color: _smsCredits > 10
+                    ? const Color(0xFF3B82F6)
+                    : const Color(0xFFEF4444),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          StatCard(
-              title: 'Online Sales',
-              value: '\u20B9${_onlineSales.toStringAsFixed(0)}',
-              icon: Icons.language_rounded,
-              color: AppColors.amber500),
-          const SizedBox(width: 10),
-          StatCard(
-              title: 'Cash Sales',
-              value: '\u20B9${_cashSales.toStringAsFixed(0)}',
-              icon: Icons.payments_rounded,
-              color: const Color(0xFFEC4899)),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        // Line 2: Cash Sales, Online Sales, Udhar (Outstanding)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: [
+              StatCard(
+                  title: 'Cash Sales',
+                  value: '\u20B9${_cashSales.toStringAsFixed(0)}',
+                  icon: Icons.payments_rounded,
+                  color: const Color(0xFFEC4899)),
+              const SizedBox(width: 10),
+              StatCard(
+                  title: 'Online Sales',
+                  value: '\u20B9${_onlineSales.toStringAsFixed(0)}',
+                  icon: Icons.language_rounded,
+                  color: AppColors.amber500),
+              const SizedBox(width: 10),
+              StatCard(
+                  title: 'Udhar (Outstanding)',
+                  value: '\u20B9${_udharSales.toStringAsFixed(0)}',
+                  icon: Icons.account_balance_wallet_rounded,
+                  color: const Color(0xFFE11D48)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
