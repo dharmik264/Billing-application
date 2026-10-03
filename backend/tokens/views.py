@@ -101,18 +101,35 @@ class CreateTokenView(APIView):
                 quantity = int(item_data.get('quantity', 1))
             except (ValueError, TypeError):
                 quantity = 1
+
+            menu_item = None
+            if menu_item_id:
+                try:
+                    menu_item = MenuItem.objects.get(pk=menu_item_id)
+                except (MenuItem.DoesNotExist, ValueError, TypeError):
+                    menu_item = None
+
+            name = item_data.get('name') or (menu_item.name if menu_item else 'Item')
+            price_val = item_data.get('price')
+            if price_val is None:
+                price_val = item_data.get('rate')
+            if price_val is None and menu_item:
+                price_val = menu_item.price
+
+            from decimal import Decimal
             try:
-                menu_item = MenuItem.objects.get(pk=menu_item_id)
-                TokenItem.objects.create(
-                    token     = token,
-                    menu_item = menu_item,
-                    name      = menu_item.name,
-                    price     = menu_item.price,
-                    quantity  = quantity,
-                    note      = item_data.get('note', ''),
-                )
-            except (MenuItem.DoesNotExist, ValueError, TypeError):
-                continue
+                price = Decimal(str(price_val or 0))
+            except (ValueError, TypeError):
+                price = Decimal('0')
+
+            TokenItem.objects.create(
+                token     = token,
+                menu_item = menu_item,
+                name      = name,
+                price     = price,
+                quantity  = quantity,
+                note      = item_data.get('note', ''),
+            )
 
         token.calculate_totals()
 

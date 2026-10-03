@@ -1440,12 +1440,12 @@
 
     Map<String, dynamic> toJson() {
       return {
-        'menu_item': id,
+        if (id != null && id!.isNotEmpty) 'menu_item': id,
         'quantity': quantity,
-        // Internal fields for offline reconstruction
         'name': name,
         'code': code,
         'rate': rate,
+        'price': rate,
       };
     }
   }

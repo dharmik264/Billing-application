@@ -4,12 +4,18 @@ from django_tenants.models import TenantMixin, DomainMixin
 
 import re
 
-def generate_schema_name(shop_name, user_id):
+def generate_schema_name(shop_name, user_id=None):
     cleaned = re.sub(r'[^a-zA-Z0-9]', '_', str(shop_name or '').lower()).strip('_')
-    cleaned = re.sub(r'_+', '_', cleaned)[:30]
-    if not cleaned:
-        cleaned = "shop"
-    return f"tenant_{cleaned}_{user_id}"
+    cleaned = re.sub(r'_+', '_', cleaned)[:50]
+    if not cleaned or cleaned in ('public', 'pg_catalog', 'information_schema', 'select', 'table', 'user', 'group'):
+        cleaned = f"shop_{cleaned}" if cleaned else "shop"
+    
+    candidate = cleaned
+    counter = 1
+    while Shop.objects.filter(schema_name=candidate).exists():
+        candidate = f"{cleaned}_{counter}"
+        counter += 1
+    return candidate
 
 class Shop(TenantMixin):
     owner                = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shop', null=True)
