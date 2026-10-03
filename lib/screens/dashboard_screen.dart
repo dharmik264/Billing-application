@@ -3,8 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/restaurant_api.dart';
-import '../utils/app_constants.dart';
-import '../widgets/stat_card.dart';
+
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'password_login_screen.dart';
@@ -188,14 +187,14 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       appBar: CustomAppBar(
         title: _shopName,
         icon: Icons.storefront_rounded,
         subtitle: _isOnline ? 'Online' : 'Local',
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.only(right: 12.0),
             child: GestureDetector(
               onTap: () async {
                 bool? confirm = await showDialog(
@@ -206,8 +205,8 @@ class DashboardScreenState extends State<DashboardScreen> {
                                   fontWeight: FontWeight.bold)),
                           content:
                               const Text('Are you sure you want to logout?'),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
+                          shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.zero),
                           actions: [
                             TextButton(
                                 onPressed: () => Navigator.pop(c, false),
@@ -215,7 +214,9 @@ class DashboardScreenState extends State<DashboardScreen> {
                             ElevatedButton(
                               onPressed: () => Navigator.pop(c, true),
                               style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red),
+                                  backgroundColor: Colors.red,
+                                  shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.zero)),
                               child: const Text('Logout',
                                   style: TextStyle(color: Colors.white)),
                             ),
@@ -234,283 +235,237 @@ class DashboardScreenState extends State<DashboardScreen> {
                   }
                 }
               },
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: const Icon(Icons.logout_rounded,
-                    color: Color(0xFFEF4444), size: 16),
-              ),
+              child: const Icon(Icons.logout_rounded,
+                  color: Color(0xFFEF4444), size: 18),
             ),
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          RefreshIndicator(
-            onRefresh: refreshData,
-            color: const Color(0xFF4F46E5),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                // SliverAppBar replaced by CustomAppBar
-                SliverToBoxAdapter(
-                  child: _isLoading && _recentTokens.isEmpty
-                      ? _buildShimmerLoading()
-                      : Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            _buildStatCards()
-                                .animate()
-                                .fadeIn(duration: 400.ms)
-                                .slideX(begin: -0.05, curve: Curves.easeOut),
-                            const SizedBox(height: 12),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Recent Tokens',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                  InkWell(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (_) =>
-                                                const AllTokensScreen()),
-                                      );
-                                    },
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 4),
-                                      child: Text(
-                                        'View All',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
-                                          color: const Color(0xFF4F46E5),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+      body: RefreshIndicator(
+        onRefresh: refreshData,
+        color: const Color(0xFF4F46E5),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: _isLoading && _recentTokens.isEmpty
+                  ? _buildShimmerLoading()
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildStatGrid()
+                            .animate()
+                            .fadeIn(duration: 300.ms),
+                        // Section header
+                        Container(
+                          decoration: const BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                  color: Color(0xFFE2E8F0), width: 1),
                             ),
-                            const SizedBox(height: 8),
-                          ],
-                        ),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-                  sliver: _recentTokens.isEmpty && !_isLoading
-                      ? SliverToBoxAdapter(
-                          child: Center(
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 30),
-                              child: Text(
-                                'No recent tokens found',
+                          ),
+                          padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'RECENT TOKENS',
                                 style: GoogleFonts.inter(
-                                    color: const Color(0xFF94A3B8),
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                  color: const Color(0xFF64748B),
+                                ),
                               ),
-                            ),
-                          ),
-                        )
-                      : SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              return _buildTokenCard(_recentTokens[index])
-                                  .animate()
-                                  .fadeIn()
-                                  .slideX(begin: 0.04, delay: (index * 40).ms);
-                            },
-                            childCount: _recentTokens.length > 5
-                                ? 5
-                                : _recentTokens.length,
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (_) =>
+                                            const AllTokensScreen()),
+                                  );
+                                },
+                                child: Text(
+                                  'View All →',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF4F46E5),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                ),
-              ],
+                      ],
+                    ),
             ),
-          ),
-        ],
+            _recentTokens.isEmpty && !_isLoading
+                ? SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 40),
+                      child: Center(
+                        child: Text(
+                          'No recent tokens found',
+                          style: GoogleFonts.inter(
+                              color: const Color(0xFF94A3B8),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  )
+                : SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final token = _recentTokens[index];
+                        return _buildTokenRow(token)
+                            .animate()
+                            .fadeIn(delay: (index * 30).ms);
+                      },
+                      childCount: _recentTokens.length > 10
+                          ? 10
+                          : _recentTokens.length,
+                    ),
+                  ),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
+        ),
       ),
     );
   }
 
-  /// Shimmer placeholder while data loads
+  /// Flat shimmer placeholder
   Widget _buildShimmerLoading() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 24),
-        // Shimmer stat cards row 1
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: List.generate(3, (i) {
-              return Container(
-                width: 140,
-                height: 90,
-                margin: const EdgeInsets.only(right: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ).animate(onPlay: (c) => c.repeat()).shimmer(
-                    delay: (i * 100).ms,
-                    duration: 1200.ms,
-                    color: Colors.white.withValues(alpha: 0.6),
-                  );
-            }),
-          ),
-        ),
-        const SizedBox(height: 10),
-        // Shimmer stat cards row 2
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: List.generate(3, (i) {
-              return Container(
-                width: 140,
-                height: 90,
-                margin: const EdgeInsets.only(right: 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ).animate(onPlay: (c) => c.repeat()).shimmer(
-                    delay: ((i + 3) * 100).ms,
-                    duration: 1200.ms,
-                    color: Colors.white.withValues(alpha: 0.6),
-                  );
-            }),
-          ),
-        ),
-        const SizedBox(height: 24),
+        // Shimmer grid: 2 columns x 3 rows = 6 cells
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: List.generate(3, (i) {
-              return Container(
-                height: 88,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ).animate(onPlay: (c) => c.repeat()).shimmer(
-                    delay: (i * 150 + 200).ms,
-                    duration: 1200.ms,
-                    color: Colors.white.withValues(alpha: 0.6),
-                  );
-            }),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCards() {
-    return Column(
-      children: [
-        // Line 1: Today's Sales, Tokens, SMS Credits
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              StatCard(
-                  title: "Today's Sales",
-                  value: '\u20B9${_totalSales.toStringAsFixed(0)}',
-                  icon: Icons.trending_up_rounded,
-                  color: AppColors.indigo600),
-              const SizedBox(width: 10),
-              StatCard(
-                  title: 'Tokens',
-                  value: _tokenCount.toString(),
-                  icon: Icons.receipt_long_rounded,
-                  color: AppColors.emerald500),
-              const SizedBox(width: 10),
-              StatCard(
-                title: 'SMS Credits',
-                value: _smsCredits.toString(),
-                icon: Icons.message_rounded,
-                color: _smsCredits > 10
-                    ? const Color(0xFF3B82F6)
-                    : const Color(0xFFEF4444),
+          padding: const EdgeInsets.all(0),
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 6,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              childAspectRatio: 2.6,
+              mainAxisSpacing: 0,
+              crossAxisSpacing: 0,
+            ),
+            itemBuilder: (_, i) => Container(
+              margin: EdgeInsets.zero,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                border: Border.all(color: const Color(0xFFF1F5F9), width: 0.5),
               ),
-            ],
+            ).animate(onPlay: (c) => c.repeat()).shimmer(
+                  delay: (i * 80).ms,
+                  duration: 1000.ms,
+                  color: Colors.white.withValues(alpha: 0.7),
+                ),
           ),
         ),
-        const SizedBox(height: 10),
-        // Line 2: Cash Sales, Online Sales, Udhar (Outstanding)
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              StatCard(
-                  title: 'Cash Sales',
-                  value: '\u20B9${_cashSales.toStringAsFixed(0)}',
-                  icon: Icons.payments_rounded,
-                  color: const Color(0xFFEC4899)),
-              const SizedBox(width: 10),
-              StatCard(
-                  title: 'Online Sales',
-                  value: '\u20B9${_onlineSales.toStringAsFixed(0)}',
-                  icon: Icons.language_rounded,
-                  color: AppColors.amber500),
-              const SizedBox(width: 10),
-              StatCard(
-                  title: 'Udhar (Outstanding)',
-                  value: '\u20B9${_udharSales.toStringAsFixed(0)}',
-                  icon: Icons.account_balance_wallet_rounded,
-                  color: const Color(0xFFE11D48)),
-            ],
-          ),
+        const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+        // Shimmer rows
+        Column(
+          children: List.generate(4, (i) => Container(
+            height: 52,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE2E8F0),
+              border: Border(
+                  bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
+            ),
+          ).animate(onPlay: (c) => c.repeat()).shimmer(
+                delay: (i * 100 + 200).ms,
+                duration: 1000.ms,
+                color: Colors.white.withValues(alpha: 0.7),
+              )),
         ),
       ],
     );
   }
 
-  Widget _buildTokenCard(_LiveToken token) {
+  /// 2-column fixed grid of stat metrics
+  Widget _buildStatGrid() {
+    final items = [
+      _StatItem("Today's Sales", '\u20B9${_totalSales.toStringAsFixed(0)}',
+          const Color(0xFF4F46E5)),
+      _StatItem('Tokens', _tokenCount.toString(), const Color(0xFF059669)),
+      _StatItem('Cash Sales', '\u20B9${_cashSales.toStringAsFixed(0)}',
+          const Color(0xFF0284C7)),
+      _StatItem('Online Sales', '\u20B9${_onlineSales.toStringAsFixed(0)}',
+          const Color(0xFFD97706)),
+      _StatItem('Udhar', '\u20B9${_udharSales.toStringAsFixed(0)}',
+          const Color(0xFFDC2626)),
+      _StatItem(
+          'SMS Credits',
+          _smsCredits.toString(),
+          _smsCredits > 10
+              ? const Color(0xFF64748B)
+              : const Color(0xFFEF4444)),
+    ];
+
+    return Table(
+      border: TableBorder.all(color: const Color(0xFFE2E8F0), width: 1),
+      children: [
+        for (int r = 0; r < 3; r++)
+          TableRow(
+            children: [
+              _buildStatCell(items[r * 2]),
+              _buildStatCell(items[r * 2 + 1]),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildStatCell(_StatItem item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            item.label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF64748B),
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            item.value,
+            style: GoogleFonts.inter(
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+              color: item.color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Flat table-style token row with thin bottom divider
+  Widget _buildTokenRow(_LiveToken token) {
     Color statusColor;
     String statusText = token.status.toUpperCase();
     if (statusText == 'COMPLETED') {
-      statusColor = const Color(0xFF10B981);
+      statusColor = const Color(0xFF059669);
     } else if (statusText == 'CANCELLED') {
-      statusColor = const Color(0xFFEF4444);
+      statusColor = const Color(0xFFDC2626);
     } else {
-      statusColor = const Color(0xFF3B82F6);
+      statusColor = const Color(0xFF2563EB);
     }
 
-    return GestureDetector(
+    final pm = token.paymentMode.isEmpty ? 'CASH' : token.paymentMode.toUpperCase();
+
+    return InkWell(
       onTap: () {
         Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => PrintPreviewScreen(
@@ -544,198 +499,98 @@ class DashboardScreenState extends State<DashboardScreen> {
         ));
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            )
-          ],
+        decoration: const BoxDecoration(
+          border: Border(
+              bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
         ),
-        child: Column(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Row(
           children: [
-            // Top Row: Token Badge & Bill Number | Amount
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'TOKEN ${token.tokenNumber}',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF4F46E5),
-                    ),
-                  ),
+            // Token number badge — flat
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFFCBD5E1)),
+              ),
+              child: Text(
+                token.tokenNumber,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF4F46E5),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Bill # and time stacked
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     token.orderId,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF0F172A),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '\u20B9${token.amount.toStringAsFixed(2)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
+                  Text(
+                    token.time,
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: const Color(0xFF94A3B8),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 6),
-            // Middle Row: Date & Time | Badges (Payment & Status)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  token.time,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: const Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
-                  ),
+            // Payment mode — tap to change
+            GestureDetector(
+              onTap: () => _changePaymentMode(token),
+              child: Text(
+                pm,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF64748B),
                 ),
-                Expanded(
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: () => _changePaymentMode(token),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                token.paymentMode.isNotEmpty
-                                    ? token.paymentMode.toUpperCase()
-                                    : 'CASH',
-                                style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF475569),
-                                ),
-                              ),
-                              const SizedBox(width: 3),
-                              const Icon(Icons.edit,
-                                  size: 9, color: Color(0xFF64748B)),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          statusText,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: statusColor,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-            const SizedBox(height: 6),
-            const Divider(height: 1, thickness: 0.8, color: Color(0xFFF1F5F9)),
-            const SizedBox(height: 6),
-            // Action Buttons Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                GestureDetector(
-                  onTap: () => _editToken(token),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.edit_document,
-                            size: 11, color: Color(0xFF3B82F6)),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Edit',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF3B82F6),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                GestureDetector(
-                  onTap: () => _deleteToken(token),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF2F2),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.delete_outline,
-                            size: 11, color: Color(0xFFEF4444)),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Delete',
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFEF4444),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(width: 10),
+            // Amount
+            Text(
+              '\u20B9${token.amount.toStringAsFixed(0)}',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Status dot
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: statusColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Edit icon
+            GestureDetector(
+              onTap: () => _editToken(token),
+              child: const Icon(Icons.edit_outlined,
+                  size: 14, color: Color(0xFF94A3B8)),
+            ),
+            const SizedBox(width: 8),
+            // Delete icon
+            GestureDetector(
+              onTap: () => _deleteToken(token),
+              child: const Icon(Icons.delete_outline,
+                  size: 14, color: Color(0xFFEF4444)),
             ),
           ],
         ),
@@ -833,4 +688,11 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
     if (result == true) refreshData();
   }
+}
+
+class _StatItem {
+  final String label;
+  final String value;
+  final Color color;
+  const _StatItem(this.label, this.value, this.color);
 }
