@@ -41,6 +41,14 @@ class TokenListView(generics.ListAPIView):
         return qs
 
 
+import re
+
+
+def normalize_phone(p):
+    digits = re.sub(r'\D', '', str(p or ''))
+    return digits[-10:] if len(digits) >= 10 else digits
+
+
 class CreateTokenView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -53,7 +61,6 @@ class CreateTokenView(APIView):
         token_number = None
         if raw_tn is not None:
             try:
-                import re
                 cleaned_tn = re.sub(r'[^0-9]', '', str(raw_tn))
                 if cleaned_tn:
                     token_number = int(cleaned_tn)
@@ -92,12 +99,12 @@ class CreateTokenView(APIView):
             token_number  = token_number,
             bill_number   = bill_number,
             order_type    = data.get('order_type', 'dine_in'),
-            table_number  = data.get('table_number', ''),
-            customer_name = data.get('customer_name', ''),
-            customer_phone= data.get('customer_phone', ''),
-            customer_address= data.get('customer_address', ''),
-            customer_gst_number= data.get('customer_gst_number', ''),
-            note          = data.get('note', ''),
+            table_number  = data.get('table_number') or '',
+            customer_name = data.get('customer_name') or '',
+            customer_phone= data.get('customer_phone') or '',
+            customer_address= data.get('customer_address') or '',
+            customer_gst_number= data.get('customer_gst_number') or '',
+            note          = data.get('note') or '',
             payment_mode  = payment_mode,
             is_paid       = is_paid,
             status        = 'completed' if is_paid else 'open',
@@ -158,60 +165,68 @@ class CreateTokenView(APIView):
                 )
 
         # ── Auto-create Customer & Record Payment Log ───────────
-        from customers.models import Customer, CustomerPayment
-        c_phone = normalize_phone(token.customer_phone)
-        c_name = token.customer_name.strip()
-        cust_obj = None
-        if c_phone:
-            cust_obj, _ = Customer.objects.get_or_create(
-                mobile_number=c_phone,
-                defaults={
-                    'name': c_name or f"Customer {c_phone}",
-                    'address': token.customer_address or '',
-                    'gst_number': token.customer_gst_number or '',
-                    'status': 'active'
-                }
-            )
-            if c_name and cust_obj.name != c_name:
-                cust_obj.name = c_name
-                cust_obj.save(update_fields=['name'])
-        elif c_name:
-            cust_obj = Customer.objects.filter(name__iexact=c_name).first()
+        try:
+            from customers.models import Customer, CustomerPayment
+            c_phone = normalize_phone(token.customer_phone)
+            c_name = (token.customer_name or '').strip()
+            cust_obj = None
+            if c_phone:
+                cust_obj, _ = Customer.objects.get_or_create(
+                    mobile_number=c_phone,
+                    defaults={
+                        'name': c_name or f"Customer {c_phone}",
+                        'address': token.customer_address or '',
+                        'gst_number': token.customer_gst_number or '',
+                        'status': 'active'
+                    }
+                )
+                if c_name and cust_obj.name != c_name:
+                    cust_obj.name = c_name
+                    cust_obj.save(update_fields=['name'])
+            elif c_name:
+                cust_obj = Customer.objects.filter(name__iexact=c_name).first()
 
-        paid_amt = Decimal(str(token.received_amount or 0))
-        if token.is_paid and paid_amt == Decimal('0'):
-            paid_amt = Decimal(str(token.total or 0))
+            paid_amt = Decimal(str(token.received_amount or 0))
+            if token.is_paid and paid_amt == Decimal('0'):
+                paid_amt = Decimal(str(token.total or 0))
 
-        if cust_obj and paid_amt > Decimal('0'):
-            CustomerPayment.objects.create(
-                customer=cust_obj,
-                token=token,
-                amount=paid_amt,
-                payment_mode=payment_mode or ('cash' if token.is_paid else 'due'),
-                note=f"Bill #{token.bill_number} initial payment"
-            )
-        
-        # ── SMS Integration (Simulated) ───────────────────────────
-        shop = getattr(request, 'tenant', None)
-        if token.customer_phone and shop and hasattr(shop, 'sms_credits') and shop.sms_credits > 0:
+            if cust_obj and paid_amt > Decimal('0'):
+                CustomerPayment.objects.create(
+                    customer=cust_obj,
+                    token=token,
+                    amount=paid_amt,
+                    payment_mode=payment_mode or ('cash' if token.is_paid else 'due'),
+                    note=f"Bill #{token.bill_number} initial payment"
+                )
+        except Exception as e:
             import logging
-            logger = logging.getLogger(__name__)
-            # Deduct 1 credit for finalized bill SMS
-            shop.sms_credits -= 1
-            shop.save(update_fields=['sms_credits'])
-            
-            sms_body = (
-                f"Dear Customer,\n"
-                f"Your bill amount is ₹{token.total}.\n"
-                f"Thank you for shopping with us.\n"
-                f"- {shop.name}\n\n"
-                f"Thank you for your purchase.\n"
-                f"We appreciate your business and look forward to serving you again.\n"
-                f"- {shop.name}"
-            )
-            logger.info(f"--- SIMULATED SMS SENT TO {token.customer_phone} ---")
-            logger.info(sms_body)
-            logger.info("-------------------------------------------")
+            logging.getLogger(__name__).warning(f"Auto-create customer error: {e}")
+
+        # ── SMS Integration (Simulated) ───────────────────────────
+        try:
+            shop = getattr(request, 'tenant', None)
+            if token.customer_phone and shop and hasattr(shop, 'sms_credits') and shop.sms_credits > 0:
+                import logging
+                logger = logging.getLogger(__name__)
+                # Deduct 1 credit for finalized bill SMS
+                shop.sms_credits -= 1
+                shop.save(update_fields=['sms_credits'])
+                
+                sms_body = (
+                    f"Dear Customer,\n"
+                    f"Your bill amount is ₹{token.total}.\n"
+                    f"Thank you for shopping with us.\n"
+                    f"- {shop.name}\n\n"
+                    f"Thank you for your purchase.\n"
+                    f"We appreciate your business and look forward to serving you again.\n"
+                    f"- {shop.name}"
+                )
+                logger.info(f"--- SIMULATED SMS SENT TO {token.customer_phone} ---")
+                logger.info(sms_body)
+                logger.info("-------------------------------------------")
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"SMS simulation error: {e}")
 
         return Response(TokenSerializer(token).data, status=status.HTTP_201_CREATED)
 
