@@ -34,8 +34,8 @@ class TokenSerializer(serializers.ModelSerializer):
 
 
 class CreateTokenSerializer(serializers.Serializer):
-    token_number   = serializers.IntegerField(required=False)
-    bill_number    = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    token_number   = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    bill_number    = serializers.CharField(max_length=20, required=False, allow_blank=True, allow_null=True)
     order_type     = serializers.ChoiceField(choices=Token.ORDER_TYPE_CHOICES, default='dine_in')
     table_number   = serializers.CharField(max_length=10, required=False, allow_blank=True)
     customer_name  = serializers.CharField(max_length=100, required=False, allow_blank=True)

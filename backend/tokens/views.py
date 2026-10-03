@@ -49,8 +49,18 @@ class CreateTokenView(APIView):
         serializer = CreateTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        token_number = data.get('token_number')
-        if token_number:
+        raw_tn = data.get('token_number')
+        token_number = None
+        if raw_tn is not None:
+            try:
+                import re
+                cleaned_tn = re.sub(r'[^0-9]', '', str(raw_tn))
+                if cleaned_tn:
+                    token_number = int(cleaned_tn)
+            except (ValueError, TypeError):
+                token_number = None
+
+        if token_number and token_number > 0:
             if Token.objects.filter(token_number=token_number, date=timezone.localdate()).exists():
                 token_number = Token.get_next_token_number()
         else:
