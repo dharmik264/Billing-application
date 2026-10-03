@@ -383,12 +383,21 @@
     Future<ApiToken> createToken(ApiTokenDraft token,
         {String shopId = defaultShopId}) async {
       final payload = token.toJson();
+      final double computedTotal = token.items.fold(0.0, (sum, i) => sum + (i.rate * i.quantity));
+      final bool computedIsPaid = token.paymentMode.toLowerCase() != 'credit';
+
       ApiToken resultToken;
       if (!SyncService.instance.isOnline) {
         final localToken = {
           'id': DateTime.now().millisecondsSinceEpoch.toString(),
           ...payload,
-          'status': 'completed',
+          'subtotal': computedTotal,
+          'total': computedTotal,
+          'grand_total': computedTotal,
+          'grandTotal': computedTotal,
+          'is_paid': computedIsPaid,
+          'isPaid': computedIsPaid,
+          'status': computedIsPaid ? 'completed' : 'open',
           'created_at': DateTime.now().toIso8601String()
         };
         await LocalDatabase.instance.saveToken(localToken);
@@ -403,7 +412,13 @@
           final localToken = {
             'id': DateTime.now().millisecondsSinceEpoch.toString(),
             ...payload,
-            'status': 'completed',
+            'subtotal': computedTotal,
+            'total': computedTotal,
+            'grand_total': computedTotal,
+            'grandTotal': computedTotal,
+            'is_paid': computedIsPaid,
+            'isPaid': computedIsPaid,
+            'status': computedIsPaid ? 'completed' : 'open',
             'created_at': DateTime.now().toIso8601String()
           };
           await LocalDatabase.instance.saveToken(localToken);

@@ -648,15 +648,19 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       final pickupSlipEnabled = await BillSettingsHelper.getPickupSlip();
 
       if (sendSmsEnabled && phone.isNotEmpty && RegExp(r'^\d{10}$').hasMatch(phone)) {
-        final status = await Permission.sms.request();
-        if (status.isGranted) {
-          final shopName = RestaurantApi.instance.shopData?.name ?? "our shop";
-          final message = 'Dear Customer,\n\nYour bill amount is \u20B9${_grandTotal.toStringAsFixed(2)}.\n\nThank you for shopping with us.\n\n- $shopName';
-          await NativeSmsService.sendSms(phone: '+91$phone', message: message);
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SMS permission denied. Bill saved without SMS.')));
+        try {
+          final status = await Permission.sms.request();
+          if (status.isGranted) {
+            final shopName = RestaurantApi.instance.shopData?.name ?? "our shop";
+            final message = 'Dear Customer,\n\nYour bill amount is \u20B9${_grandTotal.toStringAsFixed(2)}.\n\nThank you for shopping with us.\n\n- $shopName';
+            await NativeSmsService.sendSms(phone: '+91$phone', message: message);
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SMS permission denied. Bill saved without SMS.')));
+            }
           }
+        } catch (e) {
+          debugPrint('SMS Sending Exception: $e');
         }
       }
 
