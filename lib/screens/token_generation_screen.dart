@@ -624,10 +624,32 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       );
 
       ApiToken? savedApiToken;
+      CreateTokenResult? tokenResult;
       if (isEdit) {
         savedApiToken = await RestaurantApi.instance.updateToken(widget.editToken!.id, apiToken);
       } else {
-        savedApiToken = await RestaurantApi.instance.createToken(apiToken);
+        tokenResult = await RestaurantApi.instance.createTokenDetailed(apiToken);
+        savedApiToken = tokenResult.token;
+      }
+
+      if (mounted && tokenResult != null) {
+        if (tokenResult.isOnlineSaved) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ Bill #${savedApiToken.billNumber} saved in Database (tokens_token)'),
+              backgroundColor: const Color(0xFF10B981),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('⚠️ Online DB Save Failed: ${tokenResult.errorMessage ?? "Offline"}. Saved in Local Cache.'),
+              backgroundColor: const Color(0xFFF59E0B),
+              duration: const Duration(seconds: 6),
+            ),
+          );
+        }
       }
 
       // Use the backend-generated numbers for printing

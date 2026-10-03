@@ -380,7 +380,7 @@
       }
     }
 
-    Future<ApiToken> createToken(ApiTokenDraft token,
+    Future<CreateTokenResult> createTokenDetailed(ApiTokenDraft token,
         {String shopId = defaultShopId}) async {
       final payload = token.toJson();
       final double computedTotal = token.items.fold(0.0, (sum, i) => sum + (i.rate * i.quantity));
@@ -403,11 +403,22 @@
         await LocalDatabase.instance.saveToken(localToken);
         await LocalDatabase.instance.addToQueue('tokens/create/', 'POST', payload);
         resultToken = ApiToken.fromJson(localToken);
+        BillEventNotifier.notifyBillChanged();
+        return CreateTokenResult(
+          token: resultToken,
+          isOnlineSaved: false,
+          errorMessage: 'App is currently Offline',
+        );
       } else {
         try {
           final data = await post('tokens/create/', payload);
           await LocalDatabase.instance.saveToken(data);
           resultToken = ApiToken.fromJson(data);
+          BillEventNotifier.notifyBillChanged();
+          return CreateTokenResult(
+            token: resultToken,
+            isOnlineSaved: true,
+          );
         } catch (e) {
           final localToken = {
             'id': DateTime.now().millisecondsSinceEpoch.toString(),
@@ -424,10 +435,20 @@
           await LocalDatabase.instance.saveToken(localToken);
           await LocalDatabase.instance.addToQueue('tokens/create/', 'POST', payload);
           resultToken = ApiToken.fromJson(localToken);
+          BillEventNotifier.notifyBillChanged();
+          return CreateTokenResult(
+            token: resultToken,
+            isOnlineSaved: false,
+            errorMessage: e.toString(),
+          );
         }
       }
-      BillEventNotifier.notifyBillChanged();
-      return resultToken;
+    }
+
+    Future<ApiToken> createToken(ApiTokenDraft token,
+        {String shopId = defaultShopId}) async {
+      final res = await createTokenDetailed(token, shopId: shopId);
+      return res.token;
     }
 
     Future<ApiToken> updateToken(String id, ApiTokenDraft token) async {
@@ -1332,6 +1353,18 @@
     final String accountStatus;
     final String? trialEnd;
     final String? approvedPlan;
+  }
+
+  class CreateTokenResult {
+    final ApiToken token;
+    final bool isOnlineSaved;
+    final String? errorMessage;
+
+    CreateTokenResult({
+      required this.token,
+      required this.isOnlineSaved,
+      this.errorMessage,
+    });
   }
 
   class ApiDashboardStats {
