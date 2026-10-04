@@ -224,14 +224,17 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
       backgroundColor: const Color(0xFFEEF2FF),
       body: SafeArea(
         bottom: false,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: IntrinsicHeight(
-                  child: Column(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 550),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: IntrinsicHeight(
+                      child: Column(
                     children: [
                       // Top Hero / Header Section
                       Container(
@@ -308,8 +311,10 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                   ),
                 ),
               ),
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

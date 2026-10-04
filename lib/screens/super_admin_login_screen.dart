@@ -161,8 +161,13 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                         activeThumbColor: Colors.deepPurple,
                         onChanged: (val) {
                           setState(() => _isDevMode = val);
-                          if (val && _devSuperAdmins.isEmpty) {
-                            _fetchDevUsers();
+                          if (val) {
+                            RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
+                            if (_devSuperAdmins.isEmpty) {
+                              _fetchDevUsers();
+                            }
+                          } else {
+                            RestaurantApi.instance.setCustomBaseUrl(null);
                           }
                         },
                       ),

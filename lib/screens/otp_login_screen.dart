@@ -511,8 +511,13 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                               activeTrackColor: const Color(0xFF4F46E5),
                               onChanged: (val) {
                                 setState(() => _isDevMode = val);
-                                if (val && _devUsers.isEmpty) {
-                                  _fetchDevUsers();
+                                if (val) {
+                                  RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
+                                  if (_devUsers.isEmpty) {
+                                    _fetchDevUsers();
+                                  }
+                                } else {
+                                  RestaurantApi.instance.setCustomBaseUrl(null);
                                 }
                               },
                             ),
