@@ -294,3 +294,143 @@ class CustomerPayDueView(APIView):
             'bills': TokenListSerializer(updated_summary['bills'], many=True).data,
             'payments': CustomerPaymentSerializer(updated_summary['payments'], many=True).data
         }, status=status.HTTP_200_OK)
+
+
+class CustomerCreditView(APIView):
+    """
+    POST /api/customers/{id}/credit/
+    Record a credit entry — customer pays money to the shop.
+    Distributes payment to unpaid bills (oldest first). Any surplus is
+    stored as advance credit (token=None).
+    Payload: { "amount": 500.0, "payment_mode": "cash", "note": "" }
+    """
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, pk=None, *args, **kwargs):
+        target_id = pk or kwargs.get('pk')
+        customer = Customer.objects.select_for_update().filter(pk=target_id).first()
+        if not customer:
+            return Response({'error': f'Customer not found for id {target_id}.'}, status=status.HTTP_404_NOT_FOUND)
+
+        raw_amount = request.data.get('amount')
+        payment_mode = str(request.data.get('payment_mode', 'cash')).strip().lower()
+        note = str(request.data.get('note', '')).strip()
+
+        if payment_mode not in ALLOWED_PAYMENT_MODES:
+            return Response({'error': f'Invalid payment mode: {payment_mode}.'}, status=status.HTTP_400_BAD_REQUEST)
+        if raw_amount is None:
+            return Response({'error': 'Amount is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            amount = Decimal(str(raw_amount)).quantize(Decimal('0.01'))
+            if not amount.is_finite() or amount <= Decimal('0.00'):
+                return Response({'error': 'Amount must be greater than zero.'}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError, InvalidOperation):
+            return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Distribute to unpaid bills
+        unpaid_tokens = get_customer_bills(customer).filter(is_paid=False).order_by('created_at').select_for_update()
+        remaining = amount
+        payment_records = []
+
+        for token in unpaid_tokens:
+            token.calculate_totals()
+            due = token.balance_due
+            if due <= 0:
+                continue
+            pay_this = min(due, remaining)
+            token.received_amount = Decimal(str(token.received_amount or 0)) + pay_this
+            token.payment_mode = payment_mode
+            if token.received_amount >= token.total:
+                token.is_paid = True
+                token.status = 'completed'
+            token.save(update_fields=['received_amount', 'payment_mode', 'is_paid', 'status'])
+            token.calculate_totals()
+            p_rec = CustomerPayment.objects.create(
+                customer=customer,
+                token=token,
+                amount=pay_this,
+                payment_mode=payment_mode,
+                note=note or f'Credit for Bill #{token.bill_number}',
+            )
+            payment_records.append(p_rec)
+            remaining -= pay_this
+            if remaining <= 0:
+                break
+
+        if remaining > 0:
+            p_rec = CustomerPayment.objects.create(
+                customer=customer,
+                token=None,
+                amount=remaining,
+                payment_mode=payment_mode,
+                note=note or 'Advance credit',
+            )
+            payment_records.append(p_rec)
+
+        updated_summary = compute_customer_ledger_summary(customer)
+        return Response({
+            'message': f'Credit of ₹{amount} recorded.',
+            'summary': {
+                'total_billed': float(updated_summary['total_billed']),
+                'total_paid':   float(updated_summary['total_paid']),
+                'net_due':      float(updated_summary['net_due']),
+                'payment_status': updated_summary['payment_status'],
+            },
+            'payments': CustomerPaymentSerializer(updated_summary['payments'], many=True).data,
+        }, status=status.HTTP_200_OK)
+
+
+class CustomerDebitView(APIView):
+    """
+    POST /api/customers/{id}/debit/
+    Record a debit entry — shop adds a manual charge to the customer account
+    (increases outstanding balance).
+    Payload: { "amount": 200.0, "note": "Extra charge" }
+    """
+    permission_classes = [IsAuthenticated]
+
+    @transaction.atomic
+    def post(self, request, pk=None, *args, **kwargs):
+        target_id = pk or kwargs.get('pk')
+        customer = Customer.objects.select_for_update().filter(pk=target_id).first()
+        if not customer:
+            return Response({'error': f'Customer not found for id {target_id}.'}, status=status.HTTP_404_NOT_FOUND)
+
+        raw_amount = request.data.get('amount')
+        note = str(request.data.get('note', '')).strip()
+
+        if raw_amount is None:
+            return Response({'error': 'Amount is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            amount = Decimal(str(raw_amount)).quantize(Decimal('0.01'))
+            if not amount.is_finite() or amount <= Decimal('0.00'):
+                return Response({'error': 'Amount must be greater than zero.'}, status=status.HTTP_400_BAD_REQUEST)
+        except (ValueError, TypeError, InvalidOperation):
+            return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # A debit is recorded as a negative CustomerPayment (charge).
+        # Using a negative amount makes it visible in payment history and
+        # reduces total_paid in compute_customer_ledger_summary, thus increasing net_due.
+        CustomerPayment.objects.create(
+            customer=customer,
+            token=None,
+            amount=-amount,
+            payment_mode='debit',
+            note=note or 'Manual debit charge',
+        )
+
+        updated_summary = compute_customer_ledger_summary(customer)
+        return Response({
+            'message': f'Debit of ₹{amount} added to account.',
+            'summary': {
+                'total_billed': float(updated_summary['total_billed']),
+                'total_paid':   float(updated_summary['total_paid']),
+                'net_due':      float(updated_summary['net_due']),
+                'payment_status': updated_summary['payment_status'],
+            },
+            'payments': CustomerPaymentSerializer(updated_summary['payments'], many=True).data,
+        }, status=status.HTTP_200_OK)
+

@@ -4,7 +4,7 @@ import 'dart:html' as html;
 import 'dart:convert';
 import 'dart:typed_data';
 
-void downloadCsv(String csvData, String fileName) {
+Future<void> downloadCsv(String csvData, String fileName) async {
   final bytes = utf8.encode(csvData);
   // Add BOM for Excel UTF-8 compatibility
   final bom = [0xEF, 0xBB, 0xBF];

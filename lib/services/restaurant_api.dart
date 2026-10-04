@@ -640,6 +640,35 @@
       return response;
     }
 
+    Future<Map<String, dynamic>> recordCustomerCredit({
+      required String customerId,
+      required double amount,
+      String paymentMode = 'CASH',
+      String? note,
+    }) async {
+      final response = await post('customers/$customerId/credit/', {
+        'amount': amount,
+        'payment_mode': paymentMode,
+        if (note != null && note.isNotEmpty) 'note': note,
+      });
+      BillEventNotifier.notifyBillChanged();
+      return response;
+    }
+
+    Future<Map<String, dynamic>> recordCustomerDebit({
+      required String customerId,
+      required double amount,
+      String? note,
+    }) async {
+      final response = await post('customers/$customerId/debit/', {
+        'amount': amount,
+        if (note != null && note.isNotEmpty) 'note': note,
+      });
+      BillEventNotifier.notifyBillChanged();
+      return response;
+    }
+
+
 
     // ── Reports ──────────────────────────────────────────────────
 
