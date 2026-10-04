@@ -94,204 +94,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     return NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 2).format(amount);
   }
 
-  // ── Pay Due Dialog ─────────────────────────────────────────────
-  Future<void> _showPayDueDialog() async {
-    if (_ledger == null) return;
-    final summary = _ledger!.summary;
-    if (summary.netDue <= 0) return;
 
-    final amountCtrl = TextEditingController();
-    String selectedMode = 'CASH';
-    String? validationError;
-    bool submitting = false;
-
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: _green.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.payments_rounded, color: _green, size: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Pay Due Amount',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18, color: _slate900),
-                        ),
-                        Text(
-                          widget.customer.name,
-                          style: GoogleFonts.inter(fontSize: 12, color: _slate600),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Summary Box inside Dialog
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: _slate50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: _slate200),
-                      ),
-                      child: Column(
-                        children: [
-                          _dialogSummaryRow('Total Billed', _formatAmount(summary.totalBilled), _slate700),
-                          const SizedBox(height: 6),
-                          _dialogSummaryRow('Already Paid', _formatAmount(summary.totalPaid), _green),
-                          const Divider(height: 16),
-                          _dialogSummaryRow('Outstanding Due', _formatAmount(summary.netDue), _red, isBold: true),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Enter Payment Amount',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: _slate900),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: amountCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      autofocus: true,
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate900),
-                      onChanged: (val) {
-                        setDialogState(() {
-                          validationError = null;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        prefixText: '₹ ',
-                        prefixStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate700),
-                        hintText: 'Enter amount...',
-                        errorText: validationError,
-                        errorMaxLines: 2,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: _indigo, width: 2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Payment Mode',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _modeChip('Cash', 'CASH', selectedMode, (m) => setDialogState(() => selectedMode = m)),
-                        const SizedBox(width: 8),
-                        _modeChip('UPI', 'UPI', selectedMode, (m) => setDialogState(() => selectedMode = m)),
-                        const SizedBox(width: 8),
-                        _modeChip('Card', 'CARD', selectedMode, (m) => setDialogState(() => selectedMode = m)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting ? null : () => Navigator.pop(ctx),
-                  child: Text('Cancel', style: GoogleFonts.inter(color: _slate600, fontWeight: FontWeight.w600)),
-                ),
-                ElevatedButton(
-                  onPressed: submitting
-                      ? null
-                      : () async {
-                          final text = amountCtrl.text.trim();
-                          if (text.isEmpty) {
-                            setDialogState(() {
-                              validationError = 'Please enter a payment amount.';
-                            });
-                            return;
-                          }
-                          final amt = double.tryParse(text);
-                          if (amt == null || amt <= 0) {
-                            setDialogState(() {
-                              validationError = 'Amount must be greater than zero.';
-                            });
-                            return;
-                          }
-                          if (amt > summary.netDue) {
-                            setDialogState(() {
-                              validationError = 'Payment cannot exceed the outstanding amount of ${_formatAmount(summary.netDue)}.';
-                            });
-                            return;
-                          }
-
-                          final nav = Navigator.of(ctx);
-                          final messenger = ScaffoldMessenger.of(context);
-                          setDialogState(() => submitting = true);
-                          try {
-                            await RestaurantApi.instance.payCustomerDue(
-                              customerId: widget.customer.id,
-                              amount: amt,
-                              paymentMode: selectedMode,
-                            );
-                            if (mounted) {
-                              nav.pop();
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text('Payment of ${_formatAmount(amt)} recorded successfully.'),
-                                  backgroundColor: _green,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                              );
-                              _loadLedger();
-                            }
-                          } catch (e) {
-                            setDialogState(() {
-                              submitting = false;
-                              validationError = e.toString().replaceAll('Exception: ', '');
-                            });
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _indigo,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: submitting
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : Text('Pay', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15)),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 
   Widget _modeChip(String label, String value, String selected, Function(String) onSelect) {
     final isSelected = selected == value;
@@ -323,29 +126,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     );
   }
 
-  Widget _dialogSummaryRow(String label, String value, Color color, {bool isBold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,
-            color: _slate600,
-          ),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: isBold ? 15 : 13,
-            fontWeight: isBold ? FontWeight.w800 : FontWeight.w700,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
+
 
   // ── Build ──────────────────────────────────────────────────────
   @override
@@ -372,9 +153,10 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     );
   }
 
-  // ── Jama Payment Dialog ────────────────────────────────────────
-  Future<void> _showJamaDialog() async {
+  // ── Credit Dialog (Customer pays shop) ────────────────────────
+  Future<void> _showCreditDialog() async {
     final amountCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
     String selectedMode = 'CASH';
     String? validationError;
     bool submitting = false;
@@ -386,30 +168,24 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: _green.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Icons.account_balance_wallet_rounded, color: _green, size: 24),
+                    child: const Icon(Icons.arrow_downward_rounded, color: _green, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Jama Payment (\u0AA8\u0ABE\u0AA3\u0ABE\u0A82 \u0A9C\u0AAE\u0ABE)',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18, color: _slate900),
-                        ),
-                        Text(
-                          widget.customer.name,
-                          style: GoogleFonts.inter(fontSize: 12, color: _slate600),
-                        ),
+                        Text('Credit Entry', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: _slate900)),
+                        Text('Customer pays shop', style: GoogleFonts.inter(fontSize: 12, color: _slate600)),
                       ],
                     ),
                   ),
@@ -420,54 +196,47 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _slate50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _slate200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(widget.customer.name, style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: _slate900)),
-                          const SizedBox(height: 2),
-                          Text('Phone: ${widget.customer.mobileNumber}', style: GoogleFonts.inter(fontSize: 12, color: _slate600)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text('Jama Amount (\u20B9 \u0A9C\u0AAE\u0ABE \u0AB0\u0A95\u0AAE)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
+                    Text('Amount (₹)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: amountCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       autofocus: true,
-                      style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
-                      onChanged: (_) {
-                        setDialogState(() => validationError = null);
-                      },
+                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate900),
+                      onChanged: (_) => setDialogState(() => validationError = null),
                       decoration: InputDecoration(
-                        prefixText: '\u20B9 ',
-                        hintText: 'Enter amount to credit...',
+                        prefixText: '₹ ',
+                        prefixStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate700),
+                        hintText: '0',
                         errorText: validationError,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _green, width: 2)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _green, width: 2)),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Text('Payment Mode (\u0A9A\u0AC2\u0A95\u0AB5\u0AA3\u0AC0 \u0AAE\u0ABE\u0AA1)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
+                    const SizedBox(height: 14),
+                    Text('Payment Mode', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
                     const SizedBox(height: 8),
                     Row(
                       children: [
                         _modeChip('Cash', 'CASH', selectedMode, (m) => setDialogState(() => selectedMode = m)),
                         const SizedBox(width: 8),
-                        _modeChip('UPI', 'ONLINE', selectedMode, (m) => setDialogState(() => selectedMode = m)),
+                        _modeChip('UPI', 'UPI', selectedMode, (m) => setDialogState(() => selectedMode = m)),
                         const SizedBox(width: 8),
                         _modeChip('Card', 'CARD', selectedMode, (m) => setDialogState(() => selectedMode = m)),
                       ],
+                    ),
+                    const SizedBox(height: 14),
+                    Text('Note (Optional)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: noteCtrl,
+                      style: GoogleFonts.inter(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Payment for March bills',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     ),
                   ],
                 ),
@@ -479,48 +248,29 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                 ),
                 ElevatedButton(
                   onPressed: submitting ? null : () async {
-                    final text = amountCtrl.text.trim();
-                    final amt = double.tryParse(text);
+                    final amt = double.tryParse(amountCtrl.text.trim());
                     if (amt == null || amt <= 0) {
-                      setDialogState(() {
-                        validationError = 'Please enter a valid amount greater than zero.';
-                      });
+                      setDialogState(() => validationError = 'Enter a valid amount greater than zero.');
                       return;
                     }
                     final nav = Navigator.of(ctx);
                     final messenger = ScaffoldMessenger.of(context);
                     setDialogState(() => submitting = true);
                     try {
-                      final response = await RestaurantApi.instance.recordCustomerJama(
-                        customerPhone: widget.customer.mobileNumber,
+                      await RestaurantApi.instance.recordCustomerCredit(
+                        customerId: widget.customer.id,
                         amount: amt,
                         paymentMode: selectedMode,
-                        customerName: widget.customer.name,
+                        note: noteCtrl.text.trim(),
                       );
                       if (mounted) {
                         nav.pop();
-                        final int updatedCount = (response['updated_tokens_count'] as num?)?.toInt() ?? 0;
-                        final double unused = (response['remaining_unused'] as num?)?.toDouble() ?? 0.0;
-                        final double applied = (response['amount_applied'] as num?)?.toDouble() ?? 0.0;
-                        
-                        String msg = 'Jama of ${_formatAmount(amt)} recorded successfully for ${widget.customer.name}.';
-                        Color msgBg = _green;
-                        if (updatedCount == 0) {
-                          msg = 'Jama recorded (${_formatAmount(amt)}). Note: No pending unpaid bills found for ${widget.customer.name}.';
-                          msgBg = _indigo;
-                        } else if (unused > 0) {
-                          msg = '${_formatAmount(applied)} applied to bills. ${_formatAmount(unused)} registered as credit balance.';
-                          msgBg = _amber;
-                        }
-
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(msg),
-                            backgroundColor: msgBg,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        );
+                        messenger.showSnackBar(SnackBar(
+                          content: Text('Credit of ${_formatAmount(amt)} recorded.'),
+                          backgroundColor: _green,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ));
                         _loadLedger();
                       }
                     } catch (e) {
@@ -534,12 +284,11 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     backgroundColor: _green,
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                   child: submitting
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('Submit Jama (\u20B9 \u0A9C\u0AAE\u0ABE)', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14)),
+                      : Text('Save Credit', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
                 ),
               ],
             );
@@ -548,6 +297,139 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
       },
     );
   }
+
+  // ── Debit Dialog (Shop charges customer) ────────────────────────
+  Future<void> _showDebitDialog() async {
+    final amountCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    String? validationError;
+    bool submitting = false;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _red.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.arrow_upward_rounded, color: _red, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Debit Entry', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: _slate900)),
+                        Text('Shop charges customer', style: GoogleFonts.inter(fontSize: 12, color: _slate600)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Charge Amount (₹)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: amountCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      autofocus: true,
+                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate900),
+                      onChanged: (_) => setDialogState(() => validationError = null),
+                      decoration: InputDecoration(
+                        prefixText: '₹ ',
+                        prefixStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate700),
+                        hintText: '0',
+                        errorText: validationError,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _red, width: 2)),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text('Reason / Note', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: noteCtrl,
+                      style: GoogleFonts.inter(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Late fee, extra items...',
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: submitting ? null : () => Navigator.pop(ctx),
+                  child: Text('Cancel', style: GoogleFonts.inter(color: _slate600, fontWeight: FontWeight.w600)),
+                ),
+                ElevatedButton(
+                  onPressed: submitting ? null : () async {
+                    final amt = double.tryParse(amountCtrl.text.trim());
+                    if (amt == null || amt <= 0) {
+                      setDialogState(() => validationError = 'Enter a valid amount greater than zero.');
+                      return;
+                    }
+                    final nav = Navigator.of(ctx);
+                    final messenger = ScaffoldMessenger.of(context);
+                    setDialogState(() => submitting = true);
+                    try {
+                      await RestaurantApi.instance.recordCustomerDebit(
+                        customerId: widget.customer.id,
+                        amount: amt,
+                        note: noteCtrl.text.trim(),
+                      );
+                      if (mounted) {
+                        nav.pop();
+                        messenger.showSnackBar(SnackBar(
+                          content: Text('Debit of ${_formatAmount(amt)} added to account.'),
+                          backgroundColor: _red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ));
+                        _loadLedger();
+                      }
+                    } catch (e) {
+                      setDialogState(() {
+                        submitting = false;
+                        validationError = e.toString().replaceAll('Exception: ', '');
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _red,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: submitting
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text('Save Debit', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
 
   Widget _buildCustomerProfileCard(bool isPaidInFull, double netDue) {
     return Container(
@@ -663,32 +545,24 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           const SizedBox(height: 14),
           const Divider(height: 1, color: _slate200),
           const SizedBox(height: 14),
-          // Actions Row: Pay Due & Jama Payment
+          // Actions Row: Credit & Debit
           Row(
             children: [
               Expanded(
                 child: SizedBox(
                   height: 44,
                   child: ElevatedButton.icon(
-                    onPressed: isPaidInFull ? null : _showPayDueDialog,
+                    onPressed: _showCreditDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isPaidInFull ? _slate200 : _indigo,
-                      foregroundColor: isPaidInFull ? _slate400 : Colors.white,
-                      disabledBackgroundColor: const Color(0xFFE2E8F0),
-                      disabledForegroundColor: const Color(0xFF94A3B8),
+                      backgroundColor: _green,
+                      foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    icon: Icon(
-                      isPaidInFull ? Icons.check_circle_outline_rounded : Icons.payments_rounded,
-                      size: 18,
-                    ),
+                    icon: const Icon(Icons.arrow_downward_rounded, size: 18),
                     label: Text(
-                      isPaidInFull ? 'Paid in Full' : 'Pay Due (${_formatAmount(netDue)})',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
+                      'Credit',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                   ),
                 ),
@@ -698,26 +572,24 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                 child: SizedBox(
                   height: 44,
                   child: ElevatedButton.icon(
-                    onPressed: _showJamaDialog,
+                    onPressed: _showDebitDialog,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _green,
+                      backgroundColor: _red,
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    icon: const Icon(Icons.account_balance_wallet_rounded, size: 18),
+                    icon: const Icon(Icons.arrow_upward_rounded, size: 18),
                     label: Text(
-                      'Jama (\u20B9 \u0A9C\u0AAE\u0ABE)',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                      ),
+                      'Debit',
+                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                   ),
                 ),
               ),
             ],
           ),
+
         ],
       ),
     );
@@ -1101,15 +973,22 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           ),
           child: Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: _green.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.arrow_downward_rounded, color: _green, size: 20),
-              ),
+              Builder(builder: (_) {
+                final isDebit = payment.paymentMode.toLowerCase() == 'debit' || payment.amount < 0;
+                return Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: isDebit ? _red.withValues(alpha: 0.1) : _green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isDebit ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                    color: isDebit ? _red : _green,
+                    size: 20,
+                  ),
+                );
+              }),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1122,10 +1001,13 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                           payment.paymentNumber.isNotEmpty ? 'Payment #${payment.paymentNumber}' : 'Payment #${payment.id}',
                           style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: _slate900),
                         ),
-                        Text(
-                          _formatAmount(payment.amount),
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: _green),
-                        ),
+                        Builder(builder: (_) {
+                          final isDebit = payment.paymentMode.toLowerCase() == 'debit' || payment.amount < 0;
+                          return Text(
+                            isDebit ? '-${_formatAmount(payment.amount.abs())}' : _formatAmount(payment.amount),
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: isDebit ? _red : _green),
+                          );
+                        }),
                       ],
                     ),
                     const SizedBox(height: 4),

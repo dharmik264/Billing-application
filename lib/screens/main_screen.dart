@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -276,167 +276,84 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildMobileLayout() {
-    return Stack(
-      children: [
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 380),
-          switchInCurve: Curves.easeOutQuint,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0.04, 0),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuint)),
+    return ValueListenableBuilder<bool>(
+      valueListenable: MainScreen.hideNavbar,
+      builder: (context, hide, _) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
                 child: child,
-              ),
-            );
-          },
-          child: KeyedSubtree(
-            key: ValueKey(_currentIndex),
-            child: _screens[_currentIndex],
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey(_currentIndex),
+              child: _screens[_currentIndex],
+            ),
           ),
-        ),
-        ValueListenableBuilder<bool>(
-          valueListenable: MainScreen.hideNavbar,
-          builder: (context, hide, child) {
-            return AnimatedPositioned(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              left: 16,
-              right: 16,
-              bottom: hide ? -140 : 12,
-              child: _buildUnifiedNavbar(),
-            );
-          },
-        ),
-      ],
+          bottomNavigationBar: hide
+              ? null
+              : _buildFlatNavbar(),
+        );
+      },
     );
   }
 
-  Widget _buildUnifiedNavbar() {
-    return SizedBox(
-      height: 76,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
-        children: [
-          // Glassmorphic Navbar Background
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 60,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // Navigation Items Row
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: 76,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: _navItems.map((nav) {
-                  int index = _navItems.indexOf(nav);
-                  return _mobileNavItem(index, nav['icon'], nav['inactive'], nav['label']);
-                }).toList(),
-              ),
-            ),
-          ),
-        ],
+  Widget _buildFlatNavbar() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+      ),
+      height: 60,
+      child: Row(
+        children: _navItems.map((nav) {
+          final index = _navItems.indexOf(nav);
+          return _flatNavItem(index, nav['icon'], nav['inactive'], nav['label']);
+        }).toList(),
       ),
     );
   }
 
-  Widget _mobileNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
+  Widget _flatNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
     final isSelected = _currentIndex == index;
-    return Tooltip(
-      message: label,
-      preferBelow: false,
-      textStyle: GoogleFonts.inter(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutBack,
-        margin: EdgeInsets.only(bottom: isSelected ? 16 : 8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutBack,
-          height: 48,
-          width: 48,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: isSelected
-                ? const LinearGradient(
-                    colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            color: isSelected ? null : Colors.transparent,
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.35),
-                      blurRadius: 10,
-                      spreadRadius: 2,
-                    ),
-                  ]
-                : [],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            shape: const CircleBorder(),
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              onTap: () => _onTabTapped(index),
-              splashColor: Colors.white.withValues(alpha: 0.2),
-              highlightColor: Colors.transparent,
-              child: Center(
-                child: AnimatedScale(
-                  scale: isSelected ? 1.1 : 1.0,
-                  duration: const Duration(milliseconds: 250),
-                  curve: Curves.easeOutQuint,
-                  child: Icon(
-                    isSelected ? activeIcon : inactiveIcon,
-                    color: isSelected ? Colors.white : const Color(0xFF94A3B8),
-                    size: 22,
-                  ),
-                ),
+    const indigo = Color(0xFF4F46E5);
+    const slate400 = Color(0xFF94A3B8);
+
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onTabTapped(index),
+        splashColor: const Color(0xFF4F46E5).withValues(alpha: 0.08),
+        highlightColor: Colors.transparent,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Thin indigo indicator on top for selected
+            Container(
+              height: 2,
+              margin: const EdgeInsets.only(bottom: 4),
+              color: isSelected ? indigo : Colors.transparent,
+            ),
+            Icon(
+              isSelected ? activeIcon : inactiveIcon,
+              color: isSelected ? indigo : slate400,
+              size: 22,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? indigo : slate400,
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
