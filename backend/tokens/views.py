@@ -477,7 +477,7 @@ class TodaySummaryView(APIView):
             'cash':          tokens.filter(payment_mode__iexact='cash').aggregate(s=Sum('total'))['s'] or 0,
             'upi':           tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI']).aggregate(s=Sum('total'))['s'] or 0,
             'card':          tokens.filter(payment_mode__iexact='card').aggregate(s=Sum('total'))['s'] or 0,
-            'credit':        tokens.filter(payment_mode__in=['credit', 'udhar', 'due', 'CREDIT', 'UDHAR']).aggregate(s=Sum('total'))['s'] or 0,
+            'credit':        tokens.filter(models.Q(payment_mode__in=['credit', 'udhar', 'due', 'CREDIT', 'UDHAR']) | models.Q(is_paid=False) | models.Q(balance_due__gt=0)).aggregate(s=Sum('total'))['s'] or 0,
         })
 
 class CustomerSearchAPIView(APIView):

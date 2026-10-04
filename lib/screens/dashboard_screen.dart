@@ -110,11 +110,13 @@ class DashboardScreenState extends State<DashboardScreen> {
         RestaurantApi.instance.fetchShop(forceRefresh: forceRefresh),
         RestaurantApi.instance.fetchAllTimeSummary(useCache: !forceRefresh),
         RestaurantApi.instance.fetchTokens(),
+        RestaurantApi.instance.fetchCustomers(),
       ]);
 
       final shop = results[0] as ApiShopData;
       final summary = results[1] as ApiSummaryReport;
       final tokens = results[2] as List<ApiToken>;
+      final customers = results[3] as List<ApiCustomer>;
 
       if (mounted) {
         setState(() {
@@ -135,12 +137,32 @@ class DashboardScreenState extends State<DashboardScreen> {
           for (var t in todayTokens) {
             calcTotal += t.grandTotal;
             final pm = t.paymentMode.toLowerCase();
-            if (pm == 'cash') {
-              calcCash += t.grandTotal;
+            final dueAmount = t.balanceDue > 0
+                ? t.balanceDue
+                : (!t.isPaid ? (t.grandTotal - t.receivedAmount) : 0.0);
+
+            if (dueAmount > 0 || pm == 'credit' || pm == 'udhar' || pm == 'due') {
+              final netDue = dueAmount > 0 ? dueAmount : t.grandTotal;
+              calcUdhar += netDue;
+              final paidPortion = t.grandTotal - netDue;
+              if (paidPortion > 0) {
+                if (pm == 'online' || pm == 'upi' || pm == 'online / upi') {
+                  calcOnline += paidPortion;
+                } else {
+                  calcCash += paidPortion;
+                }
+              }
             } else if (pm == 'online' || pm == 'upi' || pm == 'online / upi') {
               calcOnline += t.grandTotal;
-            } else if (pm == 'credit' || pm == 'udhar' || pm == 'due' || !t.isPaid) {
-              calcUdhar += t.balanceDue > 0 ? t.balanceDue : (t.grandTotal - t.receivedAmount);
+            } else {
+              calcCash += t.grandTotal;
+            }
+          }
+
+          double totalCustomerNetDue = 0.0;
+          for (var c in customers) {
+            if (c.netDue > 0) {
+              totalCustomerNetDue += c.netDue;
             }
           }
 
@@ -150,7 +172,9 @@ class DashboardScreenState extends State<DashboardScreen> {
           _totalSales = summary.totalSales > 0 ? summary.totalSales : calcTotal;
           _cashSales = summary.cashTotal > 0 ? summary.cashTotal : calcCash;
           _onlineSales = summary.onlineTotal > 0 ? summary.onlineTotal : calcOnline;
-          _udharSales = summary.creditTotal > 0 ? summary.creditTotal : calcUdhar;
+          
+          final effectiveCredit = summary.creditTotal > 0 ? summary.creditTotal : calcUdhar;
+          _udharSales = totalCustomerNetDue > 0 ? totalCustomerNetDue : effectiveCredit;
 
           _recentTokens = tokens.map((t) {
             final date = DateTime.parse(t.createdAt).toLocal();
