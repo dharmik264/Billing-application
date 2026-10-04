@@ -4,7 +4,6 @@ import '../services/restaurant_api.dart';
 import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
 import 'add_customer_screen.dart';
-import 'customer_ledger_screen.dart';
 
 class CustomerManagementScreen extends StatefulWidget {
   const CustomerManagementScreen({super.key});
@@ -284,13 +283,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     );
   }
 
-  Future<void> _openLedger(ApiCustomer customer) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CustomerLedgerScreen(customer: customer)),
-    );
-    _loadCustomers();
-  }
-
   Widget _buildCustomerCard(ApiCustomer customer) {
     final initials = customer.name.trim().isEmpty
         ? '?'
@@ -308,15 +300,9 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: () => _openLedger(customer),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Avatar
@@ -448,20 +434,10 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text('Ledger', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: _indigo)),
-                        const Icon(Icons.chevron_right_rounded, size: 16, color: _indigo),
-                      ],
-                    ),
                   ],
                 ),
               ],
             ),
-          ),
-        ),
       ),
     );
   }
