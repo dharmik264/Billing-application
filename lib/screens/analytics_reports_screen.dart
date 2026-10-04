@@ -61,9 +61,12 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         icon: Icons.bar_chart_rounded,
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Stack(
+              children: [
+                Column(
               children: [
                 CustomSearchActionView(
                   searchHint: 'Search token number or customer...',
@@ -127,7 +130,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _reportTypeTabs() {

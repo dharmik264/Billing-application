@@ -268,11 +268,15 @@ class DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: refreshData,
-        color: const Color(0xFF4F46E5),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: RefreshIndicator(
+              onRefresh: refreshData,
+              color: const Color(0xFF4F46E5),
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
               child: _isLoading && _recentTokens.isEmpty
@@ -360,6 +364,9 @@ class DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
       ),
+    ),
+  ),
+),
     );
   }
 
@@ -434,17 +441,27 @@ class DashboardScreenState extends State<DashboardScreen> {
               : const Color(0xFFEF4444)),
     ];
 
-    return Table(
-      border: TableBorder.all(color: const Color(0xFFE2E8F0), width: 1),
-      children: [
-        for (int r = 0; r < 3; r++)
-          TableRow(
-            children: [
-              _buildStatCell(items[r * 2]),
-              _buildStatCell(items[r * 2 + 1]),
-            ],
-          ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 600;
+        final cols = isWide ? 3 : 2;
+        final rows = (items.length / cols).ceil();
+
+        return Table(
+          border: TableBorder.all(color: const Color(0xFFE2E8F0), width: 1),
+          children: [
+            for (int r = 0; r < rows; r++)
+              TableRow(
+                children: [
+                  for (int c = 0; c < cols; c++)
+                    (r * cols + c < items.length)
+                        ? _buildStatCell(items[r * cols + c])
+                        : const SizedBox.shrink(),
+                ],
+              ),
+          ],
+        );
+      },
     );
   }
 

@@ -190,61 +190,68 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
         icon: Icons.people_rounded,
         subtitle: (!_isLoading && _customers.isNotEmpty) ? '$activeCount active · $inactiveCount inactive' : null,
       ),
-      body: Column(
-        children: [
-          CustomSearchActionView(
-            searchHint: 'Search by name, mobile, GST...',
-            searchController: _searchCtrl,
-            onSearchChanged: _onSearch,
-            onSearchClear: () {
-              _searchCtrl.clear();
-              _onSearch('');
-            },
-            filterChips: [
-              FilterChipData(label: 'All', value: '', icon: Icons.people_outline_rounded),
-              FilterChipData(label: 'Active', value: 'active', icon: Icons.check_circle_outline_rounded),
-              FilterChipData(label: 'Inactive', value: 'inactive', icon: Icons.cancel_outlined),
-            ],
-            selectedFilterValue: _statusFilter,
-            onFilterChanged: _onStatusFilter,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: Row(
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Column(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _openAdd,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _indigo,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    icon: const Icon(Icons.person_add_rounded, size: 18),
-                    label: Text('Add Customer', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+                CustomSearchActionView(
+                  searchHint: 'Search by name, mobile, GST...',
+                  searchController: _searchCtrl,
+                  onSearchChanged: _onSearch,
+                  onSearchClear: () {
+                    _searchCtrl.clear();
+                    _onSearch('');
+                  },
+                  filterChips: [
+                    FilterChipData(label: 'All', value: '', icon: Icons.people_outline_rounded),
+                    FilterChipData(label: 'Active', value: 'active', icon: Icons.check_circle_outline_rounded),
+                    FilterChipData(label: 'Inactive', value: 'inactive', icon: Icons.cancel_outlined),
+                  ],
+                  selectedFilterValue: _statusFilter,
+                  onFilterChanged: _onStatusFilter,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _openAdd,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _indigo,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.person_add_rounded, size: 18),
+                          label: Text('Add Customer', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded, color: _slate600),
+                        onPressed: _loadCustomers,
+                        tooltip: 'Refresh',
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          padding: const EdgeInsets.all(12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: const BorderSide(color: _slate200, width: 1),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                IconButton(
-                  icon: const Icon(Icons.refresh_rounded, color: _slate600),
-                  onPressed: _loadCustomers,
-                  tooltip: 'Refresh',
-                  style: IconButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: const BorderSide(color: _slate200, width: 1),
-                    ),
-                  ),
-                ),
+                Expanded(child: _buildBody()),
               ],
             ),
           ),
-          Expanded(child: _buildBody()),
-        ],
+        ),
       ),
     );
   }

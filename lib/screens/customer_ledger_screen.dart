@@ -145,11 +145,18 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: _indigo))
-          : _error != null
-              ? _buildErrorState()
-              : _buildBody(),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator(color: _indigo))
+                : _error != null
+                    ? _buildErrorState()
+                    : _buildBody(),
+          ),
+        ),
+      ),
     );
   }
 
