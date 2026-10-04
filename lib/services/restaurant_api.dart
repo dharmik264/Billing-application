@@ -31,10 +31,15 @@
     List<ApiItem>? _cachedItems;
     ApiSummaryReport? _cachedSummary;
 
+    String? _customBaseUrl;
+    void setCustomBaseUrl(String? url) {
+      _customBaseUrl = url;
+    }
+
     bool get hasValidToken => _accessToken != null && _accessToken!.isNotEmpty;
     ApiShopData? get shopData => _cachedShopData;
 
-    String get baseUrl => _baseUrl;
+    String get baseUrl => _customBaseUrl ?? _baseUrl;
 
     String getMediaUrl(String path) {
       if (path.startsWith('http://') || path.startsWith('https://')) return path;

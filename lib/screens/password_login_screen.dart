@@ -252,8 +252,13 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                       activeTrackColor: const Color(0xFF4F46E5),
                                       onChanged: (val) {
                                         setState(() => _isDevMode = val);
-                                        if (val && _devUsers.isEmpty) {
-                                          _fetchDevUsers();
+                                        if (val) {
+                                          RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
+                                          if (_devUsers.isEmpty) {
+                                            _fetchDevUsers();
+                                          }
+                                        } else {
+                                          RestaurantApi.instance.setCustomBaseUrl(null);
                                         }
                                       },
                                     ),
@@ -281,7 +286,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                         ),
                       ),
                       
-                      // Bottom Card Form Container (Expanded to fill to the bottom of screen)
+                      // Bottom Card Form Container
                       Expanded(
                         child: Container(
                           width: double.infinity,
@@ -296,9 +301,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                             ],
                           ),
                           padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
-                          child: _isDevMode 
-                              ? _buildDevUserList() 
-                              : _buildLoginForm(),
+                          child: _buildLoginForm(),
                         ),
                       ),
                     ],
@@ -316,6 +319,60 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (_isDevMode) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEF2FF),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFC7D2FE)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.developer_mode, size: 18, color: Color(0xFF4F46E5)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Local Server Active (http://127.0.0.1:8000/api)',
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF3730A3)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_isLoadingDevUsers)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8.0),
+              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4F46E5)))),
+            )
+          else if (_devUsers.isNotEmpty) ...[
+            Text('Quick Select Dev User:', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 36,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _devUsers.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final u = _devUsers[index];
+                  final name = u['name'] ?? u['phone'] ?? 'User';
+                  return ActionChip(
+                    avatar: const Icon(Icons.person, size: 14, color: Color(0xFF4F46E5)),
+                    label: Text(name.toString(), style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
+                    backgroundColor: const Color(0xFFF1F5F9),
+                    onPressed: () {
+                      _mobileController.text = u['phone']?.toString() ?? '';
+                      _performDevLogin(u['phone']?.toString() ?? '');
+                    },
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ],
         Text(
           'Welcome Back!',
           style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
@@ -327,7 +384,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
           style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B), height: 1.5),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         Container(
           decoration: BoxDecoration(
             color: const Color(0xFFF1F5F9),
@@ -463,48 +520,6 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildDevUserList() {
-    if (_isLoadingDevUsers) {
-      return const Padding(
-        padding: EdgeInsets.all(24.0),
-        child: CircularProgressIndicator(color: Colors.deepPurple),
-      );
-    }
-    if (_devUsers.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(24.0),
-        child: Text('No active users found'),
-      );
-    }
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 350),
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: _devUsers.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final u = _devUsers[index];
-          return ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: Colors.deepPurple,
-              child: Icon(Icons.person, color: Colors.white, size: 20),
-            ),
-            title: Text(u['name'] ?? 'User', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
-            subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
-            trailing: const Icon(Icons.login, size: 18, color: Color(0xFF94A3B8)),
-            onTap: () => _performDevLogin(u['phone']),
-          );
-        },
-      ),
     );
   }
 }
