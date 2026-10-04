@@ -52,6 +52,8 @@ class DashboardScreenState extends State<DashboardScreen> {
   double _cashSales = 0.0;
   double _onlineSales = 0.0;
   double _udharSales = 0.0;
+  double _todayUdhar = 0.0;
+  double _totalCustomerDue = 0.0;
 
   List<_LiveToken> _recentTokens = [];
 
@@ -173,8 +175,9 @@ class DashboardScreenState extends State<DashboardScreen> {
           _cashSales = summary.cashTotal > 0 ? summary.cashTotal : calcCash;
           _onlineSales = summary.onlineTotal > 0 ? summary.onlineTotal : calcOnline;
           
-          final effectiveCredit = summary.creditTotal > 0 ? summary.creditTotal : calcUdhar;
-          _udharSales = totalCustomerNetDue > 0 ? totalCustomerNetDue : effectiveCredit;
+          _todayUdhar = summary.creditTotal > 0 ? summary.creditTotal : calcUdhar;
+          _totalCustomerDue = totalCustomerNetDue;
+          _udharSales = _totalCustomerDue > 0 ? _totalCustomerDue : _todayUdhar;
 
           _recentTokens = tokens.map((t) {
             final date = DateTime.parse(t.createdAt).toLocal();
@@ -421,7 +424,7 @@ class DashboardScreenState extends State<DashboardScreen> {
           const Color(0xFF0284C7)),
       _StatItem('Online Sales', '\u20B9${_onlineSales.toStringAsFixed(0)}',
           const Color(0xFFD97706)),
-      _StatItem('Udhar', '\u20B9${_udharSales.toStringAsFixed(0)}',
+      _StatItem('Net Due', '\u20B9${_udharSales.toStringAsFixed(0)}',
           const Color(0xFFDC2626)),
       _StatItem(
           'SMS Credits',

@@ -465,6 +465,18 @@ class TodaySummaryView(APIView):
         tokens = Token.objects.filter(date=today).exclude(status='cancelled')
         agg    = tokens.aggregate(revenue=Sum('total'), count=Count('id'))
 
+        # Credit is total balance due remaining for today's unpaid or partially-paid bills
+        unpaid_due = tokens.filter(models.Q(is_paid=False) | models.Q(balance_due__gt=0)).aggregate(
+            s=Sum(models.F('total') - models.F('received_amount'))
+        )['s'] or 0
+
+        # Cash received today
+        cash_paid = tokens.filter(payment_mode__iexact='cash', is_paid=True).aggregate(s=Sum('total'))['s'] or tokens.filter(payment_mode__iexact='cash').aggregate(s=Sum('received_amount'))['s'] or 0
+        # UPI / Online received today
+        upi_paid = tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI'], is_paid=True).aggregate(s=Sum('total'))['s'] or tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI']).aggregate(s=Sum('received_amount'))['s'] or 0
+        # Card received today
+        card_paid = tokens.filter(payment_mode__iexact='card', is_paid=True).aggregate(s=Sum('total'))['s'] or tokens.filter(payment_mode__iexact='card').aggregate(s=Sum('received_amount'))['s'] or 0
+
         return Response({
             'date':          str(today),
             'total_tokens':  tokens.count(), # Today tokens
@@ -474,10 +486,10 @@ class TodaySummaryView(APIView):
             'paid_tokens':   tokens.filter(is_paid=True).count(),
             'open_tokens':   tokens.filter(status__in=['open', 'preparing']).count(),
             'revenue':       agg['revenue'] or 0, # Today sales (includes all bills)
-            'cash':          tokens.filter(payment_mode__iexact='cash').aggregate(s=Sum('total'))['s'] or 0,
-            'upi':           tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI']).aggregate(s=Sum('total'))['s'] or 0,
-            'card':          tokens.filter(payment_mode__iexact='card').aggregate(s=Sum('total'))['s'] or 0,
-            'credit':        tokens.filter(models.Q(payment_mode__in=['credit', 'udhar', 'due', 'CREDIT', 'UDHAR']) | models.Q(is_paid=False) | models.Q(balance_due__gt=0)).aggregate(s=Sum('total'))['s'] or 0,
+            'cash':          cash_paid,
+            'upi':           upi_paid,
+            'card':          card_paid,
+            'credit':        max(0, float(unpaid_due)),
         })
 
 class CustomerSearchAPIView(APIView):
