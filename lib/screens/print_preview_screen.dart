@@ -14,6 +14,7 @@ import '../widgets/bill_receipt_widget.dart';
 
 import '../services/printer_service.dart';
 import '../utils/bill_settings_helper.dart';
+import 'main_screen.dart';
 
 class PrintPreviewScreen extends StatefulWidget {
   const PrintPreviewScreen({
@@ -191,35 +192,49 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     });
   }
 
+  void _navigateToHome() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const MainScreen()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final width = math.min(_panelWidth, constraints.maxWidth);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _navigateToHome();
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final width = math.min(_panelWidth, constraints.maxWidth);
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(width: width, child: _buildPanel()),
-                  ),
-                );
-              },
-            ),
-            if (_isPrinting || _isLoading)
-              const Positioned.fill(
-                child: Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(_primary),
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: SizedBox(width: width, child: _buildPanel()),
+                    ),
+                  );
+                },
+              ),
+              if (_isPrinting || _isLoading)
+                const Positioned.fill(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(_primary),
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -289,7 +304,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
               children: [
                 InkWell(
                   borderRadius: BorderRadius.circular(18),
-                  onTap: () => Navigator.of(context).pop(),
+                  onTap: _navigateToHome,
                   child: const Padding(
                     padding: EdgeInsets.all(2),
                     child: Icon(

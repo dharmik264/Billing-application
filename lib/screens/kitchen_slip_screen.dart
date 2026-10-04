@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
+import 'main_screen.dart';
 
 class KitchenSlipScreen extends StatefulWidget {
   const KitchenSlipScreen({super.key, required this.token});
@@ -26,20 +27,27 @@ class _KitchenSlipScreenState extends State<KitchenSlipScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = math.min(_panelWidth, constraints.maxWidth);
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: SizedBox(width: width, child: _buildPanel()),
-              ),
-            );
-          },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _goBack();
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = math.min(_panelWidth, constraints.maxWidth);
+              return SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: SizedBox(width: width, child: _buildPanel()),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -510,11 +518,10 @@ class _KitchenSlipScreenState extends State<KitchenSlipScreen> {
   }
 
   void _goBack() {
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-      return;
-    }
-    _showSnackBar('Back pressed');
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const MainScreen()),
+      (route) => false,
+    );
   }
 
   void _showSnackBar(String message) {
