@@ -76,8 +76,11 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         icon: Icons.inventory_2_rounded,
       ),
       body: SafeArea(
-        child: Stack(
-          children: [
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: Stack(
+              children: [
             Column(
               children: [
                 CustomSearchActionView(
@@ -145,7 +148,9 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
 
