@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../services/restaurant_api.dart';
-import 'edit_item_screen.dart';
-import '../widgets/skeleton_loader.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../services/restaurant_api.dart';
 import '../utils/local_storage_helper.dart';
-import '../widgets/custom_page_header.dart';
-import '../utils/app_constants.dart';
+import '../widgets/skeleton_loader.dart';
+import 'edit_item_screen.dart';
 
 class ItemManagementScreen extends StatefulWidget {
   const ItemManagementScreen({super.key});
@@ -18,9 +18,6 @@ class ItemManagementScreen extends StatefulWidget {
 }
 
 class _ItemManagementScreenState extends State<ItemManagementScreen> {
-  static const Color _panelBackground = StitchColors.background;
-  static const Color _textSecondary = StitchColors.textSecondary;
-  static const Color _orange = StitchColors.primary;
   String _selectedCategory = 'All Items';
   final bool _showOnlyActive = false;
 
@@ -70,98 +67,289 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       }
     }
 
+    final activeItemsCount = _items.where((i) => i.active).length;
+    final totalCategoriesCount = (categories.length - 1) > 0 ? (categories.length - 1) : 0;
+
     return Scaffold(
-      backgroundColor: _panelBackground,
-      appBar: const CustomAppBar(
-        title: 'Item Management',
-        icon: Icons.inventory_2_rounded,
+      backgroundColor: const Color(0xFFF4F4F4),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Item Management',
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF111111),
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              'DHARA FOOD POS',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF666666),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Manage Categories',
+            icon: const Icon(Icons.category_outlined, size: 20, color: Color(0xFF111111)),
+            onPressed: _isProcessing ? null : _manageCategories,
+          ),
+          IconButton(
+            tooltip: 'Add Item',
+            icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: Color(0xFF111111)),
+            onPressed: _isProcessing ? null : _addItem,
+          ),
+          const SizedBox(width: 4),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFD8D8D8)),
+        ),
       ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
+            constraints: const BoxConstraints(maxWidth: 600),
             child: Stack(
               children: [
-            Column(
-              children: [
-                CustomSearchActionView(
-                  searchHint: 'Search items by name or code...',
-                  searchController: _searchController,
-                  onSearchClear: () {
-                    _searchController.clear();
-                    setState(() {});
-                  },
-                  filterChips: categories.map((cat) {
-                    final label = cat == 'All Items' ? 'All Items (${_items.length})' : cat;
-                    return FilterChipData(
-                      label: label,
-                      value: cat,
-                      icon: cat == 'All Items' ? Icons.apps_rounded : Icons.label_outline_rounded,
-                    );
-                  }).toList(),
-                  selectedFilterValue: _selectedCategory,
-                  onFilterChanged: (val) => setState(() => _selectedCategory = val),
-                  actionButtonsOnNewLine: true,
-                  actionButtons: [
-                    ElevatedButton.icon(
-                      onPressed: _isProcessing ? null : _manageCategories,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF4F46E5),
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          side: const BorderSide(color: Color(0xFF4F46E5), width: 1),
-                        ),
-                      ),
-                      icon: const Icon(Icons.category_rounded, size: 18),
-                      label: Text('Category', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: _isProcessing ? null : _addItem,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4F46E5),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      icon: const Icon(Icons.add_circle_outline, size: 18),
-                      label: Text('Item', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
-                    ),
+                Column(
+                  children: [
+                    // Inventory Metrics Overview Bar
+                    _buildInventoryMetricsGrid(_items.length, activeItemsCount, totalCategoriesCount),
+
+                    // Search & Category Filters
+                    _buildSearchAndFilters(categories),
+
+                    // Main Item Ledger List
+                    Expanded(child: _buildItemList()),
                   ],
                 ),
-                Expanded(child: _buildItemList()),
+                if (_isProcessing)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF111111)),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
-            if (_isProcessing)
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(_orange),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInventoryMetricsGrid(int totalItems, int activeItems, int totalCategories) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Color(0xFFD8D8D8), width: 1)),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _inventoryMetricColumn('TOTAL ITEMS', '$totalItems')),
+          Container(width: 1, height: 36, color: const Color(0xFFD8D8D8)),
+          Expanded(child: _inventoryMetricColumn('ACTIVE', '$activeItems')),
+          Container(width: 1, height: 36, color: const Color(0xFFD8D8D8)),
+          Expanded(child: _inventoryMetricColumn('CATEGORIES', '$totalCategories')),
+        ],
+      ),
+    );
+  }
+
+  Widget _inventoryMetricColumn(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF666666),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF111111),
+              letterSpacing: -0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchAndFilters(List<String> categories) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFD8D8D8), width: 1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Search Input Box
+          TextField(
+            controller: _searchController,
+            style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF111111)),
+            decoration: InputDecoration(
+              hintText: 'Search items by name or code...',
+              hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF666666)),
+              prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF666666)),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 16, color: Color(0xFF666666)),
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {});
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: const BorderSide(color: Color(0xFFD8D8D8), width: 1),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: const BorderSide(color: Color(0xFFD8D8D8), width: 1),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: const BorderSide(color: Color(0xFF111111), width: 1.5),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Horizontal Category Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              children: [
+                for (final cat in categories) ...[
+                  _categoryChip(cat),
+                  const SizedBox(width: 6),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Action Buttons Row (2-Column Grid)
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _isProcessing ? null : _manageCategories,
+                  icon: const Icon(Icons.add_rounded, size: 15, color: Color(0xFF111111)),
+                  label: Text(
+                    'Category',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF111111),
                     ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFFD8D8D8), width: 1),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                   ),
                 ),
               ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _isProcessing ? null : _addItem,
+                  icon: const Icon(Icons.add_rounded, size: 15, color: Colors.white),
+                  label: Text(
+                    'Add Item',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF111111),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-    ),
-  ),
-);
+    );
   }
 
+  Widget _categoryChip(String category) {
+    final selected = _selectedCategory == category;
+    final label = category == 'All Items' ? 'All (${_items.length})' : category;
 
-
-  // ── Item list ──────────────────────────────────────────────
+    return GestureDetector(
+      onTap: () => setState(() => _selectedCategory = category),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF111111) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? const Color(0xFF111111) : const Color(0xFFD8D8D8),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? Colors.white : const Color(0xFF111111),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildItemList() {
     if (_loading) {
       return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
         itemCount: 6,
         itemBuilder: (context, index) => const SkeletonListItem(),
       );
@@ -169,173 +357,226 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
     final items = _filteredItems;
 
-    return Stack(
-      children: [
-        items.isEmpty
-            ? Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 100),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.inventory_2_outlined, size: 64, color: Color(0xFFCBD5E1)),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No items found',
-                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF94A3B8)),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 140),
-                physics: const BouncingScrollPhysics(),
-                itemCount: items.length,
-                itemBuilder: (context, index) => _itemCard(items[index]),
+    if (items.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 60),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.inventory_2_outlined, size: 56, color: Color(0xFFD8D8D8)),
+              const SizedBox(height: 12),
+              Text(
+                'No items found',
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF666666)),
               ),
-        if (_isProcessing)
-          Positioned.fill(
-            child: Container(
-              color: Colors.white.withValues(alpha: 0.5),
-              child: const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5))),
-            ),
+            ],
           ),
-      ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+      physics: const BouncingScrollPhysics(),
+      itemCount: items.length,
+      itemBuilder: (context, index) => _itemCard(items[index]),
     );
   }
 
   Widget _itemCard(_MenuItem item) {
     final isActive = item.active;
 
+    String initials = 'IT';
+    if (item.name.trim().isNotEmpty) {
+      final parts = item.name.trim().split(RegExp(r'\s+'));
+      if (parts.length >= 2) {
+        initials = '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      } else if (parts[0].length >= 2) {
+        initials = parts[0].substring(0, 2).toUpperCase();
+      } else {
+        initials = parts[0].toUpperCase();
+      }
+    }
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: StitchDecorations.card(
-        radius: AppRadius.md,
-        borderColor: StitchColors.border,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFD8D8D8), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Image, Name & Meta, Price
+          // Top Half: Avatar Monogram/Image, Info & Price
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image
               Container(
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isActive ? StitchColors.infoBg : StitchColors.surface,
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  border: Border.all(color: StitchColors.border, width: 1),
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFFD8D8D8), width: 1),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: _buildItemTileImage(item, isActive),
+                child: _buildItemTileImage(item, isActive, initials),
               ),
               const SizedBox(width: 12),
-              // Name + Meta
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       item.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: isActive ? StitchColors.textPrimary : StitchColors.textMuted,
+                        color: isActive ? const Color(0xFF111111) : const Color(0xFF8E8E8E),
+                        height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: isActive ? const Color(0xFF666666) : const Color(0xFF8E8E8E),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          item.category.isNotEmpty ? item.category : 'General',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: const Color(0xFF666666),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '|',
+                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFD8D8D8)),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Code: ${item.code}',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 11,
+                            color: const Color(0xFF666666),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '₹${item.price.toStringAsFixed(2)}',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: isActive ? const Color(0xFF111111) : const Color(0xFF8E8E8E),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFD8D8D8)),
+          const SizedBox(height: 10),
+
+          // Bottom Controls Row: Active Status Switch & Actions
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              GestureDetector(
+                onTap: () => _toggleActiveStatus(item),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 36,
+                      height: 20,
+                      padding: const EdgeInsets.all(2),
+                      alignment: isActive ? Alignment.centerRight : Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        color: isActive ? const Color(0xFF111111) : const Color(0xFFD8D8D8),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Text(
-                      '${item.code} • ${item.category}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      'Active',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: StitchColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF111111),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
-              // Price
-              Text(
-                '₹${item.price.toStringAsFixed(2)}',
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isActive ? StitchColors.primary : StitchColors.textMuted,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          const Divider(height: 1, thickness: 1, color: StitchColors.border),
-          const SizedBox(height: 8),
-          // Bottom Row: Active Toggle & Actions
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _compactToggleSwitch(
-                label: 'Active',
-                value: item.active,
-                activeColor: StitchColors.successText,
-                onTap: () => _toggleActiveStatus(item),
-              ),
+
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTap: () => _editItem(item),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: StitchColors.surface,
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        border: Border.all(color: StitchColors.border, width: 1),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.edit_rounded, size: 13, color: StitchColors.textSecondary),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Edit',
-                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: StitchColors.textSecondary),
-                          ),
-                        ],
+                  OutlinedButton.icon(
+                    onPressed: () => _editItem(item),
+                    icon: const Icon(Icons.edit_rounded, size: 12, color: Color(0xFF111111)),
+                    label: Text(
+                      'Edit',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF111111),
                       ),
                     ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFD8D8D8), width: 1),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _deleteItem(item),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: StitchColors.dangerBg,
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        border: Border.all(color: StitchColors.dangerBorder, width: 1),
+                  const SizedBox(width: 6),
+                  OutlinedButton.icon(
+                    onPressed: () => _deleteItem(item),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 12, color: Color(0xFF111111)),
+                    label: Text(
+                      'Delete',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF111111),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.delete_outline_rounded, size: 13, color: StitchColors.dangerText),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Delete',
-                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: StitchColors.dangerText),
-                          ),
-                        ],
-                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFD8D8D8), width: 1),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                     ),
                   ),
                 ],
@@ -347,68 +588,12 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     );
   }
 
-
-
-  Widget _compactToggleSwitch({
-    required String label,
-    required bool value,
-    required Color activeColor,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: value ? activeColor.withValues(alpha: 0.1) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: value ? activeColor.withValues(alpha: 0.3) : const Color(0xFFE2E8F0),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: value ? activeColor : const Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(width: 6),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 32,
-              height: 18,
-              padding: const EdgeInsets.all(2),
-              alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-              decoration: BoxDecoration(
-                color: value ? activeColor : const Color(0xFFCBD5E1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Container(
-                width: 14,
-                height: 14,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildItemTileImage(_MenuItem item, bool isActive) {
+  Widget _buildItemTileImage(_MenuItem item, bool isActive, String initials) {
     if (item.localImageBytes != null) {
       return Image.memory(
         item.localImageBytes!,
-        width: 48,
-        height: 48,
+        width: 44,
+        height: 44,
         fit: BoxFit.cover,
       );
     }
@@ -420,8 +605,8 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         final bytes = base64Decode(base64Str);
         return Image.memory(
           bytes,
-          width: 48,
-          height: 48,
+          width: 44,
+          height: 44,
           fit: BoxFit.cover,
         );
       } catch (_) {}
@@ -437,8 +622,8 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
           return Image.memory(
             snapshot.data!,
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             fit: BoxFit.cover,
           );
         }
@@ -446,27 +631,30 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         if (imgUrl != null && imgUrl.isNotEmpty && (imgUrl.startsWith('http://') || imgUrl.startsWith('https://'))) {
           return Image.network(
             imgUrl,
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Icon(
-              Icons.restaurant_menu_rounded,
-              size: 24,
-              color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-            ),
+            errorBuilder: (context, error, stackTrace) => _monogramFallback(initials),
           );
         }
 
-        return Icon(
-          Icons.restaurant_menu_rounded,
-          size: 24,
-          color: isActive ? const Color(0xFF4F46E5) : const Color(0xFF94A3B8),
-        );
+        return _monogramFallback(initials);
       },
     );
   }
 
-  // ── Filtering ──────────────────────────────────────────────
+  Widget _monogramFallback(String initials) {
+    return Center(
+      child: Text(
+        initials,
+        style: GoogleFonts.jetBrainsMono(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: const Color(0xFF111111),
+        ),
+      ),
+    );
+  }
 
   List<_MenuItem> get _filteredItems {
     final query = _searchController.text.trim().toLowerCase();
@@ -482,8 +670,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       return matchesCategory && matchesActive && matchesSearch;
     }).toList();
   }
-
-  // ── Actions ────────────────────────────────────────────────
 
   Future<void> _addCategory() async {
     final controller = TextEditingController();
@@ -503,7 +689,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel', style: TextStyle(color: _textSecondary)),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF666666))),
           ),
           ElevatedButton(
             onPressed: () {
@@ -512,7 +698,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: _orange,
+              backgroundColor: const Color(0xFF111111),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -554,11 +740,10 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
     if (result == null) return;
 
-    // Refresh custom categories state
     await _loadCustomCategories();
 
     setState(() => _isProcessing = true);
-    
+
     if (result.imageBytes != null) {
       await LocalImageStorage.saveItemImage(
         code: result.code,
@@ -638,7 +823,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     if (result == null) return;
 
     setState(() => _isProcessing = true);
-    
+
     if (result.imageBytes != null) {
       await LocalImageStorage.saveItemImage(
         id: item.id,
@@ -691,13 +876,13 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Future<void> _deleteItem(_MenuItem item) async {
     setState(() => _isProcessing = true);
-    
+
     await LocalImageStorage.deleteItemImage(
       id: item.id,
       code: item.code,
       name: item.name,
     );
-    
+
     if (item.id != null) {
       try {
         await RestaurantApi.instance.deleteItem(item.id!);
@@ -715,7 +900,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         }
       }
     } else {
-      // Local only item
       if (mounted) {
         setState(() {
           _items.remove(item);
@@ -726,11 +910,9 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     }
   }
 
-  /// Immediately toggle active/inactive and persist to DB.
   Future<void> _toggleActiveStatus(_MenuItem item) async {
     final newActive = !item.active;
 
-    // Optimistic update
     setState(() {
       item.active = newActive;
       _isProcessing = true;
@@ -743,7 +925,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
           active: newActive,
         );
       } catch (_) {
-        // Revert on failure
         if (mounted) {
           setState(() {
             item.active = !newActive;
@@ -761,8 +942,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       '${item.name} is now ${newActive ? 'Active' : 'Inactive'}',
     );
   }
-
-
 
   Future<void> _editCategory(String oldName) async {
     final controller = TextEditingController(text: oldName);
@@ -782,7 +961,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel', style: TextStyle(color: _textSecondary)),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF666666))),
           ),
           ElevatedButton(
             onPressed: () {
@@ -791,7 +970,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
+              backgroundColor: const Color(0xFF111111),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
@@ -892,7 +1071,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                   children: [
                     Text('Manage Categories', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
                     IconButton(
-                      icon: const Icon(Icons.add_circle_outline, color: Color(0xFF4F46E5)),
+                      icon: const Icon(Icons.add_circle_outline, color: Color(0xFF111111)),
                       onPressed: () async {
                         Navigator.of(ctx).pop();
                         await _addCategory();
@@ -921,7 +1100,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit_rounded, size: 20, color: Color(0xFF4F46E5)),
+                                icon: const Icon(Icons.edit_rounded, size: 20, color: Color(0xFF111111)),
                                 onPressed: () async {
                                   Navigator.of(ctx).pop();
                                   await _editCategory(cat);
@@ -948,7 +1127,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     );
   }
 
-
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
@@ -970,8 +1148,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     }
   }
 }
-
-// ── Data classes ───────────────────────────────────────────────
 
 class _MenuItem {
   _MenuItem({
