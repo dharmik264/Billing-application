@@ -155,8 +155,8 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     try {
       await RestaurantApi.instance.deleteCustomer(customer.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Customer deleted'),
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Customer deleted'),
           backgroundColor: _red,
           behavior: SnackBarBehavior.floating,
         ));
@@ -214,7 +214,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
   Widget build(BuildContext context) {
     final activeCount   = _customers.where((c) => c.isActive).length;
     final inactiveCount = _customers.where((c) => !c.isActive).length;
-    final totalDue = _customers.fold<double>(0.0, (sum, c) => sum + c.netDue);
 
     return Scaffold(
       backgroundColor: StitchColors.background,
@@ -238,7 +237,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
             constraints: const BoxConstraints(maxWidth: 800),
             child: Column(
               children: [
-                _buildMetricMatrix(_customers.length, activeCount, totalDue),
                 _buildSearchAndFilters(activeCount, inactiveCount),
                 _buildAddButton(),
                 Expanded(child: _buildBody()),
@@ -250,107 +248,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     );
   }
 
-  Widget _buildMetricMatrix(int total, int active, double totalDue) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _cardBorder),
-      ),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                child: Column(
-                  children: [
-                    Text(
-                      'TOTAL',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF666666),
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$total',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: _brandBlack,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const VerticalDivider(width: 1, thickness: 1, color: _cardBorder),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                child: Column(
-                  children: [
-                    Text(
-                      'ACTIVE',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF666666),
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$active',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: _brandBlack,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const VerticalDivider(width: 1, thickness: 1, color: _cardBorder),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-                child: Column(
-                  children: [
-                    Text(
-                      'OUTSTANDING DUE',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF666666),
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '\u20B9${totalDue.toStringAsFixed(2)}',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: _brandBlack,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildSearchAndFilters(int activeCount, int inactiveCount) {
     final totalCount = _customers.length;

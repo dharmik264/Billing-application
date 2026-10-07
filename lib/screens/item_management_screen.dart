@@ -67,9 +67,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       }
     }
 
-    final activeItemsCount = _items.where((i) => i.active).length;
-    final totalCategoriesCount = (categories.length - 1) > 0 ? (categories.length - 1) : 0;
-
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F4),
       appBar: AppBar(
@@ -126,9 +123,6 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
               children: [
                 Column(
                   children: [
-                    // Inventory Metrics Overview Bar
-                    _buildInventoryMetricsGrid(_items.length, activeItemsCount, totalCategoriesCount),
-
                     // Search & Category Filters
                     _buildSearchAndFilters(categories),
 
@@ -155,53 +149,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     );
   }
 
-  Widget _buildInventoryMetricsGrid(int totalItems, int activeItems, int totalCategories) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFD8D8D8), width: 1)),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _inventoryMetricColumn('TOTAL ITEMS', '$totalItems')),
-          Container(width: 1, height: 36, color: const Color(0xFFD8D8D8)),
-          Expanded(child: _inventoryMetricColumn('ACTIVE', '$activeItems')),
-          Container(width: 1, height: 36, color: const Color(0xFFD8D8D8)),
-          Expanded(child: _inventoryMetricColumn('CATEGORIES', '$totalCategories')),
-        ],
-      ),
-    );
-  }
 
-  Widget _inventoryMetricColumn(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF666666),
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 19,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF111111),
-              letterSpacing: -0.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSearchAndFilters(List<String> categories) {
     return Container(

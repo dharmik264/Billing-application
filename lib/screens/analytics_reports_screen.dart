@@ -49,11 +49,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filteredTokens;
-    final totalSales = filtered.fold(0.0, (sum, item) => sum + item.amount);
-    final totalTokensCount = filtered.length;
-    final avgBill = totalTokensCount == 0 ? 0.0 : totalSales / totalTokensCount;
-
     return Scaffold(
       backgroundColor: const Color(0xFFFBF9F8),
       appBar: AppBar(
@@ -114,10 +109,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Metric Summary Bar (POS 3-Column Grid)
-                      _buildMetricSummaryBar(totalTokensCount, totalSales, avgBill),
-                      const SizedBox(height: 12),
-
                       // Search Input Container
                       _buildSearchBar(),
                       const SizedBox(height: 10),
@@ -159,54 +150,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     );
   }
 
-  Widget _buildMetricSummaryBar(int tokens, double sales, double avg) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE5E5E5), width: 1),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _metricColumn('TOKENS', '$tokens')),
-          Container(width: 1, height: 32, color: const Color(0xFFE5E5E5)),
-          Expanded(child: _metricColumn('SALES', _money(sales))),
-          Container(width: 1, height: 32, color: const Color(0xFFE5E5E5)),
-          Expanded(child: _metricColumn('AVG BILL', _money(avg))),
-        ],
-      ),
-    );
-  }
 
-  Widget _metricColumn(String label, String value) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF666666),
-            letterSpacing: 0.5,
-          ),
-        ),
-        const SizedBox(height: 4),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            value,
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF111111),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildSearchBar() {
     return TextField(

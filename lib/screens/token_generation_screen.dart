@@ -1504,18 +1504,65 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   void _openCartPage() {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
         appBar: AppBar(
-          title: Text('Current Bill', style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: const Color(0xFF0F172A), fontSize: 20)),
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: Colors.white,
           elevation: 0,
-          iconTheme: const IconThemeData(color: Color(0xFF0F172A)),
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF111111)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            'Current Bill',
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF111111),
+              letterSpacing: -0.3,
+            ),
+          ),
+          centerTitle: false,
+          actions: [
+            if (_billItems.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: TextButton(
+                  onPressed: () {
+                    _clearCart();
+                    Navigator.of(context).pop();
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFF1F2),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                      side: const BorderSide(color: Color(0xFFFECDD3)),
+                    ),
+                  ),
+                  child: Text(
+                    'Clear Cart',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFE11D48),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(height: 1, color: const Color(0xFFE5E7EB)),
+          ),
         ),
-        backgroundColor: const Color(0xFFF8FAFC),
-        body: ValueListenableBuilder<int>(
-          valueListenable: _cartTrigger,
-          builder: (context, _, __) {
-            return _buildCartSection(isTablet: true);
-          },
+        body: SafeArea(
+          child: ValueListenableBuilder<int>(
+            valueListenable: _cartTrigger,
+            builder: (context, _, __) {
+              return _buildCartSection(isTablet: true);
+            },
+          ),
         ),
       ),
     ));

@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../services/restaurant_api.dart';
-import '../services/data_service.dart';
-import '../services/sync_service.dart';
 import '../widgets/offline_banner.dart';
-import '../utils/app_constants.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final ApiCustomer? customer; // null = Add mode, non-null = Edit mode
@@ -24,41 +22,40 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
   late final Animation<double> _fadeAnim;
 
   // Controllers
-  final _nameCtrl    = TextEditingController();
-  final _mobileCtrl  = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _mobileCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
-  final _gstCtrl     = TextEditingController();
+  final _gstCtrl = TextEditingController();
 
   String _status = 'active';
   bool _isSaving = false;
 
   bool get _isEdit => widget.customer != null;
 
-  // ── Colours ────────────────────────────────────────────────────
-  static const _indigo  = StitchColors.primary;
-  static const _slate50 = StitchColors.background;
-  static const _slate300 = StitchColors.border;
-  static const _slate600 = StitchColors.textSecondary;
-  static const _slate900 = StitchColors.textPrimary;
-  static const _red     = StitchColors.dangerText;
+  // ── Monochromatic Palette ──────────────────────────────────────
+  static const Color _bgCanvas = Color(0xFFFBF9F8);
+  static const Color _brandBlack = Color(0xFF111111);
+  static const Color _mutedText = Color(0xFF71717A);
+  static const Color _cardBorder = Color(0xFFE5E5E5);
+  static const Color _red = Color(0xFFDC2626);
 
   @override
   void initState() {
     super.initState();
     _animCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 300),
     );
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
 
     if (_isEdit) {
       final c = widget.customer!;
-      _nameCtrl.text    = c.name;
-      _mobileCtrl.text  = c.mobileNumber;
+      _nameCtrl.text = c.name;
+      _mobileCtrl.text = c.mobileNumber;
       _addressCtrl.text = c.address;
-      _gstCtrl.text     = c.gstNumber;
-      _status            = c.status;
+      _gstCtrl.text = c.gstNumber;
+      _status = c.status;
     }
   }
 
@@ -107,7 +104,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
               content: const Text('Permission to access contacts was denied.'),
               backgroundColor: _red,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
           );
         }
@@ -119,7 +116,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
             content: Text('Failed to select contact: $e'),
             backgroundColor: _red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         );
       }
@@ -139,72 +136,38 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
     return null;
   }
 
-  String? _validateAddress(String? v) {
-    return null; // optional
-  }
-
-  String? _validateGst(String? v) {
-    return null; // completely optional
-  }
-
   // ── Save ───────────────────────────────────────────────────────
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isSaving = true);
 
     final draft = ApiCustomerDraft(
-      name:         _nameCtrl.text.trim(),
+      name: _nameCtrl.text.trim(),
       mobileNumber: _mobileCtrl.text.trim(),
-      address:      _addressCtrl.text.trim(),
-      gstNumber:    _gstCtrl.text.trim().toUpperCase(),
-      status:       _status,
+      address: _addressCtrl.text.trim(),
+      gstNumber: _gstCtrl.text.trim(),
+      status: _status,
     );
 
     try {
-      final SaveResult<ApiCustomer> result;
       if (_isEdit) {
-        result = await DataService.updateCustomer(widget.customer!.id, draft);
+        await RestaurantApi.instance.updateCustomer(widget.customer!.id, draft);
       } else {
-        result = await DataService.createCustomer(draft);
+        await RestaurantApi.instance.createCustomer(draft);
       }
 
-      if (mounted) {
-        final isOffline = !SyncService.instance.isOnline;
-        final label = _isEdit ? 'Customer updated' : 'Customer added';
+      if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                Icon(
-                  isOffline ? Icons.cloud_queue_rounded : Icons.check_circle_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    isOffline
-                        ? '$label locally. Will sync when online.'
-                        : '$label successfully!',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor:
-                isOffline ? const Color(0xFFF59E0B) : const Color(0xFF10B981),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        );
-        Navigator.of(context).pop(result.data); // pass the new/updated customer back
-      }
+      final actionText = _isEdit ? 'updated' : 'created';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Customer $actionText successfully'),
+          backgroundColor: const Color(0xFF16A34A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -212,7 +175,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
             content: Text(e.toString()),
             backgroundColor: _red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         );
       }
@@ -225,131 +188,131 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _slate50,
+      backgroundColor: _bgCanvas,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: _slate900,
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
+          color: _brandBlack,
           onPressed: () => Navigator.of(context).pop(false),
         ),
         title: Text(
           _isEdit ? 'Edit Customer' : 'Add Customer',
           style: GoogleFonts.inter(
             fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: _slate900,
+            fontWeight: FontWeight.bold,
+            color: _brandBlack,
+            letterSpacing: -0.3,
           ),
         ),
         centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: _slate300.withValues(alpha: 0.5)),
+          child: Container(height: 1, color: _cardBorder),
         ),
       ),
-      body: Column(
-        children: [
-          // Offline banner — slides in automatically when connectivity drops.
-          OfflineBanner(scaffoldContext: context),
-          // Main form
-          Expanded(
-            child: FadeTransition(
-              opacity: _fadeAnim,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: Column(
+              children: [
+                OfflineBanner(scaffoldContext: context),
+                Expanded(
+                  child: FadeTransition(
+                    opacity: _fadeAnim,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(20),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Customer Name
+                            _buildSectionTitle('Customer Name'),
+                            const SizedBox(height: 6),
+                            _buildTextField(
+                              controller: _nameCtrl,
+                              hint: 'Enter customer full name',
+                              icon: Icons.person_outline_rounded,
+                              validator: _validateName,
+                              textCapitalization: TextCapitalization.words,
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.contacts_rounded, color: _brandBlack, size: 20),
+                                tooltip: 'Pick from contacts',
+                                onPressed: _pickContact,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
 
+                            // Mobile Number
+                            _buildSectionTitle('Mobile Number'),
+                            const SizedBox(height: 6),
+                            _buildTextField(
+                              controller: _mobileCtrl,
+                              hint: '10-digit mobile number',
+                              icon: Icons.phone_android_rounded,
+                              validator: _validateMobile,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(10),
+                              ],
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.contacts_rounded, color: _brandBlack, size: 20),
+                                tooltip: 'Pick from contacts',
+                                onPressed: _pickContact,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
 
-                      // ── Customer Name ──────────────────────────────
-                      _buildSectionTitle('Customer Name'),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        controller: _nameCtrl,
-                        hint: 'Enter customer name',
-                        icon: Icons.person_outline_rounded,
-                        validator: _validateName,
-                        textCapitalization: TextCapitalization.words,
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.contacts_rounded, color: _indigo),
-                          tooltip: 'Pick from contacts',
-                          onPressed: _pickContact,
+                            // Address (optional)
+                            _buildSectionTitle('Address', optional: true),
+                            const SizedBox(height: 6),
+                            _buildTextField(
+                              controller: _addressCtrl,
+                              hint: 'Enter full address (optional)',
+                              icon: Icons.location_on_outlined,
+                              maxLines: 3,
+                              textCapitalization: TextCapitalization.sentences,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // GST Number (optional)
+                            _buildSectionTitle('GST Number', optional: true),
+                            const SizedBox(height: 6),
+                            _buildTextField(
+                              controller: _gstCtrl,
+                              hint: 'e.g. 24AAAAA0000A1Z5 (optional)',
+                              icon: Icons.receipt_long_outlined,
+                              textCapitalization: TextCapitalization.characters,
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Status
+                            _buildSectionTitle('Status'),
+                            const SizedBox(height: 6),
+                            _buildStatusToggle(),
+                            const SizedBox(height: 32),
+
+                            // Action Buttons
+                            _buildActionButtons(),
+                            const SizedBox(height: 16),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 20),
-
-                      // ── Mobile Number ──────────────────────────────
-                      _buildSectionTitle('Mobile Number'),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        controller: _mobileCtrl,
-                        hint: '10-digit mobile number',
-                        icon: Icons.phone_outlined,
-                        validator: _validateMobile,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(10),
-                        ],
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.contacts_rounded, color: _indigo),
-                          tooltip: 'Pick from contacts',
-                          onPressed: _pickContact,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // ── Address (optional) ─────────────────────────
-                      _buildSectionTitle('Address', optional: true),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        controller: _addressCtrl,
-                        hint: 'Enter full address',
-                        icon: Icons.location_on_outlined,
-                        validator: _validateAddress,
-                        maxLines: 3,
-                        textCapitalization: TextCapitalization.sentences,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // ── GST Number (optional) ──────────────────────
-                      _buildSectionTitle('GST Number', optional: true),
-                      const SizedBox(height: 8),
-                      _buildTextField(
-                        controller: _gstCtrl,
-                        hint: 'e.g. 22AAAAA0000A1Z5 (optional)',
-                        icon: Icons.receipt_long_outlined,
-                        validator: _validateGst,
-                        textCapitalization: TextCapitalization.characters,
-                      ),
-                      const SizedBox(height: 20),
-
-                      // ── Status ─────────────────────────────────────
-                      _buildSectionTitle('Status'),
-                      const SizedBox(height: 8),
-                      _buildStatusToggle(),
-                      const SizedBox(height: 32),
-
-                      // ── Buttons ─────────────────────────────────────
-                      _buildActionButtons(),
-                      const SizedBox(height: 16),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
-
-
 
   Widget _buildSectionTitle(String title, {bool optional = false}) {
     return Row(
@@ -357,26 +320,20 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
         Text(
           title,
           style: GoogleFonts.inter(
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: _slate600,
+            color: _brandBlack,
+            letterSpacing: -0.1,
           ),
         ),
         if (optional) ...[
           const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFF06B6D4).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              'Optional',
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF0891B2),
-              ),
+          Text(
+            '(Optional)',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: _mutedText,
             ),
           ),
         ],
@@ -404,39 +361,39 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
       validator: validator,
       style: GoogleFonts.inter(
         fontSize: 14,
-        color: _slate900,
+        color: _brandBlack,
         fontWeight: FontWeight.w500,
       ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: GoogleFonts.inter(
-          fontSize: 14,
-          color: _slate300,
+          fontSize: 13,
+          color: const Color(0xFFA1A1AA),
         ),
-        prefixIcon: Icon(icon, size: 20, color: _slate300),
+        prefixIcon: Icon(icon, size: 18, color: _mutedText),
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _slate300, width: 1),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _cardBorder, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: _slate300.withValues(alpha: 0.7), width: 1),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _cardBorder, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _indigo, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _brandBlack, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: _red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: _red, width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _red, width: 1.5),
         ),
       ),
     );
@@ -444,15 +401,16 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
 
   Widget _buildStatusToggle() {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0),
-        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFFF4F4F5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _cardBorder),
       ),
       child: Row(
         children: [
-          Expanded(child: _statusOption('active', 'Active', Icons.check_circle_outline_rounded, const Color(0xFF10B981))),
-          Expanded(child: _statusOption('inactive', 'Inactive', Icons.cancel_outlined, const Color(0xFF94A3B8))),
+          Expanded(child: _statusOption('active', 'Active', Icons.check_circle_outline_rounded, const Color(0xFF16A34A))),
+          Expanded(child: _statusOption('inactive', 'Inactive', Icons.cancel_outlined, _mutedText)),
         ],
       ),
     );
@@ -463,26 +421,27 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
     return GestureDetector(
       onTap: () => setState(() => _status = value),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: selected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
+          border: selected ? Border.all(color: _cardBorder) : null,
           boxShadow: selected
-              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8)]
+              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)]
               : [],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 18, color: selected ? activeColor : _slate300),
+            Icon(icon, size: 16, color: selected ? activeColor : _mutedText),
             const SizedBox(width: 6),
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? activeColor : _slate300,
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                color: selected ? _brandBlack : _mutedText,
               ),
             ),
           ],
@@ -496,19 +455,21 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
       children: [
         // Cancel button
         Expanded(
-          child: OutlinedButton(
-            onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              side: const BorderSide(color: _slate300, width: 1.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            child: Text(
-              'Cancel',
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: _slate600,
+          child: SizedBox(
+            height: 48,
+            child: OutlinedButton(
+              onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: _cardBorder),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: _brandBlack,
+                ),
               ),
             ),
           ),
@@ -517,28 +478,30 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
         // Save button
         Expanded(
           flex: 2,
-          child: ElevatedButton(
-            onPressed: _isSaving ? null : _save,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _indigo,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: _indigo.withValues(alpha: 0.5),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            child: _isSaving
-                ? const SizedBox(
-                    width: 20, height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : Text(
-                    _isEdit ? 'Update Customer' : 'Save Customer',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
+          child: SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _brandBlack,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(
+                      _isEdit ? 'Update Customer' : 'Save Customer',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
+            ),
           ),
         ),
       ],
