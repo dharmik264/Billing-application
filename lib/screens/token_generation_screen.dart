@@ -911,8 +911,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   padding: const EdgeInsets.all(16),
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 200,
-                    childAspectRatio: 1.0,
+                    maxCrossAxisExtent: 180,
+                    childAspectRatio: 1.25,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                   ),
@@ -933,7 +933,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         child: Column(
           children: [
             Container(
-              height: 52,
+              height: 48,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
                 color: StitchColors.surfaceSubtle,
@@ -943,37 +943,44 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (product.code.isNotEmpty) ...[
-                      Text(
-                        product.code,
-                        style: StitchTypography.caption(color: StitchColors.primary).copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (product.code.isNotEmpty) ...[
+                          Text(
+                            product.code,
+                            style: StitchTypography.caption(color: StitchColors.primary).copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 1),
+                        ],
+                        Text(
+                          product.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: StitchTypography.body(weight: FontWeight.w600, size: 12),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                    ],
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: StitchTypography.body(weight: FontWeight.w600, size: 12),
+                      ],
                     ),
-                    const Spacer(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           '\u20B9${product.price.toStringAsFixed(0)}',
-                          style: StitchTypography.monospace(size: 14),
+                          style: StitchTypography.monospace(size: 14, weight: FontWeight.w700),
                         ),
                         Container(
-                          width: 26,
-                          height: 26,
+                          width: 24,
+                          height: 24,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: StitchColors.primary,
