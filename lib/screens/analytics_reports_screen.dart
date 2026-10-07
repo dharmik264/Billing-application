@@ -931,7 +931,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      token.customerName.isNotEmpty ? token.customerName : 'Walk-in Customer',
+                      token.customerName.trim().isNotEmpty ? token.customerName.trim() : token.title,
                       style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
                     ),
                     Text(

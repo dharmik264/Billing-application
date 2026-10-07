@@ -469,7 +469,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   /// 3. Transaction Section (Ledger Table)
   Widget _buildTransactionLedger() {
-    final displayTokens = _recentTokens.take(10).toList();
+    final displayTokens = _recentTokens.take(6).toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -576,7 +576,9 @@ class DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildLedgerRow(_LiveToken token) {
-    final name = token.rawToken.customerName.isNotEmpty ? token.rawToken.customerName : 'Dhara Food';
+    final name = token.rawToken.customerName.trim().isNotEmpty
+        ? token.rawToken.customerName.trim()
+        : 'Token #${token.tokenNumber}';
     
     // Status text mapping
     String statusStr = 'Paid';

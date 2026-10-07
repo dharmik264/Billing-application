@@ -220,7 +220,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     }
 
     final cName = token.customerName.trim();
-    String displayTitle = cName.isNotEmpty ? cName : 'Walk-in Customer';
+    String displayTitle = cName.isNotEmpty ? cName : 'Token #${token.tokenNumber}';
     if (token.billNumber.isNotEmpty) {
       displayTitle += ' (#${token.billNumber})';
     }
