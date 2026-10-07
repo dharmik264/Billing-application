@@ -232,6 +232,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
         ],
       ),
       body: SafeArea(
+        top: false,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 800),

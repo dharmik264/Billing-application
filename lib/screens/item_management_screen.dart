@@ -116,6 +116,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         ),
       ),
       body: SafeArea(
+        top: false,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
