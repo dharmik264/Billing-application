@@ -909,202 +909,433 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Widget _buildProductsSection() {
     return Column(
       children: [
-        ValueListenableBuilder<int>(
-          valueListenable: _cartTrigger,
-          builder: (context, _, __) {
-            final itemCount = _billItems.fold(0, (sum, item) => sum + item.quantity);
-            final tokenNo = widget.editToken != null ? '#${widget.editToken!.tokenNumber}' : '#NEW';
-            return Container(
-              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFE5E5E5)),
-              ),
-              child: IntrinsicHeight(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Token No',
-                              style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              tokenNo,
-                              style: GoogleFonts.jetBrainsMono(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF111111),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5)),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Selected',
-                              style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '$itemCount items',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF111111),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5)),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Bill Total',
-                              style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '\u20B9${_grandTotal.toStringAsFixed(2)}',
-                              style: GoogleFonts.jetBrainsMono(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF111111),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-        CustomSearchActionView(
-          searchHint: 'Search products by name or code...',
-          searchController: _searchController,
-          onSearchClear: _searchController.clear,
-          filterChips: _categories.map((cat) => FilterChipData(
-            label: cat,
-            value: cat,
-            icon: cat == 'All' ? Icons.apps_rounded : Icons.label_outline_rounded,
-          )).toList(),
-          selectedFilterValue: _selectedCategory,
-          onFilterChanged: (val) => setState(() => _selectedCategory = val),
-        ),
+        _buildSummaryStrip(),
+        _buildSearchBar(),
+        _buildCategoryTabs(),
+        const SizedBox(height: 8),
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: StitchColors.primary))
-              : GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  physics: const BouncingScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 180,
-                    childAspectRatio: 1.25,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: _filteredProducts.length,
-                  itemBuilder: (context, index) => _productCard(_filteredProducts[index]),
-                ),
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF111111)))
+              : _filteredProducts.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No items found',
+                        style: GoogleFonts.inter(color: const Color(0xFF5D5F5F), fontSize: 14),
+                      ),
+                    )
+                  : GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      physics: const BouncingScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.95,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                      ),
+                      itemCount: _filteredProducts.length,
+                      itemBuilder: (context, index) => _productCard(_filteredProducts[index]),
+                    ),
         ),
+        _buildBottomDockedBar(),
       ],
     );
   }
 
-  Widget _productCard(_TokenProduct product) {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: StitchDecorations.card(),
-      child: InkWell(
-        onTap: () => _addProduct(product),
-        child: Column(
-          children: [
-            Container(
-              height: 48,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: StitchColors.surfaceSubtle,
-                border: Border(bottom: BorderSide(color: StitchColors.border, width: 1.0)),
-              ),
-              child: _buildCardImage(product),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+  Widget _buildSummaryStrip() {
+    return ValueListenableBuilder<int>(
+      valueListenable: _cartTrigger,
+      builder: (context, _, __) {
+        final itemCount = _billItems.fold(0, (sum, item) => sum + item.quantity);
+        final tokenNo = widget.editToken != null ? '#${widget.editToken!.tokenNumber}' : '#049';
+        return Container(
+          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: const Color(0xFFE5E5E5)),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (product.code.isNotEmpty) ...[
-                          Text(
-                            product.code,
-                            style: StitchTypography.caption(color: StitchColors.primary).copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 1),
-                        ],
                         Text(
-                          product.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: StitchTypography.body(weight: FontWeight.w600, size: 12),
+                          'Token No',
+                          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF5D5F5F)),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          tokenNo,
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF000000),
+                            letterSpacing: -0.5,
+                          ),
                         ),
                       ],
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                  ),
+                ),
+                const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5)),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '\u20B9${product.price.toStringAsFixed(0)}',
-                          style: StitchTypography.monospace(size: 14, weight: FontWeight.w700),
+                          'Selected',
+                          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF5D5F5F)),
                         ),
-                        Container(
-                          width: 24,
-                          height: 24,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: StitchColors.primary,
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                        const SizedBox(height: 2),
+                        Text(
+                          '$itemCount items',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF000000),
                           ),
-                          child: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+                const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5)),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Bill Total',
+                          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF5D5F5F)),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '\u20B9${_grandTotal.toStringAsFixed(2)}',
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF000000),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      height: 40,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E5E5)),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 10),
+          const Icon(Icons.search_rounded, size: 18, color: Color(0xFF5D5F5F)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (_) => setState(() {}),
+              style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF111111)),
+              decoration: InputDecoration(
+                hintText: 'Search items...',
+                hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF9CA3AF)),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF5D5F5F)),
+              onPressed: () {
+                _searchController.clear();
+                setState(() {});
+              },
+            ),
+          Container(
+            height: 20,
+            width: 1,
+            color: const Color(0xFFE5E5E5),
+          ),
+          IconButton(
+            icon: const Icon(Icons.qr_code_scanner_rounded, size: 16, color: Color(0xFF5D5F5F)),
+            onPressed: () {},
+            tooltip: 'Barcode or QR Scan',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryTabs() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 6),
+        itemBuilder: (context, i) {
+          final cat = _categories[i];
+          final isSelected = _selectedCategory == cat;
+          final count = cat == 'All'
+              ? _allProducts.length
+              : _allProducts.where((p) => p.category == cat).length;
+          final labelStr = cat == 'All' ? 'All ($count)' : cat;
+
+          IconData? catIcon;
+          if (cat == 'South Indian') catIcon = Icons.breakfast_dining_outlined;
+          if (cat == 'Sandwich') catIcon = Icons.lunch_dining_outlined;
+          if (cat == 'Beverages') catIcon = Icons.local_cafe_outlined;
+          if (cat == 'Snacks') catIcon = Icons.fastfood_outlined;
+
+          return InkWell(
+            onTap: () => setState(() => _selectedCategory = cat),
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected ? const Color(0xFF111111) : Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: isSelected ? const Color(0xFF111111) : const Color(0xFFE5E5E5),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isSelected && catIcon != null) ...[
+                    Icon(catIcon, size: 16, color: const Color(0xFF6B7280)),
+                    const SizedBox(width: 6),
+                  ],
+                  Text(
+                    labelStr,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected ? Colors.white : const Color(0xFF111111),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBottomDockedBar() {
+    final tokenNo = widget.editToken != null ? '#${widget.editToken!.tokenNumber}' : '#049';
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFE5E5E5)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'FAST LANE',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF5D5F5F),
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Auto Print Receipt $tokenNo',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF111111),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 40,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                if (_billItems.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please add items to generate token')),
+                  );
+                  return;
+                }
+                _saveBill();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF111111),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              ),
+              icon: const Icon(Icons.print_outlined, size: 16),
+              label: Text(
+                'Generate Token',
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _productCard(_TokenProduct product) {
+    final cartItemIndex = _billItems.indexWhere((i) => i.product.id == product.id);
+    final inCartQty = cartItemIndex >= 0 ? _billItems[cartItemIndex].quantity : 0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFE5E5E5)),
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 48,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F4F5),
+                  borderRadius: BorderRadius.circular(2),
+                  border: Border.all(color: const Color(0xFFE5E5E5)),
+                ),
+                child: Stack(
+                  children: [
+                    Center(child: _buildCardImage(product)),
+                    Positioned(
+                      top: 4,
+                      left: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(2),
+                          border: Border.all(color: const Color(0xFFE5E5E5)),
+                        ),
+                        child: Text(
+                          product.category.isNotEmpty ? product.category.toUpperCase() : 'VEG',
+                          style: GoogleFonts.inter(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF5D5F5F),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 6),
+              Text(
+                product.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF111111),
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                product.category,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  color: const Color(0xFF5D5F5F),
+                ),
+              ),
+            ],
+          ),
+          Column(
+            children: [
+              const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E5)),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '\u20B9${product.price.toStringAsFixed(0)}',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF000000),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => _addProduct(product),
+                    borderRadius: BorderRadius.circular(2),
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF000000),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: Center(
+                        child: inCartQty > 0
+                            ? Text(
+                                '$inCartQty',
+                                style: GoogleFonts.jetBrainsMono(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                ),
+                              )
+                            : const Icon(Icons.add, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
