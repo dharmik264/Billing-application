@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/restaurant_api.dart';
 import '../utils/bill_counter.dart';
@@ -64,10 +63,6 @@ class TokenGenerationScreen extends StatefulWidget {
 }
 
 class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
-  static const Color _panelBackground = Color(0xFFF5F6FA);
-
-  static const Color _softBorder = Color(0xFFE2E8F0);
-
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _customerNameController = TextEditingController();
   final TextEditingController _customerPhoneController = TextEditingController();
@@ -909,7 +904,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Widget _buildProductsSection() {
     return Column(
       children: [
-        _buildSummaryStrip(),
         _buildSearchBar(),
         _buildCategoryTabs(),
         const SizedBox(height: 8),
@@ -938,105 +932,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         ),
         _buildBottomDockedBar(),
       ],
-    );
-  }
-
-  Widget _buildSummaryStrip() {
-    return ValueListenableBuilder<int>(
-      valueListenable: _cartTrigger,
-      builder: (context, _, __) {
-        final itemCount = _billItems.fold(0, (sum, item) => sum + item.quantity);
-        final tokenNo = widget.editToken != null ? '#${widget.editToken!.tokenNumber}' : '#049';
-        return Container(
-          margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: const Color(0xFFE5E5E5)),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Token No',
-                          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF5D5F5F)),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          tokenNo,
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF000000),
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5)),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Selected',
-                          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF5D5F5F)),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '$itemCount items',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF000000),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5)),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Bill Total',
-                          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF5D5F5F)),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '\u20B9${_grandTotal.toStringAsFixed(2)}',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF000000),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
