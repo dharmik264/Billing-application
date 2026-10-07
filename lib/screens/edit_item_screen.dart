@@ -1,18 +1,17 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../utils/app_constants.dart';
 import '../utils/local_storage_helper.dart';
 
 class EditItemScreen extends StatefulWidget {
   const EditItemScreen({
     super.key,
     this.initialName,
-    this.initialCode = 'C-1030',
+    this.initialCode = 'C-9003',
     this.initialCategory = '',
     this.initialRate,
     this.initialOnline = true,
@@ -35,11 +34,12 @@ class EditItemScreen extends StatefulWidget {
 }
 
 class _EditItemScreenState extends State<EditItemScreen> {
-  static const Color _panelBackground = AppColors.slate50;
-  static const Color _primary = AppColors.indigo600;
-  static const Color _textPrimary = AppColors.slate900;
-  static const Color _textSecondary = AppColors.slate500;
-  static const Color _border = AppColors.slate200;
+  static const Color _bg = Color(0xFFFBF9F8);
+  static const Color _surface = Colors.white;
+  static const Color _textOnSurface = Color(0xFF1B1C1C);
+  static const Color _textSecondary = Color(0xFF5D5F5F);
+  static const Color _borderLight = Color(0xFFE5E5E5);
+  static const Color _primary = Color(0xFF111111);
 
   List<String> _categories = [];
 
@@ -49,6 +49,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
   late bool _availableOnline;
   late bool _activeStatus;
   Uint8List? _imageBytes;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -92,157 +93,511 @@ class _EditItemScreenState extends State<EditItemScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.initialName != null && widget.initialName!.isNotEmpty;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: _bg,
+      appBar: AppBar(
+        backgroundColor: _surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: _borderLight),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: _textOnSurface, size: 20),
+          onPressed: _cancel,
+        ),
+        title: Text(
+          isEditing ? 'Edit Item' : 'Add New Item',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: _textOnSurface,
+          ),
+        ),
+        actions: [
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: _surface,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: _borderLight),
+              ),
+              child: Text(
+                'DRAFT',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: _textSecondary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: _textSecondary, size: 20),
+            onPressed: () {},
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: _buildBasicInfoTab(),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Photo Upload Ledger Box
+                        _buildPhotoUploadSection(),
+                        const SizedBox(height: 20),
+                        // Form Matrix
+                        _buildFormMatrix(),
+                      ],
+                    ),
+                  ),
+                ),
+                // Dual Action Buttons Footer
+                _buildFooterActions(),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: _buildButtons(),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildBasicInfoTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Column(
-        children: [
-          _buildCompactImageSection(),
-          const SizedBox(height: 16),
-          _buildItemName(),
-          const SizedBox(height: 12),
-          _buildCodeAndRate(),
-          const SizedBox(height: 12),
-          _buildCategorySelector(),
-          const SizedBox(height: 16),
-          _buildSwitchPanel(),
-        ],
-      ),
+  /// Photo Upload Ledger Box
+  Widget _buildPhotoUploadSection() {
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _showImagePickerSheet,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _borderLight),
+                ),
+                child: _imageBytes != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(11),
+                        child: Image.memory(_imageBytes!, width: 80, height: 80, fit: BoxFit.cover),
+                      )
+                    : FutureBuilder<Uint8List?>(
+                        future: LocalImageStorage.loadItemImageBytes(
+                          code: widget.initialCode,
+                          name: widget.initialName,
+                        ),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(11),
+                              child: Image.memory(snapshot.data!, width: 80, height: 80, fit: BoxFit.cover),
+                            );
+                          }
+                          return const Center(
+                            child: Icon(Icons.add_a_photo_outlined, size: 28, color: _textSecondary),
+                          );
+                        },
+                      ),
+              ),
+              Positioned(
+                bottom: -4,
+                right: -4,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: _primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _bg, width: 2),
+                  ),
+                  child: const Icon(Icons.add, size: 12, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Upload Item Photo',
+          style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+        ),
+      ],
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Row(
-              children: [
-                InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: _cancel,
-                  child: Container(
-                    width: 40,
+  /// Form Elements Matrix
+  Widget _buildFormMatrix() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ITEM NAME
+        _label('ITEM NAME'),
+        const SizedBox(height: 4),
+        Container(
+          height: 40,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: _borderLight),
+          ),
+          child: TextField(
+            controller: _nameController,
+            style: GoogleFonts.inter(fontSize: 14, color: _textOnSurface),
+            decoration: InputDecoration(
+              hintText: 'e.g. Double Cheese Truffle Burger',
+              hintStyle: GoogleFonts.inter(fontSize: 14, color: _textSecondary),
+              border: InputBorder.none,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // 2-Column: ITEM CODE & RATE (₹)
+        Row(
+          children: [
+            // Left: ITEM CODE
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _label('ITEM CODE'),
+                  const SizedBox(height: 4),
+                  Container(
                     height: 40,
-                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F3F3),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: _borderLight),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          widget.initialCode,
+                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _textOnSurface),
+                        ),
+                        const Icon(Icons.lock_outline_rounded, size: 16, color: _textSecondary),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Right: RATE (₹)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _label('RATE (\u20B9)'),
+                  const SizedBox(height: 4),
+                  Container(
+                    height: 40,
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _border),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: _borderLight),
                     ),
-                    child: const Icon(Icons.close_rounded, size: 20, color: _textPrimary),
+                    child: TextField(
+                      controller: _rateController,
+                      textAlign: TextAlign.right,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+                      ],
+                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _textOnSurface),
+                      decoration: InputDecoration(
+                        hintText: '0.00',
+                        hintStyle: GoogleFonts.inter(fontSize: 14, color: _textSecondary),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+
+        // CATEGORY
+        _label('CATEGORY'),
+        const SizedBox(height: 4),
+        InkWell(
+          onTap: _pickCategory,
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: _borderLight),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _category.isNotEmpty ? _category : 'Select Category',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: _category.isNotEmpty ? _textOnSurface : _textSecondary,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Flexible(
-                  child: Text(
-                    widget.initialName != null && widget.initialName!.isNotEmpty ? 'Edit Item' : 'Add New Item',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: _textPrimary,
+                const Icon(Icons.expand_more_rounded, size: 18, color: _textSecondary),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Option Toggles Ledger Container
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _borderLight),
+          ),
+          child: Column(
+            children: [
+              // Available Online
+              InkWell(
+                onTap: () => setState(() => _availableOnline = !_availableOnline),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: _bg,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: _borderLight),
+                        ),
+                        child: const Icon(Icons.language_rounded, size: 18, color: _primary),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Available Online',
+                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _textOnSurface),
+                            ),
+                            Text(
+                              'Show this item on digital menu',
+                              style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _customToggle(_availableOnline),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(height: 1, thickness: 1, color: _borderLight),
+              // Active Status
+              InkWell(
+                onTap: () => setState(() => _activeStatus = !_activeStatus),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: _bg,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: _borderLight),
+                        ),
+                        child: const Icon(Icons.check_circle_outline_rounded, size: 18, color: _primary),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Active Status',
+                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _textOnSurface),
+                            ),
+                            Text(
+                              "Set to 'Out of Stock' if disabled",
+                              style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _customToggle(_activeStatus),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Quick Tax & Inventory Meta (Bento style 1px grid)
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _borderLight),
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('TAX RATE (GST)', style: GoogleFonts.inter(fontSize: 11, color: _textSecondary)),
+                        const SizedBox(height: 2),
+                        Text('5.00% Standard', style: GoogleFonts.inter(fontSize: 14, color: _textOnSurface)),
+                      ],
+                    ),
+                  ),
+                ),
+                const VerticalDivider(width: 1, thickness: 1, color: _borderLight),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('STOCK UNIT', style: GoogleFonts.inter(fontSize: 11, color: _textSecondary)),
+                        const SizedBox(height: 2),
+                        Text('Portion (1 pc)', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: _textOnSurface)),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF), // light indigo
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              'Draft',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _primary,
-              ),
-            ),
-          ),
-        ],
+        ),
+      ],
+    );
+  }
+
+  Widget _label(String text) {
+    return Text(
+      text,
+      style: GoogleFonts.inter(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: _textSecondary,
+        letterSpacing: 0.5,
       ),
     );
   }
 
-  Widget _buildCompactImageSection() {
-    return Center(
-      child: GestureDetector(
-        onTap: () => _showImagePickerSheet(),
-        child: Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            color: _panelBackground,
-            shape: BoxShape.circle,
-            border: Border.all(color: _border, width: 1.5),
-            boxShadow: [
-              BoxShadow(
-                color: _textPrimary.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              )
-            ],
-          ),
-          child: _imageBytes != null
-              ? ClipOval(
-                  child: Image.memory(
-                    _imageBytes!,
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
-                )
-              : FutureBuilder<Uint8List?>(
-                  future: LocalImageStorage.loadItemImageBytes(
-                    code: widget.initialCode,
-                    name: widget.initialName,
-                  ),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done && snapshot.data != null) {
-                      return ClipOval(
-                        child: Image.memory(
-                          snapshot.data!,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                        ),
-                      );
-                    }
-                    return const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_a_photo_outlined, size: 24, color: _primary),
-                      ],
-                    );
-                  },
-                ),
+  Widget _customToggle(bool value) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      width: 40,
+      height: 24,
+      padding: const EdgeInsets.all(2),
+      alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+      decoration: BoxDecoration(
+        color: value ? _primary : const Color(0xFFDBDADA),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Container(
+        width: 20,
+        height: 20,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          border: Border.all(color: _borderLight),
         ),
+      ),
+    );
+  }
+
+  /// Dual Action Buttons Footer
+  Widget _buildFooterActions() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: _surface,
+        border: Border(top: BorderSide(color: _borderLight)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: SizedBox(
+              height: 44,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: _borderLight),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                ),
+                onPressed: _cancel,
+                child: Text(
+                  'Cancel',
+                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: _textOnSurface),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: SizedBox(
+              height: 44,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _primary,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                ),
+                onPressed: _isSaving ? null : _save,
+                icon: const Icon(Icons.save_outlined, size: 18, color: Colors.white),
+                label: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text(
+                        'Save Item',
+                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
+                      ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -264,10 +619,10 @@ class _EditItemScreenState extends State<EditItemScreen> {
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: _panelBackground, borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(color: _bg, borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.camera_alt_outlined, color: _primary),
                   ),
-                  title: Text('Take Photo', style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: _textPrimary)),
+                  title: Text('Take Photo', style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: _textOnSurface)),
                   onTap: () {
                     Navigator.pop(context);
                     _selectImage('Take Photo');
@@ -276,10 +631,10 @@ class _EditItemScreenState extends State<EditItemScreen> {
                 ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: _panelBackground, borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(color: _bg, borderRadius: BorderRadius.circular(10)),
                     child: const Icon(Icons.photo_library_outlined, color: _primary),
                   ),
-                  title: Text('Choose from Gallery', style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: _textPrimary)),
+                  title: Text('Choose from Gallery', style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: _textOnSurface)),
                   onTap: () {
                     Navigator.pop(context);
                     _selectImage('Gallery');
@@ -290,338 +645,6 @@ class _EditItemScreenState extends State<EditItemScreen> {
           ),
         );
       },
-    );
-  }
-
-  Widget _buildItemName() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _label('Item Name'),
-        const SizedBox(height: 6),
-        _inputShell(
-          child: TextField(
-            controller: _nameController,
-            maxLines: 1,
-            style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
-            decoration: InputDecoration(
-              hintText: 'e.g. Double Cheese Truffle Burger',
-              hintStyle: GoogleFonts.inter(fontSize: 15, color: _textSecondary.withValues(alpha: 0.5)),
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCodeAndRate() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _label('Item Code'),
-              const SizedBox(height: 6),
-              _inputShell(
-                background: _panelBackground,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        widget.initialCode,
-                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
-                      ),
-                      const Icon(Icons.lock_outline, size: 16, color: _textSecondary),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _label('Rate (\u20B9)'),
-              const SizedBox(height: 6),
-              _inputShell(
-                child: TextField(
-                  controller: _rateController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                        RegExp(r'^\d*\.?\d{0,2}')),
-                  ],
-                  maxLines: 1,
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
-                  decoration: InputDecoration(
-                    hintText: '0.00',
-                    hintStyle: GoogleFonts.inter(fontSize: 15, color: _textSecondary.withValues(alpha: 0.5)),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategorySelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _label('Category'),
-        const SizedBox(height: 6),
-        InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: _pickCategory,
-          child: _inputShell(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _category,
-                    style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w500, color: _textPrimary),
-                  ),
-                  const Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 20,
-                    color: _textSecondary,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSwitchPanel() {
-    return Column(
-      children: [
-        _settingsRow(
-          icon: Icons.public,
-          iconBackground: const Color(0xFFEFF6FF),
-          iconColor: const Color(0xFF4F46E5),
-          title: 'Available Online',
-          subtitle: 'Show this item on your website',
-          value: _availableOnline,
-          onTap: () => setState(() => _availableOnline = !_availableOnline),
-        ),
-        const SizedBox(height: 16),
-        _settingsRow(
-          icon: Icons.check_circle_outline,
-          iconBackground: const Color(0xFFF0FDF4),
-          iconColor: const Color(0xFF16A34A),
-          title: 'Active Status',
-          subtitle: "Set to 'Out of Stock' if disabled",
-          value: _activeStatus,
-          onTap: () => setState(() => _activeStatus = !_activeStatus),
-        ),
-      ],
-    );
-  }
-
-  Widget _settingsRow({
-    required IconData icon,
-    required Color iconBackground,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool value,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: iconBackground,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 20, color: iconColor),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            _switch(value),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _switch(bool value) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
-      width: 44,
-      height: 26,
-      padding: const EdgeInsets.all(3),
-      alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-      decoration: BoxDecoration(
-        color: value ? _primary : _border,
-        borderRadius: BorderRadius.circular(13),
-      ),
-      child: Container(
-        width: 20,
-        height: 20,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildButtons() {
-    return Row(
-      children: [
-        Expanded(
-          flex: 1,
-          child: SizedBox(
-            height: 56,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: _border, width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              onPressed: _cancel,
-              child: Text('Cancel', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _textSecondary)),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: Container(
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.indigo600, Color(0xFF4338CA)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.indigo600.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-              onPressed: _isSaving ? null : _save,
-              child: _isSaving
-                  ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text('Save Item', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _inputShell({
-    required Widget child,
-    Color background = Colors.white,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
-        boxShadow: [
-          if (background == Colors.white)
-            BoxShadow(
-              color: _textPrimary.withValues(alpha: 0.01),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            )
-        ],
-      ),
-      child: child,
-    );
-  }
-
-  Widget _label(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text.toUpperCase(),
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: _textSecondary,
-          letterSpacing: 0.5,
-        ),
-      ),
     );
   }
 
@@ -677,7 +700,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: _textPrimary,
+                        color: _textOnSurface,
                       ),
                     ),
                     IconButton(
@@ -699,7 +722,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 15,
                               fontWeight: cat == _category ? FontWeight.w700 : FontWeight.w500,
-                              color: cat == _category ? _primary : _textPrimary,
+                              color: cat == _category ? _primary : _textOnSurface,
                             ),
                           ),
                           trailing: cat == _category
@@ -792,8 +815,6 @@ class _EditItemScreenState extends State<EditItemScreen> {
       _showSnackBar('Category "$newCategory" added!');
     }
   }
-
-  bool _isSaving = false;
 
   void _save() {
     final name = _nameController.text.trim();
