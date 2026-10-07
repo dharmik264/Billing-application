@@ -27,23 +27,16 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
   late final Animation<double>   _fadeAnim;
   final _searchCtrl = TextEditingController();
 
-  // ── Colours ────────────────────────────────────────────────────
-  static const _indigo   = Color(0xFF4F46E5);
-  static const _slate50  = Color(0xFFF8FAFC);
-  static const _slate200 = Color(0xFFE2E8F0);
-  static const _slate400 = Color(0xFF94A3B8);
-  static const _slate600 = Color(0xFF475569);
-  static const _slate700 = Color(0xFF334155);
-  static const _slate900 = Color(0xFF0F172A);
-  static const _green    = Color(0xFF10B981);
-  static const _red      = Color(0xFFEF4444);
+  static const Color _cardBorder = Color(0xFFE5E5E5);
+  static const Color _brandBlack = Color(0xFF111111);
+  static const Color _red        = Color(0xFFD32F2F);
 
   @override
   void initState() {
     super.initState();
     _animCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 300),
     );
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     BillEventNotifier.billRefreshNotifier.addListener(_onBillChanged);
@@ -133,22 +126,26 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text('Delete Customer',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _slate900)),
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: _brandBlack)),
         content: Text(
           'Are you sure you want to delete "${customer.name}"? This action cannot be undone.',
-          style: GoogleFonts.inter(fontSize: 14, color: _slate600),
+          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF666666)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel', style: GoogleFonts.inter(color: _slate600, fontWeight: FontWeight.w600)),
+            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF666666), fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: _red, foregroundColor: Colors.white, elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _red,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
             child: Text('Delete', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
           ),
         ],
@@ -162,7 +159,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           content: const Text('Customer deleted'),
           backgroundColor: _red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ));
         _loadCustomers();
       }
@@ -172,294 +168,9 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           content: Text(e.toString()),
           backgroundColor: _red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ));
       }
     }
-  }
-
-  // ── Build ──────────────────────────────────────────────────────
-  @override
-  Widget build(BuildContext context) {
-    final activeCount   = _customers.where((c) => c.isActive).length;
-    final inactiveCount = _customers.where((c) => !c.isActive).length;
-    
-    return Scaffold(
-      backgroundColor: StitchColors.background,
-      appBar: CustomAppBar(
-        title: 'Customer Directory',
-        icon: Icons.people_rounded,
-        subtitle: (!_isLoading && _customers.isNotEmpty) ? '$activeCount active · $inactiveCount inactive' : null,
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
-            child: Column(
-              children: [
-                CustomSearchActionView(
-                  searchHint: 'Search by name, mobile number, GST or address...',
-                  searchController: _searchCtrl,
-                  onSearchChanged: _onSearch,
-                  onSearchClear: () {
-                    _searchCtrl.clear();
-                    _onSearch('');
-                  },
-                  filterChips: [
-                    FilterChipData(label: 'All', value: '', icon: Icons.people_outline_rounded),
-                    FilterChipData(label: 'Active', value: 'active', icon: Icons.check_circle_outline_rounded),
-                    FilterChipData(label: 'Inactive', value: 'inactive', icon: Icons.cancel_outlined),
-                  ],
-                  selectedFilterValue: _statusFilter,
-                  onFilterChanged: _onStatusFilter,
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 38,
-                          child: ElevatedButton.icon(
-                            onPressed: _openAdd,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: StitchColors.primary,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
-                            ),
-                            icon: const Icon(Icons.person_add_rounded, size: 16),
-                            label: Text('Add New Customer', style: StitchTypography.body(color: Colors.white, weight: FontWeight.w600)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      IconButton(
-                        icon: const Icon(Icons.refresh_rounded, color: StitchColors.textSecondary, size: 18),
-                        onPressed: _loadCustomers,
-                        tooltip: 'Refresh',
-                        style: IconButton.styleFrom(
-                          backgroundColor: StitchColors.surface,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                            side: const BorderSide(color: StitchColors.border, width: 1),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(child: _buildBody()),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: StitchColors.primary),
-      );
-    }
-    if (_error != null) {
-      return _buildErrorState();
-    }
-    if (_customers.isEmpty) {
-      return _buildEmptyState(noCustomers: true);
-    }
-    if (_filtered.isEmpty) {
-      return _buildEmptyState(noCustomers: false);
-    }
-    return FadeTransition(
-      opacity: _fadeAnim,
-      child: RefreshIndicator(
-        color: StitchColors.primary,
-        onRefresh: _loadCustomers,
-        child: _buildCustomerList(),
-      ),
-    );
-  }
-
-  Widget _buildCustomerList() {
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: _filtered.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (_, i) => _buildCustomerCard(_filtered[i]),
-    );
-  }
-
-  Widget _buildCustomerCard(ApiCustomer customer) {
-    final initials = customer.name.trim().isEmpty
-        ? '?'
-        : customer.name.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
-
-    return Container(
-      decoration: StitchDecorations.card(),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Avatar
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: customer.isActive ? StitchColors.primaryDark : StitchColors.surfaceSubtle,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-                border: Border.all(color: StitchColors.border),
-              ),
-              child: Center(
-                child: Text(
-                  initials,
-                  style: StitchTypography.body(
-                    color: customer.isActive ? Colors.white : StitchColors.textMuted,
-                    weight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    customer.name,
-                    style: StitchTypography.header(size: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  _infoRow(Icons.phone_outlined, customer.mobileNumber),
-                  if (customer.address.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    _infoRow(Icons.location_on_outlined, customer.address, maxLines: 1),
-                  ],
-                  if (customer.gstNumber.isNotEmpty) ...[
-                    const SizedBox(height: 2),
-                    _infoRow(Icons.receipt_long_outlined, customer.gstNumber),
-                  ],
-                  if (customer.netDue > 0) ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.account_balance_wallet_outlined, size: 12, color: StitchColors.dangerText),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Due: \u20B9${customer.netDue.toStringAsFixed(2)}',
-                          style: StitchTypography.caption(color: StitchColors.dangerText).copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ] else ...[
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.check_circle_outline_rounded, size: 12, color: StitchColors.successText),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Paid in Full',
-                          style: StitchTypography.caption(color: StitchColors.successText).copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Actions Column
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _statusToggleBadge(customer),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined, size: 16, color: StitchColors.textMuted),
-                      onPressed: () => _openEdit(customer),
-                      visualDensity: VisualDensity.compact,
-                      tooltip: 'Edit',
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 16, color: StitchColors.dangerText),
-                      onPressed: () => _deleteCustomer(customer),
-                      visualDensity: VisualDensity.compact,
-                      tooltip: 'Delete',
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-
-
-  Widget _infoRow(IconData icon, String text, {int maxLines = 2}) {
-    return Row(
-      children: [
-        Icon(icon, size: 13, color: _slate400),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.inter(fontSize: 12, color: _slate600),
-            maxLines: maxLines,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _statusToggleBadge(ApiCustomer customer) {
-    final active = customer.isActive;
-    return GestureDetector(
-      onTap: () => _toggleCustomerStatus(customer),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: active ? _green.withValues(alpha: 0.1) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: active ? _green.withValues(alpha: 0.3) : const Color(0xFFCBD5E1),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              active ? 'Active' : 'Inactive',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: active ? _green : const Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              active ? Icons.toggle_on_rounded : Icons.toggle_off_rounded,
-              size: 18,
-              color: active ? _green : const Color(0xFF64748B),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _toggleCustomerStatus(ApiCustomer customer) async {
@@ -478,7 +189,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('${customer.name} status updated to $newStatus'),
-            backgroundColor: const Color(0xFF10B981),
+            backgroundColor: _brandBlack,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 2),
           ),
@@ -498,6 +209,505 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     }
   }
 
+  // ── Build ──────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    final activeCount   = _customers.where((c) => c.isActive).length;
+    final inactiveCount = _customers.where((c) => !c.isActive).length;
+    final totalDue = _customers.fold<double>(0.0, (sum, c) => sum + c.netDue);
+
+    return Scaffold(
+      backgroundColor: StitchColors.background,
+      appBar: CustomAppBar(
+        title: 'Customer Management',
+        icon: Icons.people_rounded,
+        subtitle: (!_isLoading && _customers.isNotEmpty)
+            ? '$activeCount active · $inactiveCount inactive'
+            : null,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, size: 20, color: _brandBlack),
+            onPressed: _loadCustomers,
+            tooltip: 'Refresh and sync',
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Column(
+              children: [
+                _buildMetricMatrix(_customers.length, activeCount, totalDue),
+                _buildSearchAndFilters(activeCount, inactiveCount),
+                _buildAddButton(),
+                Expanded(child: _buildBody()),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricMatrix(int total, int active, double totalDue) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _cardBorder),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                child: Column(
+                  children: [
+                    Text(
+                      'TOTAL',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF666666),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$total',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: _brandBlack,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const VerticalDivider(width: 1, thickness: 1, color: _cardBorder),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                child: Column(
+                  children: [
+                    Text(
+                      'ACTIVE',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF666666),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$active',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: _brandBlack,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const VerticalDivider(width: 1, thickness: 1, color: _cardBorder),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+                child: Column(
+                  children: [
+                    Text(
+                      'OUTSTANDING DUE',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF666666),
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '\u20B9${totalDue.toStringAsFixed(2)}',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: _brandBlack,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchAndFilters(int activeCount, int inactiveCount) {
+    final totalCount = _customers.length;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Column(
+        children: [
+          // Search Input
+          Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: _cardBorder),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 12),
+                const Icon(Icons.search_rounded, size: 18, color: Color(0xFF888888)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _searchCtrl,
+                    onChanged: _onSearch,
+                    style: GoogleFonts.inter(fontSize: 14, color: _brandBlack),
+                    decoration: InputDecoration(
+                      hintText: 'Search by name, mobile, GST...',
+                      hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF888888)),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+                if (_searchQuery.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFF888888)),
+                    onPressed: () {
+                      _searchCtrl.clear();
+                      _onSearch('');
+                    },
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Filter Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildFilterChip('All', '', totalCount),
+                const SizedBox(width: 8),
+                _buildFilterChip('Active', 'active', activeCount),
+                const SizedBox(width: 8),
+                _buildFilterChip('Inactive', 'inactive', inactiveCount),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String label, String value, int count) {
+    final isSelected = _statusFilter == value;
+    return InkWell(
+      onTap: () => _onStatusFilter(value),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? _brandBlack : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? _brandBlack : _cardBorder,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isSelected ? Colors.white : _brandBlack,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '($count)',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                color: isSelected ? Colors.white.withValues(alpha: 0.8) : const Color(0xFF888888),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAddButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: SizedBox(
+        width: double.infinity,
+        height: 44,
+        child: ElevatedButton.icon(
+          onPressed: _openAdd,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: _brandBlack,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          ),
+          icon: const Icon(Icons.person_add_rounded, size: 18),
+          label: Text(
+            '+ Add Customer',
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: _brandBlack),
+      );
+    }
+    if (_error != null) {
+      return _buildErrorState();
+    }
+    if (_customers.isEmpty) {
+      return _buildEmptyState(noCustomers: true);
+    }
+    if (_filtered.isEmpty) {
+      return _buildEmptyState(noCustomers: false);
+    }
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: RefreshIndicator(
+        color: _brandBlack,
+        onRefresh: _loadCustomers,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          itemCount: _filtered.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (_, i) => _buildCustomerCard(_filtered[i]),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCustomerCard(ApiCustomer customer) {
+    final initials = customer.name.trim().isEmpty
+        ? '?'
+        : customer.name
+            .trim()
+            .split(' ')
+            .where((e) => e.isNotEmpty)
+            .map((e) => e[0])
+            .take(2)
+            .join()
+            .toUpperCase();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _cardBorder),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        children: [
+          // Top row
+          Row(
+            children: [
+              // Initial avatar box
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: _cardBorder),
+                ),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _brandBlack,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Customer Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      customer.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: _brandBlack,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.call_rounded, size: 14, color: Color(0xFF888888)),
+                            const SizedBox(width: 4),
+                            Text(
+                              customer.mobileNumber,
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 12,
+                                color: const Color(0xFF666666),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (customer.address.isNotEmpty) ...[
+                          const Text('•', style: TextStyle(color: Color(0xFFCCCCCC))),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFF888888)),
+                              const SizedBox(width: 2),
+                              Text(
+                                customer.address,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  color: const Color(0xFF666666),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Status Pill
+              GestureDetector(
+                onTap: () => _toggleCustomerStatus(customer),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _cardBorder),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: customer.isActive ? _brandBlack : const Color(0xFF888888),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        customer.isActive ? 'Active' : 'Inactive',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: _brandBlack,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, thickness: 1, color: _cardBorder),
+          const SizedBox(height: 8),
+          // Bottom Row: Due Amount & Action Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Due: ',
+                    style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF666666)),
+                  ),
+                  Text(
+                    '\u20B9${customer.netDue.toStringAsFixed(2)}',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _brandBlack,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _openEdit(customer),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _brandBlack,
+                      side: const BorderSide(color: _cardBorder),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    ),
+                    icon: const Icon(Icons.edit_outlined, size: 14),
+                    label: Text('Edit', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500)),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () => _deleteCustomer(customer),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _red,
+                      side: const BorderSide(color: _cardBorder),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    ),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 14),
+                    label: Text('Delete', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState({required bool noCustomers}) {
     return Center(
       child: Padding(
@@ -505,51 +715,24 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: _indigo.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                noCustomers ? Icons.people_outline_rounded : Icons.search_off_rounded,
-                size: 40,
-                color: _indigo.withValues(alpha: 0.5),
-              ),
+            Icon(
+              noCustomers ? Icons.people_outline_rounded : Icons.search_off_rounded,
+              size: 48,
+              color: const Color(0xFF888888),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             Text(
               noCustomers ? 'No Customers Yet' : 'No Results Found',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: _slate700,
-              ),
+              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: _brandBlack),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               noCustomers
-                  ? 'Tap the + button to add your first customer'
-                  : 'Try a different search or filter',
-              style: GoogleFonts.inter(fontSize: 14, color: _slate400),
+                  ? 'Tap the + Add Customer button to get started.'
+                  : 'Try changing your search or filter terms.',
+              style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF666666)),
               textAlign: TextAlign.center,
             ),
-            if (noCustomers) ...[
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _openAdd,
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text('Add Customer', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _indigo,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
           ],
         ),
       ),
@@ -563,32 +746,23 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: _red.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.cloud_off_rounded, size: 40, color: _red.withValues(alpha: 0.6)),
+            const Icon(Icons.error_outline_rounded, size: 48, color: _red),
+            const SizedBox(height: 16),
+            Text(
+              'Something went wrong',
+              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: _brandBlack),
             ),
-            const SizedBox(height: 20),
-            Text('Something went wrong',
-              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate700)),
-            const SizedBox(height: 8),
-            Text(_error ?? '', style: GoogleFonts.inter(fontSize: 13, color: _slate400), textAlign: TextAlign.center),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
+            const SizedBox(height: 6),
+            Text(_error ?? '', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF666666)), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            ElevatedButton(
               onPressed: _loadCustomers,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: Text('Retry', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _indigo,
+                backgroundColor: _brandBlack,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -596,3 +770,4 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     );
   }
 }
+

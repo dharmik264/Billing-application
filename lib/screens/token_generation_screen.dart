@@ -789,10 +789,27 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     return Scaffold(
       backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
-        title: widget.editToken != null ? 'Edit Bill #${widget.editToken!.billNumber}' : 'New Token & Bill',
-        icon: Icons.receipt_long_rounded,
-        subtitle: 'Quick POS Billing',
+        title: widget.editToken != null ? 'Edit Bill #${widget.editToken!.billNumber}' : 'Token Generation',
+        icon: Icons.confirmation_number_rounded,
+        subtitle: 'Dhara Food POS',
         actions: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F4F5),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0xFFE4E4E7)),
+            ),
+            child: Text(
+              'Terminal 01',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF3F3F46),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
           LayoutBuilder(
             builder: (context, constraints) {
               if (MediaQuery.of(context).size.width < 800) {
@@ -868,14 +885,14 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                 child: SizedBox(
                   height: 44,
                   child: FloatingActionButton.extended(
-                    backgroundColor: StitchColors.primary,
+                    backgroundColor: const Color(0xFF111111),
                     elevation: 0,
                     hoverElevation: 0,
                     onPressed: _openCartPage,
                     icon: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 18),
                     label: Text(
                       'View Bill ($totalItems)', 
-                      style: StitchTypography.body(color: Colors.white, weight: FontWeight.w600),
+                      style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                     ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
@@ -892,6 +909,98 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Widget _buildProductsSection() {
     return Column(
       children: [
+        ValueListenableBuilder<int>(
+          valueListenable: _cartTrigger,
+          builder: (context, _, __) {
+            final itemCount = _billItems.fold(0, (sum, item) => sum + item.quantity);
+            final tokenNo = widget.editToken != null ? '#${widget.editToken!.tokenNumber}' : '#NEW';
+            return Container(
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFE5E5E5)),
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Token No',
+                              style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              tokenNo,
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF111111),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5)),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Selected',
+                              style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '$itemCount items',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF111111),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1, color: Color(0xFFE5E5E5)),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Bill Total',
+                              style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '\u20B9${_grandTotal.toStringAsFixed(2)}',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF111111),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
         CustomSearchActionView(
           searchHint: 'Search products by name or code...',
           searchController: _searchController,

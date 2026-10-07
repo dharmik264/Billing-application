@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 import 'password_login_screen.dart';
 import 'printer_setup_screen.dart';
 import 'shop_setup_screen.dart';
@@ -25,10 +24,10 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   static const Color _panelBackground = StitchColors.background;
-  static const Color _primary = StitchColors.primary;
   static const Color _textPrimary = StitchColors.textPrimary;
   static const Color _textSecondary = StitchColors.textSecondary;
-  static const Color _danger = StitchColors.dangerText;
+  static const Color _cardBorder = Color(0xFFE5E5E5);
+
   ApiShopData? _shopData;
   ApiUser? _user;
   bool _isPrinterConnected = false;
@@ -59,9 +58,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _panelBackground,
-      appBar: const CustomAppBar(
+      appBar: CustomAppBar(
         title: 'Settings',
         icon: Icons.settings_rounded,
+        actions: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAFAFA),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0xFFE4E4E7)),
+            ),
+            child: Text(
+              'POS',
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF71717A),
+                letterSpacing: 1.0,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
       ),
       body: SafeArea(
         child: Center(
@@ -76,146 +95,107 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildPanel() {
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(16),
       children: [
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              children: [
-                if (_user != null) _subscriptionCard(),
-                _profileCard(),
-                _settingsSection(
-                  title: 'Store Management',
-                  rows: [
-                    _SettingsRowData(
-                      icon: Icons.storefront_outlined,
-                      iconBackground: const Color(0xFFEFF6FF),
-                      iconColor: _primary,
-                      title: 'Shop Profile',
-                      subtitle: 'Logo, Address, Contact Info',
-                      onTap: () => _open(const ShopSetupScreen()),
-                    ),
-                    _SettingsRowData(
-                      icon: Icons.print_outlined,
-                      iconBackground: const Color(0xFFFFF7ED),
-                      iconColor: const Color(0xFFEA580C),
-                      title: 'Printer Settings',
-                      subtitle: 'Bluetooth & Paper Size (58mm / 80mm)',
-                      badge: _isPrinterConnected ? 'Connected' : 'Disconnected',
-                      badgeBackground: _isPrinterConnected
-                          ? const Color(0xFFDCFCE7)
-                          : const Color(0xFFFEE2E2),
-                      badgeColor: _isPrinterConnected
-                          ? const Color(0xFF166534)
-                          : const Color(0xFF991B1B),
-                      onTap: () => _open(const PrinterSetupScreen()),
-                    ),
-                  ],
-                ),
-                _settingsSection(
-                  title: 'Billing & Payments',
-                  rows: [
-                    _SettingsRowData(
-                      icon: Icons.account_balance_wallet_outlined,
-                      iconBackground: const Color(0xFFF5F3FF),
-                      iconColor: const Color(0xFF7C3AED),
-                      title: 'Payment Modes',
-                      subtitle: 'Cash, Cards, UPI, QR',
-                      onTap: () => _open(const PaymentModesScreen()),
-                    ),
-                    _SettingsRowData(
-                      icon: Icons.receipt_long_outlined,
-                      iconBackground: const Color(0xFFF0FDF4),
-                      iconColor: const Color(0xFF16A34A),
-                      title: 'Tax Settings',
-                      subtitle: 'GST, VAT, Service Charge',
-                      onTap: () => _open(const TaxSettingsScreen()),
-                    ),
-                    _SettingsRowData(
-                      icon: Icons.local_offer_outlined,
-                      iconBackground: const Color(0xFFFEF3C7),
-                      iconColor: const Color(0xFFD97706),
-                      title: 'Token Prefix Settings',
-                      subtitle: 'Customize Order Numbers',
-                      onTap: () => _open(const TokenPrefixScreen()),
-                    ),
-                  ],
-                ),
-                _settingsSection(
-                  title: 'System & Security',
-                  rows: [
-
-                    _SettingsRowData(
-                      icon: Icons.logout,
-                      iconBackground: const Color(0xFFFEF2F2),
-                      iconColor: _danger,
-                      title: 'Logout',
-                      subtitle: 'Sign out from this device',
-                      danger: true,
-                      onTap: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.clear();
-                        await RestaurantApi.instance.clearTokens();
-                        if (!mounted) return;
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                              builder: (_) => const PasswordLoginScreen()),
-                          (route) => false,
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'POS Version 2.4.0 (Build 842)',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'DESIGNED WITH \u2665 FOR GASTRONOMY',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFFCBD5E1),
-                    letterSpacing: 1.0,
-                  ),
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
-          ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.05),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_user != null) _buildSubscriptionCard(),
+            _buildShopIdentitySummary(),
+            const SizedBox(height: 16),
+            _buildSectionHeader('STORE MANAGEMENT'),
+            const SizedBox(height: 8),
+            _buildGroupedSection([
+              _SettingsRowData(
+                icon: Icons.storefront_outlined,
+                title: 'Shop Profile',
+                subtitle: 'Logo, Address, Contact Info',
+                onTap: () => _open(const ShopSetupScreen()),
+              ),
+              _SettingsRowData(
+                icon: Icons.print_outlined,
+                title: 'Printer Settings',
+                subtitle: 'Bluetooth & Paper Size (58mm / 80mm)',
+                badge: _isPrinterConnected ? 'Connected' : 'Disconnected',
+                badgeBg: _isPrinterConnected
+                    ? const Color(0xFFDCFCE7)
+                    : const Color(0xFFF4F4F5),
+                badgeColor: _isPrinterConnected
+                    ? const Color(0xFF166534)
+                    : const Color(0xFF52525B),
+                badgeBorder: _isPrinterConnected
+                    ? const Color(0xFFBBF7D0)
+                    : const Color(0xFFD4D4D8),
+                onTap: () => _open(const PrinterSetupScreen()),
+              ),
+            ]),
+            const SizedBox(height: 20),
+            _buildSectionHeader('BILLING & PAYMENTS'),
+            const SizedBox(height: 8),
+            _buildGroupedSection([
+              _SettingsRowData(
+                icon: Icons.payments_outlined,
+                title: 'Payment Modes',
+                subtitle: 'Cash, Cards, UPI, QR',
+                onTap: () => _open(const PaymentModesScreen()),
+              ),
+              _SettingsRowData(
+                icon: Icons.receipt_long_outlined,
+                title: 'Tax Settings',
+                subtitle: 'GST, VAT, Service Charge',
+                onTap: () => _open(const TaxSettingsScreen()),
+              ),
+              _SettingsRowData(
+                icon: Icons.local_offer_outlined,
+                title: 'Token Prefix Settings',
+                subtitle: 'Customize Order Numbers',
+                onTap: () => _open(const TokenPrefixScreen()),
+              ),
+            ]),
+            const SizedBox(height: 20),
+            _buildSectionHeader('SYSTEM & SECURITY'),
+            const SizedBox(height: 8),
+            _buildGroupedSection([
+              _SettingsRowData(
+                icon: Icons.logout_rounded,
+                title: 'Logout',
+                subtitle: 'Sign out from this device',
+                danger: true,
+                onTap: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.clear();
+                  await RestaurantApi.instance.clearTokens();
+                  if (!mounted) return;
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                        builder: (_) => const PasswordLoginScreen()),
+                    (route) => false,
+                  );
+                },
+              ),
+            ]),
+            const SizedBox(height: 24),
+            _buildFooter(),
+            const SizedBox(height: 24),
+          ],
+        ).animate().fadeIn(duration: 300.ms),
       ],
     );
   }
 
-
-
-  Widget _subscriptionCard() {
-    bool isTrial = _user?.accountStatus == 'trial';
-    String planName = _user?.approvedPlan ?? 'Unknown Plan';
+  Widget _buildSubscriptionCard() {
+    final isTrial = _user?.accountStatus == 'trial';
+    String planName = _user?.approvedPlan ?? 'Trial Plan Active';
     if (isTrial) planName = 'Trial Plan Active';
-    String statusStr = _user?.accountStatus.toUpperCase() ?? 'PENDING';
-    
+    final statusStr = _user?.accountStatus.toUpperCase() ?? 'TRIAL';
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
+      margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF4F46E5), Color(0xFF3730A3)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: const Color(0xFF111111),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF111111)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,78 +204,113 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Subscription',
-                style: GoogleFonts.inter(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                'SUBSCRIPTION',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFA1A1AA),
+                  letterSpacing: 1.5,
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFF27272A),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: const Color(0xFF3F3F46)),
                 ),
                 child: Text(
                   statusStr,
-                  style: GoogleFonts.inter(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700),
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFE4E4E7),
+                    letterSpacing: 1.0,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             planName,
-            style: GoogleFonts.inter(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+            style: GoogleFonts.inter(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: -0.3,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           if (_user?.trialEnd != null)
             Text(
               'Valid until: ${_user!.trialEnd!.split('T')[0]}',
-              style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 12,
+                color: const Color(0xFFA1A1AA),
+              ),
             ),
           const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => _open(const SubscriptionPlansScreen()),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF4F46E5),
-              elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton(
+              onPressed: () => _open(const SubscriptionPlansScreen()),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF111111),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'View Plans / Upgrade',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward_rounded, size: 16),
+                ],
+              ),
             ),
-            child: const Text('View Plans / Upgrade'),
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.08, curve: Curves.easeOut);
+    );
   }
 
-  Widget _profileCard() {
+  Widget _buildShopIdentitySummary() {
     return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _cardBorder),
       ),
       child: Row(
         children: [
           Container(
-            width: 56,
-            height: 56,
-            alignment: Alignment.center,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF7ED),
-              borderRadius: BorderRadius.circular(16),
+              color: const Color(0xFFF4F4F5),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFE4E4E7)),
             ),
-            child: const Icon(Icons.restaurant_menu,
-                size: 28, color: Color(0xFFEA580C)),
+            child: const Icon(
+              Icons.restaurant_rounded,
+              size: 20,
+              color: Color(0xFF27272A),
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,96 +320,101 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: _textPrimary,
+                    letterSpacing: -0.2,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
-                  _shopData?.id != null ? 'ID: ${_shopData!.id}' : 'Loading...',
-                  style: GoogleFonts.inter(fontSize: 13, color: _textSecondary, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    'Premium Plan',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF166534),
-                    ),
+                  _shopData?.id != null ? 'ID: ${_shopData!.id}' : 'ID: --',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 12,
+                    color: _textSecondary,
                   ),
                 ),
               ],
             ),
           ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F4F5),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0xFFE4E4E7)),
+            ),
+            child: Text(
+              _user?.approvedPlan ?? 'Premium Plan',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF3F3F46),
+              ),
+            ),
+          ),
         ],
       ),
-    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.08);
+    );
   }
 
-  Widget _settingsSection({
-    required String title,
-    required List<_SettingsRowData> rows,
-  }) {
-    return Column(
-      children: [
-        _sectionLabel(title),
-        const SizedBox(height: 8),
-        Container(
-          clipBehavior: Clip.antiAlias,
-          margin: const EdgeInsets.only(bottom: 24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              for (var index = 0; index < rows.length; index++) ...[
-                _settingsRow(rows[index]),
-                if (index != rows.length - 1)
-                  const Divider(
-                      height: 1.0, thickness: 1.0, color: Color(0xFFF1F5F9)),
-              ],
-            ],
-          ),
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        title,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF71717A),
+          letterSpacing: 1.0,
         ),
-      ],
-    ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.06);
+      ),
+    );
   }
 
-  Widget _settingsRow(_SettingsRowData data) {
+  Widget _buildGroupedSection(List<_SettingsRowData> rows) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _cardBorder),
+      ),
+      child: Column(
+        children: [
+          for (int i = 0; i < rows.length; i++) ...[
+            _buildSettingsRow(rows[i]),
+            if (i < rows.length - 1)
+              const Divider(height: 1, thickness: 1, color: _cardBorder),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsRow(_SettingsRowData data) {
     return InkWell(
-      onTap: data.onTap ?? () => _showSnackBar('${data.title} opened'),
+      onTap: data.onTap,
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.all(12),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
-                color: data.iconBackground,
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFFFAFAFA),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFE4E4E7)),
               ),
-              child: Icon(data.icon, size: 20, color: data.iconColor),
-            ).animate().shimmer(delay: 400.ms, duration: 1200.ms),
-            const SizedBox(width: 16),
+              child: Icon(
+                data.icon,
+                size: 18,
+                color: data.danger ? const Color(0xFFDC2626) : const Color(0xFF3F3F46),
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,108 +422,108 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     data.title,
                     style: GoogleFonts.inter(
-                      fontSize: 15,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: data.danger ? _danger : _textPrimary,
+                      color: data.danger ? const Color(0xFFDC2626) : _textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 1),
                   Text(
                     data.subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(fontSize: 13, color: _textSecondary, fontWeight: FontWeight.w400),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: _textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
             if (data.badge != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: data.badgeBackground,
-                  borderRadius: BorderRadius.circular(20),
+                  color: data.badgeBg,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: data.badgeBorder ?? Colors.transparent),
                 ),
                 child: Text(
                   data.badge!,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
                     color: data.badgeColor,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
             ],
-            const Icon(Icons.chevron_right_rounded, size: 20, color: Color(0xFFCBD5E1)),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: Color(0xFFA1A1AA),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _sectionLabel(String label) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        label.toUpperCase(),
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF94A3B8),
-          letterSpacing: 0.8,
-        ),
+  Widget _buildFooter() {
+    return Center(
+      child: Column(
+        children: [
+          Text(
+            'POS Version 2.4.0 (Build 842)',
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 11,
+              color: const Color(0xFF71717A),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'LEDGER PROTOCOL • OPERATIONAL',
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFFA1A1AA),
+              letterSpacing: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   void _open(Widget screen) {
     Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (_, animation, __) => screen,
-        transitionsBuilder: (_, animation, __, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuint)),
-            child: FadeTransition(opacity: animation, child: child),
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 350),
-      ),
+      MaterialPageRoute(builder: (_) => screen),
     );
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
 class _SettingsRowData {
   const _SettingsRowData({
     required this.icon,
-    required this.iconBackground,
-    required this.iconColor,
     required this.title,
     required this.subtitle,
     this.badge,
-    this.badgeBackground = Colors.transparent,
-    this.badgeColor = Colors.transparent,
+    this.badgeBg,
+    this.badgeColor,
+    this.badgeBorder,
     this.danger = false,
     this.onTap,
   });
 
   final IconData icon;
-  final Color iconBackground;
-  final Color iconColor;
   final String title;
   final String subtitle;
   final String? badge;
-  final Color badgeBackground;
-  final Color badgeColor;
+  final Color? badgeBg;
+  final Color? badgeColor;
+  final Color? badgeBorder;
   final bool danger;
   final VoidCallback? onTap;
 }
+
