@@ -551,86 +551,128 @@ class DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Token Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: StitchDecorations.badge(
-                backgroundColor: StitchColors.surfaceSubtle,
-                borderColor: StitchColors.border,
-              ),
-              child: Text(
-                token.tokenNumber,
-                style: StitchTypography.monospace(color: StitchColors.primary, size: 12),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Order ID & Time
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    token.orderId,
-                    style: StitchTypography.header(size: 13),
+            // Top Line: Token Badge, Bill Number, Date/Time & Amount
+            Row(
+              children: [
+                // Token Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: StitchDecorations.badge(
+                    backgroundColor: StitchColors.surfaceSubtle,
+                    borderColor: StitchColors.border,
                   ),
-                  Text(
-                    token.time,
-                    style: StitchTypography.caption(),
-                  ),
-                ],
-              ),
-            ),
-            // Payment Mode Pill
-            GestureDetector(
-              onTap: () => _changePaymentMode(token),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: StitchDecorations.badge(
-                  backgroundColor: StitchColors.surfaceSubtle,
-                  borderColor: StitchColors.border,
-                ),
-                child: Text(
-                  pm,
-                  style: StitchTypography.caption(color: StitchColors.textSecondary).copyWith(
-                    fontWeight: FontWeight.w600,
+                  child: Text(
+                    token.tokenNumber,
+                    style: StitchTypography.monospace(color: StitchColors.primary, size: 12),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Amount
-            Text(
-              '\u20B9${token.amount.toStringAsFixed(0)}',
-              style: StitchTypography.monospace(size: 14),
-            ),
-            const SizedBox(width: 12),
-            // Status Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: StitchDecorations.badge(
-                backgroundColor: statusBg,
-                borderColor: statusBorder,
-              ),
-              child: Text(
-                statusLabel,
-                style: StitchTypography.caption(color: statusText, size: 10).copyWith(
-                  fontWeight: FontWeight.w700,
+                const SizedBox(width: 10),
+                // Bill Number & Time Column
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        token.orderId,
+                        style: StitchTypography.header(size: 14),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        token.time,
+                        style: StitchTypography.caption(size: 11),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                // Amount
+                Text(
+                  '\u20B9${token.amount.toStringAsFixed(0)}',
+                  style: StitchTypography.monospace(size: 15, weight: FontWeight.w700),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            // Actions
-            IconButton(
-              icon: const Icon(Icons.edit_outlined, size: 16, color: StitchColors.textMuted),
-              onPressed: () => _editToken(token),
-              visualDensity: VisualDensity.compact,
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, size: 16, color: StitchColors.dangerText),
-              onPressed: () => _deleteToken(token),
-              visualDensity: VisualDensity.compact,
+            const SizedBox(height: 8),
+            // Bottom Line: Payment Mode Pill, Status Badge & Action Icons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Payment Mode Pill
+                    GestureDetector(
+                      onTap: () => _changePaymentMode(token),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: StitchDecorations.badge(
+                          backgroundColor: StitchColors.surfaceSubtle,
+                          borderColor: StitchColors.border,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              pm,
+                              style: StitchTypography.caption(color: StitchColors.textSecondary).copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(width: 3),
+                            const Icon(Icons.edit_outlined, size: 11, color: StitchColors.textMuted),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Status Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: StitchDecorations.badge(
+                        backgroundColor: statusBg,
+                        borderColor: statusBorder,
+                      ),
+                      child: Text(
+                        statusLabel,
+                        style: StitchTypography.caption(color: statusText, size: 10).copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                // Action Icons
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 16, color: StitchColors.textMuted),
+                      onPressed: () => _editToken(token),
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                      tooltip: 'Edit Bill',
+                    ),
+                    const SizedBox(width: 10),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 16, color: StitchColors.dangerText),
+                      onPressed: () => _deleteToken(token),
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                      tooltip: 'Delete Bill',
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
