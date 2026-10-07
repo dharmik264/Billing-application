@@ -209,80 +209,94 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     final isActive = item.active;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: StitchDecorations.card(
         radius: AppRadius.md,
-        borderColor: isActive ? StitchColors.border : StitchColors.border,
+        borderColor: StitchColors.border,
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isActive ? StitchColors.infoBg : StitchColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
-              border: Border.all(color: StitchColors.border, width: 1),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: _buildItemTileImage(item, isActive),
-          ),
-          const SizedBox(width: 12),
-          // Name + meta
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  item.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: isActive ? StitchColors.textPrimary : StitchColors.textMuted,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${item.code} • ${item.category}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: StitchColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '₹${item.price.toStringAsFixed(2)}',
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isActive ? StitchColors.primary : StitchColors.textMuted,
-            ),
-          ),
-          const SizedBox(width: 12),
-          // Actions Column
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisSize: MainAxisSize.min,
+          // Top Row: Image, Name & Meta, Price
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Image
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: isActive ? StitchColors.infoBg : StitchColors.surface,
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  border: Border.all(color: StitchColors.border, width: 1),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: _buildItemTileImage(item, isActive),
+              ),
+              const SizedBox(width: 12),
+              // Name + Meta
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      item.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isActive ? StitchColors.textPrimary : StitchColors.textMuted,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${item.code} • ${item.category}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                        color: StitchColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Price
+              Text(
+                '₹${item.price.toStringAsFixed(2)}',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isActive ? StitchColors.primary : StitchColors.textMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Divider(height: 1, thickness: 1, color: StitchColors.border),
+          const SizedBox(height: 8),
+          // Bottom Row: Active Toggle & Actions
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _compactToggleSwitch(
+                label: 'Active',
+                value: item.active,
+                activeColor: StitchColors.successText,
+                onTap: () => _toggleActiveStatus(item),
+              ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
                     onTap: () => _editItem(item),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         color: StitchColors.surface,
                         borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -291,18 +305,21 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.edit_rounded, size: 12, color: StitchColors.textSecondary),
+                          const Icon(Icons.edit_rounded, size: 13, color: StitchColors.textSecondary),
                           const SizedBox(width: 4),
-                          Text('Edit', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: StitchColors.textSecondary)),
+                          Text(
+                            'Edit',
+                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: StitchColors.textSecondary),
+                          ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () => _deleteItem(item),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         color: StitchColors.dangerBg,
                         borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -311,21 +328,17 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.delete_outline_rounded, size: 12, color: StitchColors.dangerText),
+                          const Icon(Icons.delete_outline_rounded, size: 13, color: StitchColors.dangerText),
                           const SizedBox(width: 4),
-                          Text('Delete', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: StitchColors.dangerText)),
+                          Text(
+                            'Delete',
+                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: StitchColors.dangerText),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 6),
-              _compactToggleSwitch(
-                label: 'Active',
-                value: item.active,
-                activeColor: StitchColors.successText,
-                onTap: () => _toggleActiveStatus(item),
               ),
             ],
           ),
