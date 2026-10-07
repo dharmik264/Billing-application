@@ -1052,26 +1052,49 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModalState) {
           return Container(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.7,
+              maxHeight: MediaQuery.of(context).size.height * 0.75,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // iOS Sheet Drag Handle Bar
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD4D4D4),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                // Modal Header Title & Add Category Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Manage Categories', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Manage Categories',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF111111),
+                        letterSpacing: -0.3,
+                      ),
+                    ),
                     IconButton(
-                      icon: const Icon(Icons.add_circle_outline, color: Color(0xFF111111)),
+                      tooltip: 'Add Category',
+                      icon: const Icon(Icons.add_circle_outline, size: 24, color: Color(0xFF111111)),
                       onPressed: () async {
                         Navigator.of(ctx).pop();
                         await _addCategory();
@@ -1079,39 +1102,63 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                     ),
                   ],
                 ),
-                const Divider(),
+                const SizedBox(height: 6),
+                const Divider(height: 1, color: Color(0xFFEEEEEE)),
                 if (allCategories.isEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    padding: const EdgeInsets.symmetric(vertical: 28),
                     child: Center(
                       child: Text('No categories found', style: GoogleFonts.inter(color: Colors.grey)),
                     ),
                   )
                 else
                   Flexible(
-                    child: ListView.builder(
+                    child: ListView.separated(
                       shrinkWrap: true,
+                      padding: const EdgeInsets.only(top: 4),
                       itemCount: allCategories.length,
+                      separatorBuilder: (ctx, idx) => const Divider(height: 1, color: Color(0xFFEEEEEE)),
                       itemBuilder: (ctx, idx) {
                         final cat = allCategories[idx];
-                        return ListTile(
-                          title: Text(cat, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit_rounded, size: 20, color: Color(0xFF111111)),
-                                onPressed: () async {
-                                  Navigator.of(ctx).pop();
-                                  await _editCategory(cat);
-                                },
+                              Text(
+                                cat,
+                                style: GoogleFonts.inter(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF111111),
+                                  letterSpacing: -0.2,
+                                ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded, size: 20, color: Colors.red),
-                                onPressed: () async {
-                                  Navigator.of(ctx).pop();
-                                  await _deleteCategory(cat);
-                                },
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    padding: const EdgeInsets.all(6),
+                                    constraints: const BoxConstraints(),
+                                    tooltip: 'Edit category',
+                                    icon: const Icon(Icons.edit_outlined, size: 18, color: Color(0xFF262626)),
+                                    onPressed: () async {
+                                      Navigator.of(ctx).pop();
+                                      await _editCategory(cat);
+                                    },
+                                  ),
+                                  const SizedBox(width: 14),
+                                  IconButton(
+                                    padding: const EdgeInsets.all(6),
+                                    constraints: const BoxConstraints(),
+                                    tooltip: 'Delete category',
+                                    icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFFF25442)),
+                                    onPressed: () async {
+                                      Navigator.of(ctx).pop();
+                                      await _deleteCategory(cat);
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),

@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import '../services/printer_service.dart';
-import '../utils/app_constants.dart';
 
 class PrinterSetupScreen extends StatefulWidget {
   const PrinterSetupScreen({super.key});
@@ -16,12 +15,6 @@ class PrinterSetupScreen extends StatefulWidget {
 }
 
 class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
-  static const Color _panelBackground = StitchColors.background;
-  static const Color _primary = StitchColors.primary;
-  static const Color _textPrimary = StitchColors.textPrimary;
-  static const Color _textSecondary = StitchColors.textSecondary;
-  static const Color _softBorder = StitchColors.border;
-  static const Color _danger = StitchColors.dangerText;
   static const double _panelWidth = 360;
 
   bool _wifiEnabled = false;
@@ -97,208 +90,273 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   }
 
   Widget _buildPanel() {
-    return Material(
-      color: _panelBackground,
-      borderRadius: BorderRadius.circular(28),
-      clipBehavior: Clip.antiAlias,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            )
-          ],
-        ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildHeader(),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              children: [
-                _label('Connect New Device'),
-                const SizedBox(height: 8),
-                _scanBluetoothButton(),
-                const SizedBox(height: 8),
-                _wifiCard(),
-                const SizedBox(height: 16),
-                _label('Current Connection'),
-                const SizedBox(height: 8),
-                _currentConnectionCard(),
-                if (_showDisconnectPrompt && _connected) ...[
-                  const SizedBox(height: 16),
-                  _disconnectPrompt(),
-                ],
-                const SizedBox(height: 16),
-                _label('Paper Size'),
-                const SizedBox(height: 8),
-                _paperSizeOptions(),
-                const SizedBox(height: 20),
-                _saveButton(),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Section 1: Connect New Device
+              _sectionHeader('CONNECT NEW DEVICE', badgeText: 'BT & LAN Active', isGreenBadge: true),
+              const SizedBox(height: 8),
+              _buildScanningCard(),
+              const SizedBox(height: 10),
+              _wifiCard(),
+
+              const SizedBox(height: 20),
+              // Section 2: Current Connection
+              _sectionHeader('CURRENT CONNECTION', badgeText: 'Status'),
+              const SizedBox(height: 8),
+              _currentConnectionCard(),
+              if (_showDisconnectPrompt && _connected) ...[
+                const SizedBox(height: 12),
+                _disconnectPrompt(),
               ],
-            ),
+
+              const SizedBox(height: 20),
+              // Section 3: Paper Size
+              _sectionHeader('PAPER SIZE', badgeText: 'ESC/POS'),
+              const SizedBox(height: 8),
+              _paperSizeOptions(),
+
+              const SizedBox(height: 24),
+              _saveButton(),
+              const SizedBox(height: 10),
+              Center(
+                child: Text(
+                  'Compatible with Star Micronics, Epson, POS-58, and universal ESC/POS thermal printers.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF71717A)),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-     ),
+        ),
+      ],
+    );
+  }
+
+  Widget _sectionHeader(String title, {String? badgeText, bool isGreenBadge = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF71717A),
+            letterSpacing: 0.8,
+          ),
+        ),
+        if (badgeText != null)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isGreenBadge) ...[
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF10B981),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(
+                badgeText,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF71717A),
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: const Border(bottom: BorderSide(color: _softBorder, width: 1.0)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 4, offset: const Offset(0, 2))],
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5))),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(20),
             onTap: _goBack,
             child: const Padding(
               padding: EdgeInsets.all(4),
-              child: Icon(Icons.arrow_back_rounded, size: 24, color: Color(0xFF64748B)),
+              child: Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xFF111111)),
             ),
           ),
-          const SizedBox(width: 12),
           Text(
             'Printer Setup',
             style: GoogleFonts.inter(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: _textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF111111),
+              letterSpacing: -0.2,
             ),
+          ),
+          IconButton(
+            tooltip: 'Help & Manual',
+            icon: const Icon(Icons.help_outline_rounded, size: 20, color: Color(0xFF71717A)),
+            onPressed: () {
+              _showSnackBar('Ensure Bluetooth or Wi-Fi printer is powered on and in range.');
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _scanBluetoothButton() {
-    return Column(
-      children: [
-        InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: (_isScanning || _isProcessing) ? null : _scanBluetooth,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+  Widget _buildScanningCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E5E5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F4F5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFE5E5E5)),
+                ),
+                child: const Icon(Icons.print_outlined, size: 22, color: Color(0xFF111111)),
               ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ],
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              _isScanning ? 'Scanning nearby printers...' : 'Scan Bluetooth Printers',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF111111),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF111111),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: Icon(
+                            Icons.refresh_rounded,
+                            size: 18,
+                            color: _isScanning ? const Color(0xFF111111) : const Color(0xFF71717A),
+                          ),
+                          onPressed: (_isScanning || _isProcessing) ? null : _scanBluetooth,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Searching for thermal Bluetooth & LAN devices in range',
+                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF71717A)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          if (_devices.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFFE5E5E5)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: _devices
+                    .map((device) => ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                          title: Text(device.name ?? 'Unknown Device', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF111111))),
+                          subtitle: Text(device.address ?? '', style: GoogleFonts.jetBrainsMono(fontSize: 11, color: const Color(0xFF71717A))),
+                          trailing: Icon(
+                            _connectedDevice?.address == device.address ? Icons.check_circle_rounded : Icons.link_rounded,
+                            color: _connectedDevice?.address == device.address ? const Color(0xFF10B981) : const Color(0xFF111111),
+                          ),
+                          onTap: () => _connectDevice(device),
+                        ))
+                    .toList(),
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.only(top: 10),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Color(0xFFF4F4F5))),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Row(
+                  children: [
+                    const Icon(Icons.arrow_back_rounded, size: 14, color: Color(0xFF71717A)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Hold printer close for Bluetooth discovery',
+                      style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF71717A)),
+                    ),
+                  ],
+                ),
                 Container(
-                  width: 40,
-                  height: 40,
-                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFFF4F4F5),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  child: _isScanning
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                              color: Colors.white, strokeWidth: 2))
-                      : const Icon(Icons.bluetooth_rounded,
-                          size: 20, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isScanning ? 'Scanning...' : 'Scan Bluetooth',
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Find nearby wireless printers',
-                        style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFE0E7FF), fontWeight: FontWeight.w500),
-                      ),
-                    ],
+                  child: Text(
+                    'POS-ESC/POS',
+                    style: GoogleFonts.jetBrainsMono(fontSize: 10, color: const Color(0xFF52525B), fontWeight: FontWeight.w500),
                   ),
-                ),
-                const Icon(Icons.search_rounded, size: 24, color: Colors.white),
-              ],
-            ),
-          ),
-        ),
-        if (_isScanning && _devices.isEmpty) ...[
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              border: Border.all(color: _softBorder),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: _primary),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Searching nearby Bluetooth printers...',
-                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: _textSecondary),
                 ),
               ],
             ),
           ),
         ],
-        if (_devices.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: _softBorder),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: _devices
-                  .map((device) => ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                        title: Text(device.name ?? 'Unknown', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
-                        subtitle: Text(device.address ?? '', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
-                        trailing: Icon(
-                          _connectedDevice?.address == device.address ? Icons.check_circle_rounded : Icons.link_rounded,
-                          color: _connectedDevice?.address == device.address ? const Color(0xFF10B981) : _primary,
-                        ),
-                        onTap: () => _connectDevice(device),
-                      ))
-                  .toList(),
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 
@@ -315,30 +373,24 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
               }
             },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _softBorder, width: 1.0),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.02),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            )
-          ],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E5E5)),
         ),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: _panelBackground,
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFFF4F4F5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFE5E5E5)),
               ),
-              child: const Icon(Icons.wifi_rounded, size: 24, color: Color(0xFF64748B)),
+              child: const Icon(Icons.wifi_rounded, size: 20, color: Color(0xFF111111)),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -346,22 +398,22 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'WiFi / Network',
+                    'Wi-Fi / Ethernet Network',
                     style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: _textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF111111),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Connect via IP Address',
-                    style: GoogleFonts.inter(fontSize: 13, color: _textSecondary, fontWeight: FontWeight.w400),
+                    'Connect via IP Address & standard Port 9100',
+                    style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF71717A)),
                   ),
                 ],
               ),
             ),
-            _switch(_wifiEnabled, activeColor: _primary),
+            _switch(_wifiEnabled, activeColor: const Color(0xFF111111)),
           ],
         ),
       ),
@@ -369,250 +421,162 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   }
 
   Widget _currentConnectionCard() {
-    if (!_connected) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _softBorder, width: 1.0),
-        ),
-        child: Text(
-          'No printer connected',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(fontSize: 14, color: _textSecondary, fontWeight: FontWeight.w500),
-        ),
-      );
-    }
-
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _primary, width: 2.0),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E5E5)),
       ),
       child: Column(
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.print_rounded, size: 24, color: _primary),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        Text(
-                          _wifiEnabled
-                              ? 'Network Printer'
-                              : (_connectedDevice?.name ?? 'Bluetooth Printer'),
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: _textPrimary,
-                          ),
-                        ),
-                        _statusBadge(),
-                      ],
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF4F4F5),
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(height: 4),
+                    child: const Icon(Icons.wifi_tethering_rounded, size: 16, color: Color(0xFF71717A)),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _connected
+                            ? (_wifiEnabled ? 'Network Printer' : (_connectedDevice?.name ?? 'Bluetooth Printer'))
+                            : 'No printer connected',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF27272A),
+                        ),
+                      ),
+                      Text(
+                        _connected ? 'Active device ready for billing' : 'Select a device from discovered list to bind',
+                        style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF71717A)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F4F5),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFE5E5E5)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: _connected ? const Color(0xFF10B981) : const Color(0xFFA1A1AA),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                     Text(
-                      _wifiEnabled
-                          ? 'WiFi \u00B7 Port 9100'
-                          : 'Bluetooth \u00B7 MAC: ${_connectedDevice?.address ?? ''}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(fontSize: 13, color: _textSecondary, fontWeight: FontWeight.w500),
+                      _connected ? 'Connected' : 'Idle',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF52525B),
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _testPrintButton(),
-              ),
-              const SizedBox(width: 12),
-              InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: _isProcessing
-                    ? null
-                    : () => setState(() => _showDisconnectPrompt = true),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFFECACA),
-                      width: 1.0,
-                    ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.only(top: 10),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: Color(0xFFF4F4F5))),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                InkWell(
+                  onTap: _showIpDialog,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.add_rounded, size: 16, color: Color(0xFF111111)),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Add Printer by IP',
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF111111)),
+                      ),
+                    ],
                   ),
-                  child: const Icon(Icons.link_off_rounded, size: 20, color: _danger),
                 ),
-              ),
-            ],
+                InkWell(
+                  onTap: () {
+                    _showSnackBar('Tip: Ensure Bluetooth is turned ON and printer paper roll is loaded.');
+                  },
+                  child: Text(
+                    'Troubleshoot',
+                    style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF71717A), decoration: TextDecoration.underline),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _statusBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFDCFCE7),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        'Connected',
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: const Color(0xFF166534),
-        ),
-      ),
-    );
-  }
-
-  Widget _testPrintButton() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: _isProcessing
-          ? null
-          : () async {
-              _showSnackBar('Sending test print...');
-              await PrinterService.instance.printTest();
-            },
-      child: Container(
-        height: 48,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: _panelBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _softBorder, width: 1.0),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.edit_document, size: 18, color: _textSecondary),
-            const SizedBox(width: 8),
-            Text(
-              'Test Print',
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _textSecondary),
-            ),
-          ],
-        ),
       ),
     );
   }
 
   Widget _disconnectPrompt() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFFEF2F2),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFECACA), width: 1.0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFFECACA)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Disconnect Printer?',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF991B1B),
-            ),
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFF991B1B)),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
-            _wifiEnabled
-                ? 'This will disconnect the network printer. You will not be able to print until reconnected.'
-                : 'This will disconnect ${_connectedDevice?.name ?? 'the printer'}. You will not be able to print until reconnected.',
-            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFB91C1C), fontWeight: FontWeight.w500),
+            'This will disconnect current printer connection.',
+            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFB91C1C)),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
-                child: _promptButton(
-                  'Cancel',
-                  Colors.white,
-                  _textSecondary,
-                  () => setState(() => _showDisconnectPrompt = false),
+                child: OutlinedButton(
+                  onPressed: () => setState(() => _showDisconnectPrompt = false),
+                  child: const Text('Cancel'),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _promptButton(
-                  'Disconnect',
-                  _danger,
-                  Colors.white,
-                  _disconnect,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
+                  onPressed: _disconnect,
+                  child: const Text('Disconnect'),
                 ),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _promptButton(
-    String label,
-    Color background,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Container(
-        height: 44,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFFECACA), width: 1.0),
-        ),
-        child: Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
-        ),
       ),
     );
   }
@@ -621,113 +585,119 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
     return Row(
       children: [
         Expanded(
-          child: _paperOption(
+          child: _paperOptionCard(
             size: '58 mm',
-            description: 'Standard portable thermal',
-            paperWidth: 36,
+            description: 'Standard portable',
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
-          child: _paperOption(
+          child: _paperOptionCard(
             size: '80 mm',
-            description: 'Desktop receipt printers',
-            paperWidth: 46,
+            description: 'Desktop receipt',
           ),
         ),
       ],
     );
   }
 
-  Widget _paperOption({
+  Widget _paperOptionCard({
     required String size,
     required String description,
-    required double paperWidth,
   }) {
     final selected = _paperSize == size;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       onTap: _isProcessing ? null : () => setState(() => _paperSize = size),
-      child: Container(
-        height: 156,
-        padding: const EdgeInsets.all(16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEEF2FF) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? _primary : _softBorder,
+            color: selected ? const Color(0xFF111111) : const Color(0xFFE5E5E5),
             width: selected ? 2.0 : 1.0,
           ),
         ),
         child: Column(
           children: [
             Container(
-              width: paperWidth,
-              height: 48,
-              alignment: Alignment.center,
+              width: size == '58 mm' ? 56 : 64,
+              height: 64,
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: selected ? Colors.white : _panelBackground,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFCBD5E1)),
+                color: const Color(0xFFFAFAFA),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: selected ? const Color(0xFF111111) : const Color(0xFFD4D4D8), width: selected ? 2 : 1),
               ),
-              child: Text(
-                size.replaceAll(' ', ''),
-                style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: size == '58 mm' ? 24 : 32,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE5E5E5),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  Text(
+                    size.replaceAll(' ', ''),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF111111),
+                    ),
+                  ),
+                  const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E5)),
+                ],
               ),
             ),
             const SizedBox(height: 12),
             Text(
               size,
               style: GoogleFonts.inter(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: selected ? _primary : _textPrimary,
+                fontSize: 14,
+                fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                color: const Color(0xFF111111),
               ),
             ),
-            const SizedBox(height: 4),
-            Expanded(
-              child: Text(
-                description,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: selected ? const Color(0xFF6366F1) : _textSecondary,
-                ),
-              ),
+            const SizedBox(height: 2),
+            Text(
+              description,
+              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF71717A)),
             ),
-            if (selected)
-              Container(
-                width: 22,
-                height: 22,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: _primary,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+            const SizedBox(height: 12),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: selected ? const Color(0xFF111111) : Colors.white,
+                shape: BoxShape.circle,
+                border: selected ? null : Border.all(color: const Color(0xFFD4D4D8)),
               ),
+              child: selected
+                  ? const Icon(Icons.check, size: 12, color: Colors.white)
+                  : null,
+            ),
           ],
         ),
       ),
     );
   }
 
-
   Widget _saveButton() {
     return SizedBox(
       width: double.infinity,
-      height: 52,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: _primary,
+          backgroundColor: const Color(0xFF111111),
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onPressed: _isProcessing
             ? null
@@ -738,20 +708,27 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
                   await prefs.setString('paper_size', _paperSize);
                   await prefs.setDouble('print_font_size', _printFontSize);
                   await PrinterService.instance.initPreferences();
-                  _showSnackBar('Printer & Font Settings saved! (${_printFontSize.toInt()} px)');
+                  _showSnackBar('Printer & Font Settings saved!');
                 } finally {
                   if (mounted) setState(() => _isProcessing = false);
                 }
               },
         child: _isProcessing
             ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2))
-            : Text(
-                'Save Printer & Font Settings',
-                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700),
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Save Printer & Font Settings',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_rounded, size: 16),
+                ],
               ),
       ),
     );
@@ -760,35 +737,20 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   Widget _switch(bool value, {required Color activeColor}) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 160),
-      width: 42,
+      width: 44,
       height: 24,
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(2),
       alignment: value ? Alignment.centerRight : Alignment.centerLeft,
       decoration: BoxDecoration(
-        color: value ? activeColor : const Color(0xFFDDDDDD),
+        color: value ? activeColor : const Color(0xFFE4E4E7),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Container(
-        width: 18,
-        height: 18,
+        width: 20,
+        height: 20,
         decoration: const BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-        ),
-      ),
-    );
-  }
-
-  Widget _label(String label) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text(
-        label.toUpperCase(),
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: const Color(0xFF94A3B8),
-          letterSpacing: 0.8,
         ),
       ),
     );
@@ -847,7 +809,7 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
               child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: _primary, foregroundColor: Colors.white),
+                backgroundColor: const Color(0xFF111111), foregroundColor: Colors.white),
             onPressed: () async {
               Navigator.pop(context);
               if (controller.text.isEmpty) return;

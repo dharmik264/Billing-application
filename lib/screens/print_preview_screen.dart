@@ -1,20 +1,26 @@
 import 'dart:convert';
-import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:flutter/rendering.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
 
-import '../services/restaurant_api.dart';
 import '../services/pdf_receipt_service.dart';
+import '../services/printer_service.dart';
+import '../services/restaurant_api.dart';
+import '../utils/bill_settings_helper.dart';
 import '../widgets/bill_receipt_widget.dart';
 
-import '../services/printer_service.dart';
-import '../utils/bill_settings_helper.dart';
+import 'analytics_reports_screen.dart';
+import 'customer_management_screen.dart';
+import 'item_management_screen.dart';
 import 'main_screen.dart';
+import 'printer_setup_screen.dart';
+import 'settings_screen.dart';
+import 'token_generation_screen.dart';
 
 class PrintPreviewScreen extends StatefulWidget {
   const PrintPreviewScreen({
@@ -46,10 +52,7 @@ class PrintPreviewScreen extends StatefulWidget {
   final String paymentMode;
   final Future<ApiToken?> Function()? onSaveBill;
 
-  /// Pre-loaded base64 logo (optional – if null we fetch from API)
   final String? logoBase64;
-
-  /// Pre-loaded base64 QR (optional – if null we fetch from API)
   final String? qrBase64;
   final List<ApiTokenItemDraft> items;
   final double subtotal;
@@ -61,10 +64,12 @@ class PrintPreviewScreen extends StatefulWidget {
 }
 
 class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
-  static const Color _primary = Color(0xFF4F46E5);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _softBorder = Color(0xFFE2E8F0);
-  static const double _panelWidth = 360;
+  static const Color _bgCanvas = Color(0xFFF0EEEB);
+  static const Color _brandBg = Color(0xFFFBF9F8);
+  static const Color _brandPrimary = Color(0xFF111111);
+  static const Color _brandSecondary = Color(0xFF666666);
+  static const Color _brandMuted = Color(0xFF8C8C8C);
+  static const Color _brandBorder = Color(0xFFE5E5E5);
 
   Uint8List? _logoBytes;
   Uint8List? _qrBytes;
@@ -76,35 +81,24 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   bool _isCapturingForPrint = false;
   ApiToken? _savedToken;
   String _billFormat = 'Bill Slip';
-  
+
   final bool _printCustomerSlip = true;
   final bool _printKitchenSlip = true;
   final GlobalKey _receiptKey = GlobalKey();
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    return '${date.day.toString().padLeft(2, '0')} ${months[date.month - 1]} ${date.year}';
   }
 
   String _formatTime(DateTime date) {
-    final hour =
-        date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
+    final hour = date.hour == 0 ? 12 : (date.hour > 12 ? date.hour - 12 : date.hour);
     final minute = date.minute.toString().padLeft(2, '0');
     final period = date.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
+    return '${hour.toString().padLeft(2, '0')}:$minute $period';
   }
 
   @override
@@ -116,7 +110,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   }
 
   Future<void> _initImages() async {
-    // Use pre-loaded values if provided
     if (widget.logoBase64 != null && widget.logoBase64!.isNotEmpty) {
       try {
         _logoBytes = base64Decode(widget.logoBase64!);
@@ -133,33 +126,27 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
     try {
       shop = await RestaurantApi.instance.fetchShop();
-    } catch (_) {
-      // Offline or error
-    }
+    } catch (_) {}
 
     try {
       template = await RestaurantApi.instance.fetchBillTemplate();
-    } catch (_) {
-      // Offline or error
-    }
+    } catch (_) {}
 
     if (!mounted) return;
 
-    // Fallback if shop is null
     final finalShop = shop ??
         const ApiShopData(
           id: 'offline',
-          name: 'Offline Shop',
+          name: 'YAMUNAJI FOOD',
           tagline: '',
           address: 'Offline Address',
-          phone: '',
+          phone: '+91 99887 79988',
         );
 
-    // Fallback if template is null
     final finalTemplate = template ??
         ApiBillTemplate(
           id: 'fallback',
-          shopName: finalShop.name.isNotEmpty ? finalShop.name : 'MY SHOP',
+          shopName: finalShop.name.isNotEmpty ? finalShop.name : 'YAMUNAJI FOOD',
           address: finalShop.address,
           mobileNumber: finalShop.phone,
           gstNumber: '',
@@ -208,80 +195,128 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         _navigateToHome();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: _bgCanvas,
         body: SafeArea(
-          child: Stack(
-            children: [
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final width = math.min(_panelWidth, constraints.maxWidth);
+          child: Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 420),
+              color: _brandBg,
+              child: Column(
+                children: [
+                  // Sticky Top Bar
+                  _buildTopBar(),
 
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: SizedBox(width: width, child: _buildPanel()),
-                    ),
-                  );
-                },
-              ),
-              if (_isPrinting || _isLoading)
-                const Positioned.fill(
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(_primary),
+                  // Scrollable Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Hardware Status Banner
+                          _buildHardwareStatus(),
+                          const SizedBox(height: 16),
+
+                          // Main Invoice Receipt Sheet
+                          _buildInvoiceCard(),
+                          const SizedBox(height: 16),
+
+                          // Action Buttons Grid (Print / Share)
+                          _buildActionButtons(),
+                          const SizedBox(height: 8),
+
+                          // Helper Text
+                          Text(
+                            'Bill stored in daily ledger · Order completed',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: _brandMuted,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-            ],
+
+                  // Bottom 6-Tab Navigation Bar
+                  _buildBottomNavigation(),
+                ],
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPanel() {
+  Widget _buildTopBar() {
     return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF4F46E5).withValues(alpha: 0.08),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
-          )
-        ],
+        border: Border(bottom: BorderSide(color: _brandBorder)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildHeader(),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    _buildReceipt(),
-                    if (_isLoading)
-                      Container(
-                        width: double.infinity,
-                        height: 300,
-                        color: Colors.white.withValues(alpha: 0.7),
-                        child: const Center(
-                          child: CircularProgressIndicator(color: _primary),
-                        ),
-                      ),
-                  ],
+          Row(
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(6),
+                onTap: _navigateToHome,
+                child: const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 18,
+                    color: _brandPrimary,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                _connectionBanner(),
-                const SizedBox(height: 12),
-                _primaryPrintActions(),
-              ],
+              ),
+              const SizedBox(width: 8),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bill Preview',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _brandPrimary,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  Text(
+                    'Order ${widget.orderId}',
+                    style: GoogleFonts.spaceMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: _brandMuted,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: _brandBorder),
+            ),
+            child: Text(
+              'TAX INVOICE',
+              style: GoogleFonts.spaceMono(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: _brandSecondary,
+              ),
             ),
           ),
         ],
@@ -289,62 +324,278 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _softBorder, width: 0.5)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Flexible(
-            child: Row(
-              children: [
-                InkWell(
-                  borderRadius: BorderRadius.circular(18),
-                  onTap: _navigateToHome,
-                  child: const Padding(
-                    padding: EdgeInsets.all(2),
-                    child: Icon(
-                      Icons.arrow_back,
-                      size: 19,
-                      color: Color(0xFF555555),
+  Widget _buildHardwareStatus() {
+    return FutureBuilder<bool>(
+      future: PrinterService.instance.isConnected,
+      builder: (context, snapshot) {
+        final isConnected = snapshot.data ?? false;
+        const printerName = 'BT-P58-PRO';
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _brandBorder),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: isConnected ? const Color(0xFF16A34A) : Colors.amber,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isConnected ? const Color(0xFF16A34A) : Colors.amber).withValues(alpha: 0.4),
+                          blurRadius: 4,
+                          spreadRadius: 2,
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Bill Preview',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: _textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        'Order ID: ${widget.orderId}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: _primary,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 8),
+                  Text(
+                    printerName,
+                    style: GoogleFonts.spaceMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: _brandPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isConnected ? 'Connected' : 'Ready',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: _brandSecondary,
+                    ),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PrinterSetupScreen()),
+                  );
+                },
+                child: Text(
+                  'Settings',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: _brandPrimary,
+                    decoration: TextDecoration.underline,
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInvoiceCard() {
+    if (_isLoading || _billTemplate == null) {
+      return Container(
+        height: 300,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _brandBorder),
+        ),
+        child: const CircularProgressIndicator(color: _brandPrimary),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _brandBorder),
+      ),
+      child: RepaintBoundary(
+        key: _receiptKey,
+        child: BillReceiptWidget(
+          template: _billTemplate!,
+          shopData: _shopData,
+          tokenNumber: _actualTokenNumber,
+          billNumber: widget.billNumber,
+          customerName: widget.customerName,
+          customerPhone: widget.customerPhone,
+          customerAddress: widget.customerAddress,
+          customerGstNumber: widget.customerGstNumber,
+          date: _formatDate(DateTime.now()),
+          time: _formatTime(DateTime.now()),
+          items: widget.items,
+          subtotal: widget.subtotal,
+          tax: widget.tax,
+          grandTotal: widget.grandTotal,
+          paymentMode: widget.paymentMode,
+          logoBytesOverride: _logoBytes,
+          qrBytesOverride: _qrBytes,
+          isForPrint: _isCapturingForPrint,
+          is80mm: PrinterService.instance.is80mm,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        // Solid Black Primary CTA: Print Bill
+        Expanded(
+          child: SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _brandPrimary,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: _isPrinting ? null : _executePrint,
+              child: _isPrinting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.print_outlined, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Print Bill',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
+        ),
+        const SizedBox(width: 12),
 
+        // Outlined Secondary CTA: Share Bill
+        Expanded(
+          child: SizedBox(
+            height: 48,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: _brandPrimary,
+                side: const BorderSide(color: _brandBorder),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: _isPrinting ? null : _shareBill,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.share_outlined, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Share Bill',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBottomNavigation() {
+    return Container(
+      height: 56,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: _brandBorder)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _navItem(Icons.home_outlined, 'Home', false, () => _navigateToHome()),
+          _navItem(Icons.confirmation_number_outlined, 'Token', true, () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const TokenGenerationScreen()),
+            );
+          }),
+          _navItem(Icons.people_outline_rounded, 'Customers', false, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const CustomerManagementScreen()),
+            );
+          }),
+          _navItem(Icons.grid_view_rounded, 'Items', false, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ItemManagementScreen()),
+            );
+          }),
+          _navItem(Icons.bar_chart_rounded, 'Analytics', false, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AnalyticsReportsScreen()),
+            );
+          }),
+          _navItem(Icons.settings_outlined, 'Settings', false, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _navItem(IconData icon, String label, bool isActive, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: isActive ? _brandPrimary : _brandMuted,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+              color: isActive ? _brandPrimary : _brandMuted,
+            ),
+          ),
         ],
       ),
     );
@@ -377,109 +628,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       )).toList(),
       createdAt: DateTime.now().toIso8601String(),
       updatedAt: DateTime.now().toIso8601String(),
-    );
-  }
-
-  Widget _buildReceipt() {
-    if (_billTemplate == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_billFormat == 'Bill A4') {
-      final tokenToPreview = _savedToken ?? _generatePreviewToken();
-      return SizedBox(
-        height: 450,
-        width: double.infinity,
-        child: PdfPreview(
-          build: (format) => PdfReceiptService.generateReceipt(tokenToPreview, isThermal: false),
-          useActions: false,
-          allowPrinting: false,
-          allowSharing: false,
-          canChangeOrientation: false,
-          canChangePageFormat: false,
-        ),
-      );
-    }
-
-    return RepaintBoundary(
-        key: _receiptKey,
-        child: BillReceiptWidget(
-      template: _billTemplate!,
-      shopData: _shopData,
-      tokenNumber: _actualTokenNumber,
-      billNumber: widget.billNumber,
-      customerName: widget.customerName,
-      customerPhone: widget.customerPhone,
-      customerAddress: widget.customerAddress,
-      customerGstNumber: widget.customerGstNumber,
-      date: _formatDate(DateTime.now()),
-      time: _formatTime(DateTime.now()),
-      items: widget.items,
-      subtotal: widget.subtotal,
-      tax: widget.tax,
-      grandTotal: widget.grandTotal,
-      paymentMode: widget.paymentMode,
-      logoBytesOverride: _logoBytes,
-      qrBytesOverride: _qrBytes,
-      isForPrint: _isCapturingForPrint,
-      is80mm: PrinterService.instance.is80mm,
-    ));
-  }
-
-  Widget _connectionBanner() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF0FDF4),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFBBF7D0), width: 0.5),
-      ),
-      child: const Row(
-        children: [
-          CircleAvatar(radius: 4, backgroundColor: Color(0xFF16A34A)),
-          SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Printer Connected: BT-P58-PRO',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF166534),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _primaryPrintActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: _stackedButton(
-            label: 'Print Bill',
-            subtitle: 'Send to Printer',
-            icon: Icons.print_rounded,
-            background: _primary,
-            subtitleColor: const Color(0xFFC7D2FE),
-            isLoading: _isPrinting,
-            onTap: _executePrint,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _stackedButton(
-            label: 'Share Bill',
-            subtitle: 'Share PDF Invoice',
-            icon: Icons.share_rounded,
-            background: const Color(0xFF10B981),
-            subtitleColor: const Color(0xFFA7F3D0),
-            isLoading: _isPrinting,
-            onTap: _shareBill,
-          ),
-        ),
-      ],
     );
   }
 
@@ -531,96 +679,15 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     }
   }
 
-  Widget _stackedButton({
-    required String label,
-    required String subtitle,
-    required IconData icon,
-    required Color background,
-    required Color subtitleColor,
-    required VoidCallback onTap,
-    bool isLoading = false,
-  }) {
-    final bool isPrimary = background == _primary;
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: isLoading ? null : onTap,
-      child: Container(
-        height: 62,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isPrimary ? null : background,
-          gradient: isPrimary
-              ? const LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: isPrimary
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : null,
-        ),
-        child: isLoading
-            ? const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-              )
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(icon, size: 16, color: Colors.white),
-                        const SizedBox(width: 5),
-                        Text(
-                          label,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 10, color: subtitleColor),
-                  ),
-                ],
-              ),
-      ),
-    );
-  }
-
-
-
   void _executePrint() async {
     if (_isPrinting) return;
     if (!_printCustomerSlip && !_printKitchenSlip) {
       _showSnackBar('Please select at least one slip to print');
       return;
     }
-    
+
     setState(() => _isPrinting = true);
-    
+
     if (widget.onSaveBill != null && _savedToken == null) {
       try {
         _savedToken = await widget.onSaveBill!();
@@ -635,7 +702,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         return;
       }
     }
-    
+
     final tokenToPrint = _savedToken ?? _generatePreviewToken();
 
     if (_billFormat == 'Bill A4') {
@@ -649,7 +716,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       }
       return;
     }
-    
+
     if (kIsWeb) {
       final pngBytes = await _captureReceiptPng();
       if (pngBytes != null) {
@@ -666,7 +733,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     } catch (e) {
       debugPrint('Bluetooth check error: $e');
     }
-    
+
     if (isConnected != true) {
       if (mounted) setState(() => _isPrinting = false);
       _showSnackBar('Printer is not connected.');
@@ -684,11 +751,11 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
           }
         }
       }
-      
+
       if (_printKitchenSlip) {
         await PrinterService.instance.printKitchenSlip(tokenToPrint);
       }
-      
+
       _showSnackBar('Slips sent to thermal printer');
     } catch (e) {
       debugPrint('Printer error: $e');
@@ -702,7 +769,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       }
     }
   }
-
 
   Future<Uint8List?> _captureReceiptPng() async {
     try {
@@ -722,5 +788,4 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       ..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(message)));
   }
-
 }

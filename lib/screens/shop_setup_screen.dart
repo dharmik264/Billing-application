@@ -7,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/restaurant_api.dart';
-import '../utils/app_constants.dart';
 import '../utils/local_storage_helper.dart';
 import 'main_screen.dart';
 import 'dart:math' as math;
@@ -21,12 +20,8 @@ class ShopSetupScreen extends StatefulWidget {
 }
 
 class _ShopSetupScreenState extends State<ShopSetupScreen> {
-  static const Color _panelBackground = AppColors.slate50;
-  static const Color _primary = AppColors.indigo600;
-  static const Color _textPrimary = AppColors.slate900;
-  static const Color _textSecondary = AppColors.slate500;
-  static const Color _border = AppColors.slate200;
-  static const Color _softBorder = AppColors.slate100;
+  static const Color _primary = Color(0xFF111111);
+  static const Color _textSecondary = Color(0xFF71717A);
   static const double _panelWidth = 360;
 
   final TextEditingController _shopNameController =
@@ -284,7 +279,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       case 1:
         stepContent = _buildCard(
           'Branding & Visuals',
-          icon: Icons.brush_rounded,
+          icon: Icons.palette_outlined,
           [
             _buildLogoUpload(),
             const SizedBox(height: 16),
@@ -294,31 +289,50 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
         break;
       case 2:
         stepContent = _buildCard(
-          'Core Details',
-          icon: Icons.storefront_rounded,
+          'CORE DETAILS',
+          icon: Icons.storefront_outlined,
           [
-            _buildTextField(label: 'Shop Name', controller: _shopNameController),
-            const SizedBox(height: 16),
-            _buildTextField(label: 'Tagline', controller: _taglineController),
-            const SizedBox(height: 16),
-            _buildTextField(label: 'Mobile Number', controller: _phoneController),
-            const SizedBox(height: 16),
-            _buildTextField(label: 'Alternate Mobile Number', controller: _alternatePhoneController),
+            _buildTextField(label: 'SHOP NAME', controller: _shopNameController, placeholder: 'e.g. Yamunaji Food'),
+            const SizedBox(height: 14),
+            _buildTextField(label: 'TAGLINE', controller: _taglineController, placeholder: 'Brief shop motto or slogan'),
+            const SizedBox(height: 14),
+            _buildTextField(label: 'MOBILE NUMBER', controller: _phoneController, placeholder: '10-digit primary contact', keyboardType: TextInputType.phone),
+            const SizedBox(height: 14),
+            _buildTextField(label: 'ALTERNATE MOBILE NUMBER', controller: _alternatePhoneController, placeholder: 'Optional contact number', isOptional: true, keyboardType: TextInputType.phone),
           ],
         );
         break;
       case 3:
         stepContent = _buildCard(
-          'Registration & Contact',
-          icon: Icons.assignment_rounded,
+          'REGISTRATION & CONTACT',
+          icon: Icons.assignment_outlined,
           [
-            _buildTextField(label: 'Shop Address', controller: _addressController),
-            const SizedBox(height: 16),
-            _buildTextField(label: 'GST Number', controller: _gstinController),
-            const SizedBox(height: 16),
-            _buildTextField(label: 'Email Address', controller: _emailController),
-            const SizedBox(height: 16),
-            _buildTextField(label: 'UPI ID (For Payments)', controller: _upiIdController),
+            _buildTextField(
+              label: 'SHOP ADDRESS',
+              controller: _addressController,
+              placeholder: 'Shop No., Landmark, City, Pincode',
+              maxLines: 2,
+            ),
+            const SizedBox(height: 14),
+            _buildTextField(
+              label: 'GST NUMBER',
+              controller: _gstinController,
+              placeholder: '22AAAAA0000A1Z5 (Optional)',
+              isOptional: true,
+            ),
+            const SizedBox(height: 14),
+            _buildTextField(
+              label: 'EMAIL ADDRESS',
+              controller: _emailController,
+              placeholder: 'owner@storename.com',
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 14),
+            _buildTextField(
+              label: 'UPI ID (FOR PAYMENTS)',
+              controller: _upiIdController,
+              placeholder: 'storename@okhdfcbank',
+            ),
           ],
         );
         break;
@@ -326,7 +340,8 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       default:
         stepContent = _buildCard(
           'Payment Preferences',
-          icon: Icons.payments_rounded,
+          subtitle: 'Choose checkout options allowed in your POS',
+          icon: Icons.payment_rounded,
           [
             _buildPaymentModes(),
           ],
@@ -340,13 +355,13 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
         _buildHeader(),
         _buildProgress(),
         Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
               stepContent,
-              const SizedBox(height: 24),
-              _buildBottomNav(),
               const SizedBox(height: 16),
+              _buildBottomNav(),
+              const SizedBox(height: 14),
               _buildFooterNote(),
             ],
           ),
@@ -355,21 +370,14 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     );
   }
 
-  Widget _buildCard(String title, List<Widget> children, {IconData? icon}) {
+  Widget _buildCard(String title, List<Widget> children, {IconData? icon, String? subtitle}) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 4),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _border),
-        boxShadow: [
-          BoxShadow(
-            color: _textPrimary.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE5E5E5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -377,39 +385,73 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
           Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 20, color: _primary),
-                const SizedBox(width: 8),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F4F5),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE5E5E5)),
+                  ),
+                  child: Icon(icon, size: 15, color: const Color(0xFF111111)),
+                ),
+                const SizedBox(width: 10),
               ],
-              Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: _textPrimary)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF111111),
+                        letterSpacing: title == title.toUpperCase() ? 0.8 : -0.2,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF71717A)),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF4F4F5)),
+          const SizedBox(height: 16),
           ...children,
         ],
       ),
     );
   }
+
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
       child: Row(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             onTap: _handleBack,
             child: Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _border),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFE5E5E5)),
               ),
-              child: const Icon(Icons.arrow_back_rounded, size: 20, color: _textPrimary),
+              child: const Icon(Icons.arrow_back_rounded, size: 18, color: Color(0xFF111111)),
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,17 +459,19 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
                 Text(
                   'Shop Configuration',
                   style: GoogleFonts.inter(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: _textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF111111),
+                    letterSpacing: -0.3,
                   ),
                 ),
+                const SizedBox(height: 1),
                 Text(
                   'Step $_currentStep of 4',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: _textSecondary,
+                    color: const Color(0xFF71717A),
                   ),
                 ),
               ],
@@ -440,11 +484,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
 
   Widget _buildProgress() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: _softBorder, width: 0.5)),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           _progressBar(active: _currentStep >= 1),
@@ -462,9 +502,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   Widget _progressBar({bool active = false}) {
     return Expanded(
       child: Container(
-        height: 4,
+        height: 3.5,
         decoration: BoxDecoration(
-          color: active ? _primary : const Color(0xFFE5E7EB),
+          color: active ? const Color(0xFF111111) : const Color(0xFFE5E5E5),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -477,69 +517,75 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel('Shop Logo'),
-        const SizedBox(height: 12),
+        _fieldLabel('SHOP LOGO'),
+        const SizedBox(height: 8),
         InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           onTap: _saving ? null : _pickLogo,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: _logoBytes != null ? Colors.transparent : _panelBackground,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _logoBytes != null ? _primary : _border,
-                width: 1.5,
-              ),
+          child: CustomPaint(
+            painter: _DashedBorderPainter(
+              color: _logoBytes != null ? const Color(0xFF111111) : const Color(0xFFD4D4D8),
+              borderRadius: 8,
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _border),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFBF9F8),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE5E5E5)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: _logoBytes != null
+                        ? Image.memory(_logoBytes!, fit: BoxFit.cover, width: 50, height: 50)
+                        : const Icon(Icons.camera_alt_outlined, color: Color(0xFF52525B), size: 22),
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: _logoBytes != null
-                      ? _buildLogoImage()
-                      : const Icon(Icons.camera_alt_outlined, color: _textSecondary, size: 28),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _logoBytes != null ? 'Logo Selected' : 'Upload your logo',
-                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _logoBytes != null ? _primary : _textPrimary),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'This will appear on all your printed bills.',
-                        style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
-                      ),
-                    ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _logoBytes != null ? 'Logo Selected' : 'Upload your logo',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF111111),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'This will appear on all your printed bills.',
+                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF71717A)),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const Icon(Icons.upload_file_rounded, color: _textSecondary),
-              ],
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFE5E5E5)),
+                    ),
+                    child: const Icon(Icons.file_upload_outlined, size: 18, color: Color(0xFF71717A)),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildLogoImage() {
-    return Image.memory(
-      _logoBytes!,
-      fit: BoxFit.cover,
-      width: 72,
-      height: 72,
     );
   }
 
@@ -549,56 +595,71 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel('Payment QR Code'),
-        const SizedBox(height: 12),
+        _fieldLabel('PAYMENT QR CODE'),
+        const SizedBox(height: 8),
         InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           onTap: _saving ? null : _pickQr,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: _qrBytes != null ? Colors.transparent : _panelBackground,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: _qrBytes != null ? _primary : _border,
-                width: 1.5,
-              ),
+          child: CustomPaint(
+            painter: _DashedBorderPainter(
+              color: _qrBytes != null ? const Color(0xFF111111) : const Color(0xFFD4D4D8),
+              borderRadius: 8,
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _border),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFBF9F8),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFE5E5E5)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: _qrBytes != null
+                        ? Image.memory(_qrBytes!, fit: BoxFit.cover, width: 50, height: 50)
+                        : const Icon(Icons.qr_code_2_rounded, color: Color(0xFF52525B), size: 22),
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: _qrBytes != null
-                      ? Image.memory(_qrBytes!, fit: BoxFit.cover, width: 72, height: 72)
-                      : const Icon(Icons.qr_code_2_rounded, color: _textSecondary, size: 28),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _qrBytes != null ? 'QR Code Selected' : 'Upload UPI QR',
-                        style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _qrBytes != null ? _primary : _textPrimary),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Customers can scan this to pay you directly.',
-                        style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
-                      ),
-                    ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _qrBytes != null ? 'QR Code Selected' : 'Upload UPI QR',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF111111),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Customers can scan this to pay you directly.',
+                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF71717A)),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const Icon(Icons.upload_file_rounded, color: _textSecondary),
-              ],
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFE5E5E5)),
+                    ),
+                    child: const Icon(Icons.file_upload_outlined, size: 18, color: Color(0xFF71717A)),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -611,38 +672,56 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   Widget _buildTextField({
     required String label,
     required TextEditingController controller,
+    String? placeholder,
+    bool isOptional = false,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel(label),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _fieldLabel(label),
+            if (isOptional)
+              Text(
+                'Optional',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFFA1A1AA),
+                ),
+              ),
+          ],
+        ),
         const SizedBox(height: 6),
         Container(
+          height: maxLines > 1 ? (42.0 + (maxLines - 1) * 20.0) : 42.0,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _border),
-            boxShadow: [
-              BoxShadow(
-                color: _textPrimary.withValues(alpha: 0.01),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              )
-            ]
+            color: const Color(0xFFFBF9F8),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFE5E5E5)),
           ),
           child: TextField(
             controller: controller,
             enabled: !_saving,
-            maxLines: 1,
+            keyboardType: keyboardType,
+            maxLines: maxLines,
             style: GoogleFonts.inter(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: _textPrimary,
+              color: const Color(0xFF111111),
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
+              hintText: placeholder,
+              hintStyle: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFFA1A1AA),
+              ),
               border: InputBorder.none,
               isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
             ),
           ),
         ),
@@ -658,15 +737,34 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _fieldLabel('Accepted Payment Modes'),
-        const SizedBox(height: 8),
+        _fieldLabel('ACCEPTED PAYMENT MODES'),
+        const SizedBox(height: 12),
         Column(
           children: [
             for (final mode in modes) ...[
               _paymentModeRow(mode),
-              if (mode != modes.last) const SizedBox(height: 8),
+              if (mode != modes.last) const SizedBox(height: 10),
             ],
           ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.only(top: 12),
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: Color(0xFFF4F4F5))),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.info_outline, size: 14, color: Color(0xFF71717A)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Customers can pay either via paper money or digital scanners.',
+                  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF71717A)),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -676,53 +774,51 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     final selected = _selectedPaymentMode == mode;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(8),
       onTap: _saving ? null : () => setState(() => _selectedPaymentMode = mode),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEFF6FF) : Colors.white,
-          borderRadius: BorderRadius.circular(10),
+          color: selected ? const Color(0xFFFAFAFA) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: selected ? _primary : _border,
-            width: selected ? 1.5 : 0.5,
+            color: selected ? const Color(0xFF111111) : const Color(0xFFE5E5E5),
+            width: selected ? 2.0 : 1.0,
           ),
         ),
         child: Row(
           children: [
             Container(
-              width: 18,
-              height: 18,
+              width: 16,
+              height: 16,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: selected ? _primary : Colors.white,
+                color: selected ? const Color(0xFF111111) : Colors.white,
                 shape: BoxShape.circle,
-                border:
-                    selected ? null : Border.all(color: _border, width: 1.5),
+                border: selected ? null : Border.all(color: const Color(0xFFD4D4D8), width: 1.5),
               ),
               child: selected
-                  ? const Icon(Icons.check, size: 11, color: Colors.white)
+                  ? const Icon(Icons.check, size: 10, color: Colors.white)
                   : null,
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 mode,
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
-                  color: selected ? const Color(0xFF1E40AF) : _textSecondary,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                  color: const Color(0xFF111111),
                 ),
               ),
             ),
             if (mode == 'Cash')
-              const Icon(Icons.payments_outlined,
-                  size: 18, color: Color(0xFF16A34A)),
+              const Icon(Icons.payments_outlined, size: 18, color: Color(0xFF71717A)),
             if (mode == 'Online / UPI')
-              const Icon(Icons.phone_android_outlined,
-                  size: 18, color: Color(0xFF2563EB)),
+              const Icon(Icons.smartphone_rounded, size: 18, color: Color(0xFF71717A)),
             if (mode == 'Both')
-              const Icon(Icons.swap_horiz, size: 18, color: Color(0xFF7C3AED)),
+              Icon(Icons.swap_horiz, size: 18, color: selected ? const Color(0xFF111111) : const Color(0xFF71717A)),
           ],
         ),
       ),
@@ -735,40 +831,83 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
     if (_currentStep == 4) {
       return _buildSaveButton();
     }
-    
+
+    if (_currentStep == 1) {
+      return SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF111111),
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          onPressed: () {
+            setState(() => _currentStep++);
+          },
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Next Step',
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.arrow_forward_rounded, size: 16),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Row(
       children: [
-        if (_currentStep > 1) ...[
-          Expanded(
-            flex: 1,
-            child: SizedBox(
-              height: 56,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: _border, width: 1.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                onPressed: () => setState(() => _currentStep--),
-                child: Text('Back', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: _textSecondary)),
+        SizedBox(
+          height: 44,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFD4D4D8)),
+              backgroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () => setState(() => _currentStep--),
+            child: Text(
+              'Back',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF111111),
               ),
             ),
           ),
-          const SizedBox(width: 12),
-        ],
+        ),
+        const SizedBox(width: 10),
         Expanded(
-          flex: 2,
           child: SizedBox(
-            height: 56,
+            height: 44,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: _primary,
+                backgroundColor: const Color(0xFF111111),
+                foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
                 setState(() => _currentStep++);
               },
-              child: Text('Next Step', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Next Step',
+                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.arrow_forward_rounded, size: 16),
+                ],
+              ),
             ),
           ),
         ),
@@ -777,54 +916,45 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   }
 
   Widget _buildSaveButton() {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.indigo600, Color(0xFF4338CA)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.indigo600.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          shadowColor: Colors.transparent,
+          backgroundColor: const Color(0xFF111111),
+          foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: _saving ? null : _saveAndContinue,
         child: _saving
             ? const SizedBox(
-                width: 24,
-                height: 24,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
+                  strokeWidth: 2,
                   color: Colors.white,
                 ),
               )
             : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Save Shop Configuration',
-                          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_rounded, size: 18, color: Colors.white),
+                      Text(
+                        'Save Shop Configuration',
+                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
                     ],
                   ),
-                  Text('Proceed to Dashboard', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w400, color: Colors.white.withValues(alpha: 0.8))),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Proceed to Dashboard',
+                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w400, color: const Color(0xFFA1A1AA)),
+                  ),
                 ],
               ),
       ),
@@ -838,12 +968,12 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
         children: [
           TextSpan(
             text: 'Account Settings',
-            style: GoogleFonts.inter(color: _textPrimary, fontWeight: FontWeight.w700),
+            style: GoogleFonts.inter(color: const Color(0xFF111111), fontWeight: FontWeight.w700),
           ),
         ],
       ),
       textAlign: TextAlign.center,
-      style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF71717A)),
     );
   }
 
@@ -854,9 +984,9 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
         label.toUpperCase(),
         style: GoogleFonts.inter(
           fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: _textSecondary,
-          letterSpacing: 0.5,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF71717A),
+          letterSpacing: 0.8,
         ),
       ),
     );
@@ -1126,3 +1256,49 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
       ..showSnackBar(SnackBar(content: Text(message)));
   }
 }
+
+class _DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double borderRadius;
+
+  _DashedBorderPainter({
+    this.color = const Color(0xFFD4D4D8),
+    this.borderRadius = 8.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const strokeWidth = 1.0;
+    const dash = 5.0;
+    const gap = 3.0;
+
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(borderRadius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    final metrics = path.computeMetrics();
+
+    for (final metric in metrics) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final len = (distance + dash > metric.length) ? metric.length - distance : dash;
+        canvas.drawPath(
+          metric.extractPath(distance, distance + len),
+          paint,
+        );
+        distance += dash + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

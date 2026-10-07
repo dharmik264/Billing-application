@@ -311,9 +311,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Future<bool> _promptCustomerInfoForUdhar() async {
     final nameCtrl = TextEditingController(text: _customerNameController.text);
     final phoneCtrl = TextEditingController(text: _customerPhoneController.text);
-    // Local variables to hold address/GST selected from autocomplete.
-    // These are only copied to screen controllers when Proceed succeeds,
-    // so Cancel leaves the screen values unchanged.
     String dialogAddress = _customerAddressController.text;
     String dialogGst = _customerGstController.text;
 
@@ -322,138 +319,277 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFEF3C7),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.account_circle_outlined, color: Color(0xFFD97706), size: 24),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Customer Details Required', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('ઉધાર બિલ માટે કસ્ટમર નામ/ફોન જરૂરી છે', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B))),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RawAutocomplete<ApiCustomer>(
-                  textEditingController: nameCtrl,
-                  focusNode: FocusNode(),
-                  displayStringForOption: (option) => option.name,
-                  optionsBuilder: (textEditingValue) async {
-                    if (textEditingValue.text.length < 2) {
-                      return const Iterable<ApiCustomer>.empty();
-                    }
-                    try {
-                      return await RestaurantApi.instance.searchCustomers(textEditingValue.text);
-                    } catch (_) {
-                      return const Iterable<ApiCustomer>.empty();
-                    }
-                  },
-                  onSelected: (option) {
-                    nameCtrl.text = option.name;
-                    phoneCtrl.text = option.mobileNumber;
-                    // Keep address/GST local to the dialog; do NOT write to
-                    // screen controllers here — Cancel must leave them unchanged.
-                    dialogAddress = option.address;
-                    dialogGst = option.gstNumber;
-                  },
-                  fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-                    return TextField(
-                      controller: controller,
-                      focusNode: focusNode,
-                      decoration: InputDecoration(
-                        labelText: 'Customer Name *',
-                        hintText: 'e.g. Raju Patel',
-                        prefixIcon: const Icon(Icons.person_outline),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          contentPadding: const EdgeInsets.all(20),
+          content: SizedBox(
+            width: 320,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4F4F5),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE5E5E5)),
+                        ),
+                        child: const Icon(
+                          Icons.person_outline_rounded,
+                          color: Color(0xFF111111),
+                          size: 20,
+                        ),
                       ),
-                    );
-                  },
-                  optionsViewBuilder: (context, onSelected, options) {
-                    return Align(
-                      alignment: Alignment.topLeft,
-                      child: Material(
-                        elevation: 4,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          width: 280,
-                          constraints: const BoxConstraints(maxHeight: 180),
-                          child: ListView.builder(
-                            padding: EdgeInsets.zero,
-                            itemCount: options.length,
-                            itemBuilder: (context, index) {
-                              final option = options.elementAt(index);
-                              return ListTile(
-                                title: Text(option.name, style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                                subtitle: Text(option.mobileNumber),
-                                trailing: option.netDue > 0
-                                    ? Text('Due: \u20B9${option.netDue.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 12))
-                                    : Text('Paid', style: GoogleFonts.inter(color: const Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.w600)),
-                                onTap: () => onSelected(option),
-                              );
-                            },
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Customer Details Required',
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF111111),
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'ઉધાર બિલ માટે કસ્ટમર નામ/ફોન જરૂરી છે',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF71717A),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Customer Name Autocomplete
+                  Text(
+                    'CUSTOMER NAME *',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF71717A),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  RawAutocomplete<ApiCustomer>(
+                    textEditingController: nameCtrl,
+                    focusNode: FocusNode(),
+                    displayStringForOption: (option) => option.name,
+                    optionsBuilder: (textEditingValue) async {
+                      if (textEditingValue.text.length < 2) {
+                        return const Iterable<ApiCustomer>.empty();
+                      }
+                      try {
+                        return await RestaurantApi.instance.searchCustomers(textEditingValue.text);
+                      } catch (_) {
+                        return const Iterable<ApiCustomer>.empty();
+                      }
+                    },
+                    onSelected: (option) {
+                      nameCtrl.text = option.name;
+                      phoneCtrl.text = option.mobileNumber;
+                      dialogAddress = option.address;
+                      dialogGst = option.gstNumber;
+                    },
+                    fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                      return Container(
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFE5E5E5)),
+                        ),
+                        child: TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF111111),
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Enter customer full name',
+                            hintStyle: GoogleFonts.inter(
+                              color: const Color(0xFFA1A1AA),
+                              fontSize: 12,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.person_outline_rounded,
+                              size: 16,
+                              color: Color(0xFFA1A1AA),
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                          ),
+                        ),
+                      );
+                    },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            width: 280,
+                            constraints: const BoxConstraints(maxHeight: 180),
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              itemCount: options.length,
+                              itemBuilder: (context, index) {
+                                final option = options.elementAt(index);
+                                return ListTile(
+                                  title: Text(option.name, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
+                                  subtitle: Text(option.mobileNumber, style: GoogleFonts.inter(fontSize: 11)),
+                                  trailing: option.netDue > 0
+                                      ? Text('Due: \u20B9${option.netDue.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 11))
+                                      : Text('Paid', style: GoogleFonts.inter(color: const Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.w600)),
+                                  onTap: () => onSelected(option),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Mobile Number Field
+                  Text(
+                    'MOBILE NUMBER *',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF71717A),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE5E5E5)),
+                    ),
+                    child: TextField(
+                      controller: phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF111111),
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '10-digit mobile number',
+                        hintStyle: GoogleFonts.inter(
+                          color: const Color(0xFFA1A1AA),
+                          fontSize: 12,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.phone_android_rounded,
+                          size: 16,
+                          color: Color(0xFFA1A1AA),
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Action Buttons (Cancel / Proceed)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 42,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFD4D4D8)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF3F3F46),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: phoneCtrl,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'Mobile Number *',
-                    hintText: '10-digit mobile number',
-                    prefixIcon: const Icon(Icons.phone_android_outlined),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: SizedBox(
+                          height: 42,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF111111),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () {
+                              if (nameCtrl.text.trim().isEmpty && phoneCtrl.text.trim().isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Please enter Customer Name or Mobile Number')),
+                                );
+                                return;
+                              }
+                              _customerNameController.text = nameCtrl.text.trim();
+                              _customerPhoneController.text = phoneCtrl.text.trim();
+                              _customerAddressController.text = dialogAddress;
+                              _customerGstController.text = dialogGst;
+                              Navigator.pop(context, true);
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Proceed',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.arrow_forward_rounded, size: 14),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD97706),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {
-                if (nameCtrl.text.trim().isEmpty && phoneCtrl.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter Customer Name or Mobile Number')),
-                  );
-                  return;
-                }
-                // Proceed: now safe to commit all values to screen controllers.
-                _customerNameController.text = nameCtrl.text.trim();
-                _customerPhoneController.text = phoneCtrl.text.trim();
-                _customerAddressController.text = dialogAddress;
-                _customerGstController.text = dialogGst;
-                Navigator.pop(context, true);
-              },
-              child: Text('Proceed', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-            ),
-          ],
         );
       },
     );
@@ -469,103 +605,231 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          contentPadding: const EdgeInsets.all(20),
+          content: SizedBox(
+            width: 320,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Udhar Billing (ઉધાર બિલ)', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF3C7),
-                      borderRadius: BorderRadius.circular(12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Udhar Billing',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF111111),
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            Text(
+                              '(ઉધાર બિલ)',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF71717A),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF4F4F5),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFE5E5E5)),
+                        ),
+                        child: Text(
+                          'Total: \u20B9${_grandTotal.toStringAsFixed(2)}',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF111111),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+                  Text(
+                    'Today how much money paid? (હાલે કેટલી રકમ જમા કરી?)',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: const Color(0xFF71717A),
+                      height: 1.3,
                     ),
-                    child: Text('Total: \u20B9${_grandTotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w800, color: const Color(0xFFD97706))),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  Text(
+                    'RECEIVED AMOUNT / જમા રકમ',
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF71717A),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF9FAFB),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE5E5E5)),
+                    ),
+                    child: TextField(
+                      controller: amtCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      autofocus: true,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF111111),
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'Leave empty for 100%...',
+                        hintStyle: GoogleFonts.inter(
+                          color: const Color(0xFFA1A1AA),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.only(left: 12, right: 6, top: 12),
+                          child: Text(
+                            '\u20B9',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF111111),
+                            ),
+                          ),
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+                  Text(
+                    'If empty or 0, total amount (\u20B9${_grandTotal.toStringAsFixed(2)}) will be recorded as 100% Udhar in customer ledger.',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: const Color(0xFF71717A),
+                      height: 1.3,
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Shortcut Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 38,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFE5E5E5)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        Navigator.pop(context, {'amount': 0.0, 'mode': 'CASH'});
+                      },
+                      child: Text(
+                        'Full Udhar (\u20B90 Paid)',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF111111),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Primary Action (Save Bill & Cancel)
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF111111),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        final input = amtCtrl.text.trim();
+                        if (input.isEmpty) {
+                          Navigator.pop(context, {'amount': 0.0, 'mode': 'CASH'});
+                          return;
+                        }
+                        final double? parsed = double.tryParse(input);
+                        if (parsed == null || parsed < 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter a valid numeric amount')),
+                          );
+                          return;
+                        }
+                        if (parsed > _grandTotal) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Amount cannot exceed total \u20B9${_grandTotal.toStringAsFixed(2)}')),
+                          );
+                          return;
+                        }
+                        Navigator.pop(context, {'amount': parsed, 'mode': 'CASH'});
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Save Bill',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.check_rounded, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Center(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context, null),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF71717A),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text('Today how much money paid? (હાલે કેટલી રકમ જમા કરી?)', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
-            ],
+            ),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: amtCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                autofocus: true,
-                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  labelText: 'Received Amount / જમા રકમ (Optional)',
-                  hintText: 'Leave empty for 100% Udhar',
-                  prefixText: '\u20B9 ',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFD97706), width: 2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text('If empty or 0, total amount (\u20B9${_grandTotal.toStringAsFixed(2)}) will be recorded as 100% Udhar in customer ledger.', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8))),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, null),
-              child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
-            ),
-            OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFD97706)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {
-                Navigator.pop(context, {'amount': 0.0, 'mode': 'CASH'});
-              },
-              child: Text('Full Udhar (\u20B90 Paid)', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFFD97706))),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF10B981),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () {
-                final input = amtCtrl.text.trim();
-                // Blank input is treated as ₹0 (full udhar).
-                if (input.isEmpty) {
-                  Navigator.pop(context, {'amount': 0.0, 'mode': 'CASH'});
-                  return;
-                }
-                final double? parsed = double.tryParse(input);
-                if (parsed == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a valid numeric amount')),
-                  );
-                  return;
-                }
-                if (parsed < 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Amount cannot be negative')),
-                  );
-                  return;
-                }
-                if (parsed > _grandTotal) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Amount cannot exceed total ₹${_grandTotal.toStringAsFixed(2)}')),
-                  );
-                  return;
-                }
-                Navigator.pop(context, {'amount': parsed, 'mode': 'CASH'});
-              },
-              child: Text('Save Bill', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-            ),
-          ],
         );
       },
     );
@@ -1607,11 +1871,11 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Grand Total', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 18, color: const Color(0xFF0F172A))),
-                    Text('\u20B9${_grandTotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 24, color: const Color(0xFF4F46E5))),
+                    Text('Grand Total', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18, color: const Color(0xFF111111))),
+                    Text('\u20B9${_grandTotal.toStringAsFixed(2)}', style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 24, color: const Color(0xFF111111))),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 Row(
                   children: [
                     Expanded(
@@ -1622,21 +1886,20 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                           _saveBill();
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: _paymentMode == 'CASH' ? const Color(0xFF10B981) : Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: _paymentMode == 'CASH' ? const Color(0xFF10B981) : const Color(0xFFE2E8F0)),
-                            boxShadow: _paymentMode == 'CASH' ? [BoxShadow(color: const Color(0xFF10B981).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : null,
+                            color: _paymentMode == 'CASH' ? const Color(0xFF111111) : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _paymentMode == 'CASH' ? const Color(0xFF111111) : const Color(0xFFE5E5E5)),
                           ),
                           alignment: Alignment.center,
                           child: _isSaving && _paymentMode == 'CASH'
                               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Text('CASH', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 14, color: _paymentMode == 'CASH' ? Colors.white : const Color(0xFF64748B))),
+                              : Text('CASH', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: _paymentMode == 'CASH' ? Colors.white : const Color(0xFF111111))),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: GestureDetector(
                         onTap: _billItems.isEmpty || _isSaving ? null : () {
@@ -1645,36 +1908,34 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                           _saveBill();
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5) : Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: _paymentMode == 'ONLINE' ? const Color(0xFF4F46E5) : const Color(0xFFE2E8F0)),
-                            boxShadow: _paymentMode == 'ONLINE' ? [BoxShadow(color: const Color(0xFF4F46E5).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : null,
+                            color: _paymentMode == 'ONLINE' ? const Color(0xFF111111) : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _paymentMode == 'ONLINE' ? const Color(0xFF111111) : const Color(0xFFE5E5E5)),
                           ),
                           alignment: Alignment.center,
                           child: _isSaving && _paymentMode == 'ONLINE'
                               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Text('ONLINE', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 14, color: _paymentMode == 'ONLINE' ? Colors.white : const Color(0xFF64748B))),
+                              : Text('ONLINE', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: _paymentMode == 'ONLINE' ? Colors.white : const Color(0xFF111111))),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: GestureDetector(
                         onTap: _billItems.isEmpty || _isSaving ? null : _onUdharClicked,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: _paymentMode == 'CREDIT' ? const Color(0xFFF59E0B) : Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: _paymentMode == 'CREDIT' ? const Color(0xFFF59E0B) : const Color(0xFFE2E8F0)),
-                            boxShadow: _paymentMode == 'CREDIT' ? [BoxShadow(color: const Color(0xFFF59E0B).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : null,
+                            color: _paymentMode == 'CREDIT' ? const Color(0xFF111111) : const Color(0xFFF4F4F5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _paymentMode == 'CREDIT' ? const Color(0xFF111111) : const Color(0xFFE5E5E5)),
                           ),
                           alignment: Alignment.center,
                           child: _isSaving && _paymentMode == 'CREDIT'
                               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : Text('UDHAR', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 14, color: _paymentMode == 'CREDIT' ? Colors.white : const Color(0xFF64748B))),
+                              : Text('UDHAR', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13, color: _paymentMode == 'CREDIT' ? Colors.white : const Color(0xFF111111))),
                         ),
                       ),
                     ),
