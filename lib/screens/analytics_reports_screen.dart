@@ -4,9 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
 import '../utils/pdf_export.dart';
 import '../utils/csv_export.dart';
-import '../widgets/custom_page_header.dart';
 import '../utils/bill_event_notifier.dart';
-import '../utils/app_constants.dart';
 import 'customer_ledger_screen.dart';
 
 class AnalyticsReportsScreen extends StatefulWidget {
@@ -17,10 +15,6 @@ class AnalyticsReportsScreen extends StatefulWidget {
 }
 
 class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
-  static const Color _panelBackground = StitchColors.background;
-  static const Color _textPrimary = StitchColors.textPrimary;
-  static const Color _textSecondary = StitchColors.textSecondary;
-
   final TextEditingController _searchController = TextEditingController();
   final List<_HistoryToken> _tokens = [];
   final List<ApiCustomer> _customers = [];
@@ -55,102 +49,299 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final filtered = _filteredTokens;
+    final totalSales = filtered.fold(0.0, (sum, item) => sum + item.amount);
+    final totalTokensCount = filtered.length;
+    final avgBill = totalTokensCount == 0 ? 0.0 : totalSales / totalTokensCount;
+
     return Scaffold(
-      backgroundColor: _panelBackground,
-      appBar: const CustomAppBar(
-        title: 'Analytics Reports',
-        icon: Icons.bar_chart_rounded,
+      backgroundColor: const Color(0xFFFBF9F8),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ANALYTICS REPORTS',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF111111),
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'DHARA FOOD POS',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF666666),
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Refresh data',
+            icon: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFF111111)),
+            onPressed: _loadTokensFromDatabase,
+          ),
+          IconButton(
+            tooltip: 'Quick range selector',
+            icon: const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF111111)),
+            onPressed: _pickDateRange,
+          ),
+          const SizedBox(width: 4),
+        ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE5E5E5)),
+        ),
       ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
+            constraints: const BoxConstraints(maxWidth: 600),
             child: Stack(
               children: [
-                Column(
-              children: [
-                CustomSearchActionView(
-                  searchHint: 'Search token number or customer...',
-                  searchController: _searchController,
-                  onSearchClear: () {
-                    _searchController.clear();
-                    setState(() {});
-                  },
-                  filterChips: <String>['All', 'Today', 'Yesterday', 'This Week'].map((range) => FilterChipData(
-                    label: range,
-                    value: range,
-                    icon: Icons.calendar_month_rounded,
-                  )).toList(),
-                  selectedFilterValue: _selectedRange,
-                  onFilterChanged: (val) => setState(() => _selectedRange = val),
-                  actionButtons: [
-                    Builder(
-                      builder: (context) {
-                        final isCustom = !['All', 'Today', 'Yesterday', 'This Week'].contains(_selectedRange);
-                        return ElevatedButton(
-                          onPressed: _pickDateRange,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isCustom ? const Color(0xFF4F46E5) : const Color(0xFFF1F5F9),
-                            foregroundColor: isCustom ? Colors.white : const Color(0xFF64748B),
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          child: const Icon(Icons.calendar_today_outlined, size: 18),
-                        );
-                      }
-                    ),
-                  ],
-                ),
-                _reportTypeTabs(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
+                SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _summaryHeader(),
+                      // Metric Summary Bar (POS 3-Column Grid)
+                      _buildMetricSummaryBar(totalTokensCount, totalSales, avgBill),
                       const SizedBox(height: 12),
-                      _exportButton(),
-                      const SizedBox(height: 6),
+
+                      // Search Input Container
+                      _buildSearchBar(),
+                      const SizedBox(height: 10),
+
+                      // Period Horizontal Filters (Date Range)
+                      _buildPeriodFilters(),
+                      const SizedBox(height: 10),
+
+                      // Report Category Segmented Tabs
+                      _buildCategoryTabs(),
+                      const SizedBox(height: 12),
+
+                      // Minimal Business Export Action Buttons
+                      _buildExportActions(),
+                      const SizedBox(height: 14),
+
+                      // Data Table Frame Container
+                      _buildDataTableContainer(),
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
-                Expanded(child: _buildActiveReportView()),
-              ],
-            ),
-            if (_loading)
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4F46E5)),
+                if (_loading)
+                  Positioned.fill(
+                    child: Container(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF111111)),
+                        ),
+                      ),
                     ),
                   ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricSummaryBar(int tokens, double sales, double avg) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE5E5E5), width: 1),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _metricColumn('TOKENS', '$tokens')),
+          Container(width: 1, height: 32, color: const Color(0xFFE5E5E5)),
+          Expanded(child: _metricColumn('SALES', _money(sales))),
+          Container(width: 1, height: 32, color: const Color(0xFFE5E5E5)),
+          Expanded(child: _metricColumn('AVG BILL', _money(avg))),
+        ],
+      ),
+    );
+  }
+
+  Widget _metricColumn(String label, String value) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF666666),
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 4),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF111111),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return TextField(
+      controller: _searchController,
+      style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF111111)),
+      decoration: InputDecoration(
+        hintText: 'Search token number or customer...',
+        hintStyle: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFA3A3A3)),
+        prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF666666)),
+        suffixIcon: _searchController.text.isNotEmpty
+            ? IconButton(
+                icon: const Icon(Icons.clear_rounded, size: 16, color: Color(0xFF666666)),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {});
+                },
+              )
+            : null,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        isDense: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: Color(0xFFE5E5E5), width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: Color(0xFFE5E5E5), width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: Color(0xFF111111), width: 1.5),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeriodFilters() {
+    final ranges = ['All', 'Today', 'Yesterday', 'This Week'];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: [
+          for (final r in ranges) ...[
+            _periodPill(r),
+            const SizedBox(width: 6),
+          ],
+          Builder(builder: (context) {
+            final isCustom = !ranges.contains(_selectedRange);
+            return GestureDetector(
+              onTap: _pickDateRange,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isCustom ? const Color(0xFF111111) : Colors.white,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: isCustom ? const Color(0xFF111111) : const Color(0xFFD8D8D8),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  Icons.calendar_month_outlined,
+                  size: 14,
+                  color: isCustom ? Colors.white : const Color(0xFF111111),
                 ),
               ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _periodPill(String rangeLabel) {
+    final selected = _selectedRange == rangeLabel;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRange = rangeLabel),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF111111) : Colors.white,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: selected ? const Color(0xFF111111) : const Color(0xFFD8D8D8),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (selected) ...[
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              rangeLabel,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected ? Colors.white : const Color(0xFF111111),
+              ),
+            ),
           ],
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 
-  Widget _reportTypeTabs() {
+  Widget _buildCategoryTabs() {
     const reportTypes = ['Bills', 'Item Detail', 'Item Summary', 'Customer Detail', 'Customer Summary', 'Customer Ledger'];
 
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-      color: Colors.white,
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5), width: 1)),
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         child: Row(
           children: [
             for (final rType in reportTypes) ...[
-              _reportTypeChip(rType),
-              const SizedBox(width: 8),
+              _categoryTab(rType),
+              const SizedBox(width: 12),
             ],
           ],
         ),
@@ -158,30 +349,309 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     );
   }
 
-  Widget _reportTypeChip(String label) {
+  Widget _categoryTab(String label) {
     final selected = _activeReportType == label;
     return GestureDetector(
       onTap: () => setState(() => _activeReportType = label),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF4F46E5) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(20),
+          border: Border(
+            bottom: BorderSide(
+              color: selected ? const Color(0xFF111111) : Colors.transparent,
+              width: 2,
+            ),
+          ),
         ),
         child: Text(
           label,
           style: GoogleFonts.inter(
             fontSize: 12,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-            color: selected ? Colors.white : const Color(0xFF64748B),
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            color: selected ? const Color(0xFF111111) : const Color(0xFF666666),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildActiveReportView() {
+  Widget _buildExportActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _exportToPdf,
+            icon: const Icon(Icons.picture_as_pdf_outlined, size: 15, color: Color(0xFF666666)),
+            label: Text(
+              'EXPORT PDF',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF111111),
+                letterSpacing: 0.5,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xFFE5E5E5), width: 1),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: _exportToCsv,
+            icon: const Icon(Icons.table_view_outlined, size: 15, color: Color(0xFF666666)),
+            label: Text(
+              'EXPORT EXCEL',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF111111),
+                letterSpacing: 0.5,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xFFE5E5E5), width: 1),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDataTableContainer() {
+    final recordCount = _getRecordCountForActiveReport();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE5E5E5), width: 1),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Table Header
+          _buildTableHeader(),
+
+          // Body (List View or Empty State)
+          if (recordCount == 0)
+            _buildEmptyStateView()
+          else
+            _buildActiveReportList(),
+
+          // Table Footer Bar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: const BoxDecoration(
+              color: Color(0xFFF9FAFB),
+              border: Border(top: BorderSide(color: Color(0xFFE5E5E5), width: 1)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$recordCount records found',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF666666),
+                  ),
+                ),
+                Text(
+                  'Ledger synced',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF666666),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableHeader() {
+    List<Widget> cols;
+
+    switch (_activeReportType) {
+      case 'Item Detail':
+        cols = [
+          const Expanded(flex: 4, child: Text('ITEM NAME')),
+          const Expanded(flex: 4, child: Text('BILL / DATE')),
+          const Expanded(flex: 2, child: Text('QTY x RATE', textAlign: TextAlign.right)),
+          const Expanded(flex: 2, child: Text('SUBTOTAL', textAlign: TextAlign.right)),
+        ];
+        break;
+      case 'Item Summary':
+        cols = [
+          const Expanded(flex: 1, child: Text('#')),
+          const Expanded(flex: 6, child: Text('ITEM & CATEGORY')),
+          const Expanded(flex: 2, child: Text('QTY SOLD', textAlign: TextAlign.right)),
+          const Expanded(flex: 3, child: Text('REVENUE', textAlign: TextAlign.right)),
+        ];
+        break;
+      case 'Customer Detail':
+        cols = [
+          const Expanded(flex: 5, child: Text('CUSTOMER')),
+          const Expanded(flex: 4, child: Text('BILL / DATE')),
+          const Expanded(flex: 3, child: Text('AMOUNT', textAlign: TextAlign.right)),
+        ];
+        break;
+      case 'Customer Summary':
+        cols = [
+          const Expanded(flex: 1, child: Text('#')),
+          const Expanded(flex: 5, child: Text('CUSTOMER & PHONE')),
+          const Expanded(flex: 2, child: Text('ORDERS', textAlign: TextAlign.center)),
+          const Expanded(flex: 4, child: Text('SPENT', textAlign: TextAlign.right)),
+        ];
+        break;
+      case 'Customer Ledger':
+        cols = [
+          const Expanded(flex: 5, child: Text('CUSTOMER & PHONE')),
+          const Expanded(flex: 2, child: Text('ORDERS', textAlign: TextAlign.center)),
+          const Expanded(flex: 5, child: Text('BILLED / NET DUE', textAlign: TextAlign.right)),
+        ];
+        break;
+      case 'Bills':
+      default:
+        cols = [
+          const Expanded(flex: 3, child: Text('TOKEN #')),
+          const Expanded(flex: 4, child: Text('TIME / ORDER')),
+          const Expanded(flex: 2, child: Text('STATUS', textAlign: TextAlign.center)),
+          const Expanded(flex: 3, child: Text('AMOUNT', textAlign: TextAlign.right)),
+        ];
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF9FAFB),
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5), width: 1)),
+      ),
+      child: Row(
+        children: cols
+            .map((c) => DefaultTextStyle(
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF666666),
+                    letterSpacing: 0.5,
+                  ),
+                  child: c,
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget _buildEmptyStateView() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      alignment: Alignment.center,
+      constraints: const BoxConstraints(minHeight: 200),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5E5E5), width: 1),
+            ),
+            child: const Icon(
+              Icons.article_outlined,
+              size: 20,
+              color: Color(0xFF666666),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'NO TOKENS FOUND',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF111111),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'No bills recorded for today. Try adjusting date filters or search terms.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: const Color(0xFF666666),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  int _getRecordCountForActiveReport() {
+    switch (_activeReportType) {
+      case 'Item Detail':
+        int count = 0;
+        for (final t in _filteredTokens) {
+          count += t.items.length;
+        }
+        return count;
+      case 'Item Summary':
+        final set = <String>{};
+        for (final t in _filteredTokens) {
+          for (final i in t.items) {
+            set.add(i.name);
+          }
+        }
+        return set.length;
+      case 'Customer Detail':
+        return _filteredTokens.where((t) => t.customerName.isNotEmpty || t.customerPhone.isNotEmpty).length;
+      case 'Customer Summary':
+        final set = <String>{};
+        for (final t in _filteredTokens) {
+          final key = t.customerName.isNotEmpty ? t.customerName : (t.customerPhone.isNotEmpty ? t.customerPhone : 'Walk-in');
+          set.add(key);
+        }
+        return set.length;
+      case 'Customer Ledger':
+        final query = _searchController.text.trim().toLowerCase();
+        final set = <String>{};
+        for (final t in _tokens) {
+          final name = t.customerName.trim();
+          final phone = t.customerPhone.trim();
+          final lowerName = name.toLowerCase();
+          final isUnnamed = phone.isEmpty && (name.isEmpty || lowerName == 'walk-in' || lowerName == 'walk-in customer' || lowerName == 'walkin');
+          if (isUnnamed) continue;
+          if (query.isNotEmpty) {
+            if (!name.toLowerCase().contains(query) && !phone.toLowerCase().contains(query)) continue;
+          }
+          final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+          final normPhone = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
+          final key = normPhone.isNotEmpty ? 'phone_$normPhone' : 'name_${name.trim().toLowerCase()}';
+          set.add(key);
+        }
+        return set.length;
+      case 'Bills':
+      default:
+        return _filteredTokens.length;
+    }
+  }
+
+  Widget _buildActiveReportList() {
     switch (_activeReportType) {
       case 'Item Detail':
         return _buildItemDetailList();
@@ -201,20 +671,12 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   Widget _buildTokenList() {
     final tokens = _filteredTokens;
-    if (tokens.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(40),
-        child: Text('No tokens found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 24),
-        itemCount: tokens.length,
-        itemBuilder: (context, index) => _tokenRow(tokens[index]),
-      ),
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: tokens.length,
+      separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE5E5E5)),
+      itemBuilder: (context, index) => _tokenRow(tokens[index]),
     );
   }
 
@@ -234,40 +696,32 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
             : const Color(0xFFEA580C);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: badgeBg,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              token.shortId,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: badgeFg,
-              ),
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  token.shortId,
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF111111),
+                  ),
+                ),
+                if (token.billNumber.isNotEmpty)
+                  Text(
+                    'Bill #${token.billNumber}',
+                    style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                  ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
           Expanded(
+            flex: 4,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -276,50 +730,51 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: _textPrimary,
+                    color: const Color(0xFF111111),
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
-                  '${token.payment.isEmpty ? 'N/A' : token.payment} · ${token.dateTimeString}',
+                  '${token.payment.isEmpty ? "N/A" : token.payment} • ${token.dateTimeString}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(fontSize: 12, color: _textSecondary, fontWeight: FontWeight.w500),
+                  style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                _money(token.amount),
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: _textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: badgeBg,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   token.status,
                   style: GoogleFonts.inter(
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: badgeFg,
                   ),
                 ),
               ),
-            ],
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              _money(token.amount),
+              textAlign: TextAlign.right,
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF111111),
+              ),
+            ),
           ),
         ],
       ),
@@ -338,95 +793,471 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     return '$displayTitle (${token.title})';
   }
 
+  Widget _buildItemDetailList() {
+    final entries = <_ItemDetailEntry>[];
+    for (final token in _filteredTokens) {
+      for (final item in token.items) {
+        entries.add(_ItemDetailEntry(
+          date: token.dateTimeString,
+          rawDate: token.rawDate,
+          billNumber: token.billNumber.isNotEmpty ? token.billNumber : token.shortId,
+          itemName: item.name,
+          category: item.category,
+          quantity: item.quantity,
+          rate: item.rate,
+          subtotal: item.subtotal,
+        ));
+      }
+    }
 
+    entries.sort((a, b) => b.rawDate.compareTo(a.rawDate));
 
-  Widget _summaryHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            'Total Tokens: ${_filteredTokens.length}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.inter(fontSize: 14, color: _textSecondary, fontWeight: FontWeight.w500),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                'Total: ${_money(_filteredTokens.fold(0, (sum, item) => sum + item.amount))}',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF16A34A),
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: entries.length,
+      separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE5E5E5)),
+      itemBuilder: (context, index) {
+        final item = entries[index];
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.itemName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                    ),
+                    Text(
+                      item.category.isNotEmpty ? item.category : 'General',
+                      style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                    ),
+                  ],
                 ),
               ),
-            ),
+              Expanded(
+                flex: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bill #${item.billNumber}',
+                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF111111)),
+                    ),
+                    Text(
+                      item.date,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '${item.quantity} × ${_money(item.rate)}',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  _money(item.subtotal),
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _exportButton() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16, top: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFDC2626),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+  Widget _buildItemSummaryList() {
+    final map = <String, _ItemSummaryEntry>{};
+    for (final token in _filteredTokens) {
+      for (final item in token.items) {
+        if (!map.containsKey(item.name)) {
+          map[item.name] = _ItemSummaryEntry(
+            itemName: item.name,
+            category: item.category,
+            totalQty: 0,
+            totalRevenue: 0.0,
+          );
+        }
+        final existing = map[item.name]!;
+        map[item.name] = _ItemSummaryEntry(
+          itemName: item.name,
+          category: item.category.isNotEmpty ? item.category : existing.category,
+          totalQty: existing.totalQty + item.quantity,
+          totalRevenue: existing.totalRevenue + item.subtotal,
+        );
+      }
+    }
+
+    final summaries = map.values.toList()..sort((a, b) => b.totalRevenue.compareTo(a.totalRevenue));
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: summaries.length,
+      separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE5E5E5)),
+      itemBuilder: (context, index) {
+        final summary = summaries[index];
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 1,
+                child: Text(
+                  '#${index + 1}',
+                  style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF666666)),
+                ),
               ),
-              onPressed: _exportToPdf,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Export PDF',
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+              Expanded(
+                flex: 6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      summary.itemName,
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                    ),
+                    Text(
+                      summary.category.isNotEmpty ? summary.category : 'General',
+                      style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '${summary.totalQty}',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  _money(summary.totalRevenue),
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCustomerDetailList() {
+    final list = _filteredTokens
+        .where((t) => t.customerName.isNotEmpty || t.customerPhone.isNotEmpty)
+        .toList()
+      ..sort((a, b) => b.rawDate.compareTo(a.rawDate));
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: list.length,
+      separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE5E5E5)),
+      itemBuilder: (context, index) {
+        final token = list[index];
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      token.customerName.isNotEmpty ? token.customerName : 'Walk-in Customer',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                    ),
+                    Text(
+                      token.customerPhone.isNotEmpty ? token.customerPhone : 'No Mobile',
+                      style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Bill #${token.billNumber.isNotEmpty ? token.billNumber : token.shortId}',
+                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF111111)),
+                    ),
+                    Text(
+                      token.dateTimeString,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  _money(token.amount),
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCustomerSummaryList() {
+    final map = <String, _CustomerSummaryEntry>{};
+    for (final token in _filteredTokens) {
+      final key = token.customerName.isNotEmpty
+          ? token.customerName
+          : (token.customerPhone.isNotEmpty ? token.customerPhone : 'Walk-in');
+
+      if (!map.containsKey(key)) {
+        map[key] = _CustomerSummaryEntry(
+          customerName: key,
+          customerPhone: token.customerPhone,
+          totalOrders: 0,
+          totalSpent: 0.0,
+          lastPurchaseDate: token.dateTimeString,
+        );
+      }
+      final existing = map[key]!;
+      map[key] = _CustomerSummaryEntry(
+        customerName: key,
+        customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : existing.customerPhone,
+        totalOrders: existing.totalOrders + 1,
+        totalSpent: existing.totalSpent + token.amount,
+        lastPurchaseDate: token.dateTimeString,
+      );
+    }
+
+    final summaries = map.values.toList()..sort((a, b) => b.totalSpent.compareTo(a.totalSpent));
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: summaries.length,
+      separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE5E5E5)),
+      itemBuilder: (context, index) {
+        final summary = summaries[index];
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 1,
+                child: Text(
+                  '#${index + 1}',
+                  style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.bold, color: const Color(0xFF666666)),
+                ),
+              ),
+              Expanded(
+                flex: 5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      summary.customerName,
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                    ),
+                    Text(
+                      summary.customerPhone.isNotEmpty ? summary.customerPhone : 'No Mobile',
+                      style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  '${summary.totalOrders}',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Text(
+                  _money(summary.totalSpent),
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCustomerLedgerList() {
+    final map = <String, _CustomerLedgerSummary>{};
+    final query = _searchController.text.trim().toLowerCase();
+
+    for (final token in _tokens) {
+      final name = token.customerName.trim();
+      final phone = token.customerPhone.trim();
+
+      final lowerName = name.toLowerCase();
+      final isUnnamed = phone.isEmpty && (name.isEmpty || lowerName == 'walk-in' || lowerName == 'walk-in customer' || lowerName == 'walkin');
+      if (isUnnamed) continue;
+
+      if (query.isNotEmpty) {
+        final matchesName = name.toLowerCase().contains(query);
+        final matchesPhone = phone.toLowerCase().contains(query);
+        if (!matchesName && !matchesPhone) continue;
+      }
+
+      final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+      final normPhone = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
+      final key = normPhone.isNotEmpty ? 'phone_$normPhone' : 'name_${name.trim().toLowerCase()}';
+
+      if (!map.containsKey(key)) {
+        map[key] = _CustomerLedgerSummary(
+          customerName: name.isNotEmpty ? name : phone,
+          customerPhone: phone,
+          totalOrders: 0,
+          totalBilled: 0.0,
+          totalPaid: 0.0,
+          dueBalance: 0.0,
+          lastTransactionDate: token.dateTimeString,
+          tokens: [],
+        );
+      }
+
+      final existing = map[key]!;
+      final isCancelled = token.status.toLowerCase() == 'cancelled';
+      final isPaid = token.isPaid || (token.payment.isNotEmpty && token.payment.toLowerCase() != 'credit' && token.payment.toLowerCase() != 'due' && !isCancelled);
+
+      final billed = isCancelled ? 0.0 : token.amount;
+      double paid = 0.0;
+      if (!isCancelled) {
+        if (isPaid) {
+          paid = token.amount;
+        } else if (token.receivedAmount > 0) {
+          paid = token.receivedAmount;
+        } else {
+          paid = 0.0;
+        }
+      }
+
+      existing.tokens.add(token);
+      final newBilled = existing.totalBilled + billed;
+      final newPaid = existing.totalPaid + paid;
+      final netDue = (newBilled - newPaid) > 0 ? (newBilled - newPaid) : 0.0;
+
+      map[key] = _CustomerLedgerSummary(
+        customerName: name.isNotEmpty ? name : existing.customerName,
+        customerPhone: phone.isNotEmpty ? phone : existing.customerPhone,
+        totalOrders: existing.totalOrders + 1,
+        totalBilled: newBilled,
+        totalPaid: newPaid,
+        dueBalance: netDue,
+        lastTransactionDate: token.dateTimeString,
+        tokens: existing.tokens,
+      );
+    }
+
+    final summaries = map.values.toList()..sort((a, b) => b.totalBilled.compareTo(a.totalBilled));
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: summaries.length,
+      separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE5E5E5)),
+      itemBuilder: (context, index) {
+        final summary = summaries[index];
+        final netDueAmount = _getNetDueForCustomer(summary.customerName, summary.customerPhone, summary.dueBalance);
+        final isDue = netDueAmount > 0;
+
+        return InkWell(
+          onTap: () => _openFullLedgerForSummary(summary),
+          onLongPress: () => _openCustomerLedgerSheet(summary),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        summary.customerName,
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                      ),
+                      Text(
+                        summary.customerPhone.isNotEmpty ? summary.customerPhone : 'No Mobile',
+                        style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666)),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    '${summary.totalOrders}',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                  ),
+                ),
+                Expanded(
+                  flex: 5,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        _money(summary.totalBilled),
+                        style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          isDue ? 'Due: ${_money(netDueAmount)}' : 'Paid in Full',
+                          style: GoogleFonts.inter(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: isDue ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF16A34A),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              ),
-              onPressed: _exportToCsv,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.table_view_outlined, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Export Excel',
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -507,7 +1338,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   List<_HistoryToken> get _filteredTokens {
     final query = _searchController.text.trim().toLowerCase();
 
-    // First, filter by selected date range
     List<_HistoryToken> rangeFiltered = _tokens.toList();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -536,7 +1366,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
               t.rawDate.isAfter(weekAgo) || t.rawDate.isAtSameMomentAs(weekAgo))
           .toList();
     } else if (_customStart != null && _customEnd != null) {
-      // It's a custom date range
       final endOfDay = DateTime(
           _customEnd!.year, _customEnd!.month, _customEnd!.day, 23, 59, 59);
       rangeFiltered = _tokens.where((t) {
@@ -555,11 +1384,10 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
       final matchCustomer = token.customerName.toLowerCase().contains(query) || token.customerPhone.contains(query);
       final matchOrderType = token.orderType.toLowerCase().contains(query);
       final matchItem = token.items.any((item) => item.name.toLowerCase().contains(query) || item.code.toLowerCase().contains(query));
-      
+
       return matchTitle || matchId || matchPayment || matchCustomer || matchOrderType || matchItem;
     }).toList();
   }
-
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context)
@@ -711,497 +1539,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     }
   }
 
-  // ── Item Detail List (Date Order wise) ──────────────────────────
-  Widget _buildItemDetailList() {
-    final entries = <_ItemDetailEntry>[];
-    for (final token in _filteredTokens) {
-      for (final item in token.items) {
-        entries.add(_ItemDetailEntry(
-          date: token.dateTimeString,
-          rawDate: token.rawDate,
-          billNumber: token.billNumber.isNotEmpty ? token.billNumber : token.shortId,
-          itemName: item.name,
-          category: item.category,
-          quantity: item.quantity,
-          rate: item.rate,
-          subtotal: item.subtotal,
-        ));
-      }
-    }
-
-    entries.sort((a, b) => b.rawDate.compareTo(a.rawDate));
-
-    if (entries.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(40),
-        child: Text('No item transactions found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      itemCount: entries.length,
-      itemBuilder: (context, index) {
-        final item = entries[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.fastfood_rounded, color: Color(0xFF4F46E5), size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.itemName, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary)),
-                    const SizedBox(height: 2),
-                    Text('Bill: ${item.billNumber} · ${item.date}', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(_money(item.subtotal), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF10B981))),
-                  const SizedBox(height: 2),
-                  Text('${item.quantity} x ${_money(item.rate)}', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Item Summary List ─────────────────────────────────────────
-  Widget _buildItemSummaryList() {
-    final map = <String, _ItemSummaryEntry>{};
-    for (final token in _filteredTokens) {
-      for (final item in token.items) {
-        if (!map.containsKey(item.name)) {
-          map[item.name] = _ItemSummaryEntry(
-            itemName: item.name,
-            category: item.category,
-            totalQty: 0,
-            totalRevenue: 0.0,
-          );
-        }
-        final existing = map[item.name]!;
-        map[item.name] = _ItemSummaryEntry(
-          itemName: item.name,
-          category: item.category.isNotEmpty ? item.category : existing.category,
-          totalQty: existing.totalQty + item.quantity,
-          totalRevenue: existing.totalRevenue + item.subtotal,
-        );
-      }
-    }
-
-    final summaries = map.values.toList()..sort((a, b) => b.totalRevenue.compareTo(a.totalRevenue));
-
-    if (summaries.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(40),
-        child: Text('No item summary data found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      itemCount: summaries.length,
-      itemBuilder: (context, index) {
-        final summary = summaries[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFEF3C7),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text('#${index + 1}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFFD97706), fontSize: 13)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(summary.itemName, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary)),
-                    const SizedBox(height: 2),
-                    Text(summary.category.isNotEmpty ? summary.category : 'General', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(_money(summary.totalRevenue), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF4F46E5))),
-                  const SizedBox(height: 2),
-                  Text('Qty Sold: ${summary.totalQty}', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF059669))),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Customer Detail List (Date Order wise) ──────────────────────
-  Widget _buildCustomerDetailList() {
-    final list = _filteredTokens.where((t) => t.customerName.isNotEmpty || t.customerPhone.isNotEmpty).toList()..sort((a, b) => b.rawDate.compareTo(a.rawDate));
-
-    if (list.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(40),
-        child: Text('No customer transactions found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      itemCount: list.length,
-      itemBuilder: (context, index) {
-        final token = list[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDF4),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.person_outline_rounded, color: Color(0xFF059669), size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(token.customerName.isNotEmpty ? token.customerName : 'Walk-in Customer', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary)),
-                    const SizedBox(height: 2),
-                    Text('${token.customerPhone.isNotEmpty ? token.customerPhone : 'No Mobile'} · ${token.dateTimeString}', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(_money(token.amount), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF059669))),
-                  const SizedBox(height: 2),
-                  Text('${token.billNumber} (${token.payment})', style: GoogleFonts.inter(fontSize: 11, color: _textSecondary)),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Customer Summary List ──────────────────────────────────────
-  Widget _buildCustomerSummaryList() {
-    final map = <String, _CustomerSummaryEntry>{};
-    for (final token in _filteredTokens) {
-      final key = token.customerName.isNotEmpty
-          ? token.customerName
-          : (token.customerPhone.isNotEmpty ? token.customerPhone : 'Walk-in');
-
-      if (!map.containsKey(key)) {
-        map[key] = _CustomerSummaryEntry(
-          customerName: key,
-          customerPhone: token.customerPhone,
-          totalOrders: 0,
-          totalSpent: 0.0,
-          lastPurchaseDate: token.dateTimeString,
-        );
-      }
-      final existing = map[key]!;
-      map[key] = _CustomerSummaryEntry(
-        customerName: key,
-        customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : existing.customerPhone,
-        totalOrders: existing.totalOrders + 1,
-        totalSpent: existing.totalSpent + token.amount,
-        lastPurchaseDate: token.dateTimeString,
-      );
-    }
-
-    final summaries = map.values.toList()..sort((a, b) => b.totalSpent.compareTo(a.totalSpent));
-
-    if (summaries.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(40),
-        child: Text('No customer summary data found.', style: GoogleFonts.inter(color: _textSecondary, fontSize: 16)),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      itemCount: summaries.length,
-      itemBuilder: (context, index) {
-        final summary = summaries[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 8, offset: const Offset(0, 3))],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEEF2FF),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text('#${index + 1}', style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: const Color(0xFF4F46E5), fontSize: 13)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(summary.customerName, style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary)),
-                    const SizedBox(height: 2),
-                    Text('${summary.customerPhone.isNotEmpty ? summary.customerPhone : 'No Mobile'} · Orders: ${summary.totalOrders}', style: GoogleFonts.inter(fontSize: 12, color: _textSecondary)),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(_money(summary.totalSpent), style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: const Color(0xFF10B981))),
-                  const SizedBox(height: 2),
-                  Text('Last: ${summary.lastPurchaseDate.split(',').first}', style: GoogleFonts.inter(fontSize: 11, color: _textSecondary)),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Customer Ledger List ─────────────────────────────────────────
-  Widget _buildCustomerLedgerList() {
-    final map = <String, _CustomerLedgerSummary>{};
-    final query = _searchController.text.trim().toLowerCase();
-
-    // Iterate over _tokens (all-time records) so a customer's entire transaction history is aggregated in 1 ledger
-    for (final token in _tokens) {
-      final name = token.customerName.trim();
-      final phone = token.customerPhone.trim();
-
-      // Skip unnamed / walk-in bills without a customer name or mobile number
-      final lowerName = name.toLowerCase();
-      final isUnnamed = phone.isEmpty && (name.isEmpty || lowerName == 'walk-in' || lowerName == 'walk-in customer' || lowerName == 'walkin');
-      if (isUnnamed) {
-        continue;
-      }
-
-      // If search query is present, strictly filter to customer matching name or mobile number
-      if (query.isNotEmpty) {
-        final matchesName = name.toLowerCase().contains(query);
-        final matchesPhone = phone.toLowerCase().contains(query);
-        if (!matchesName && !matchesPhone) {
-          continue;
-        }
-      }
-
-      final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
-      final normPhone = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
-      final key = normPhone.isNotEmpty ? 'phone_$normPhone' : 'name_${name.trim().toLowerCase()}';
-
-      if (!map.containsKey(key)) {
-        map[key] = _CustomerLedgerSummary(
-          customerName: name.isNotEmpty ? name : phone,
-          customerPhone: phone,
-          totalOrders: 0,
-          totalBilled: 0.0,
-          totalPaid: 0.0,
-          dueBalance: 0.0,
-          lastTransactionDate: token.dateTimeString,
-          tokens: [],
-        );
-      }
-
-      final existing = map[key]!;
-      final isCancelled = token.status.toLowerCase() == 'cancelled';
-      final isPaid = token.isPaid || (token.payment.isNotEmpty && token.payment.toLowerCase() != 'credit' && token.payment.toLowerCase() != 'due' && !isCancelled);
-
-      final billed = isCancelled ? 0.0 : token.amount;
-      double paid = 0.0;
-      if (!isCancelled) {
-        if (isPaid) {
-          paid = token.amount;
-        } else if (token.receivedAmount > 0) {
-          paid = token.receivedAmount;
-        } else {
-          paid = 0.0;
-        }
-      }
-
-      existing.tokens.add(token);
-      final newBilled = existing.totalBilled + billed;
-      final newPaid = existing.totalPaid + paid;
-      final netDue = (newBilled - newPaid) > 0 ? (newBilled - newPaid) : 0.0;
-
-      map[key] = _CustomerLedgerSummary(
-        customerName: name.isNotEmpty ? name : existing.customerName,
-        customerPhone: phone.isNotEmpty ? phone : existing.customerPhone,
-        totalOrders: existing.totalOrders + 1,
-        totalBilled: newBilled,
-        totalPaid: newPaid,
-        dueBalance: netDue,
-        lastTransactionDate: token.dateTimeString,
-        tokens: existing.tokens,
-      );
-    }
-
-    final summaries = map.values.toList()..sort((a, b) => b.totalBilled.compareTo(a.totalBilled));
-
-    if (summaries.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(40),
-        child: Center(
-          child: Text(
-            'No customer ledger records found.',
-            style: GoogleFonts.inter(color: _textSecondary, fontSize: 16),
-          ),
-        ),
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      itemCount: summaries.length,
-      itemBuilder: (context, index) {
-        final summary = summaries[index];
-        final netDueAmount = _getNetDueForCustomer(summary.customerName, summary.customerPhone, summary.dueBalance);
-        final isDue = netDueAmount > 0;
-
-        return InkWell(
-          onTap: () => _openFullLedgerForSummary(summary),
-          onLongPress: () => _openCustomerLedgerSheet(summary),
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                )
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: isDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isDue ? Icons.account_balance_wallet_outlined : Icons.check_circle_outline,
-                    color: isDue ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        summary.customerName,
-                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${summary.customerPhone.isNotEmpty ? summary.customerPhone : "No Phone"} · ${summary.totalOrders} Orders',
-                        style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      _money(summary.totalBilled),
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: _textPrimary),
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: isDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        isDue ? 'Net Due: ${_money(netDueAmount)}' : 'Paid in Full',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: isDue ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8), size: 20),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   Future<void> _openFullLedgerForSummary(_CustomerLedgerSummary summary) async {
     try {
       final searchParam = summary.customerPhone.isNotEmpty ? summary.customerPhone : summary.customerName;
@@ -1261,7 +1598,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     final sheetNetDue = _getNetDueForCustomer(summary.customerName, summary.customerPhone, summary.dueBalance);
     final isSheetDue = sheetNetDue > 0;
 
-    // Sort customer tokens chronologically (oldest to newest) to compute running balance
     final sortedTokens = [...summary.tokens]..sort((a, b) => a.rawDate.compareTo(b.rawDate));
 
     double runningBalance = 0.0;
@@ -1292,7 +1628,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
       ));
     }
 
-    // Reverse for UI display (newest transaction on top)
     final displayEntries = ledgerEntries.reversed.toList();
 
     showModalBottomSheet(
@@ -1308,7 +1643,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
           ),
           child: Column(
             children: [
-              // Sheet Drag handle
               const SizedBox(height: 12),
               Container(
                 width: 40,
@@ -1320,7 +1654,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
               ),
               const SizedBox(height: 12),
 
-              // Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -1340,11 +1673,11 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                         children: [
                           Text(
                             summary.customerName,
-                            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: _textPrimary),
+                            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
                           ),
                           Text(
                             'Phone: ${summary.customerPhone.isNotEmpty ? summary.customerPhone : "N/A"} · Ledger Statement',
-                            style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
+                            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF666666)),
                           ),
                         ],
                       ),
@@ -1357,7 +1690,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                       icon: const Icon(Icons.account_balance_wallet_outlined, size: 16),
                       label: Text('Ledger', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4F46E5),
+                        backgroundColor: const Color(0xFF111111),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         elevation: 0,
@@ -1374,7 +1707,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
               ),
               const Divider(height: 24),
 
-              // Metric Cards Header
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -1441,7 +1773,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
               const SizedBox(height: 12),
 
-              // Export Actions Bar inside sheet
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -1537,7 +1868,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
               const SizedBox(height: 12),
 
-              // Ledger Transactions List
               Expanded(
                 child: Container(
                   color: const Color(0xFFF8FAFC),
@@ -1564,11 +1894,11 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                               children: [
                                 Text(
                                   'Bill #${entry.billNumber}',
-                                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14, color: _textPrimary),
+                                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 14, color: const Color(0xFF111111)),
                                 ),
                                 Text(
                                   entry.date,
-                                  style: GoogleFonts.inter(fontSize: 11, color: _textSecondary),
+                                  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF666666)),
                                 ),
                               ],
                             ),
@@ -1612,7 +1942,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                                     const SizedBox(height: 2),
                                     Text(
                                       '${entry.paymentMode} · ${isCancelled ? "Cancelled" : entry.status}',
-                                      style: GoogleFonts.inter(fontSize: 10, color: _textSecondary, fontWeight: FontWeight.w500),
+                                      style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF666666), fontWeight: FontWeight.w500),
                                     ),
                                   ],
                                 ),
@@ -1709,9 +2039,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF111111), // header background color
-              onPrimary: Colors.white, // header text color
-              onSurface: Color(0xFF1F2937), // body text color
+              primary: Color(0xFF111111),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF1F2937),
             ),
           ),
           child: Center(
@@ -1724,8 +2054,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                 borderRadius: BorderRadius.circular(16),
                 child: MediaQuery(
                   data: MediaQuery.of(context).copyWith(
-                    size: const Size(
-                        360, 600), // Force narrow size to simulate mobile view
+                    size: const Size(360, 600),
                   ),
                   child: child!,
                 ),
@@ -1778,7 +2107,7 @@ class _HistoryToken {
       token.billNumber,
       token.customerName,
       token.customerPhone,
-      '', // legacy time field
+      '',
       _formatDateTime(token.createdAt),
       token.grandTotal,
       token.paymentMode,
@@ -1797,7 +2126,7 @@ class _HistoryToken {
   final String billNumber;
   final String customerName;
   final String customerPhone;
-  final String time; // kept for legacy reference if needed elsewhere
+  final String time;
   final String dateTimeString;
   final double amount;
   final String payment;
@@ -1935,4 +2264,3 @@ class _CustomerLedgerEntry {
     required this.status,
   });
 }
-
