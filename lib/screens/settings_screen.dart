@@ -14,6 +14,7 @@ import 'subscription_plans_screen.dart';
 import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
 import '../widgets/custom_page_header.dart';
+import '../utils/app_constants.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -23,11 +24,11 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const Color _panelBackground = Color(0xFFF8FAFC);
-  static const Color _primary = Color(0xFF4F46E5);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _danger = Color(0xFFEF4444);
+  static const Color _panelBackground = StitchColors.background;
+  static const Color _primary = StitchColors.primary;
+  static const Color _textPrimary = StitchColors.textPrimary;
+  static const Color _textSecondary = StitchColors.textSecondary;
+  static const Color _danger = StitchColors.dangerText;
   ApiShopData? _shopData;
   ApiUser? _user;
   bool _isPrinterConnected = false;

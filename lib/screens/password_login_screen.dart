@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'registration_screen.dart';
 import 'super_admin_login_screen.dart';
 import 'forgot_password_screen.dart';
+import '../utils/app_constants.dart';
 
 class PasswordLoginScreen extends StatefulWidget {
   const PasswordLoginScreen({Key? key}) : super(key: key);
@@ -392,16 +393,17 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
         const SizedBox(height: 24),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(24),
+            color: StitchColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: StitchColors.border, width: 1),
           ),
           child: Row(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Text('+91', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A))),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Text('+91', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: StitchColors.textPrimary)),
               ),
-              Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
+              Container(width: 1, height: 20, color: StitchColors.border),
               Expanded(
                 child: TextField(
                   controller: _mobileController,
@@ -410,48 +412,49 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(10),
                   ],
-                  style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A), letterSpacing: 1.5),
+                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: StitchColors.textPrimary, letterSpacing: 1.0),
                   decoration: InputDecoration(
                     hintText: 'Enter Phone Number',
-                    hintStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8), letterSpacing: 0),
+                    hintStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: StitchColors.textMuted, letterSpacing: 0),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14),
                   ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(24),
+            color: StitchColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: StitchColors.border, width: 1),
           ),
           child: Row(
             children: [
               const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Icon(Icons.lock_outline, color: Color(0xFF94A3B8), size: 20),
+                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Icon(Icons.lock_outline, color: StitchColors.textMuted, size: 18),
               ),
               Expanded(
                 child: TextField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
-                  style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
+                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: StitchColors.textPrimary),
                   decoration: InputDecoration(
                     hintText: 'Password',
-                    hintStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8)),
+                    hintStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: StitchColors.textMuted),
                     border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14),
                   ),
                 ),
               ),
               IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                  color: const Color(0xFF94A3B8),
-                  size: 20,
+                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: StitchColors.textMuted,
+                  size: 18,
                 ),
                 onPressed: () {
                   setState(() {
@@ -474,25 +477,24 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF4F46E5),
+                color: StitchColors.primary,
               ),
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         ElevatedButton(
           onPressed: _isLoading ? null : _login,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4F46E5),
+            backgroundColor: StitchColors.primary,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            elevation: 4,
-            shadowColor: const Color(0xFF4F46E5).withValues(alpha: 0.5),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+            elevation: 0,
           ),
           child: _isLoading
               ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text('Login', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+              : Text('Login', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 24),
         Row(

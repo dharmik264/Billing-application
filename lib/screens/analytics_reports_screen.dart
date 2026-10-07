@@ -6,6 +6,7 @@ import '../utils/pdf_export.dart';
 import '../utils/csv_export.dart';
 import '../widgets/custom_page_header.dart';
 import '../utils/bill_event_notifier.dart';
+import '../utils/app_constants.dart';
 import 'customer_ledger_screen.dart';
 
 class AnalyticsReportsScreen extends StatefulWidget {
@@ -16,9 +17,9 @@ class AnalyticsReportsScreen extends StatefulWidget {
 }
 
 class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
-  static const Color _panelBackground = Color(0xFFF8FAFC);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
+  static const Color _panelBackground = StitchColors.background;
+  static const Color _textPrimary = StitchColors.textPrimary;
+  static const Color _textSecondary = StitchColors.textSecondary;
 
   final TextEditingController _searchController = TextEditingController();
   final List<_HistoryToken> _tokens = [];

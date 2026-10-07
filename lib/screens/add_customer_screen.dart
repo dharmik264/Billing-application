@@ -6,6 +6,7 @@ import '../services/restaurant_api.dart';
 import '../services/data_service.dart';
 import '../services/sync_service.dart';
 import '../widgets/offline_banner.dart';
+import '../utils/app_constants.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final ApiCustomer? customer; // null = Add mode, non-null = Edit mode
@@ -34,12 +35,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
   bool get _isEdit => widget.customer != null;
 
   // ── Colours ────────────────────────────────────────────────────
-  static const _indigo  = Color(0xFF4F46E5);
-  static const _slate50 = Color(0xFFF8FAFC);
-  static const _slate300 = Color(0xFFCBD5E1);
-  static const _slate600 = Color(0xFF475569);
-  static const _slate900 = Color(0xFF0F172A);
-  static const _red     = Color(0xFFEF4444);
+  static const _indigo  = StitchColors.primary;
+  static const _slate50 = StitchColors.background;
+  static const _slate300 = StitchColors.border;
+  static const _slate600 = StitchColors.textSecondary;
+  static const _slate900 = StitchColors.textPrimary;
+  static const _red     = StitchColors.dangerText;
 
   @override
   void initState() {

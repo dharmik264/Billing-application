@@ -4,6 +4,7 @@ import '../services/restaurant_api.dart';
 import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
 import 'add_customer_screen.dart';
+import '../utils/app_constants.dart';
 
 class CustomerManagementScreen extends StatefulWidget {
   const CustomerManagementScreen({super.key});
@@ -184,9 +185,9 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     final inactiveCount = _customers.where((c) => !c.isActive).length;
     
     return Scaffold(
-      backgroundColor: _slate50,
+      backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
-        title: 'Customer Management',
+        title: 'Customer Directory',
         icon: Icons.people_rounded,
         subtitle: (!_isLoading && _customers.isNotEmpty) ? '$activeCount active · $inactiveCount inactive' : null,
       ),
@@ -197,7 +198,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
             child: Column(
               children: [
                 CustomSearchActionView(
-                  searchHint: 'Search by name, mobile, GST...',
+                  searchHint: 'Search by name, mobile number, GST or address...',
                   searchController: _searchCtrl,
                   onSearchChanged: _onSearch,
                   onSearchClear: () {
@@ -217,30 +218,31 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                   child: Row(
                     children: [
                       Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _openAdd,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _indigo,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: SizedBox(
+                          height: 38,
+                          child: ElevatedButton.icon(
+                            onPressed: _openAdd,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: StitchColors.primary,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                            ),
+                            icon: const Icon(Icons.person_add_rounded, size: 16),
+                            label: Text('Add New Customer', style: StitchTypography.body(color: Colors.white, weight: FontWeight.w600)),
                           ),
-                          icon: const Icon(Icons.person_add_rounded, size: 18),
-                          label: Text('Add Customer', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13)),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       IconButton(
-                        icon: const Icon(Icons.refresh_rounded, color: _slate600),
+                        icon: const Icon(Icons.refresh_rounded, color: StitchColors.textSecondary, size: 18),
                         onPressed: _loadCustomers,
                         tooltip: 'Refresh',
                         style: IconButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          padding: const EdgeInsets.all(12),
+                          backgroundColor: StitchColors.surface,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(color: _slate200, width: 1),
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            side: const BorderSide(color: StitchColors.border, width: 1),
                           ),
                         ),
                       ),
@@ -259,7 +261,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: _indigo),
+        child: CircularProgressIndicator(color: StitchColors.primary),
       );
     }
     if (_error != null) {
@@ -274,7 +276,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     return FadeTransition(
       opacity: _fadeAnim,
       child: RefreshIndicator(
-        color: _indigo,
+        color: StitchColors.primary,
         onRefresh: _loadCustomers,
         child: _buildCustomerList(),
       ),
@@ -285,7 +287,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: _filtered.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (_, i) => _buildCustomerCard(_filtered[i]),
     );
   }
@@ -296,155 +298,111 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
         : customer.name.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase();
 
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: StitchDecorations.card(),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: customer.isActive ? StitchColors.primaryDark : StitchColors.surfaceSubtle,
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                border: Border.all(color: StitchColors.border),
+              ),
+              child: Center(
+                child: Text(
+                  initials,
+                  style: StitchTypography.body(
+                    color: customer.isActive ? Colors.white : StitchColors.textMuted,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    customer.name,
+                    style: StitchTypography.header(size: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  _infoRow(Icons.phone_outlined, customer.mobileNumber),
+                  if (customer.address.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    _infoRow(Icons.location_on_outlined, customer.address, maxLines: 1),
+                  ],
+                  if (customer.gstNumber.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    _infoRow(Icons.receipt_long_outlined, customer.gstNumber),
+                  ],
+                  if (customer.netDue > 0) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.account_balance_wallet_outlined, size: 12, color: StitchColors.dangerText),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Due: \u20B9${customer.netDue.toStringAsFixed(2)}',
+                          style: StitchTypography.caption(color: StitchColors.dangerText).copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.check_circle_outline_rounded, size: 12, color: StitchColors.successText),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Paid in Full',
+                          style: StitchTypography.caption(color: StitchColors.successText).copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Actions Column
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Avatar
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: customer.isActive
-                          ? [const Color(0xFF4F46E5), const Color(0xFF6366F1)]
-                          : [const Color(0xFF94A3B8), const Color(0xFFCBD5E1)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(
-                      initials,
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        customer.name,
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: _slate900,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      _infoRow(Icons.phone_outlined, customer.mobileNumber),
-                      if (customer.address.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        _infoRow(Icons.location_on_outlined, customer.address, maxLines: 1),
-                      ],
-                      if (customer.gstNumber.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        _infoRow(Icons.receipt_long_outlined, customer.gstNumber),
-                      ],
-                      if (customer.netDue > 0) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.account_balance_wallet_outlined, size: 13, color: _red),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Due: \u20B9${customer.netDue.toStringAsFixed(2)}',
-                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: _red),
-                            ),
-                          ],
-                        ),
-                      ] else ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(Icons.check_circle_outline_rounded, size: 13, color: _green),
-                            const SizedBox(width: 4),
-                            Text(
-                              'Paid in Full',
-                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: _green),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Actions Column
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                _statusToggleBadge(customer),
+                const SizedBox(height: 8),
+                Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _statusToggleBadge(customer),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: () => _openEdit(customer),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: _slate50,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: _slate200),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.edit_rounded, size: 13, color: _slate700),
-                                const SizedBox(width: 2),
-                                Text('Edit', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: _slate700)),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        GestureDetector(
-                          onTap: () => _deleteCustomer(customer),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: _red.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.delete_outline_rounded, size: 13, color: _red),
-                                const SizedBox(width: 2),
-                                Text('Delete', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: _red)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 16, color: StitchColors.textMuted),
+                      onPressed: () => _openEdit(customer),
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Edit',
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 16, color: StitchColors.dangerText),
+                      onPressed: () => _deleteCustomer(customer),
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Delete',
                     ),
                   ],
                 ),
               ],
             ),
+          ],
+        ),
       ),
     );
   }

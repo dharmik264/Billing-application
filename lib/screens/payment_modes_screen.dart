@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
+import '../utils/app_constants.dart';
 
 class PaymentModesScreen extends StatefulWidget {
   const PaymentModesScreen({super.key});
@@ -11,11 +12,11 @@ class PaymentModesScreen extends StatefulWidget {
 }
 
 class _PaymentModesScreenState extends State<PaymentModesScreen> {
-  static const Color _primary = Color(0xFF4F46E5);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _background = Color(0xFFF8FAFC);
-  static const Color _softBorder = Color(0xFFE2E8F0);
+  static const Color _primary = StitchColors.primary;
+  static const Color _textPrimary = StitchColors.textPrimary;
+  static const Color _textSecondary = StitchColors.textSecondary;
+  static const Color _background = StitchColors.background;
+  static const Color _softBorder = StitchColors.border;
 
   bool _isLoading = false;
   String _selectedMode = 'Both';

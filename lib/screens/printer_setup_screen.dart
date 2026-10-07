@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import '../services/printer_service.dart';
+import '../utils/app_constants.dart';
 
 class PrinterSetupScreen extends StatefulWidget {
   const PrinterSetupScreen({super.key});
@@ -15,12 +16,12 @@ class PrinterSetupScreen extends StatefulWidget {
 }
 
 class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
-  static const Color _panelBackground = Color(0xFFF8FAFC);
-  static const Color _primary = Color(0xFF4F46E5);
-  static const Color _textPrimary = Color(0xFF0F172A);
-  static const Color _textSecondary = Color(0xFF64748B);
-  static const Color _softBorder = Color(0xFFE2E8F0);
-  static const Color _danger = Color(0xFFEF4444);
+  static const Color _panelBackground = StitchColors.background;
+  static const Color _primary = StitchColors.primary;
+  static const Color _textPrimary = StitchColors.textPrimary;
+  static const Color _textSecondary = StitchColors.textSecondary;
+  static const Color _softBorder = StitchColors.border;
+  static const Color _danger = StitchColors.dangerText;
   static const double _panelWidth = 360;
 
   bool _wifiEnabled = false;

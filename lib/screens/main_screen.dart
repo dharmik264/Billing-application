@@ -13,6 +13,7 @@ import 'settings_screen.dart';
 import 'customer_management_screen.dart';
 import '../services/restaurant_api.dart';
 import '../services/printer_service.dart';
+import '../utils/app_constants.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -180,53 +181,56 @@ class _MainScreenState extends State<MainScreen> {
     return Row(
       children: [
         Container(
-          width: 100,
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              )
-            ],
+          width: 80,
+          decoration: const BoxDecoration(
+            color: StitchColors.surface,
+            border: Border(right: BorderSide(color: StitchColors.border, width: 1.0)),
           ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ...List.generate(_navItems.length, (i) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: _desktopNavItem(i, _navItems[i]['icon'], _navItems[i]['inactive'], _navItems[i]['label']),
-                );
-              }),
+              const SizedBox(height: 16),
+              // App Brand Header Icon
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: StitchColors.primaryDark,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: const Icon(
+                  Icons.receipt_long_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Divider(color: StitchColors.border, height: 1),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: _navItems.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, i) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: _desktopNavItem(
+                        i,
+                        _navItems[i]['icon'],
+                        _navItems[i]['inactive'],
+                        _navItems[i]['label'],
+                      ),
+                    );
+                  },
+                ),
+              ),
             ],
           ),
         ),
         Expanded(
-          child: ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(32),
-              bottomLeft: Radius.circular(32),
-            ),
+          child: Container(
+            color: StitchColors.background,
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
-              switchInCurve: Curves.easeOutQuint,
-              switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0.04, 0),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutQuint)),
-                    child: child,
-                  ),
-                );
-              },
+              duration: const Duration(milliseconds: 200),
               child: KeyedSubtree(
                 key: ValueKey(_currentIndex),
                 child: _screens[_currentIndex],
@@ -242,31 +246,31 @@ class _MainScreenState extends State<MainScreen> {
     final isSelected = _currentIndex == index;
     return InkWell(
       onTap: () => _onTabTapped(index),
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutQuint,
-        width: 72,
-        height: 72,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        height: 58,
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4F46E5).withValues(alpha: 0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? StitchColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: isSelected
+              ? Border.all(color: StitchColors.primary.withValues(alpha: 0.3), width: 1.0)
+              : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               isSelected ? activeIcon : inactiveIcon,
-              color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
-              size: isSelected ? 30 : 28,
+              color: isSelected ? StitchColors.primary : StitchColors.textMuted,
+              size: 20,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                color: isSelected ? StitchColors.primary : StitchColors.textMuted,
               ),
             )
           ],
@@ -280,25 +284,15 @@ class _MainScreenState extends State<MainScreen> {
       valueListenable: MainScreen.hideNavbar,
       builder: (context, hide, _) {
         return Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: StitchColors.background,
           body: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 280),
-            switchInCurve: Curves.easeOut,
-            switchOutCurve: Curves.easeIn,
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
+            duration: const Duration(milliseconds: 200),
             child: KeyedSubtree(
               key: ValueKey(_currentIndex),
               child: _screens[_currentIndex],
             ),
           ),
-          bottomNavigationBar: hide
-              ? null
-              : _buildFlatNavbar(),
+          bottomNavigationBar: hide ? null : _buildFlatNavbar(),
         );
       },
     );
@@ -307,10 +301,10 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildFlatNavbar() {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+        color: StitchColors.surface,
+        border: Border(top: BorderSide(color: StitchColors.border, width: 1.0)),
       ),
-      height: 60,
+      height: 56,
       child: Row(
         children: _navItems.map((nav) {
           final index = _navItems.indexOf(nav);
@@ -322,35 +316,32 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _flatNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
     final isSelected = _currentIndex == index;
-    const indigo = Color(0xFF4F46E5);
-    const slate400 = Color(0xFF94A3B8);
 
     return Expanded(
       child: InkWell(
         onTap: () => _onTabTapped(index),
-        splashColor: const Color(0xFF4F46E5).withValues(alpha: 0.08),
+        splashColor: StitchColors.primary.withValues(alpha: 0.08),
         highlightColor: Colors.transparent,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Thin indigo indicator on top for selected
             Container(
               height: 2,
               margin: const EdgeInsets.only(bottom: 4),
-              color: isSelected ? indigo : Colors.transparent,
+              color: isSelected ? StitchColors.primary : Colors.transparent,
             ),
             Icon(
               isSelected ? activeIcon : inactiveIcon,
-              color: isSelected ? indigo : slate400,
-              size: 22,
+              color: isSelected ? StitchColors.primary : StitchColors.textMuted,
+              size: 20,
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? indigo : slate400,
+                color: isSelected ? StitchColors.primary : StitchColors.textMuted,
               ),
             ),
           ],
@@ -359,3 +350,4 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 }
+

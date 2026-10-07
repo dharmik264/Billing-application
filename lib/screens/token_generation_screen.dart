@@ -18,6 +18,7 @@ import '../utils/bill_settings_helper.dart';
 import '../services/printer_service.dart';
 import 'success_screen.dart';
 import '../widgets/custom_page_header.dart';
+import '../utils/app_constants.dart';
 
 class _TokenProduct {
   final ApiItem rawItem;
@@ -786,14 +787,14 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _panelBackground,
+      backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
-        title: 'Token Generation',
+        title: widget.editToken != null ? 'Edit Bill #${widget.editToken!.billNumber}' : 'New Token & Bill',
         icon: Icons.receipt_long_rounded,
+        subtitle: 'Quick POS Billing',
         actions: [
           LayoutBuilder(
             builder: (context, constraints) {
-              // On small screens, show the cart action
               if (MediaQuery.of(context).size.width < 800) {
                 return ValueListenableBuilder<int>(
                   valueListenable: _cartTrigger,
@@ -804,16 +805,24 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       alignment: Alignment.center,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.shopping_cart_outlined),
+                          icon: const Icon(Icons.shopping_cart_outlined, color: StitchColors.textPrimary),
                           onPressed: _openCartPage,
                         ),
                         Positioned(
                           right: 4,
                           top: 4,
                           child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(color: Color(0xFFEF4444), shape: BoxShape.circle),
-                            child: Text('$totalItems', style: const TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: StitchColors.primary,
+                              borderRadius: BorderRadius.circular(AppRadius.sm),
+                            ),
+                            child: Text(
+                              '$totalItems',
+                              style: StitchTypography.caption(color: Colors.white, size: 10).copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -825,7 +834,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: const Icon(Icons.settings_outlined, color: StitchColors.textSecondary),
             onPressed: _showSettingsPanel,
           ),
           const SizedBox(width: 8),
@@ -838,7 +847,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             return Row(
               children: [
                 Expanded(flex: 3, child: _buildProductsSection()),
-                Container(width: 1, color: _softBorder),
+                Container(width: 1, color: StitchColors.border),
                 Expanded(flex: 2, child: _buildCartSection(isTablet: true)),
               ],
             );
@@ -856,31 +865,19 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               if (totalItems == 0) return const SizedBox.shrink();
               return Padding(
                 padding: const EdgeInsets.only(bottom: 72.0),
-                child: Container(
-                  height: 56,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFF6366F1)]),
-                    borderRadius: BorderRadius.circular(28),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4F46E5).withValues(alpha: 0.4),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      )
-                    ]
-                  ),
+                child: SizedBox(
+                  height: 44,
                   child: FloatingActionButton.extended(
-                    backgroundColor: Colors.transparent,
+                    backgroundColor: StitchColors.primary,
                     elevation: 0,
                     hoverElevation: 0,
-                    focusElevation: 0,
-                    highlightElevation: 0,
                     onPressed: _openCartPage,
-                    icon: const Icon(Icons.receipt_long_rounded, color: Colors.white),
+                    icon: const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 18),
                     label: Text(
                       'View Bill ($totalItems)', 
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 16)
+                      style: StitchTypography.body(color: Colors.white, weight: FontWeight.w600),
                     ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
                   ),
                 ),
               );
@@ -896,7 +893,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     return Column(
       children: [
         CustomSearchActionView(
-          searchHint: 'Search items...',
+          searchHint: 'Search products by name or code...',
           searchController: _searchController,
           onSearchClear: _searchController.clear,
           filterChips: _categories.map((cat) => FilterChipData(
@@ -909,15 +906,15 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         ),
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
+              ? const Center(child: CircularProgressIndicator(color: StitchColors.primary))
               : GridView.builder(
-                  padding: const EdgeInsets.only(left: 20, right: 20, top: 6, bottom: 140),
+                  padding: const EdgeInsets.all(16),
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 220,
-                    childAspectRatio: 1.10,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
+                    maxCrossAxisExtent: 200,
+                    childAspectRatio: 1.0,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
                   ),
                   itemCount: _filteredProducts.length,
                   itemBuilder: (context, index) => _productCard(_filteredProducts[index]),
@@ -930,89 +927,72 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   Widget _productCard(_TokenProduct product) {
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            height: 60,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [product.accent.withValues(alpha: 0.15), product.accent.withValues(alpha: 0.05)],
+      decoration: StitchDecorations.card(),
+      child: InkWell(
+        onTap: () => _addProduct(product),
+        child: Column(
+          children: [
+            Container(
+              height: 52,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: StitchColors.surfaceSubtle,
+                border: Border(bottom: BorderSide(color: StitchColors.border, width: 1.0)),
               ),
+              child: _buildCardImage(product),
             ),
-            child: _buildCardImage(product),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (product.code.isNotEmpty) ...[
-                    Text(
-                      product.code,
-                      style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w700, color: product.accent, letterSpacing: 0.5),
-                    ),
-                    const SizedBox(height: 2),
-                  ],
-                  Text(
-                    product.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (product.code.isNotEmpty) ...[
                       Text(
-                        '\u20B9${product.price.toStringAsFixed(0)}',
-                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
-                      ),
-                      GestureDetector(
-                        onTap: () => _addProduct(product),
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4F46E5),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF4F46E5).withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(Icons.add_rounded, size: 20, color: Colors.white),
+                        product.code,
+                        style: StitchTypography.caption(color: StitchColors.primary).copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
+                      const SizedBox(height: 2),
                     ],
-                  ),
-                ],
+                    Text(
+                      product.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: StitchTypography.body(weight: FontWeight.w600, size: 12),
+                    ),
+                    const Spacer(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '\u20B9${product.price.toStringAsFixed(0)}',
+                          style: StitchTypography.monospace(size: 14),
+                        ),
+                        Container(
+                          width: 26,
+                          height: 26,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: StitchColors.primary,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                          ),
+                          child: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ).animate().scale(delay: 50.ms, duration: 200.ms, curve: Curves.easeOutBack);
+    );
   }
+
 
 
   void _openCartPage() {

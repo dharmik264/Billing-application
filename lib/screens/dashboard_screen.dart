@@ -13,6 +13,7 @@ import 'token_generation_screen.dart';
 import '../widgets/custom_page_header.dart';
 import '../services/sync_service.dart';
 import '../utils/bill_event_notifier.dart';
+import '../utils/app_constants.dart';
 
 class _LiveToken {
   final ApiToken rawToken;
@@ -214,56 +215,53 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
         title: _shopName,
         icon: Icons.storefront_rounded,
-        subtitle: _isOnline ? 'Online' : 'Local',
+        subtitle: _isOnline ? 'Online Sync' : 'Local Mode',
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12.0),
-            child: GestureDetector(
-              onTap: () async {
+            child: IconButton(
+              icon: const Icon(Icons.logout_rounded, color: StitchColors.dangerText, size: 20),
+              tooltip: 'Logout',
+              onPressed: () async {
                 bool? confirm = await showDialog(
-                    context: context,
-                    builder: (c) => AlertDialog(
-                          title: Text('Logout',
-                              style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.bold)),
-                          content:
-                              const Text('Are you sure you want to logout?'),
-                          shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.zero),
-                          actions: [
-                            TextButton(
-                                onPressed: () => Navigator.pop(c, false),
-                                child: const Text('Cancel')),
-                            ElevatedButton(
-                              onPressed: () => Navigator.pop(c, true),
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red,
-                                  shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.zero)),
-                              child: const Text('Logout',
-                                  style: TextStyle(color: Colors.white)),
-                            ),
-                          ],
-                        ));
+                  context: context,
+                  builder: (c) => AlertDialog(
+                    title: Text('Logout', style: StitchTypography.header()),
+                    content: Text('Are you sure you want to logout?', style: StitchTypography.body()),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(c, false),
+                        child: Text('Cancel', style: StitchTypography.body(color: StitchColors.textMuted)),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(c, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: StitchColors.dangerText,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+                        ),
+                        child: Text('Logout', style: StitchTypography.body(color: Colors.white, weight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
+                );
                 if (confirm == true) {
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.clear();
                   await RestaurantApi.instance.clearTokens();
                   if (context.mounted) {
                     Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                          builder: (_) => const PasswordLoginScreen()),
+                      MaterialPageRoute(builder: (_) => const PasswordLoginScreen()),
                       (route) => false,
                     );
                   }
                 }
               },
-              child: const Icon(Icons.logout_rounded,
-                  color: Color(0xFFEF4444), size: 18),
             ),
           ),
         ],
@@ -274,99 +272,121 @@ class DashboardScreenState extends State<DashboardScreen> {
             constraints: const BoxConstraints(maxWidth: 1200),
             child: RefreshIndicator(
               onRefresh: refreshData,
-              color: const Color(0xFF4F46E5),
+              color: StitchColors.primary,
               child: CustomScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: _isLoading && _recentTokens.isEmpty
-                  ? _buildShimmerLoading()
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildStatGrid()
-                            .animate()
-                            .fadeIn(duration: 300.ms),
-                        // Section header
-                        Container(
-                          decoration: const BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                  color: Color(0xFFE2E8F0), width: 1),
-                            ),
-                          ),
-                          padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'RECENT TOKENS',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                  color: const Color(0xFF64748B),
-                                ),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (_isLoading && _recentTokens.isEmpty)
+                            _buildShimmerLoading()
+                          else
+                            _buildStatGrid(),
+                          const SizedBox(height: 20),
+                          // Section Header
+                          Container(
+                            decoration: const BoxDecoration(
+                              color: StitchColors.surface,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(AppRadius.md),
+                                topRight: Radius.circular(AppRadius.md),
                               ),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (_) =>
-                                            const AllTokensScreen()),
-                                  );
-                                },
-                                child: Text(
-                                  'View All →',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF4F46E5),
+                              border: Border(
+                                left: BorderSide(color: StitchColors.border, width: 1),
+                                right: BorderSide(color: StitchColors.border, width: 1),
+                                top: BorderSide(color: StitchColors.border, width: 1),
+                                bottom: BorderSide(color: StitchColors.border, width: 1),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 4,
+                                      height: 16,
+                                      decoration: BoxDecoration(
+                                        color: StitchColors.primary,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'RECENT TRANSACTIONS',
+                                      style: StitchTypography.caption(color: StitchColors.textPrimary).copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const AllTokensScreen()),
+                                    );
+                                  },
+                                  child: Text(
+                                    'View All Transactions →',
+                                    style: StitchTypography.caption(color: StitchColors.primary).copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-            ),
-            _recentTokens.isEmpty && !_isLoading
-                ? SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 40),
-                      child: Center(
-                        child: Text(
-                          'No recent tokens found',
-                          style: GoogleFonts.inter(
-                              color: const Color(0xFF94A3B8),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500),
-                        ),
+                        ],
                       ),
                     ),
-                  )
-                : SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final token = _recentTokens[index];
-                        return _buildTokenRow(token)
-                            .animate()
-                            .fadeIn(delay: (index * 30).ms);
-                      },
-                      childCount: _recentTokens.length > 10
-                          ? 10
-                          : _recentTokens.length,
-                    ),
                   ),
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
-          ],
+                  _recentTokens.isEmpty && !_isLoading
+                      ? SliverToBoxAdapter(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: StitchColors.surface,
+                              border: Border.all(color: StitchColors.border),
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(AppRadius.md),
+                                bottomRight: Radius.circular(AppRadius.md),
+                              ),
+                            ),
+                            child: Center(
+                              child: Text(
+                                'No recent tokens found',
+                                style: StitchTypography.body(color: StitchColors.textMuted),
+                              ),
+                            ),
+                          ),
+                        )
+                      : SliverPadding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final token = _recentTokens[index];
+                                return _buildTokenRow(token);
+                              },
+                              childCount: _recentTokens.length > 10 ? 10 : _recentTokens.length,
+                            ),
+                          ),
+                        ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
-    ),
-  ),
-),
     );
   }
 
@@ -375,136 +395,123 @@ class DashboardScreenState extends State<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Shimmer grid: 2 columns x 3 rows = 6 cells
-        Padding(
-          padding: const EdgeInsets.all(0),
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 6,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 2.6,
-              mainAxisSpacing: 0,
-              crossAxisSpacing: 0,
-            ),
-            itemBuilder: (_, i) => Container(
-              margin: EdgeInsets.zero,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE2E8F0),
-                border: Border.all(color: const Color(0xFFF1F5F9), width: 0.5),
-              ),
-            ).animate(onPlay: (c) => c.repeat()).shimmer(
-                  delay: (i * 80).ms,
-                  duration: 1000.ms,
-                  color: Colors.white.withValues(alpha: 0.7),
-                ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: 6,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            childAspectRatio: 2.6,
+            mainAxisSpacing: 8,
+            crossAxisSpacing: 8,
           ),
-        ),
-        const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-        // Shimmer rows
-        Column(
-          children: List.generate(4, (i) => Container(
-            height: 52,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE2E8F0),
-              border: Border(
-                  bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
-            ),
-          ).animate(onPlay: (c) => c.repeat()).shimmer(
-                delay: (i * 100 + 200).ms,
-                duration: 1000.ms,
-                color: Colors.white.withValues(alpha: 0.7),
-              )),
+          itemBuilder: (_, i) => Container(
+            decoration: StitchDecorations.card(),
+          ),
         ),
       ],
     );
   }
 
-  /// 2-column fixed grid of stat metrics
+  /// Grid of stat metrics in Stitch Minimal Business style
   Widget _buildStatGrid() {
     final items = [
-      _StatItem("Today's Sales", '\u20B9${_totalSales.toStringAsFixed(0)}',
-          const Color(0xFF4F46E5)),
-      _StatItem('Tokens', _tokenCount.toString(), const Color(0xFF059669)),
-      _StatItem('Cash Sales', '\u20B9${_cashSales.toStringAsFixed(0)}',
-          const Color(0xFF0284C7)),
-      _StatItem('Online Sales', '\u20B9${_onlineSales.toStringAsFixed(0)}',
-          const Color(0xFFD97706)),
-      _StatItem('Net Due', '\u20B9${_udharSales.toStringAsFixed(0)}',
-          const Color(0xFFDC2626)),
+      _StatItem("Today's Sales", '\u20B9${_totalSales.toStringAsFixed(0)}', StitchColors.primary, Icons.payments_outlined),
+      _StatItem('Total Tokens', _tokenCount.toString(), StitchColors.successText, Icons.confirmation_number_outlined),
+      _StatItem('Cash Sales', '\u20B9${_cashSales.toStringAsFixed(0)}', StitchColors.infoText, Icons.point_of_sale_outlined),
+      _StatItem('Online Sales', '\u20B9${_onlineSales.toStringAsFixed(0)}', StitchColors.warningText, Icons.qr_code_rounded),
+      _StatItem('Net Customer Due', '\u20B9${_udharSales.toStringAsFixed(0)}', StitchColors.dangerText, Icons.account_balance_wallet_outlined),
       _StatItem(
-          'SMS Credits',
-          _smsCredits.toString(),
-          _smsCredits > 10
-              ? const Color(0xFF64748B)
-              : const Color(0xFFEF4444)),
+        'SMS Credits',
+        _smsCredits.toString(),
+        _smsCredits > 10 ? StitchColors.textSecondary : StitchColors.dangerText,
+        Icons.sms_outlined,
+      ),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 600;
+        final isWide = constraints.maxWidth >= 700;
         final cols = isWide ? 3 : 2;
-        final rows = (items.length / cols).ceil();
 
-        return Table(
-          border: TableBorder.all(color: const Color(0xFFE2E8F0), width: 1),
-          children: [
-            for (int r = 0; r < rows; r++)
-              TableRow(
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: cols,
+            childAspectRatio: isWide ? 2.8 : 2.2,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+          ),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: StitchDecorations.card(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  for (int c = 0; c < cols; c++)
-                    (r * cols + c < items.length)
-                        ? _buildStatCell(items[r * cols + c])
-                        : const SizedBox.shrink(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.label.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: StitchTypography.caption(color: StitchColors.textMuted).copyWith(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      Icon(item.icon, size: 16, color: item.color),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      item.value,
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: StitchColors.textPrimary,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-          ],
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildStatCell(_StatItem item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            item.label,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF64748B),
-              letterSpacing: 0.2,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            item.value,
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: item.color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Flat table-style token row with thin bottom divider
+  /// Table-style token row matching Stitch Minimal Business
   Widget _buildTokenRow(_LiveToken token) {
-    Color statusColor;
-    String statusText = token.status.toUpperCase();
-    if (statusText == 'COMPLETED') {
-      statusColor = const Color(0xFF059669);
-    } else if (statusText == 'CANCELLED') {
-      statusColor = const Color(0xFFDC2626);
+    Color statusBg;
+    Color statusBorder;
+    Color statusText;
+    String statusLabel = token.status.toUpperCase();
+
+    if (statusLabel == 'COMPLETED') {
+      statusBg = StitchColors.successBg;
+      statusBorder = StitchColors.successBorder;
+      statusText = StitchColors.successText;
+    } else if (statusLabel == 'CANCELLED') {
+      statusBg = StitchColors.dangerBg;
+      statusBorder = StitchColors.dangerBorder;
+      statusText = StitchColors.dangerText;
     } else {
-      statusColor = const Color(0xFF2563EB);
+      statusBg = StitchColors.infoBg;
+      statusBorder = StitchColors.infoBorder;
+      statusText = StitchColors.infoText;
     }
 
     final pm = token.paymentMode.isEmpty ? 'CASH' : token.paymentMode.toUpperCase();
@@ -515,18 +522,10 @@ class DashboardScreenState extends State<DashboardScreen> {
           builder: (_) => PrintPreviewScreen(
             tokenNumber: token.tokenNumber,
             billNumber: token.rawToken.billNumber,
-            customerName: token.rawToken.customerName.isNotEmpty
-                ? token.rawToken.customerName
-                : null,
-            customerPhone: token.rawToken.customerPhone.isNotEmpty
-                ? token.rawToken.customerPhone
-                : null,
-            customerAddress: token.rawToken.customerAddress.isNotEmpty
-                ? token.rawToken.customerAddress
-                : null,
-            customerGstNumber: token.rawToken.customerGstNumber.isNotEmpty
-                ? token.rawToken.customerGstNumber
-                : null,
+            customerName: token.rawToken.customerName.isNotEmpty ? token.rawToken.customerName : null,
+            customerPhone: token.rawToken.customerPhone.isNotEmpty ? token.rawToken.customerPhone : null,
+            customerAddress: token.rawToken.customerAddress.isNotEmpty ? token.rawToken.customerAddress : null,
+            customerGstNumber: token.rawToken.customerGstNumber.isNotEmpty ? token.rawToken.customerGstNumber : null,
             paymentMode: token.paymentMode,
             items: token.rawToken.items
                 .map((i) => ApiTokenItemDraft(
@@ -544,97 +543,94 @@ class DashboardScreenState extends State<DashboardScreen> {
       },
       child: Container(
         decoration: const BoxDecoration(
+          color: StitchColors.surface,
           border: Border(
-              bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1)),
+            left: BorderSide(color: StitchColors.border, width: 1),
+            right: BorderSide(color: StitchColors.border, width: 1),
+            bottom: BorderSide(color: StitchColors.border, width: 1),
+          ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
           children: [
-            // Token number badge — flat
+            // Token Badge
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFCBD5E1)),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: StitchDecorations.badge(
+                backgroundColor: StitchColors.surfaceSubtle,
+                borderColor: StitchColors.border,
               ),
               child: Text(
                 token.tokenNumber,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF4F46E5),
-                ),
+                style: StitchTypography.monospace(color: StitchColors.primary, size: 12),
               ),
             ),
-            const SizedBox(width: 10),
-            // Bill # and time stacked
+            const SizedBox(width: 12),
+            // Order ID & Time
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     token.orderId,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF0F172A),
-                    ),
+                    style: StitchTypography.header(size: 13),
                   ),
                   Text(
                     token.time,
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      color: const Color(0xFF94A3B8),
-                    ),
+                    style: StitchTypography.caption(),
                   ),
                 ],
               ),
             ),
-            // Payment mode — tap to change
+            // Payment Mode Pill
             GestureDetector(
               onTap: () => _changePaymentMode(token),
-              child: Text(
-                pm,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF64748B),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: StitchDecorations.badge(
+                  backgroundColor: StitchColors.surfaceSubtle,
+                  borderColor: StitchColors.border,
+                ),
+                child: Text(
+                  pm,
+                  style: StitchTypography.caption(color: StitchColors.textSecondary).copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             // Amount
             Text(
               '\u20B9${token.amount.toStringAsFixed(0)}',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F172A),
-              ),
+              style: StitchTypography.monospace(size: 14),
             ),
-            const SizedBox(width: 8),
-            // Status dot
+            const SizedBox(width: 12),
+            // Status Badge
             Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: statusColor,
-                shape: BoxShape.circle,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: StitchDecorations.badge(
+                backgroundColor: statusBg,
+                borderColor: statusBorder,
+              ),
+              child: Text(
+                statusLabel,
+                style: StitchTypography.caption(color: statusText, size: 10).copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-            const SizedBox(width: 6),
-            // Edit icon
-            GestureDetector(
-              onTap: () => _editToken(token),
-              child: const Icon(Icons.edit_outlined,
-                  size: 14, color: Color(0xFF94A3B8)),
-            ),
             const SizedBox(width: 8),
-            // Delete icon
-            GestureDetector(
-              onTap: () => _deleteToken(token),
-              child: const Icon(Icons.delete_outline,
-                  size: 14, color: Color(0xFFEF4444)),
+            // Actions
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, size: 16, color: StitchColors.textMuted),
+              onPressed: () => _editToken(token),
+              visualDensity: VisualDensity.compact,
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, size: 16, color: StitchColors.dangerText),
+              onPressed: () => _deleteToken(token),
+              visualDensity: VisualDensity.compact,
             ),
           ],
         ),
@@ -646,21 +642,19 @@ class DashboardScreenState extends State<DashboardScreen> {
     final newMode = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Change Payment Mode',
-            style:
-                GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('Change Payment Mode', style: StitchTypography.header()),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: Text('Cash', style: GoogleFonts.inter()),
-              leading:
-                  const Icon(Icons.payments_outlined, color: Color(0xFF10B981)),
+              title: Text('Cash', style: StitchTypography.body()),
+              leading: const Icon(Icons.payments_outlined, color: StitchColors.successText),
               onTap: () => Navigator.pop(context, 'CASH'),
             ),
             ListTile(
-              title: Text('Online / UPI', style: GoogleFonts.inter()),
-              leading: const Icon(Icons.qr_code_2, color: Color(0xFF4F46E5)),
+              title: Text('Online / UPI', style: StitchTypography.body()),
+              leading: const Icon(Icons.qr_code_2, color: StitchColors.primary),
               onTap: () => Navigator.pop(context, 'ONLINE'),
             ),
           ],
@@ -668,19 +662,19 @@ class DashboardScreenState extends State<DashboardScreen> {
       ),
     );
 
-    if (newMode != null &&
-        newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
+    if (newMode != null && newMode.toLowerCase() != token.paymentMode.toLowerCase()) {
       try {
-        await RestaurantApi.instance
-            .updateTokenPaymentMode(token.rawToken.id, newMode);
+        await RestaurantApi.instance.updateTokenPaymentMode(token.rawToken.id, newMode);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Payment mode updated successfully!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment mode updated successfully!')),
+        );
         refreshData();
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update: $e')),
+        );
       }
     }
   }
@@ -689,18 +683,25 @@ class DashboardScreenState extends State<DashboardScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Delete Bill',
-            style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+        title: Text('Delete Bill', style: StitchTypography.header()),
         content: Text(
-            'Are you sure you want to delete this bill (${token.orderId})? This action cannot be undone.'),
+          'Are you sure you want to delete this bill (${token.orderId})? This action cannot be undone.',
+          style: StitchTypography.body(),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: StitchTypography.body(color: StitchColors.textMuted)),
+          ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: StitchColors.dangerText,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+            ),
+            child: Text('Delete', style: StitchTypography.body(color: Colors.white, weight: FontWeight.w600)),
           ),
         ],
       ),
@@ -710,20 +711,21 @@ class DashboardScreenState extends State<DashboardScreen> {
         await RestaurantApi.instance.deleteToken(token.rawToken.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Bill deleted successfully')));
+            const SnackBar(content: Text('Bill deleted successfully')),
+          );
           refreshData();
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Failed to delete: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete: $e')),
+          );
         }
       }
     }
   }
 
   void _editToken(_LiveToken token) async {
-    // Navigate to TokenGenerationScreen passing the editToken.
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -738,5 +740,7 @@ class _StatItem {
   final String label;
   final String value;
   final Color color;
-  const _StatItem(this.label, this.value, this.color);
+  final IconData icon;
+  const _StatItem(this.label, this.value, this.color, this.icon);
 }
+

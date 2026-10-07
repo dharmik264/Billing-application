@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/app_constants.dart';
 
@@ -26,139 +25,109 @@ class StatCard extends StatefulWidget {
 }
 
 class _StatCardState extends State<StatCard> {
-  bool _pressed = false;
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
     if (widget.compact) {
       return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.slate200),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.slate900.withValues(alpha: 0.03),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            )
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: StitchDecorations.card(
+          radius: AppRadius.md,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
                 widget.value,
-                style: GoogleFonts.inter(
-                  fontSize: 24,
+                style: StitchTypography.header(size: 20).copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.slate900,
+                  color: StitchColors.textPrimary,
                 ),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               widget.title,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: widget.color,
+              style: StitchTypography.caption(color: StitchColors.textMuted),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: widget.width ?? 140,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: StitchColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(
+            color: _hovered ? StitchColors.primary : StitchColors.border,
+            width: 1.0,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.title.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: StitchTypography.caption(color: StitchColors.textMuted).copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                if (widget.icon != null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: widget.color.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                    ),
+                    child: Icon(widget.icon, color: widget.color, size: 14),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                widget.value,
+                maxLines: 1,
+                style: GoogleFonts.inter(
+                  color: StitchColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 400.ms).scaleXY(begin: 0.88, curve: Curves.easeOutBack);
-    }
-
-    // Style used in Shop Owner Dashboard — with press animation
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) => setState(() => _pressed = false),
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedScale(
-        scale: _pressed ? 0.96 : 1.0,
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: widget.width ?? 122,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: _pressed ? widget.color.withValues(alpha: 0.3) : AppColors.slate200,
-              width: _pressed ? 1.5 : 1.0,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _pressed
-                    ? widget.color.withValues(alpha: 0.12)
-                    : AppColors.slate900.withValues(alpha: 0.03),
-                blurRadius: _pressed ? 14 : 8,
-                spreadRadius: _pressed ? 1 : 0,
-                offset: const Offset(0, 3),
-              )
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (widget.icon != null) ...[
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: widget.color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(widget.icon, color: widget.color, size: 15),
-                )
-                    .animate(onPlay: (c) => c.repeat(reverse: true))
-                    .scaleXY(begin: 1.0, end: 1.06, duration: 2000.ms, curve: Curves.easeInOut),
-                const SizedBox(height: 6),
-              ],
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.title,
-                  maxLines: 1,
-                  style: GoogleFonts.inter(
-                    color: AppColors.slate500,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 2),
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.value,
-                  maxLines: 1,
-                  style: GoogleFonts.inter(
-                    color: AppColors.slate900,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms)
-        .scaleXY(begin: 0.9, curve: Curves.easeOutBack)
-        .slideY(begin: 0.08, end: 0);
+    );
   }
 }
+
 
 

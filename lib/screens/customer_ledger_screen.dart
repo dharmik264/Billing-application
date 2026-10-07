@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../services/restaurant_api.dart';
 import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
+import '../utils/app_constants.dart';
 import 'print_preview_screen.dart';
 
 class CustomerLedgerScreen extends StatefulWidget {
@@ -27,16 +28,16 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
   late TabController _tabController;
 
-  static const _indigo = Color(0xFF4F46E5);
-  static const _slate50 = Color(0xFFF8FAFC);
-  static const _slate200 = Color(0xFFE2E8F0);
-  static const _slate400 = Color(0xFF94A3B8);
-  static const _slate600 = Color(0xFF475569);
-  static const _slate700 = Color(0xFF334155);
-  static const _slate900 = Color(0xFF0F172A);
-  static const _green = Color(0xFF10B981);
-  static const _red = Color(0xFFEF4444);
-  static const _amber = Color(0xFFF59E0B);
+  static const _indigo = StitchColors.primary;
+  static const _slate50 = StitchColors.background;
+  static const _slate200 = StitchColors.border;
+  static const _slate400 = StitchColors.textMuted;
+  static const _slate600 = StitchColors.textSecondary;
+  static const _slate700 = StitchColors.textSecondary;
+  static const _slate900 = StitchColors.textPrimary;
+  static const _green = StitchColors.successText;
+  static const _red = StitchColors.dangerText;
+  static const _amber = StitchColors.warningText;
 
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'en_IN',

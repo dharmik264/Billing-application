@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../services/restaurant_api.dart';
+import '../utils/app_constants.dart';
+import '../widgets/custom_page_header.dart';
 import 'print_preview_screen.dart';
 import 'token_generation_screen.dart';
 import '../utils/bill_event_notifier.dart';
@@ -15,12 +16,11 @@ class AllTokensScreen extends StatefulWidget {
 }
 
 class _AllTokensScreenState extends State<AllTokensScreen> {
-  static const Color _panelBackground = Color(0xFFF8FAFC);
-  static const Color _textPrimary = Color(0xFF0F172A);
-
   List<ApiToken> _tokens = [];
   bool _loading = true;
   String? _error;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -38,6 +38,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
   @override
   void dispose() {
     BillEventNotifier.billRefreshNotifier.removeListener(_onBillChanged);
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -84,15 +85,10 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         builder: (context) => PrintPreviewScreen(
           tokenNumber: token.tokenNumber,
           billNumber: token.billNumber,
-          customerName:
-              token.customerName.isNotEmpty ? token.customerName : null,
-          customerPhone:
-              token.customerPhone.isNotEmpty ? token.customerPhone : null,
-          customerAddress:
-              token.customerAddress.isNotEmpty ? token.customerAddress : null,
-          customerGstNumber: token.customerGstNumber.isNotEmpty
-              ? token.customerGstNumber
-              : null,
+          customerName: token.customerName.isNotEmpty ? token.customerName : null,
+          customerPhone: token.customerPhone.isNotEmpty ? token.customerPhone : null,
+          customerAddress: token.customerAddress.isNotEmpty ? token.customerAddress : null,
+          customerGstNumber: token.customerGstNumber.isNotEmpty ? token.customerGstNumber : null,
           paymentMode: token.paymentMode,
           items: token.items
               .map((e) => ApiTokenItemDraft(
@@ -111,23 +107,29 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     );
   }
 
+  List<ApiToken> get _filteredTokens {
+    if (_searchQuery.isEmpty) return _tokens;
+    final q = _searchQuery.toLowerCase();
+    return _tokens.where((t) {
+      return t.tokenNumber.toLowerCase().contains(q) ||
+          t.billNumber.toLowerCase().contains(q) ||
+          t.customerName.toLowerCase().contains(q) ||
+          t.customerPhone.contains(q);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _panelBackground,
-      appBar: AppBar(
-        title: Text('Token History',
-            style: GoogleFonts.inter(
-                fontWeight: FontWeight.w700,
-                color: _textPrimary,
-                fontSize: 17)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: _textPrimary),
+      backgroundColor: StitchColors.background,
+      appBar: CustomAppBar(
+        title: 'Token & Bill History',
+        icon: Icons.history_rounded,
+        subtitle: '${_tokens.length} total bills',
         actions: [
           IconButton(
             tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh_rounded),
+            icon: const Icon(Icons.refresh_rounded, color: StitchColors.textSecondary),
             onPressed: () {
               setState(() {
                 _loading = true;
@@ -138,14 +140,28 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
           ),
         ],
       ),
-      body: _buildBody(),
+      body: Column(
+        children: [
+          CustomSearchActionView(
+            searchHint: 'Search by Token #, Bill #, Customer Name or Phone...',
+            searchController: _searchController,
+            onSearchChanged: (val) => setState(() => _searchQuery = val.trim()),
+            onSearchClear: () {
+              _searchController.clear();
+              setState(() => _searchQuery = '');
+            },
+          ),
+          Expanded(child: _buildBody()),
+        ],
+      ),
     );
   }
 
   Widget _buildBody() {
     if (_loading) {
       return const Center(
-          child: CircularProgressIndicator(color: Color(0xFF4F46E5)));
+        child: CircularProgressIndicator(color: StitchColors.primary),
+      );
     }
 
     if (_error != null) {
@@ -153,292 +169,214 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_outlined,
-                size: 48, color: Color(0xFF94A3B8)),
-            const SizedBox(height: 16),
-            Text(_error!,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                    fontSize: 14, color: const Color(0xFF64748B))),
+            const Icon(Icons.cloud_off_outlined, size: 48, color: StitchColors.textDisabled),
+            const SizedBox(height: 12),
+            Text(_error!, textAlign: TextAlign.center, style: StitchTypography.body(color: StitchColors.textMuted)),
           ],
         ),
       );
     }
 
-    if (_tokens.isEmpty) {
+    final list = _filteredTokens;
+
+    if (list.isEmpty) {
       return Center(
-        child: Text('No tokens found.',
-            style: GoogleFonts.inter(
-                fontSize: 14, color: const Color(0xFF64748B))),
+        child: Text('No matching tokens found.', style: StitchTypography.body(color: StitchColors.textMuted)),
       );
     }
 
     return RefreshIndicator(
       onRefresh: _loadTokens,
-      color: const Color(0xFF4F46E5),
+      color: StitchColors.primary,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        itemCount: _tokens.length,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: list.length,
         itemBuilder: (context, index) {
-          final token = _tokens[index];
-          return _buildTokenCard(token)
-              .animate()
-              .fadeIn(delay: (50 * index).ms)
-              .slideX(begin: 0.1);
+          final token = list[index];
+          return _buildTokenCard(token);
         },
       ),
     );
   }
 
   Widget _buildTokenCard(ApiToken token) {
-    Color statusColor;
-    String statusText = token.status.toUpperCase();
-    if (statusText == 'COMPLETED') {
-      statusColor = const Color(0xFF10B981);
-    } else if (statusText == 'CANCELLED') {
-      statusColor = const Color(0xFFEF4444);
+    Color statusBg;
+    Color statusBorder;
+    Color statusText;
+    String statusLabel = token.status.toUpperCase();
+
+    if (statusLabel == 'COMPLETED') {
+      statusBg = StitchColors.successBg;
+      statusBorder = StitchColors.successBorder;
+      statusText = StitchColors.successText;
+    } else if (statusLabel == 'CANCELLED') {
+      statusBg = StitchColors.dangerBg;
+      statusBorder = StitchColors.dangerBorder;
+      statusText = StitchColors.dangerText;
     } else {
-      statusColor = const Color(0xFF3B82F6);
+      statusBg = StitchColors.infoBg;
+      statusBorder = StitchColors.infoBorder;
+      statusText = StitchColors.infoText;
     }
 
-    final isDelivery = token.orderType.toLowerCase() == 'delivery';
     final cName = token.customerName.trim();
-    String displayTitle;
-    if (isDelivery) {
-      displayTitle = cName.isNotEmpty ? 'Delivery - $cName' : 'Delivery';
-    } else {
-      displayTitle = cName.isNotEmpty ? 'Walk-in - $cName' : 'Walk-in';
-    }
-
+    String displayTitle = cName.isNotEmpty ? cName : 'Walk-in Customer';
     if (token.billNumber.isNotEmpty) {
       displayTitle += ' (#${token.billNumber})';
     }
 
-    return GestureDetector(
-      onTap: () => _openPrintPreview(token),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            )
-          ],
-        ),
-        child: Column(
-          children: [
-            // Top Row: Token Badge & Bill Number | Amount
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF2FF),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'TOKEN ${token.tokenNumber}',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF4F46E5),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: StitchDecorations.card(),
+      child: InkWell(
+        onTap: () => _openPrintPreview(token),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: StitchDecorations.badge(
+                      backgroundColor: StitchColors.surfaceSubtle,
+                      borderColor: StitchColors.border,
+                    ),
+                    child: Text(
+                      'TOKEN ${token.tokenNumber}',
+                      style: StitchTypography.monospace(color: StitchColors.primary, size: 11),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    displayTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF334155),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      displayTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: StitchTypography.header(size: 13),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '\u20B9${token.grandTotal.toStringAsFixed(2)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
+                  Text(
+                    '\u20B9${token.grandTotal.toStringAsFixed(2)}',
+                    style: StitchTypography.monospace(size: 14, weight: FontWeight.w700),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            // Middle Row: Date & Time | Badges (Payment & Status)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _formatTime(token.createdAt),
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: const Color(0xFF64748B),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _formatTime(token.createdAt),
+                    style: StitchTypography.caption(),
                   ),
-                ),
-                Expanded(
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    crossAxisAlignment: WrapCrossAlignment.center,
+                  Row(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => _changePaymentMode(token),
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              minWidth: 48,
-                              minHeight: 48,
-                            ),
-                            child: Align(
-                              alignment: Alignment.center,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE2E8F0),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      token.paymentMode.isNotEmpty
-                                          ? token.paymentMode.toUpperCase()
-                                          : 'CASH',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF475569),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.edit,
-                                        size: 10, color: Color(0xFF475569)),
-                                  ],
+                      GestureDetector(
+                        onTap: () => _changePaymentMode(token),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: StitchDecorations.badge(
+                            backgroundColor: StitchColors.surfaceSubtle,
+                            borderColor: StitchColors.border,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                token.paymentMode.isNotEmpty ? token.paymentMode.toUpperCase() : 'CASH',
+                                style: StitchTypography.caption(color: StitchColors.textSecondary).copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.edit_outlined, size: 12, color: StitchColors.textMuted),
+                            ],
                           ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(6),
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: StitchDecorations.badge(
+                          backgroundColor: statusBg,
+                          borderColor: statusBorder,
                         ),
                         child: Text(
-                          statusText,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: statusColor,
+                          statusLabel,
+                          style: StitchTypography.caption(color: statusText, size: 10).copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            // Bottom Row: Actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (!token.isPaid &&
-                    token.status.toLowerCase() != 'cancelled') ...[
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (!token.isPaid && token.status.toLowerCase() != 'cancelled') ...[
+                    GestureDetector(
+                      onTap: () => _showTokenJamaDialog(token),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: StitchDecorations.badge(
+                          backgroundColor: StitchColors.successBg,
+                          borderColor: StitchColors.successBorder,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.account_balance_wallet_outlined, size: 12, color: StitchColors.successText),
+                            const SizedBox(width: 4),
+                            Text('Jama (₹ જમા)', style: StitchTypography.caption(color: StitchColors.successText).copyWith(fontWeight: FontWeight.w700)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
                   GestureDetector(
-                    onTap: () => _showTokenJamaDialog(token),
+                    onTap: () => _editToken(token),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: StitchDecorations.badge(
+                        backgroundColor: StitchColors.infoBg,
+                        borderColor: StitchColors.infoBorder,
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.account_balance_wallet,
-                              size: 11, color: Color(0xFF10B981)),
-                          const SizedBox(width: 3),
-                          Text('Jama (\u20B9 જમા)',
-                              style: GoogleFonts.inter(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF10B981))),
+                          const Icon(Icons.edit_outlined, size: 12, color: StitchColors.infoText),
+                          const SizedBox(width: 4),
+                          Text('Edit', style: StitchTypography.caption(color: StitchColors.infoText).copyWith(fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => _deleteToken(token),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: StitchDecorations.badge(
+                        backgroundColor: StitchColors.dangerBg,
+                        borderColor: StitchColors.dangerBorder,
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete_outline_rounded, size: 12, color: StitchColors.dangerText),
+                          const SizedBox(width: 4),
+                          Text('Delete', style: StitchTypography.caption(color: StitchColors.dangerText).copyWith(fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
-                GestureDetector(
-                  onTap: () => _editToken(token),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.edit_document,
-                            size: 11, color: Color(0xFF3B82F6)),
-                        const SizedBox(width: 3),
-                        Text('Edit',
-                            style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF3B82F6))),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                GestureDetector(
-                  onTap: () => _deleteToken(token),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF2F2),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.delete_outline,
-                            size: 11, color: Color(0xFFEF4444)),
-                        const SizedBox(width: 3),
-                        Text('Delete',
-                            style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFFEF4444))),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
