@@ -516,9 +516,9 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
+                    color: customer.isActive ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _cardBorder),
+                    border: Border.all(color: customer.isActive ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -528,7 +528,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                         height: 6,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: customer.isActive ? _brandBlack : const Color(0xFF888888),
+                          color: customer.isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -536,8 +536,8 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                         customer.isActive ? 'Active' : 'Inactive',
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: _brandBlack,
+                          fontWeight: FontWeight.w600,
+                          color: customer.isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
                         ),
                       ),
                     ],

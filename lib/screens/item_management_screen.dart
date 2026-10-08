@@ -459,7 +459,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                       padding: const EdgeInsets.all(2),
                       alignment: isActive ? Alignment.centerRight : Alignment.centerLeft,
                       decoration: BoxDecoration(
-                        color: isActive ? const Color(0xFF111111) : const Color(0xFFD8D8D8),
+                        color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Container(
@@ -473,11 +473,11 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Active',
+                      isActive ? 'Active' : 'Inactive',
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF111111),
+                        fontWeight: FontWeight.w600,
+                        color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
                       ),
                     ),
                   ],
