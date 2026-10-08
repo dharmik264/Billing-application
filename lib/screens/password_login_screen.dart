@@ -12,7 +12,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'registration_screen.dart';
 import 'super_admin_login_screen.dart';
 import 'forgot_password_screen.dart';
-import '../utils/app_constants.dart';
 
 class PasswordLoginScreen extends StatefulWidget {
   const PasswordLoginScreen({Key? key}) : super(key: key);
@@ -221,312 +220,429 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: const Color(0xFFEEF2FF),
+      backgroundColor: const Color(0xFFF5F3F3),
       body: SafeArea(
-        bottom: false,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 550),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: IntrinsicHeight(
-                      child: Column(
-                    children: [
-                      // Top Hero / Header Section
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 20),
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFBF9F8),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Column(
+                  children: [
+                    // Header Bar
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFBF9F8),
+                        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+                      ),
+                      child: Row(
+                        children: [
+                          if (Navigator.canPop(context))
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back, size: 20, color: Color(0xFF1B1C1C)),
+                              onPressed: () => Navigator.pop(context),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            )
+                          else
+                            const SizedBox(width: 20),
+                          Expanded(
+                            child: Text(
+                              'Dhara Food POS',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF1B1C1C),
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Dev Mode',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFF5D5F5F),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              SizedBox(
+                                height: 20,
+                                width: 36,
+                                child: Switch(
+                                  value: _isDevMode,
+                                  activeTrackColor: const Color(0xFF1B1C1C),
+                                  onChanged: (val) {
+                                    setState(() => _isDevMode = val);
+                                    if (val) {
+                                      RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
+                                      if (_devUsers.isEmpty) {
+                                        _fetchDevUsers();
+                                      }
+                                    } else {
+                                      RestaurantApi.instance.setCustomBaseUrl(null);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Body scrollable content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
                         child: Column(
                           children: [
-                            Align(
-                              alignment: Alignment.topRight,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 16),
+                            // Monochromatic Brand Icon Anchor
+                            Container(
+                              width: 56,
+                              height: 56,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                              ),
+                              child: const Icon(
+                                Icons.storefront_outlined,
+                                size: 28,
+                                color: Color(0xFF1B1C1C),
+                              ),
+                            ),
+
+                            Text(
+                              'Welcome Back!',
+                              style: GoogleFonts.inter(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF1B1C1C),
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Log in to securely manage your shop.',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                color: const Color(0xFF5D5F5F),
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            if (_isDevMode) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF5F3F3),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                                ),
                                 child: Row(
-                                  mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
-                                    Switch(
-                                      value: _isDevMode,
-                                      activeTrackColor: const Color(0xFF4F46E5),
-                                      onChanged: (val) {
-                                        setState(() => _isDevMode = val);
-                                        if (val) {
-                                          RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
-                                          if (_devUsers.isEmpty) {
-                                            _fetchDevUsers();
-                                          }
-                                        } else {
-                                          RestaurantApi.instance.setCustomBaseUrl(null);
-                                        }
-                                      },
+                                    const Icon(Icons.developer_mode, size: 16, color: Color(0xFF1B1C1C)),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Local Server (http://127.0.0.1:8000/api)',
+                                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C)),
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
+                              if (_isLoadingDevUsers)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF1B1C1C)))),
+                                )
+                              else if (_devUsers.isNotEmpty) ...[
+                                Text('Quick Select Dev User:', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFF5D5F5F))),
+                                const SizedBox(height: 6),
+                                SizedBox(
+                                  height: 36,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: _devUsers.length,
+                                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                                    itemBuilder: (context, index) {
+                                      final u = _devUsers[index];
+                                      final name = u['name'] ?? u['phone'] ?? 'User';
+                                      return ActionChip(
+                                        avatar: const Icon(Icons.person, size: 14, color: Color(0xFF1B1C1C)),
+                                        label: Text(name.toString(), style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C))),
+                                        backgroundColor: Colors.white,
+                                        side: const BorderSide(color: Color(0xFFE5E7EB)),
+                                        onPressed: () {
+                                          _mobileController.text = u['phone']?.toString() ?? '';
+                                          _performDevLogin(u['phone']?.toString() ?? '');
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                            ],
+
+                            // Form Fields
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'MOBILE NUMBER',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF5D5F5F),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFF5F3F3),
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(7),
+                                            bottomLeft: Radius.circular(7),
+                                          ),
+                                          border: Border(right: BorderSide(color: Color(0xFFE5E7EB))),
+                                        ),
+                                        child: Text(
+                                          '+91',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF1B1C1C),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _mobileController,
+                                          keyboardType: TextInputType.phone,
+                                          inputFormatters: [
+                                            FilteringTextInputFormatter.digitsOnly,
+                                            LengthLimitingTextInputFormatter(10),
+                                          ],
+                                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1B1C1C)),
+                                          decoration: InputDecoration(
+                                            hintText: 'Enter Phone Number',
+                                            hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F)),
+                                            border: InputBorder.none,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                Text(
+                                  'SECURITY PASSWORD',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF5D5F5F),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Container(
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Padding(
+                                        padding: EdgeInsets.only(left: 12, right: 8),
+                                        child: Icon(Icons.lock_outline, size: 18, color: Color(0xFF5D5F5F)),
+                                      ),
+                                      Expanded(
+                                        child: TextField(
+                                          controller: _passwordController,
+                                          obscureText: _obscurePassword,
+                                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1B1C1C)),
+                                          decoration: InputDecoration(
+                                            hintText: 'Enter password',
+                                            hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F)),
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                          size: 18,
+                                          color: const Color(0xFF5D5F5F),
+                                        ),
+                                        onPressed: () {
+                                          setState(() => _obscurePassword = !_obscurePassword);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                                    ),
+                                    child: Text(
+                                      'Forgot Password?',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: const Color(0xFF5D5F5F),
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: _isLoading ? null : _login,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1B1C1C),
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                      elevation: 0,
+                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                        : Text('Login', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600)),
+                                  ),
+                                ),
+                              ],
                             ),
+                            const SizedBox(height: 24),
+
+                            // Terminal POS info ledger
                             Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-                                    blurRadius: 25,
-                                    spreadRadius: 2,
-                                    offset: const Offset(0, 8),
+                              padding: const EdgeInsets.only(top: 12),
+                              decoration: const BoxDecoration(
+                                border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Terminal POS #04',
+                                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F)),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 6,
+                                        height: 6,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF1B1C1C),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Store Node Online',
+                                        style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F)),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              child: const Icon(Icons.storefront_rounded, size: 54, color: Color(0xFF4F46E5)),
                             ),
                           ],
                         ),
                       ),
-                      
-                      // Bottom Card Form Container
-                      Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(32),
-                              topRight: Radius.circular(32),
-                            ),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
+                    ),
+
+                    // Bottom Navigation Footer
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF5F3F3),
+                        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('New user? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F))),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const RegistrationScreen()));
+                                },
+                                child: Text('Register here', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C), decoration: TextDecoration.underline)),
+                              ),
                             ],
                           ),
-                          padding: const EdgeInsets.fromLTRB(28, 32, 28, 32),
-                          child: _buildLoginForm(),
-                        ),
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('Super Admin? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F))),
+                              GestureDetector(
+                                onTap: () {
+                                  if (_isDevMode) {
+                                    _devSuperAdminBypass();
+                                  } else {
+                                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
+                                  }
+                                },
+                                child: Text('Login here', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C), decoration: TextDecoration.underline)),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-                );
-              },
             ),
           ),
         ),
       ),
     );
   }
-
-  Widget _buildLoginForm() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (_isDevMode) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFC7D2FE)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.developer_mode, size: 18, color: Color(0xFF4F46E5)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Local Server Active (http://127.0.0.1:8000/api)',
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF3730A3)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (_isLoadingDevUsers)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
-              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4F46E5)))),
-            )
-          else if (_devUsers.isNotEmpty) ...[
-            Text('Quick Select Dev User:', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
-            const SizedBox(height: 6),
-            SizedBox(
-              height: 36,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _devUsers.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final u = _devUsers[index];
-                  final name = u['name'] ?? u['phone'] ?? 'User';
-                  return ActionChip(
-                    avatar: const Icon(Icons.person, size: 14, color: Color(0xFF4F46E5)),
-                    label: Text(name.toString(), style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
-                    backgroundColor: const Color(0xFFF1F5F9),
-                    onPressed: () {
-                      _mobileController.text = u['phone']?.toString() ?? '';
-                      _performDevLogin(u['phone']?.toString() ?? '');
-                    },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ],
-        Text(
-          'Welcome Back!',
-          style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Log in to securely manage your shop.',
-          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B), height: 1.5),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 24),
-        Container(
-          decoration: BoxDecoration(
-            color: StitchColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: StitchColors.border, width: 1),
-          ),
-          child: Row(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Text('+91', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: StitchColors.textPrimary)),
-              ),
-              Container(width: 1, height: 20, color: StitchColors.border),
-              Expanded(
-                child: TextField(
-                  controller: _mobileController,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: StitchColors.textPrimary, letterSpacing: 1.0),
-                  decoration: InputDecoration(
-                    hintText: 'Enter Phone Number',
-                    hintStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: StitchColors.textMuted, letterSpacing: 0),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: StitchColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: StitchColors.border, width: 1),
-          ),
-          child: Row(
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                child: Icon(Icons.lock_outline, color: StitchColors.textMuted, size: 18),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: StitchColors.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Password',
-                    hintStyle: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: StitchColors.textMuted),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  color: StitchColors.textMuted,
-                  size: 18,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        Align(
-          alignment: Alignment.centerRight,
-          child: GestureDetector(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-            ),
-            child: Text(
-              'Forgot Password?',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: StitchColors.primary,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton(
-          onPressed: _isLoading ? null : _login,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: StitchColors.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
-            elevation: 0,
-          ),
-          child: _isLoading
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-              : Text('Login', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('New user? ', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const RegistrationScreen()));
-              },
-              child: Text('Register here', style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Super Admin? ', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
-            GestureDetector(
-              onTap: () {
-                if (_isDevMode) {
-                  _devSuperAdminBypass();
-                } else {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
-                }
-              },
-              child: Text('Login here', style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontWeight: FontWeight.w700)),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 }
+

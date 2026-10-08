@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/restaurant_api.dart';
-import '../utils/app_constants.dart';
 import '../widgets/custom_page_header.dart';
 import 'print_preview_screen.dart';
 import 'token_generation_screen.dart';
@@ -20,6 +19,8 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
   bool _loading = true;
   String? _error;
   String _searchQuery = '';
+  String _paymentModeFilter = 'all'; // 'all', 'cash', 'online'
+  DateTime? _selectedDate;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -108,20 +109,44 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
   }
 
   List<ApiToken> get _filteredTokens {
-    if (_searchQuery.isEmpty) return _tokens;
-    final q = _searchQuery.toLowerCase();
     return _tokens.where((t) {
-      return t.tokenNumber.toLowerCase().contains(q) ||
-          t.billNumber.toLowerCase().contains(q) ||
-          t.customerName.toLowerCase().contains(q) ||
-          t.customerPhone.contains(q);
+      // Payment mode filter
+      if (_paymentModeFilter == 'cash' && t.paymentMode.toLowerCase() != 'cash') {
+        return false;
+      }
+      if (_paymentModeFilter == 'online' && t.paymentMode.toLowerCase() != 'online' && t.paymentMode.toLowerCase() != 'upi') {
+        return false;
+      }
+
+      // Date filter
+      if (_selectedDate != null) {
+        try {
+          final dt = DateTime.parse(t.createdAt).toLocal();
+          if (dt.year != _selectedDate!.year || dt.month != _selectedDate!.month || dt.day != _selectedDate!.day) {
+            return false;
+          }
+        } catch (_) {}
+      }
+
+      // Search query filter
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        return t.tokenNumber.toLowerCase().contains(q) ||
+            t.billNumber.toLowerCase().contains(q) ||
+            t.customerName.toLowerCase().contains(q) ||
+            t.customerPhone.contains(q);
+      }
+      return true;
     }).toList();
   }
+
+  int get _cashCount => _tokens.where((t) => t.paymentMode.toLowerCase() == 'cash').length;
+  int get _onlineCount => _tokens.where((t) => t.paymentMode.toLowerCase() == 'online' || t.paymentMode.toLowerCase() == 'upi').length;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: StitchColors.background,
+      backgroundColor: const Color(0xFFFBF9F8),
       appBar: CustomAppBar(
         title: 'Token & Bill History',
         icon: Icons.history_rounded,
@@ -129,7 +154,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         actions: [
           IconButton(
             tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh_rounded, color: StitchColors.textSecondary),
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF111111)),
             onPressed: () {
               setState(() {
                 _loading = true;
@@ -142,17 +167,137 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       ),
       body: Column(
         children: [
-          CustomSearchActionView(
-            searchHint: 'Search by Token #, Bill #, Customer Name or Phone...',
-            searchController: _searchController,
-            onSearchChanged: (val) => setState(() => _searchQuery = val.trim()),
-            onSearchClear: () {
-              _searchController.clear();
-              setState(() => _searchQuery = '');
-            },
+          // Search & Filter header section
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5))),
+            ),
+            child: Column(
+              children: [
+                // Search Bar
+                Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFE5E5E5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Icon(Icons.search, size: 18, color: Color(0xFF71717A)),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF111111)),
+                          decoration: InputDecoration(
+                            hintText: 'Search by Token #, Bill #, Customer Name...',
+                            hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFA1A1AA)),
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ),
+                      if (_searchQuery.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.clear, size: 16, color: Color(0xFF71717A)),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Horizontal filter pills
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterPill(
+                        label: 'All Bills (${_tokens.length})',
+                        isSelected: _paymentModeFilter == 'all' && _selectedDate == null,
+                        onTap: () {
+                          setState(() {
+                            _paymentModeFilter = 'all';
+                            _selectedDate = null;
+                          });
+                        },
+                      ),
+                      const SizedBox(width: 6),
+                      _buildFilterPill(
+                        label: 'Cash ($_cashCount)',
+                        isSelected: _paymentModeFilter == 'cash',
+                        onTap: () {
+                          setState(() => _paymentModeFilter = _paymentModeFilter == 'cash' ? 'all' : 'cash');
+                        },
+                      ),
+                      const SizedBox(width: 6),
+                      _buildFilterPill(
+                        label: 'Online ($_onlineCount)',
+                        isSelected: _paymentModeFilter == 'online',
+                        onTap: () {
+                          setState(() => _paymentModeFilter = _paymentModeFilter == 'online' ? 'all' : 'online');
+                        },
+                      ),
+                      const SizedBox(width: 6),
+                      _buildFilterPill(
+                        label: _selectedDate == null
+                            ? 'Filter by Date'
+                            : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
+                        isSelected: _selectedDate != null,
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate ?? DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                          );
+                          if (picked != null) {
+                            setState(() => _selectedDate = picked);
+                          } else if (_selectedDate != null) {
+                            setState(() => _selectedDate = null);
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
+
           Expanded(child: _buildBody()),
         ],
+      ),
+    );
+  }
+
+  Widget _buildFilterPill({required String label, required bool isSelected, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF111111) : Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: isSelected ? const Color(0xFF111111) : const Color(0xFFE5E5E5)),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: isSelected ? Colors.white : const Color(0xFF71717A),
+          ),
+        ),
       ),
     );
   }
@@ -160,7 +305,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
   Widget _buildBody() {
     if (_loading) {
       return const Center(
-        child: CircularProgressIndicator(color: StitchColors.primary),
+        child: CircularProgressIndicator(color: Color(0xFF111111)),
       );
     }
 
@@ -169,9 +314,9 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_outlined, size: 48, color: StitchColors.textDisabled),
+            const Icon(Icons.cloud_off_outlined, size: 48, color: Color(0xFF71717A)),
             const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center, style: StitchTypography.body(color: StitchColors.textMuted)),
+            Text(_error!, textAlign: TextAlign.center, style: GoogleFonts.inter(color: const Color(0xFF71717A))),
           ],
         ),
       );
@@ -181,15 +326,15 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
 
     if (list.isEmpty) {
       return Center(
-        child: Text('No matching tokens found.', style: StitchTypography.body(color: StitchColors.textMuted)),
+        child: Text('No matching tokens found.', style: GoogleFonts.inter(color: const Color(0xFF71717A))),
       );
     }
 
     return RefreshIndicator(
       onRefresh: _loadTokens,
-      color: StitchColors.primary,
+      color: const Color(0xFF111111),
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         itemCount: list.length,
         itemBuilder: (context, index) {
           final token = list[index];
@@ -206,107 +351,143 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     String statusLabel = token.status.toUpperCase();
 
     if (statusLabel == 'COMPLETED') {
-      statusBg = StitchColors.successBg;
-      statusBorder = StitchColors.successBorder;
-      statusText = StitchColors.successText;
+      statusBg = const Color(0xFFF0FDF4);
+      statusBorder = const Color(0xFFDCFCE7);
+      statusText = const Color(0xFF166534);
     } else if (statusLabel == 'CANCELLED') {
-      statusBg = StitchColors.dangerBg;
-      statusBorder = StitchColors.dangerBorder;
-      statusText = StitchColors.dangerText;
+      statusBg = const Color(0xFFFEF2F2);
+      statusBorder = const Color(0xFFFEE2E2);
+      statusText = const Color(0xFF991B1B);
     } else {
-      statusBg = StitchColors.infoBg;
-      statusBorder = StitchColors.infoBorder;
-      statusText = StitchColors.infoText;
+      statusBg = const Color(0xFFEFF6FF);
+      statusBorder = const Color(0xFFDBEAFE);
+      statusText = const Color(0xFF1E40AF);
     }
 
     final cName = token.customerName.trim();
-    String displayTitle = cName.isNotEmpty ? cName : 'Token #${token.tokenNumber}';
-    if (token.billNumber.isNotEmpty) {
-      displayTitle += ' (#${token.billNumber})';
-    }
+    String displayCustomerName = cName.isNotEmpty ? cName : 'Token #${token.tokenNumber}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: StitchDecorations.card(),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE5E5E5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: () => _openPrintPreview(token),
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderRadius: BorderRadius.circular(8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Top row: Token badge + Customer name + Amount
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: StitchDecorations.badge(
-                      backgroundColor: StitchColors.surfaceSubtle,
-                      borderColor: StitchColors.border,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: const Color(0xFF111111), width: 1),
                     ),
                     child: Text(
                       'TOKEN ${token.tokenNumber}',
-                      style: StitchTypography.monospace(color: StitchColors.primary, size: 11),
+                      style: GoogleFonts.robotoMono(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF111111),
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      displayTitle,
+                      token.billNumber.isNotEmpty
+                          ? '$displayCustomerName (#${token.billNumber})'
+                          : displayCustomerName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: StitchTypography.header(size: 13),
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF111111),
+                      ),
                     ),
                   ),
                   Text(
                     '\u20B9${token.grandTotal.toStringAsFixed(2)}',
-                    style: StitchTypography.monospace(size: 14, weight: FontWeight.w700),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111111),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
+
+              // Middle row: Time + Payment mode pill + Status pill
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     _formatTime(token.createdAt),
-                    style: StitchTypography.caption(),
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 11,
+                      color: const Color(0xFF71717A),
+                    ),
                   ),
                   Row(
                     children: [
                       GestureDetector(
                         onTap: () => _changePaymentMode(token),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: StitchDecorations.badge(
-                            backgroundColor: StitchColors.surfaceSubtle,
-                            borderColor: StitchColors.border,
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF4F4F5),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: const Color(0xFFE5E5E5)),
                           ),
                           child: Row(
                             children: [
                               Text(
                                 token.paymentMode.isNotEmpty ? token.paymentMode.toUpperCase() : 'CASH',
-                                style: StitchTypography.caption(color: StitchColors.textSecondary).copyWith(
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
                                   fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF111111),
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              const Icon(Icons.edit_outlined, size: 12, color: StitchColors.textMuted),
+                              const SizedBox(width: 3),
+                              const Icon(Icons.edit_outlined, size: 10, color: Color(0xFF71717A)),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: StitchDecorations.badge(
-                          backgroundColor: statusBg,
-                          borderColor: statusBorder,
+                        decoration: BoxDecoration(
+                          color: statusBg,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: statusBorder),
                         ),
                         child: Text(
                           statusLabel,
-                          style: StitchTypography.caption(color: statusText, size: 10).copyWith(
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
+                            color: statusText,
                           ),
                         ),
                       ),
@@ -314,7 +495,9 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
+
+              // Bottom row: Action Buttons (Jama, Edit, Delete)
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -322,16 +505,20 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                     GestureDetector(
                       onTap: () => _showTokenJamaDialog(token),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: StitchDecorations.badge(
-                          backgroundColor: StitchColors.successBg,
-                          borderColor: StitchColors.successBorder,
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: const Color(0xFFDCFCE7)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.account_balance_wallet_outlined, size: 12, color: StitchColors.successText),
-                            const SizedBox(width: 4),
-                            Text('Jama (₹ જમા)', style: StitchTypography.caption(color: StitchColors.successText).copyWith(fontWeight: FontWeight.w700)),
+                            const Icon(Icons.account_balance_wallet_outlined, size: 12, color: Color(0xFF166534)),
+                            const SizedBox(width: 3),
+                            Text(
+                              'Jama (\u20B9 જમા)',
+                              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF166534)),
+                            ),
                           ],
                         ),
                       ),
@@ -341,16 +528,20 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                   GestureDetector(
                     onTap: () => _editToken(token),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: StitchDecorations.badge(
-                        backgroundColor: StitchColors.infoBg,
-                        borderColor: StitchColors.infoBorder,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFFE5E5E5)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.edit_outlined, size: 12, color: StitchColors.infoText),
-                          const SizedBox(width: 4),
-                          Text('Edit', style: StitchTypography.caption(color: StitchColors.infoText).copyWith(fontWeight: FontWeight.w600)),
+                          const Icon(Icons.edit_outlined, size: 12, color: Color(0xFF71717A)),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Edit',
+                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFF111111)),
+                          ),
                         ],
                       ),
                     ),
@@ -359,16 +550,20 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                   GestureDetector(
                     onTap: () => _deleteToken(token),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: StitchDecorations.badge(
-                        backgroundColor: StitchColors.dangerBg,
-                        borderColor: StitchColors.dangerBorder,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEF2F2),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFFFEE2E2)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.delete_outline_rounded, size: 12, color: StitchColors.dangerText),
-                          const SizedBox(width: 4),
-                          Text('Delete', style: StitchTypography.caption(color: StitchColors.dangerText).copyWith(fontWeight: FontWeight.w600)),
+                          const Icon(Icons.delete_outline_rounded, size: 12, color: Color(0xFFDC2626)),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Delete',
+                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFF991B1B)),
+                          ),
                         ],
                       ),
                     ),
@@ -398,17 +593,17 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
           builder: (context, setDialogState) {
             return AlertDialog(
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
+                  borderRadius: BorderRadius.circular(16)),
               title: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.account_balance_wallet_rounded,
-                        color: Color(0xFF10B981), size: 24),
+                        color: Color(0xFF10B981), size: 22),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -416,8 +611,8 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                       'Bill #${token.billNumber} Jama',
                       style: GoogleFonts.inter(
                           fontWeight: FontWeight.w700,
-                          fontSize: 17,
-                          color: const Color(0xFF0F172A)),
+                          fontSize: 16,
+                          color: const Color(0xFF111111)),
                     ),
                   ),
                 ],
@@ -431,9 +626,9 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        color: const Color(0xFFF5F3F3),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFE5E5E5)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,35 +637,35 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                             Text(token.customerName,
                                 style: GoogleFonts.inter(
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 14,
-                                    color: const Color(0xFF0F172A))),
+                                    fontSize: 13,
+                                    color: const Color(0xFF111111))),
                           Text(
                               'Bill Total: \u20B9${token.grandTotal.toStringAsFixed(2)}',
                               style: GoogleFonts.inter(
                                   fontSize: 12,
-                                  color: const Color(0xFF475569))),
+                                  color: const Color(0xFF71717A))),
                           if (token.receivedAmount > 0)
                             Text(
                                 'Already Paid: \u20B9${token.receivedAmount.toStringAsFixed(2)}',
                                 style: GoogleFonts.inter(
                                     fontSize: 12,
-                                    color: const Color(0xFF10B981))),
+                                    color: const Color(0xFF166534))),
                           if (token.balanceDue > 0)
                             Text(
                                 'Remaining Due: \u20B9${token.balanceDue.toStringAsFixed(2)}',
                                 style: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: const Color(0xFFEF4444))),
+                                    color: const Color(0xFF991B1B))),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
                     Text('Jama Amount (\u20B9 જમા રકમ)',
                         style: GoogleFonts.inter(
                             fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color: const Color(0xFF334155))),
+                            fontSize: 12,
+                            color: const Color(0xFF111111))),
                     const SizedBox(height: 6),
                     TextField(
                       controller: amountCtrl,
@@ -478,26 +673,26 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                           const TextInputType.numberWithOptions(decimal: true),
                       autofocus: true,
                       style: GoogleFonts.inter(
-                          fontSize: 16, fontWeight: FontWeight.w700),
+                          fontSize: 15, fontWeight: FontWeight.w700),
                       decoration: InputDecoration(
                         prefixText: '\u20B9 ',
                         hintText: 'Enter amount...',
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 12),
+                            horizontal: 12, vertical: 10),
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(8)),
                         focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(8),
                             borderSide: const BorderSide(
-                                color: Color(0xFF10B981), width: 2)),
+                                color: Color(0xFF111111), width: 1.5)),
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text('Payment Mode (ચૂકવણી મોડ)',
                         style: GoogleFonts.inter(
                             fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                            color: const Color(0xFF334155))),
+                            fontSize: 12,
+                            color: const Color(0xFF111111))),
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -505,8 +700,11 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                           child: ChoiceChip(
                             label: const Text('Cash'),
                             selected: selectedMode == 'CASH',
-                            selectedColor:
-                                const Color(0xFF10B981).withValues(alpha: 0.2),
+                            selectedColor: const Color(0xFF111111),
+                            labelStyle: TextStyle(
+                              color: selectedMode == 'CASH' ? Colors.white : const Color(0xFF111111),
+                              fontSize: 12,
+                            ),
                             onSelected: (val) {
                               if (val) {
                                 setDialogState(() => selectedMode = 'CASH');
@@ -514,13 +712,16 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                             },
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: ChoiceChip(
                             label: const Text('UPI'),
                             selected: selectedMode == 'ONLINE',
-                            selectedColor:
-                                const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                            selectedColor: const Color(0xFF111111),
+                            labelStyle: TextStyle(
+                              color: selectedMode == 'ONLINE' ? Colors.white : const Color(0xFF111111),
+                              fontSize: 12,
+                            ),
                             onSelected: (val) {
                               if (val) {
                                 setDialogState(() => selectedMode = 'ONLINE');
@@ -528,12 +729,16 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                             },
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         Expanded(
                           child: ChoiceChip(
                             label: const Text('Card'),
                             selected: selectedMode == 'CARD',
-                            selectedColor: Colors.amber.withValues(alpha: 0.2),
+                            selectedColor: const Color(0xFF111111),
+                            labelStyle: TextStyle(
+                              color: selectedMode == 'CARD' ? Colors.white : const Color(0xFF111111),
+                              fontSize: 12,
+                            ),
                             onSelected: (val) {
                               if (val) {
                                 setDialogState(() => selectedMode = 'CARD');
@@ -551,7 +756,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                   onPressed:
                       submitting ? null : () => Navigator.pop(ctx, false),
                   child: Text('Cancel',
-                      style: GoogleFonts.inter(color: const Color(0xFF475569))),
+                      style: GoogleFonts.inter(color: const Color(0xFF71717A))),
                 ),
                 ElevatedButton(
                   onPressed: submitting
@@ -587,10 +792,10 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                           }
                         },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10B981),
+                    backgroundColor: const Color(0xFF111111),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                   child: submitting
                       ? const SizedBox(
@@ -600,7 +805,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                               color: Colors.white, strokeWidth: 2))
                       : Text('Submit Jama (\u20B9 જમા)',
                           style:
-                              GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                              GoogleFonts.inter(fontWeight: FontWeight.w600)),
                 ),
               ],
             );
@@ -614,7 +819,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Jama recorded for Bill #${token.billNumber}!'),
-            backgroundColor: const Color(0xFF10B981),
+            backgroundColor: const Color(0xFF166534),
           ),
         );
         _loadTokens();
@@ -628,19 +833,19 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       builder: (context) => AlertDialog(
         title: Text('Change Payment Mode',
             style:
-                GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 18)),
+                GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
               title: Text('Cash', style: GoogleFonts.inter()),
               leading:
-                  const Icon(Icons.payments_outlined, color: Color(0xFF10B981)),
+                  const Icon(Icons.payments_outlined, color: Color(0xFF111111)),
               onTap: () => Navigator.pop(context, 'CASH'),
             ),
             ListTile(
               title: Text('Online / UPI', style: GoogleFonts.inter()),
-              leading: const Icon(Icons.qr_code_2, color: Color(0xFF4F46E5)),
+              leading: const Icon(Icons.qr_code_2, color: Color(0xFF111111)),
               onTap: () => Navigator.pop(context, 'ONLINE'),
             ),
           ],
