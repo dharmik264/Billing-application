@@ -510,11 +510,12 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              // Status Pill
+              // Status Toggle Switch
               GestureDetector(
                 onTap: () => _toggleCustomerStatus(customer),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: customer.isActive ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(20),
@@ -523,22 +524,34 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 6,
-                        height: 6,
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 36,
+                        height: 20,
+                        padding: const EdgeInsets.all(2),
+                        alignment: customer.isActive ? Alignment.centerRight : Alignment.centerLeft,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
                           color: customer.isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        customer.isActive ? 'Active' : 'Inactive',
+                      const SizedBox(width: 8),
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 200),
                         style: GoogleFonts.inter(
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: customer.isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
                         ),
+                        child: Text(customer.isActive ? 'Active' : 'Inactive'),
                       ),
                     ],
                   ),

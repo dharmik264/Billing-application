@@ -430,29 +430,38 @@ class _EditItemScreenState extends State<EditItemScreen> {
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: _bg,
+                          color: _activeStatus ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: _borderLight),
+                          border: Border.all(color: _activeStatus ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2)),
                         ),
-                        child: const Icon(Icons.check_circle_outline_rounded, size: 18, color: _primary),
+                        child: Icon(
+                          _activeStatus ? Icons.check_circle_outline_rounded : Icons.highlight_off_rounded,
+                          size: 18,
+                          color: _activeStatus ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                        ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Active Status',
-                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: _textOnSurface),
+                            AnimatedDefaultTextStyle(
+                              duration: const Duration(milliseconds: 200),
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: _activeStatus ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                              ),
+                              child: Text(_activeStatus ? 'Active Status' : 'Inactive Status'),
                             ),
                             Text(
-                              "Set to 'Out of Stock' if disabled",
+                              _activeStatus ? 'Item is active on billing menu' : "Set to 'Out of Stock' if disabled",
                               style: GoogleFonts.inter(fontSize: 12, color: _textSecondary),
                             ),
                           ],
                         ),
                       ),
-                      _customToggle(_activeStatus),
+                      _statusToggle(_activeStatus),
                     ],
                   ),
                 ),
@@ -538,6 +547,52 @@ class _EditItemScreenState extends State<EditItemScreen> {
           shape: BoxShape.circle,
           border: Border.all(color: _borderLight),
         ),
+      ),
+    );
+  }
+
+  Widget _statusToggle(bool isActive) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isActive ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 36,
+            height: 20,
+            padding: const EdgeInsets.all(2),
+            alignment: isActive ? Alignment.centerRight : Alignment.centerLeft,
+            decoration: BoxDecoration(
+              color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+            ),
+            child: Text(isActive ? 'Active' : 'Inactive'),
+          ),
+        ],
       ),
     );
   }

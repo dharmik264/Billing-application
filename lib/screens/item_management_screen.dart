@@ -449,38 +449,48 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
             children: [
               GestureDetector(
                 onTap: () => _toggleActiveStatus(item),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 36,
-                      height: 20,
-                      padding: const EdgeInsets.all(2),
-                      alignment: isActive ? Alignment.centerRight : Alignment.centerLeft,
-                      decoration: BoxDecoration(
-                        color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isActive ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isActive ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 36,
+                        height: 20,
+                        padding: const EdgeInsets.all(2),
+                        alignment: isActive ? Alignment.centerRight : Alignment.centerLeft,
+                        decoration: BoxDecoration(
+                          color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Container(
+                          width: 16,
+                          height: 16,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isActive ? 'Active' : 'Inactive',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                      const SizedBox(width: 8),
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 200),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                        ),
+                        child: Text(isActive ? 'Active' : 'Inactive'),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 

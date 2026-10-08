@@ -400,49 +400,72 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
   }
 
   Widget _buildStatusToggle() {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F4F5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _cardBorder),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _statusOption('active', 'Active', Icons.check_circle_outline_rounded, const Color(0xFF16A34A))),
-          Expanded(child: _statusOption('inactive', 'Inactive', Icons.cancel_outlined, _mutedText)),
-        ],
-      ),
-    );
-  }
-
-  Widget _statusOption(String value, String label, IconData icon, Color activeColor) {
-    final selected = _status == value;
+    final isActive = _status == 'active';
     return GestureDetector(
-      onTap: () => setState(() => _status = value),
+      onTap: () => setState(() => _status = isActive ? 'inactive' : 'active'),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: selected ? Border.all(color: _cardBorder) : null,
-          boxShadow: selected
-              ? [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)]
-              : [],
+          color: isActive ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isActive ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2)),
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, size: 16, color: selected ? activeColor : _mutedText),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                color: selected ? _brandBlack : _mutedText,
-              ),
+            Row(
+              children: [
+                Icon(
+                  isActive ? Icons.check_circle_outline_rounded : Icons.highlight_off_rounded,
+                  size: 18,
+                  color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                ),
+                const SizedBox(width: 8),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                  ),
+                  child: Text(isActive ? 'Customer Active' : 'Customer Inactive'),
+                ),
+              ],
+            ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 36,
+                  height: 20,
+                  padding: const EdgeInsets.all(2),
+                  alignment: isActive ? Alignment.centerRight : Alignment.centerLeft,
+                  decoration: BoxDecoration(
+                    color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                  ),
+                  child: Text(isActive ? 'Active' : 'Inactive'),
+                ),
+              ],
             ),
           ],
         ),
