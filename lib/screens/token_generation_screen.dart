@@ -273,20 +273,33 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       return;
     }
 
-    // Check 1: Ensure customer name and phone are filled
-    String name = _customerNameController.text.trim();
-    String phone = _customerPhoneController.text.trim();
+    // Ensure customer details are entered directly on the Current Bill page
+    final String name = _customerNameController.text.trim();
+    final String phone = _customerPhoneController.text.trim();
 
-    if (name.isEmpty && phone.isEmpty) {
-      final filled = await _promptCustomerInfoForUdhar();
-      if (!filled) return;
-      name = _customerNameController.text.trim();
-      phone = _customerPhoneController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter Customer Name in Customer Details section for Udhar bill'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
+    if (phone.isEmpty || !RegExp(r'^\d{10}$').hasMatch(phone)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid 10-digit Mobile Number for Udhar bill'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
     }
 
     if (!mounted) return;
 
-    // Check 2: Prompt for today's received payment amount
+    // Prompt for today's received payment amount (if any)
     final result = await _promptPartialPaymentForUdhar();
     if (result == null) return; // Cancelled
 
@@ -306,295 +319,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
 
     _cartTrigger.value++;
     await _saveBill();
-  }
-
-  Future<bool> _promptCustomerInfoForUdhar() async {
-    final nameCtrl = TextEditingController(text: _customerNameController.text);
-    final phoneCtrl = TextEditingController(text: _customerPhoneController.text);
-    String dialogAddress = _customerAddressController.text;
-    String dialogGst = _customerGstController.text;
-
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          contentPadding: const EdgeInsets.all(20),
-          content: SizedBox(
-            width: 320,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF4F4F5),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFE5E5E5)),
-                        ),
-                        child: const Icon(
-                          Icons.person_outline_rounded,
-                          color: Color(0xFF111111),
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Customer Details Required',
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF111111),
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'ઉધાર બિલ માટે કસ્ટમર નામ/ફોન જરૂરી છે',
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: const Color(0xFF71717A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Customer Name Autocomplete
-                  Text(
-                    'CUSTOMER NAME *',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF71717A),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  RawAutocomplete<ApiCustomer>(
-                    textEditingController: nameCtrl,
-                    focusNode: FocusNode(),
-                    displayStringForOption: (option) => option.name,
-                    optionsBuilder: (textEditingValue) async {
-                      if (textEditingValue.text.length < 2) {
-                        return const Iterable<ApiCustomer>.empty();
-                      }
-                      try {
-                        return await RestaurantApi.instance.searchCustomers(textEditingValue.text);
-                      } catch (_) {
-                        return const Iterable<ApiCustomer>.empty();
-                      }
-                    },
-                    onSelected: (option) {
-                      nameCtrl.text = option.name;
-                      phoneCtrl.text = option.mobileNumber;
-                      dialogAddress = option.address;
-                      dialogGst = option.gstNumber;
-                    },
-                    fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-                      return Container(
-                        height: 42,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFE5E5E5)),
-                        ),
-                        child: TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF111111),
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Enter customer full name',
-                            hintStyle: GoogleFonts.inter(
-                              color: const Color(0xFFA1A1AA),
-                              fontSize: 12,
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.person_outline_rounded,
-                              size: 16,
-                              color: Color(0xFFA1A1AA),
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-                          ),
-                        ),
-                      );
-                    },
-                    optionsViewBuilder: (context, onSelected, options) {
-                      return Align(
-                        alignment: Alignment.topLeft,
-                        child: Material(
-                          elevation: 4,
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            width: 280,
-                            constraints: const BoxConstraints(maxHeight: 180),
-                            child: ListView.builder(
-                              padding: EdgeInsets.zero,
-                              itemCount: options.length,
-                              itemBuilder: (context, index) {
-                                final option = options.elementAt(index);
-                                return ListTile(
-                                  title: Text(option.name, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
-                                  subtitle: Text(option.mobileNumber, style: GoogleFonts.inter(fontSize: 11)),
-                                  trailing: option.netDue > 0
-                                      ? Text('Due: \u20B9${option.netDue.toStringAsFixed(2)}', style: GoogleFonts.inter(color: const Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 11))
-                                      : Text('Paid', style: GoogleFonts.inter(color: const Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.w600)),
-                                  onTap: () => onSelected(option),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Mobile Number Field
-                  Text(
-                    'MOBILE NUMBER *',
-                    style: GoogleFonts.inter(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF71717A),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFE5E5E5)),
-                    ),
-                    child: TextField(
-                      controller: phoneCtrl,
-                      keyboardType: TextInputType.phone,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF111111),
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '10-digit mobile number',
-                        hintStyle: GoogleFonts.inter(
-                          color: const Color(0xFFA1A1AA),
-                          fontSize: 12,
-                        ),
-                        prefixIcon: const Icon(
-                          Icons.phone_android_rounded,
-                          size: 16,
-                          color: Color(0xFFA1A1AA),
-                        ),
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Action Buttons (Cancel / Proceed)
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: 42,
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Color(0xFFD4D4D8)),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              'Cancel',
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF3F3F46),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: SizedBox(
-                          height: 42,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF111111),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            onPressed: () {
-                              if (nameCtrl.text.trim().isEmpty && phoneCtrl.text.trim().isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Please enter Customer Name or Mobile Number')),
-                                );
-                                return;
-                              }
-                              _customerNameController.text = nameCtrl.text.trim();
-                              _customerPhoneController.text = phoneCtrl.text.trim();
-                              _customerAddressController.text = dialogAddress;
-                              _customerGstController.text = dialogGst;
-                              Navigator.pop(context, true);
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Proceed',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                const Icon(Icons.arrow_forward_rounded, size: 14),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    return result ?? false;
   }
 
   Future<Map<String, dynamic>?> _promptPartialPaymentForUdhar() async {
