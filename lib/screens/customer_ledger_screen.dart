@@ -773,6 +773,20 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                         Text(widget.customer.mobileNumber, style: GoogleFonts.inter(fontSize: 13, color: _slate700, fontWeight: FontWeight.w600)),
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    Builder(
+                      builder: (context) {
+                        final netDue = _totalDebitAmount - _totalCreditAmount;
+                        Color textColor = Colors.blue;
+                        if (netDue > 0) textColor = Colors.red;
+                        else if (netDue < 0) textColor = Colors.green;
+                        
+                        return Text(
+                          'Net Due: ${_formatAmount(netDue.abs())}',
+                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: textColor),
+                        );
+                      }
+                    ),
                   ],
                 ),
               ),
@@ -1211,15 +1225,15 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: billPaid ? _green.withValues(alpha: 0.1) : _amber.withValues(alpha: 0.1),
+                            color: bill.paymentMode.toLowerCase() == 'udhar' ? _amber.withValues(alpha: 0.1) : (billPaid ? _green.withValues(alpha: 0.1) : _amber.withValues(alpha: 0.1)),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            billPaid ? 'PAID' : 'DUE: ${_formatAmount(dueAmt)}',
+                            bill.paymentMode.toLowerCase() == 'udhar' ? 'UDHAR' : (billPaid ? 'PAID (${bill.paymentMode.toUpperCase()})' : 'DUE: ${_formatAmount(dueAmt)}'),
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: billPaid ? _green : _amber,
+                              color: bill.paymentMode.toLowerCase() == 'udhar' ? _amber : (billPaid ? _green : _amber),
                             ),
                           ),
                         ),
@@ -1312,10 +1326,10 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         String secondaryRef;
 
         if (hasBillInfo) {
-          primaryRef = custName;
           final String billPart = payment.billNumber.isNotEmpty ? 'Bill #${payment.billNumber}' : '';
           final String tokenPart = payment.tokenNumber.isNotEmpty ? 'Token #${payment.tokenNumber}' : '';
-          secondaryRef = [billPart, tokenPart].where((s) => s.isNotEmpty).join(' • ');
+          primaryRef = [billPart, tokenPart].where((s) => s.isNotEmpty).join(' • ');
+          secondaryRef = 'Method: ${payment.paymentMode.toUpperCase()}';
         } else {
           primaryRef = custName;
           secondaryRef = payment.note.isNotEmpty
