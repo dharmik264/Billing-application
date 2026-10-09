@@ -106,13 +106,11 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         total += bill.isPaid ? bill.grandTotal : bill.receivedAmount;
       }
     }
-    // 2. Cash from standalone payments or bill payments with mode='cash'
+    // 2. Cash from bill payments with mode='cash'
     for (final p in _ledger!.payments) {
       final mode = p.paymentMode.toLowerCase().trim();
       if (mode == 'cash' && p.amount > 0) {
-        if (p.tokenId == null) {
-          total += p.amount;
-        } else {
+        if (p.tokenId != null) {
           final parentBill = _ledger!.bills.firstWhere(
             (b) => b.id == p.tokenId.toString(),
             orElse: () => const ApiToken(
@@ -149,11 +147,10 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         total += bill.isPaid ? bill.grandTotal : bill.receivedAmount;
       }
     }
+    // Online from bill payments
     for (final p in _ledger!.payments) {
       if (isOnlineMode(p.paymentMode) && p.amount > 0) {
-        if (p.tokenId == null) {
-          total += p.amount;
-        } else {
+        if (p.tokenId != null) {
           final parentBill = _ledger!.bills.firstWhere(
             (b) => b.id == p.tokenId.toString(),
             orElse: () => const ApiToken(
@@ -190,7 +187,14 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
   double get _totalCreditAmount {
     if (_ledger == null) return 0.0;
-    return _ledger!.summary.totalPaid;
+    double total = 0.0;
+    for (final p in _ledger!.payments) {
+      final mode = p.paymentMode.toLowerCase().trim();
+      if (p.tokenId == null && p.amount > 0 && mode != 'debit') {
+        total += p.amount;
+      }
+    }
+    return total;
   }
 
   double get _totalDebitAmount {
@@ -198,7 +202,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     double total = 0.0;
     for (final p in _ledger!.payments) {
       final mode = p.paymentMode.toLowerCase().trim();
-      if (p.amount < 0 || mode == 'debit') {
+      if (p.tokenId == null && (p.amount < 0 || mode == 'debit')) {
         total += p.amount.abs();
       }
     }
