@@ -743,7 +743,14 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               grandTotal: currentGrandTotal,
               fromTokenGeneration: true,
             ),
-          ));
+          )).then((_) {
+            if (mounted) {
+              _clearCart();
+              if (isEdit) {
+                Navigator.of(context).pop(true);
+              }
+            }
+          });
         } else {
           _clearCart();
           if (isEdit) {
