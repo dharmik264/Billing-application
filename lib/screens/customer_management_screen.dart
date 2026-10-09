@@ -370,11 +370,28 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
       child: RefreshIndicator(
         color: _brandBlack,
         onRefresh: _loadCustomers,
-        child: ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          itemCount: _filtered.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (_, i) => _buildCustomerCard(_filtered[i]),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth >= 600) {
+              return GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 380,
+                  mainAxisExtent: 115,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: _filtered.length,
+                itemBuilder: (_, i) => _buildCustomerCard(_filtered[i]),
+              );
+            }
+            return ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              itemCount: _filtered.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) => _buildCustomerCard(_filtered[i]),
+            );
+          },
         ),
       ),
     );

@@ -1181,9 +1181,9 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   : GridView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       physics: const BouncingScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.95,
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 220,
+                        childAspectRatio: 0.92,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
                       ),

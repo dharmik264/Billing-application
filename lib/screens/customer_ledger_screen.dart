@@ -748,78 +748,146 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   }
 
   Widget _buildSixSummaryCards() {
-    return Column(
-      children: [
-        // Row 1: Cash, Online, Udhar
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth >= 640) {
+          return Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'CASH',
+                  value: _formatAmount(_cashTotal),
+                  color: const Color(0xFF16A34A),
+                  bgColor: const Color(0xFFF0FDF4),
+                  icon: Icons.payments_rounded,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'ONLINE',
+                  value: _formatAmount(_onlineTotal),
+                  color: const Color(0xFF2563EB),
+                  bgColor: const Color(0xFFEFF6FF),
+                  icon: Icons.qr_code_2_rounded,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'UDHAR',
+                  value: _formatAmount(_udharTotal),
+                  color: const Color(0xFFD97706),
+                  bgColor: const Color(0xFFFFFBEB),
+                  icon: Icons.pending_actions_rounded,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'TOTAL BILL',
+                  value: _formatAmount(_totalBillAmount),
+                  color: const Color(0xFF1F2937),
+                  bgColor: const Color(0xFFF3F4F6),
+                  icon: Icons.receipt_long_rounded,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'T CREDIT',
+                  value: _formatAmount(_totalCreditAmount),
+                  color: const Color(0xFF059669),
+                  bgColor: const Color(0xFFECFDF5),
+                  icon: Icons.arrow_downward_rounded,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: _buildMetricCard(
+                  title: 'T DEBIT',
+                  value: _formatAmount(_totalDebitAmount),
+                  color: const Color(0xFFDC2626),
+                  bgColor: const Color(0xFFFEF2F2),
+                  icon: Icons.arrow_upward_rounded,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Column(
           children: [
-            Expanded(
-              child: _buildMetricCard(
-                title: 'CASH',
-                value: _formatAmount(_cashTotal),
-                color: const Color(0xFF16A34A),
-                bgColor: const Color(0xFFF0FDF4),
-                icon: Icons.payments_rounded,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildMetricCard(
+                    title: 'CASH',
+                    value: _formatAmount(_cashTotal),
+                    color: const Color(0xFF16A34A),
+                    bgColor: const Color(0xFFF0FDF4),
+                    icon: Icons.payments_rounded,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildMetricCard(
+                    title: 'ONLINE',
+                    value: _formatAmount(_onlineTotal),
+                    color: const Color(0xFF2563EB),
+                    bgColor: const Color(0xFFEFF6FF),
+                    icon: Icons.qr_code_2_rounded,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildMetricCard(
+                    title: 'UDHAR',
+                    value: _formatAmount(_udharTotal),
+                    color: const Color(0xFFD97706),
+                    bgColor: const Color(0xFFFFFBEB),
+                    icon: Icons.pending_actions_rounded,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildMetricCard(
-                title: 'ONLINE',
-                value: _formatAmount(_onlineTotal),
-                color: const Color(0xFF2563EB),
-                bgColor: const Color(0xFFEFF6FF),
-                icon: Icons.qr_code_2_rounded,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildMetricCard(
-                title: 'UDHAR',
-                value: _formatAmount(_udharTotal),
-                color: const Color(0xFFD97706),
-                bgColor: const Color(0xFFFFFBEB),
-                icon: Icons.pending_actions_rounded,
-              ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildMetricCard(
+                    title: 'TOTAL BILL',
+                    value: _formatAmount(_totalBillAmount),
+                    color: const Color(0xFF1F2937),
+                    bgColor: const Color(0xFFF3F4F6),
+                    icon: Icons.receipt_long_rounded,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildMetricCard(
+                    title: 'T CREDIT',
+                    value: _formatAmount(_totalCreditAmount),
+                    color: const Color(0xFF059669),
+                    bgColor: const Color(0xFFECFDF5),
+                    icon: Icons.arrow_downward_rounded,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildMetricCard(
+                    title: 'T DEBIT',
+                    value: _formatAmount(_totalDebitAmount),
+                    color: const Color(0xFFDC2626),
+                    bgColor: const Color(0xFFFEF2F2),
+                    icon: Icons.arrow_upward_rounded,
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        // Row 2: Total Bill, Total Credit, Total Debit
-        Row(
-          children: [
-            Expanded(
-              child: _buildMetricCard(
-                title: 'TOTAL BILL',
-                value: _formatAmount(_totalBillAmount),
-                color: const Color(0xFF1F2937),
-                bgColor: const Color(0xFFF3F4F6),
-                icon: Icons.receipt_long_rounded,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildMetricCard(
-                title: 'T CREDIT',
-                value: _formatAmount(_totalCreditAmount),
-                color: const Color(0xFF059669),
-                bgColor: const Color(0xFFECFDF5),
-                icon: Icons.arrow_downward_rounded,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildMetricCard(
-                title: 'T DEBIT',
-                value: _formatAmount(_totalDebitAmount),
-                color: const Color(0xFFDC2626),
-                bgColor: const Color(0xFFFEF2F2),
-                icon: Icons.arrow_upward_rounded,
-              ),
-            ),
-          ],
-        ),
-      ],
+        );
+      },
     );
   }
 

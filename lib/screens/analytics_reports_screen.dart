@@ -101,7 +101,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         top: false,
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: const BoxConstraints(maxWidth: 900),
             child: Stack(
               children: [
                 SingleChildScrollView(

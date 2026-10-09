@@ -165,7 +165,12 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 850),
+            child: Column(
         children: [
           // Search & Filter header section
           Container(
@@ -277,7 +282,10 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
           Expanded(child: _buildBody()),
         ],
       ),
-    );
+    ),
+  ),
+),
+);
   }
 
   Widget _buildFilterPill({required String label, required bool isSelected, required VoidCallback onTap}) {
