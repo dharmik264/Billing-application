@@ -66,10 +66,11 @@ def compute_customer_ledger_summary(customer):
     unpaid_bills_recv_sum = bills.filter(is_paid=False).aggregate(s=Sum('received_amount'))['s'] or Decimal('0.00')
     bills_paid = paid_bills_sum + unpaid_bills_recv_sum
 
-    # Advance payments not tied to any bill
+    # Manual Credit/Debit payments not tied to any bill (T Credit / T Debit)
     advance_paid = CustomerPayment.objects.filter(customer=customer, token__isnull=True).aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
 
-    total_paid = bills_paid + advance_paid
+    # We do NOT add advance_paid to total_paid so that T Credit / T Debit don't alter the Udhar card
+    total_paid = bills_paid
     net_due = max(Decimal('0.00'), total_billed - total_paid)
     payment_status = 'PAID IN FULL' if net_due == Decimal('0.00') else 'UDHAR'
 
@@ -335,45 +336,18 @@ class CustomerCreditView(APIView):
         except (ValueError, TypeError, InvalidOperation):
             return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Distribute to unpaid bills
-        unpaid_tokens = get_customer_bills(customer).filter(is_paid=False).order_by('created_at').select_for_update()
-        remaining = amount
+        # Simply record the credit as an advance payment (token=None)
+        # We do NOT distribute to unpaid bills here, as the user wants Credit
+        # to strictly affect the 'T Credit' tally and NOT affect the 'Udhar' or 'Cash/Online' cards.
         payment_records = []
-
-        for token in unpaid_tokens:
-            token.calculate_totals()
-            due = token.balance_due
-            if due <= 0:
-                continue
-            pay_this = min(due, remaining)
-            token.received_amount = Decimal(str(token.received_amount or 0)) + pay_this
-            token.payment_mode = payment_mode
-            if token.received_amount >= token.total:
-                token.is_paid = True
-                token.status = 'completed'
-            token.save(update_fields=['received_amount', 'payment_mode', 'is_paid', 'status'])
-            token.calculate_totals()
-            p_rec = CustomerPayment.objects.create(
-                customer=customer,
-                token=token,
-                amount=pay_this,
-                payment_mode=payment_mode,
-                note=note or f'Credit for Bill #{token.bill_number}',
-            )
-            payment_records.append(p_rec)
-            remaining -= pay_this
-            if remaining <= 0:
-                break
-
-        if remaining > 0:
-            p_rec = CustomerPayment.objects.create(
-                customer=customer,
-                token=None,
-                amount=remaining,
-                payment_mode=payment_mode,
-                note=note or 'Advance credit',
-            )
-            payment_records.append(p_rec)
+        p_rec = CustomerPayment.objects.create(
+            customer=customer,
+            token=None,
+            amount=amount,
+            payment_mode=payment_mode,
+            note=note or 'Advance credit',
+        )
+        payment_records.append(p_rec)
 
         updated_summary = compute_customer_ledger_summary(customer)
         return Response({
