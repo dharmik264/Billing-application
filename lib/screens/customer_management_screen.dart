@@ -4,6 +4,7 @@ import '../services/restaurant_api.dart';
 import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
 import 'add_customer_screen.dart';
+import 'customer_ledger_screen.dart';
 import '../utils/app_constants.dart';
 
 class CustomerManagementScreen extends StatefulWidget {
@@ -121,6 +122,13 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     if (result == true) _loadCustomers();
   }
 
+  Future<void> _openLedger(ApiCustomer customer) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => CustomerLedgerScreen(customer: customer)),
+    );
+    _loadCustomers();
+  }
+
   // ── Delete ─────────────────────────────────────────────────────
   Future<void> _deleteCustomer(ApiCustomer customer) async {
     final confirmed = await showDialog<bool>(
@@ -169,42 +177,6 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
           backgroundColor: _red,
           behavior: SnackBarBehavior.floating,
         ));
-      }
-    }
-  }
-
-  Future<void> _toggleCustomerStatus(ApiCustomer customer) async {
-    final newStatus = customer.isActive ? 'inactive' : 'active';
-    final updatedDraft = ApiCustomerDraft(
-      name: customer.name,
-      mobileNumber: customer.mobileNumber,
-      address: customer.address,
-      gstNumber: customer.gstNumber,
-      status: newStatus,
-    );
-
-    try {
-      await RestaurantApi.instance.updateCustomer(customer.id, updatedDraft);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${customer.name} status updated to $newStatus'),
-            backgroundColor: _brandBlack,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        _loadCustomers();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update status: $e'),
-            backgroundColor: _red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
     }
   }
@@ -510,59 +482,46 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                 ),
               ),
               const SizedBox(width: 8),
-              // Status Toggle Switch
-              GestureDetector(
-                onTap: () => _toggleCustomerStatus(customer),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: customer.isActive ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: customer.isActive ? const Color(0xFFDCFCE7) : const Color(0xFFFEE2E2)),
+              // Vertical Edit & Delete Action Options
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _openEdit(customer),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _brandBlack,
+                      side: const BorderSide(color: _cardBorder),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    ),
+                    icon: const Icon(Icons.edit_outlined, size: 12),
+                    label: Text('Edit', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500)),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 36,
-                        height: 20,
-                        padding: const EdgeInsets.all(2),
-                        alignment: customer.isActive ? Alignment.centerRight : Alignment.centerLeft,
-                        decoration: BoxDecoration(
-                          color: customer.isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 200),
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: customer.isActive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
-                        ),
-                        child: Text(customer.isActive ? 'Active' : 'Inactive'),
-                      ),
-                    ],
+                  const SizedBox(height: 4),
+                  OutlinedButton.icon(
+                    onPressed: () => _deleteCustomer(customer),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _red,
+                      side: const BorderSide(color: _cardBorder),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    ),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 12),
+                    label: Text('Delete', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500)),
                   ),
-                ),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 12),
           const Divider(height: 1, thickness: 1, color: _cardBorder),
           const SizedBox(height: 8),
-          // Bottom Row: Due Amount & Action Buttons
+          // Bottom Row: Due Amount & Ledger Button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -582,36 +541,19 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    onPressed: () => _openEdit(customer),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _brandBlack,
-                      side: const BorderSide(color: _cardBorder),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    ),
-                    icon: const Icon(Icons.edit_outlined, size: 14),
-                    label: Text('Edit', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500)),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: () => _deleteCustomer(customer),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _red,
-                      side: const BorderSide(color: _cardBorder),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    ),
-                    icon: const Icon(Icons.delete_outline_rounded, size: 14),
-                    label: Text('Delete', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500)),
-                  ),
-                ],
+              ElevatedButton.icon(
+                onPressed: () => _openLedger(customer),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _brandBlack,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.receipt_long_rounded, size: 14),
+                label: Text('Ledger', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
               ),
             ],
           ),
