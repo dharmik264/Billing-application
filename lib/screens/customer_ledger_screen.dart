@@ -95,6 +95,104 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     return NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 2).format(amount);
   }
 
+  // ── Six Summary Cards Dynamic Calculations ──────────────────────
+  double get _cashTotal {
+    if (_ledger == null) return 0.0;
+    double total = 0.0;
+    for (final bill in _ledger!.bills) {
+      final mode = bill.paymentMode.toLowerCase().trim();
+      if (mode == 'cash') {
+        total += bill.isPaid ? bill.grandTotal : bill.receivedAmount;
+      }
+    }
+    for (final p in _ledger!.payments) {
+      final mode = p.paymentMode.toLowerCase().trim();
+      final isStandalone = p.paymentNumber.isEmpty || p.note.toLowerCase().contains('credit') || p.note.toLowerCase().contains('advance');
+      if (mode == 'cash' && p.amount > 0 && isStandalone) {
+        bool matchedInBills = _ledger!.bills.any((b) => b.id == p.id || ('P${b.billNumber}' == p.paymentNumber));
+        if (!matchedInBills) {
+          total += p.amount;
+        }
+      }
+    }
+    return total;
+  }
+
+  double get _onlineTotal {
+    if (_ledger == null) return 0.0;
+    double total = 0.0;
+    for (final bill in _ledger!.bills) {
+      final mode = bill.paymentMode.toLowerCase().trim();
+      if (mode == 'online' || mode == 'upi' || mode == 'card' || mode == 'qr' || mode.contains('online') || mode.contains('upi')) {
+        total += bill.isPaid ? bill.grandTotal : bill.receivedAmount;
+      }
+    }
+    for (final p in _ledger!.payments) {
+      final mode = p.paymentMode.toLowerCase().trim();
+      final isOnline = mode == 'online' || mode == 'upi' || mode == 'card' || mode == 'qr' || mode.contains('online') || mode.contains('upi');
+      if (isOnline && p.amount > 0) {
+        bool matchedInBills = _ledger!.bills.any((b) => b.id == p.id || ('P${b.billNumber}' == p.paymentNumber));
+        if (!matchedInBills) {
+          total += p.amount;
+        }
+      }
+    }
+    return total;
+  }
+
+  double get _udharTotal {
+    if (_ledger == null) return 0.0;
+    double total = 0.0;
+    for (final bill in _ledger!.bills) {
+      final mode = bill.paymentMode.toLowerCase().trim();
+      if (mode == 'udhar' || mode == 'credit' || !bill.isPaid) {
+        if (bill.balanceDue > 0) {
+          total += bill.balanceDue;
+        } else if (!bill.isPaid) {
+          final due = bill.grandTotal - bill.receivedAmount;
+          if (due > 0) total += due;
+        }
+      }
+    }
+    if (total == 0.0 && _ledger!.summary.netDue > 0) {
+      total = _ledger!.summary.netDue;
+    }
+    return total;
+  }
+
+  double get _totalBillAmount {
+    if (_ledger == null) return 0.0;
+    double total = 0.0;
+    for (final bill in _ledger!.bills) {
+      total += bill.grandTotal;
+    }
+    return total > 0 ? total : _ledger!.summary.totalBilled;
+  }
+
+  double get _totalCreditAmount {
+    if (_ledger == null) return 0.0;
+    double total = 0.0;
+    for (final p in _ledger!.payments) {
+      final mode = p.paymentMode.toLowerCase().trim();
+      if (p.amount > 0 && mode != 'debit') {
+        total += p.amount;
+      }
+    }
+    return total > 0 ? total : _ledger!.summary.totalPaid;
+  }
+
+  double get _totalDebitAmount {
+    if (_ledger == null) return 0.0;
+    double total = 0.0;
+    for (final p in _ledger!.payments) {
+      final mode = p.paymentMode.toLowerCase().trim();
+      if (p.amount < 0 || mode == 'debit') {
+        total += p.amount.abs();
+      }
+    }
+    return total;
+  }
+
 
 
   Widget _modeChip(String label, String value, String selected, Function(String) onSelect) {
@@ -624,48 +722,8 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                 // Customer Profile Card with Pay Due & Jama Options
                 _buildCustomerProfileCard(isPaidInFull, summary.netDue),
 
-                // 4 Financial Metric Cards
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricCard(
-                        title: 'TOTAL BILLED',
-                        value: _formatAmount(summary.totalBilled),
-                        color: _indigo,
-                        bgColor: _indigo.withValues(alpha: 0.08),
-                        icon: Icons.receipt_long_rounded,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildMetricCard(
-                        title: 'TOTAL PAID',
-                        value: _formatAmount(summary.totalPaid),
-                        color: _green,
-                        bgColor: _green.withValues(alpha: 0.08),
-                        icon: Icons.check_circle_rounded,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildMetricCard(
-                        title: 'NET DUE',
-                        value: _formatAmount(summary.netDue),
-                        color: isPaidInFull ? _slate600 : _red,
-                        bgColor: isPaidInFull ? _slate50 : _red.withValues(alpha: 0.08),
-                        icon: Icons.pending_actions_rounded,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _buildStatusCard(summary.paymentStatus, isPaidInFull),
-                    ),
-                  ],
-                ),
+                // Six Customer Ledger Summary Cards
+                _buildSixSummaryCards(),
               ],
             ),
           ),
@@ -703,6 +761,82 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     );
   }
 
+  Widget _buildSixSummaryCards() {
+    return Column(
+      children: [
+        // Row 1: Cash, Online, Udhar
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricCard(
+                title: 'CASH',
+                value: _formatAmount(_cashTotal),
+                color: const Color(0xFF16A34A),
+                bgColor: const Color(0xFFF0FDF4),
+                icon: Icons.payments_rounded,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildMetricCard(
+                title: 'ONLINE',
+                value: _formatAmount(_onlineTotal),
+                color: const Color(0xFF2563EB),
+                bgColor: const Color(0xFFEFF6FF),
+                icon: Icons.qr_code_2_rounded,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildMetricCard(
+                title: 'UDHAR',
+                value: _formatAmount(_udharTotal),
+                color: const Color(0xFFD97706),
+                bgColor: const Color(0xFFFFFBEB),
+                icon: Icons.pending_actions_rounded,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Row 2: Total Bill, Total Credit, Total Debit
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricCard(
+                title: 'TOTAL BILL',
+                value: _formatAmount(_totalBillAmount),
+                color: const Color(0xFF1F2937),
+                bgColor: const Color(0xFFF3F4F6),
+                icon: Icons.receipt_long_rounded,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildMetricCard(
+                title: 'T CREDIT',
+                value: _formatAmount(_totalCreditAmount),
+                color: const Color(0xFF059669),
+                bgColor: const Color(0xFFECFDF5),
+                icon: Icons.arrow_downward_rounded,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildMetricCard(
+                title: 'T DEBIT',
+                value: _formatAmount(_totalDebitAmount),
+                color: const Color(0xFFDC2626),
+                bgColor: const Color(0xFFFEF2F2),
+                icon: Icons.arrow_upward_rounded,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildMetricCard({
     required String title,
     required String value,
@@ -711,90 +845,46 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     required IconData icon,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: color),
+              Icon(icon, size: 13, color: color),
               const SizedBox(width: 4),
-              Text(
-                title,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                  letterSpacing: 0.5,
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    letterSpacing: 0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: GoogleFonts.inter(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: _slate900,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusCard(String statusText, bool isPaidInFull) {
-    final statusColor = isPaidInFull ? _green : _red;
-    final bgColor = isPaidInFull ? _green.withValues(alpha: 0.08) : _red.withValues(alpha: 0.08);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                isPaidInFull ? Icons.verified_rounded : Icons.warning_amber_rounded,
-                size: 14,
-                color: statusColor,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: _slate900,
               ),
-              const SizedBox(width: 4),
-              Text(
-                'STATUS',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: statusColor,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            statusText.toUpperCase(),
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-              color: statusColor,
-              letterSpacing: 0.5,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
