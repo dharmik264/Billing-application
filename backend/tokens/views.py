@@ -201,6 +201,14 @@ class CreateTokenView(APIView):
                     cust_obj.save(update_fields=['name'])
             elif c_name:
                 cust_obj = Customer.objects.filter(name__iexact=c_name).first()
+                if not cust_obj:
+                    # Auto-create customer by name so Udhar bills appear in the ledger
+                    cust_obj = Customer.objects.create(
+                        name=c_name,
+                        address=token.customer_address or '',
+                        gst_number=token.customer_gst_number or '',
+                        status='active'
+                    )
 
             paid_amt = Decimal(str(token.received_amount or 0))
             if token.is_paid and paid_amt == Decimal('0'):

@@ -189,8 +189,11 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   }
 
   void _handleBackNavigation() {
-    if (widget.fromTokenGeneration && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+    if (widget.fromTokenGeneration) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MainScreen(initialIndex: 0)),
+        (route) => false,
+      );
     } else if (Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     } else {
