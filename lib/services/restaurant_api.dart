@@ -583,12 +583,15 @@
         }
         final customer = await fetchCustomer(customerId);
         final tokens = await fetchTokens();
-        final customerTokens = tokens.where((t) =>
-          t.status.toLowerCase() != 'cancelled' &&
-          (t.customerPhone.contains(customer.mobileNumber) ||
+        final customerTokens = tokens.where((t) {
+          final mode = t.paymentMode.toLowerCase().trim();
+          final isUdhar = mode == 'udhar' || mode == 'credit';
+          final isCancelled = t.status.toLowerCase() == 'cancelled';
+          final matchesCustomer = (t.customerPhone.contains(customer.mobileNumber) ||
            customer.mobileNumber.contains(t.customerPhone) ||
-           t.customerName.toLowerCase() == customer.name.toLowerCase())
-        ).toList();
+           t.customerName.toLowerCase() == customer.name.toLowerCase());
+          return !isCancelled && !isUdhar && matchesCustomer;
+        }).toList();
 
         double totalBilled = 0.0;
         double totalPaid = 0.0;
@@ -2022,10 +2025,16 @@
     });
 
     factory ApiCustomerLedger.fromJson(Map<String, dynamic> json) {
+      final rawBills = (json['bills'] as List? ?? []).map((e) => ApiToken.fromJson(e as Map<String, dynamic>)).toList();
+      final filteredBills = rawBills.where((b) {
+        final mode = b.paymentMode.toLowerCase().trim();
+        return mode != 'udhar' && mode != 'credit';
+      }).toList();
+
       return ApiCustomerLedger(
         customer: ApiCustomer.fromJson(json['customer'] is Map<String, dynamic> ? json['customer'] : {}),
         summary: ApiCustomerLedgerSummary.fromJson(json['summary'] is Map<String, dynamic> ? json['summary'] : {}),
-        bills: (json['bills'] as List? ?? []).map((e) => ApiToken.fromJson(e as Map<String, dynamic>)).toList(),
+        bills: filteredBills,
         payments: (json['payments'] as List? ?? []).map((e) => ApiCustomerPayment.fromJson(e as Map<String, dynamic>)).toList(),
       );
     }

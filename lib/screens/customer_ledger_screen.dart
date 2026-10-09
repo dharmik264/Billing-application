@@ -142,22 +142,8 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
   double get _udharTotal {
     if (_ledger == null) return 0.0;
-    double total = 0.0;
-    for (final bill in _ledger!.bills) {
-      final mode = bill.paymentMode.toLowerCase().trim();
-      if (mode == 'udhar' || mode == 'credit' || !bill.isPaid) {
-        if (bill.balanceDue > 0) {
-          total += bill.balanceDue;
-        } else if (!bill.isPaid) {
-          final due = bill.grandTotal - bill.receivedAmount;
-          if (due > 0) total += due;
-        }
-      }
-    }
-    if (total == 0.0 && _ledger!.summary.netDue > 0) {
-      total = _ledger!.summary.netDue;
-    }
-    return total;
+    // Udhar bills are excluded from customer's ledger transactions and calculations
+    return 0.0;
   }
 
   double get _totalBillAmount {
