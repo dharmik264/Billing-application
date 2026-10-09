@@ -2,6 +2,9 @@ from django.db import models
 
 
 class Category(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     name       = models.CharField(max_length=100, unique=True)
     icon       = models.CharField(max_length=50, blank=True)   # emoji or icon name
     sort_order = models.PositiveIntegerField(default=0)
@@ -17,6 +20,9 @@ class Category(models.Model):
 
 
 class MenuItem(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     ITEM_TYPE_CHOICES = [
         ('veg',     'Vegetarian'),
         ('non_veg', 'Non-Vegetarian'),

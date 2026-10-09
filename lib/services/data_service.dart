@@ -3,7 +3,7 @@ import 'local_database.dart';
 import 'restaurant_api.dart';
 import 'sync_service.dart';
 
-/// Result returned by [DataService.saveWithSync].
+/// Result returned by [DataService] operations.
 class SaveResult<T> {
   /// The entity that was saved (optimistically or from server).
   final T data;

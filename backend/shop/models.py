@@ -18,6 +18,9 @@ def generate_schema_name(shop_name, user_id=None):
     return candidate
 
 class Shop(TenantMixin):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     owner                = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='shop', null=True)
     name                 = models.CharField(max_length=200)
     tagline              = models.CharField(max_length=200, blank=True)
@@ -71,10 +74,14 @@ class Shop(TenantMixin):
 
 
 class Domain(DomainMixin):
-    pass
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
 
 
 class BillTemplate(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     shop = models.OneToOneField(Shop, on_delete=models.CASCADE, related_name='bill_template')
     logo_url = models.ImageField(upload_to='bill_templates/logos/', null=True, blank=True)
     shop_name = models.CharField(max_length=200, blank=True)

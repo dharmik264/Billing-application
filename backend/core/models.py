@@ -50,6 +50,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD  = 'phone'
     REQUIRED_FIELDS = []
     objects = UserManager()
+    DoesNotExist = models.ObjectDoesNotExist
 
     def __str__(self):
         return self.phone
@@ -82,6 +83,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class OTP(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     phone      = models.CharField(max_length=15)
     code       = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -106,6 +110,9 @@ class OTP(models.Model):
 
 class AppSettings(models.Model):
     """Global app settings (singleton per shop)"""
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     shop             = models.OneToOneField('shop.Shop', on_delete=models.CASCADE, related_name='settings', null=True)
     gst_enabled      = models.BooleanField(default=True)
     gst_percentage   = models.DecimalField(max_digits=5, decimal_places=2, default=5.00)
@@ -132,6 +139,9 @@ class AppSettings(models.Model):
 
 
 class SubscriptionPlan(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     price_monthly = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -161,6 +171,9 @@ class SubscriptionPlan(models.Model):
         return self.name
 
 class SystemSettings(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     payment_qr_code = models.TextField(null=True, blank=True, help_text='Base64 encoded QR code image stored directly in DB for persistence on cloud servers')
     payment_upi_id = models.CharField(max_length=100, blank=True)
     bill_title_font_size_mm = models.FloatField(default=20.0, help_text='Global printable bill title/shop name font height in mm')
@@ -185,6 +198,9 @@ class SystemSettings(models.Model):
 
 
 class SubscriptionPayment(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     STATUS_CHOICES = [
         ('pending', 'Pending Verification'),
         ('approved', 'Approved'),

@@ -4,6 +4,9 @@ from menu.models import MenuItem
 
 
 class Token(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     STATUS_CHOICES = [
         ('open',      'Open'),
         ('preparing', 'Preparing'),
@@ -124,6 +127,9 @@ class Token(models.Model):
 
 
 class TokenItem(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     token     = models.ForeignKey(Token, on_delete=models.CASCADE, related_name='items')
     menu_item = models.ForeignKey(MenuItem, on_delete=models.SET_NULL, null=True)
     name      = models.CharField(max_length=200)   # snapshot

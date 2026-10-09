@@ -62,34 +62,37 @@ class _OfflineBannerState extends State<OfflineBanner>
     // Listen for successful syncs and show a SnackBar.
     _syncCountSub = SyncService.instance.syncCountStream.listen((count) {
       if (!mounted) return;
-      final messenger = ScaffoldMessenger.maybeOf(widget.scaffoldContext);
+      final scaffoldContext = widget.scaffoldContext;
+      if (!scaffoldContext.mounted) return;
+      final messenger = ScaffoldMessenger.maybeOf(scaffoldContext);
       if (messenger == null) return;
-      messenger.clearSnackBars();
-      messenger.showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.cloud_done_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Synced $count pending ${count == 1 ? 'change' : 'changes'} successfully!',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.cloud_done_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Synced $count pending ${count == 1 ? 'change' : 'changes'} successfully!',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           ),
-          backgroundColor: const Color(0xFF10B981),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        ),
-      );
+        );
     });
   }
 
@@ -105,7 +108,7 @@ class _OfflineBannerState extends State<OfflineBanner>
   Widget build(BuildContext context) {
     return SizeTransition(
       sizeFactor: _slideAnim,
-      axisAlignment: -1,
+      alignment: Alignment.topCenter,
       child: _buildBanner(),
     );
   }

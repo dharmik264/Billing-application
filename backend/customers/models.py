@@ -10,6 +10,9 @@ GST_REGEX = re.compile(
 
 
 class Customer(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     STATUS_CHOICES = [
         ('active',   'Active'),
         ('inactive', 'Inactive'),
@@ -32,6 +35,9 @@ class Customer(models.Model):
 
 
 class CustomerPayment(models.Model):
+    objects = models.Manager()
+    DoesNotExist = models.ObjectDoesNotExist
+
     customer       = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='payments')
     token          = models.ForeignKey('tokens.Token', null=True, blank=True, on_delete=models.SET_NULL, related_name='payments')
     payment_number = models.CharField(max_length=50, blank=True)
