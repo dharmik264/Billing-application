@@ -1225,15 +1225,15 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: bill.paymentMode.toLowerCase() == 'udhar' ? _amber.withValues(alpha: 0.1) : (billPaid ? _green.withValues(alpha: 0.1) : _amber.withValues(alpha: 0.1)),
+                            color: (bill.paymentMode.toLowerCase() == 'udhar' || bill.paymentMode.toLowerCase() == 'credit') ? _amber.withValues(alpha: 0.1) : (billPaid ? _green.withValues(alpha: 0.1) : _amber.withValues(alpha: 0.1)),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            bill.paymentMode.toLowerCase() == 'udhar' ? 'UDHAR' : (billPaid ? 'PAID (${bill.paymentMode.toUpperCase()})' : 'DUE: ${_formatAmount(dueAmt)}'),
+                            (bill.paymentMode.toLowerCase() == 'udhar' || bill.paymentMode.toLowerCase() == 'credit') ? 'UDHAR' : (billPaid ? 'PAID (${bill.paymentMode.toUpperCase()})' : 'DUE: ${_formatAmount(dueAmt)}'),
                             style: GoogleFonts.inter(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: bill.paymentMode.toLowerCase() == 'udhar' ? _amber : (billPaid ? _green : _amber),
+                              color: (bill.paymentMode.toLowerCase() == 'udhar' || bill.paymentMode.toLowerCase() == 'credit') ? _amber : (billPaid ? _green : _amber),
                             ),
                           ),
                         ),

@@ -41,16 +41,15 @@ ALLOWED_PAYMENT_MODES = {'cash', 'upi', 'card', 'online', 'net_banking', 'due', 
 def get_customer_bills(customer):
     clean_phone = normalize_phone(customer.mobile_number)
     qs = Token.objects.exclude(status='cancelled')
+    
     if clean_phone:
         matching_ids = []
         for token_id, c_phone, c_name in qs.values_list('id', 'customer_phone', 'customer_name').iterator():
             t_phone = normalize_phone(c_phone)
-            if t_phone:
-                if t_phone == clean_phone:
-                    matching_ids.append(token_id)
-            else:
-                if c_name and c_name.strip().lower() == customer.name.strip().lower():
-                    matching_ids.append(token_id)
+            if t_phone and t_phone == clean_phone:
+                matching_ids.append(token_id)
+            elif c_name and c_name.strip().lower() == customer.name.strip().lower():
+                matching_ids.append(token_id)
         qs = Token.objects.filter(id__in=matching_ids)
     else:
         qs = qs.filter(customer_name__iexact=customer.name)
