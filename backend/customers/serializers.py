@@ -68,11 +68,27 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 
 class CustomerPaymentSerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    customer_phone = serializers.CharField(source='customer.mobile_number', read_only=True)
+    token_number = serializers.SerializerMethodField()
+    bill_number = serializers.SerializerMethodField()
+
     class Meta:
         model  = CustomerPayment
         fields = [
-            'id', 'payment_number', 'customer', 'token',
+            'id', 'payment_number', 'customer', 'customer_name', 'customer_phone',
+            'token', 'token_number', 'bill_number',
             'amount', 'payment_mode', 'date', 'note', 'created_at',
         ]
         read_only_fields = ['id', 'created_at']
+
+    def get_token_number(self, obj):
+        if obj.token:
+            return obj.token.token_number
+        return ''
+
+    def get_bill_number(self, obj):
+        if obj.token:
+            return obj.token.bill_number
+        return ''
 

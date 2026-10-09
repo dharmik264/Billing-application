@@ -605,6 +605,10 @@
             payments.add(ApiCustomerPayment(
               id: token.id,
               paymentNumber: 'P${token.billNumber}',
+              customerName: customer.name,
+              customerPhone: customer.mobileNumber,
+              tokenNumber: token.tokenNumber,
+              billNumber: token.billNumber,
               amount: pAmt,
               paymentMode: token.paymentMode.isNotEmpty ? token.paymentMode : 'cash',
               date: token.createdAt.contains('T') ? token.createdAt.split('T').first : token.createdAt,
@@ -1959,6 +1963,10 @@
     const ApiCustomerPayment({
       required this.id,
       required this.paymentNumber,
+      this.customerName = '',
+      this.customerPhone = '',
+      this.tokenNumber = '',
+      this.billNumber = '',
       required this.amount,
       required this.paymentMode,
       required this.date,
@@ -1970,6 +1978,10 @@
       return ApiCustomerPayment(
         id: json['id']?.toString() ?? '',
         paymentNumber: json['payment_number']?.toString() ?? '',
+        customerName: json['customer_name']?.toString() ?? '',
+        customerPhone: json['customer_phone']?.toString() ?? '',
+        tokenNumber: json['token_number']?.toString() ?? '',
+        billNumber: json['bill_number']?.toString() ?? '',
         amount: _toDouble(json['amount']),
         paymentMode: json['payment_mode']?.toString() ?? 'cash',
         date: json['date']?.toString() ?? '',
@@ -1980,6 +1992,10 @@
 
     final String id;
     final String paymentNumber;
+    final String customerName;
+    final String customerPhone;
+    final String tokenNumber;
+    final String billNumber;
     final double amount;
     final String paymentMode;
     final String date;

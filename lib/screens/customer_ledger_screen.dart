@@ -1109,6 +1109,25 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         final dateStr = DateFormat('dd/MM/yyyy').format(dateTime);
         final timeStr = DateFormat('hh:mm a').format(dateTime);
 
+        final isDebit = payment.paymentMode.toLowerCase() == 'debit' || payment.amount < 0;
+        final hasBillInfo = payment.billNumber.isNotEmpty || payment.tokenNumber.isNotEmpty;
+        final custName = payment.customerName.isNotEmpty ? payment.customerName : widget.customer.name;
+
+        String primaryRef;
+        String secondaryRef;
+
+        if (hasBillInfo) {
+          primaryRef = custName;
+          final String billPart = payment.billNumber.isNotEmpty ? 'Bill #${payment.billNumber}' : '';
+          final String tokenPart = payment.tokenNumber.isNotEmpty ? 'Token #${payment.tokenNumber}' : '';
+          secondaryRef = [billPart, tokenPart].where((s) => s.isNotEmpty).join(' • ');
+        } else {
+          primaryRef = custName;
+          secondaryRef = payment.note.isNotEmpty
+              ? payment.note
+              : (isDebit ? 'Debit Transaction' : 'Credit Transaction');
+        }
+
         return Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -1125,22 +1144,19 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           ),
           child: Row(
             children: [
-              Builder(builder: (_) {
-                final isDebit = payment.paymentMode.toLowerCase() == 'debit' || payment.amount < 0;
-                return Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: isDebit ? _red.withValues(alpha: 0.1) : _green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    isDebit ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
-                    color: isDebit ? _red : _green,
-                    size: 20,
-                  ),
-                );
-              }),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: isDebit ? _red.withValues(alpha: 0.1) : _green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isDebit ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                  color: isDebit ? _red : _green,
+                  size: 20,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -1149,18 +1165,25 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          payment.paymentNumber.isNotEmpty ? 'Payment #${payment.paymentNumber}' : 'Payment #${payment.id}',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: _slate900),
+                        Expanded(
+                          child: Text(
+                            primaryRef,
+                            style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: _slate900),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                        Builder(builder: (_) {
-                          final isDebit = payment.paymentMode.toLowerCase() == 'debit' || payment.amount < 0;
-                          return Text(
-                            isDebit ? '-${_formatAmount(payment.amount.abs())}' : _formatAmount(payment.amount),
-                            style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: isDebit ? _red : _green),
-                          );
-                        }),
+                        const SizedBox(width: 8),
+                        Text(
+                          isDebit ? '-${_formatAmount(payment.amount.abs())}' : _formatAmount(payment.amount),
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 15, color: isDebit ? _red : _green),
+                        ),
                       ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      secondaryRef,
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: _indigo),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -1184,7 +1207,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                         ),
                       ],
                     ),
-                    if (payment.note.isNotEmpty) ...[
+                    if (hasBillInfo && payment.note.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
                         payment.note,
