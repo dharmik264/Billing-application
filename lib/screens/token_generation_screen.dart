@@ -958,7 +958,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         final currentSubtotal = _subtotal;
         final currentTax = _taxAmount;
         final currentGrandTotal = _grandTotal;
-        _clearCart();
 
         if (billPrintEnabled) {
           try {
@@ -1018,13 +1017,11 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               subtotal: currentSubtotal,
               tax: currentTax,
               grandTotal: currentGrandTotal,
+              fromTokenGeneration: true,
             ),
-          )).then((_) {
-            if (isEdit && mounted) {
-              Navigator.of(context).pop(true);
-            }
-          });
+          ));
         } else {
+          _clearCart();
           if (isEdit) {
             Navigator.of(context).pop(true);
           } else {

@@ -40,6 +40,7 @@ class PrintPreviewScreen extends StatefulWidget {
     required this.tax,
     required this.grandTotal,
     this.onSaveBill,
+    this.fromTokenGeneration = false,
   });
 
   final String orderId;
@@ -51,6 +52,7 @@ class PrintPreviewScreen extends StatefulWidget {
   final String? customerGstNumber;
   final String paymentMode;
   final Future<ApiToken?> Function()? onSaveBill;
+  final bool fromTokenGeneration;
 
   final String? logoBase64;
   final String? qrBase64;
@@ -186,13 +188,26 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
+  void _handleBackNavigation() {
+    if (widget.fromTokenGeneration && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const MainScreen(initialIndex: 1)),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-        _navigateToHome();
+        _handleBackNavigation();
       },
       child: Scaffold(
         backgroundColor: _bgCanvas,
@@ -266,7 +281,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
             children: [
               InkWell(
                 borderRadius: BorderRadius.circular(6),
-                onTap: _navigateToHome,
+                onTap: _handleBackNavigation,
                 child: const Padding(
                   padding: EdgeInsets.all(6),
                   child: Icon(

@@ -16,7 +16,8 @@ import '../services/printer_service.dart';
 import '../utils/app_constants.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  const MainScreen({super.key, this.initialIndex = 0});
 
   static final ValueNotifier<bool> hideNavbar = ValueNotifier(false);
 
@@ -25,7 +26,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
   final GlobalKey<DashboardScreenState> _dashboardKey = GlobalKey<DashboardScreenState>();
 
   bool _isLoading = true;
@@ -35,6 +36,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    _currentIndex = widget.initialIndex;
     _loadPermissions();
     PrinterService.instance.attemptAutoConnect();
   }
@@ -73,6 +75,9 @@ class _MainScreenState extends State<MainScreen> {
 
     setState(() {
       _isLoading = false;
+      if (widget.initialIndex >= 0 && widget.initialIndex < _screens.length) {
+        _currentIndex = widget.initialIndex;
+      }
     });
   }
 
