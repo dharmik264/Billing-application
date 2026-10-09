@@ -27,8 +27,10 @@ def run_tests():
         u.account_status = "approved"; u.is_active = True; u.save()
 
     from shop.models import Shop, Domain
+    from django.core.management import call_command
     shop = Shop.get_shop(u)
     Domain.objects.get_or_create(domain="testserver", defaults={"tenant": shop, "is_primary": True})
+    call_command('migrate_schemas', schema_name=shop.schema_name, verbosity=0)
     connection.set_schema(shop.schema_name)
 
     token = str(RefreshToken.for_user(u).access_token)
@@ -42,8 +44,11 @@ def run_tests():
     print("\n" + "="*55)
     print("  1. DATABASE TABLES")
     print("="*55)
-    all_tables = connection.introspection.table_names()
-    expected_tables = {
+
+    # Public tables in public schema
+    connection.set_schema_to_public()
+    public_tables = connection.introspection.table_names()
+    public_expected = {
         "core_user": ["id","phone","name","email","shop_name","account_status","is_active","created_at"],
         "core_otp": ["id","phone","code","created_at","is_used"],
         "core_appsettings": ["id","gst_enabled","gst_percentage","service_charge","currency_symbol"],
@@ -52,16 +57,32 @@ def run_tests():
         "core_subscriptionpayment": ["id","user_id","plan_id","transaction_id","status","amount_paid"],
         "shop_shop": ["id","owner_id","name","tagline","address","phone","gstin","upi_id","created_at"],
         "shop_billtemplate": ["id","shop_id","shop_name","footer_message","theme_color"],
-        "menu_category": ["id","shop_id","name","icon","sort_order","is_active"],
-        "menu_menuitem": ["id","shop_id","category_id","name","price","is_available","created_at"],
-        "tokens_token": ["id","shop_id","token_number","bill_number","status","total","is_paid","created_at"],
-        "tokens_tokenitem": ["id","token_id","menu_item_id","name","price","quantity"],
-        "printer_printer": ["id","shop_id","name","connection_type","paper_size","is_default","is_active"],
-        "printer_printjob": ["id","printer_id","job_type","status","created_at"],
-        "customers_customer": ["id","shop_id","name","mobile_number","address","gst_number","status","created_at","updated_at"],
     }
-    for tbl, fields in expected_tables.items():
-        exists = tbl in all_tables
+    for tbl, fields in public_expected.items():
+        exists = tbl in public_tables
+        check("DB Tables", f"Table: {tbl}", exists)
+        if exists:
+            with connection.cursor() as cur:
+                desc = connection.introspection.get_table_description(cur, tbl)
+            col_names = {c.name for c in desc}
+            for f in fields:
+                check("DB Fields", f"{tbl}.{f}", f in col_names, "found" if f in col_names else "MISSING")
+
+    # Tenant tables in tenant schema
+    connection.set_schema(shop.schema_name)
+    tenant_tables = connection.introspection.table_names()
+    tenant_expected = {
+        "menu_category": ["id","name","icon","sort_order","is_active"],
+        "menu_menuitem": ["id","category_id","name","price","is_available","created_at"],
+        "tokens_token": ["id","token_number","bill_number","status","total","is_paid","created_at"],
+        "tokens_tokenitem": ["id","token_id","menu_item_id","name","price","quantity"],
+        "printer_printer": ["id","name","connection_type","paper_size","is_default","is_active"],
+        "printer_printjob": ["id","printer_id","job_type","status","created_at"],
+        "customers_customer": ["id","name","mobile_number","address","gst_number","status","created_at","updated_at"],
+        "customers_customerpayment": ["id","customer_id","token_id","payment_number","amount","payment_mode","date"],
+    }
+    for tbl, fields in tenant_expected.items():
+        exists = tbl in tenant_tables
         check("DB Tables", f"Table: {tbl}", exists)
         if exists:
             with connection.cursor() as cur:
@@ -134,12 +155,13 @@ def run_tests():
     print("  4. MENU APIs")
     print("="*55)
 
+    connection.set_schema(shop.schema_name)
     from menu.models import Category, MenuItem
 
     # Category CRUD — unique names per run to avoid unique constraint errors
     cat_name = f"TestCat_{_ts}"
     cat_upd  = f"UpdCat_{_ts}"
-    Category.objects.filter(shop=shop, name__in=[cat_name, cat_upd]).delete()
+    Category.objects.filter(name__in=[cat_name, cat_upd]).delete()
 
     r = client.post("/api/menu/categories/", {"name": cat_name, "icon": "X", "sort_order": 99}, format="json")
     check("Menu API", "POST /menu/categories/ (201)", r.status_code == 201, f"got {r.status_code}")
@@ -154,7 +176,8 @@ def run_tests():
 
     # MenuItem CRUD
     item_name = f"TestItem_{_ts}"
-    MenuItem.objects.filter(shop=shop, name=item_name).delete()
+    connection.set_schema(shop.schema_name)
+    MenuItem.objects.filter(name=item_name).delete()
     r = client.post("/api/menu/items/", {"name": item_name, "price": "99.00", "item_type": "veg", "is_available": True}, format="json")
     check("Menu API", "POST /menu/items/ (201)", r.status_code == 201, f"got {r.status_code}")
     item_id = r.json().get("id") if r.status_code == 201 else None
@@ -178,9 +201,10 @@ def run_tests():
     print("  5. TOKEN APIs")
     print("="*55)
 
+    connection.set_schema(shop.schema_name)
     from menu.models import MenuItem as MI
     test_item, _ = MI.objects.get_or_create(
-        shop=shop, name="Token Test Item",
+        name="Token Test Item",
         defaults={"price": "50.00", "is_available": True}
     )
 
@@ -241,8 +265,9 @@ def run_tests():
     print("  7. PRINTER APIs")
     print("="*55)
 
+    connection.set_schema(shop.schema_name)
     from printer.models import Printer
-    Printer.objects.filter(shop=shop, name="Test Printer API").delete()
+    Printer.objects.filter(name="Test Printer API").delete()
     r = client.post("/api/printer/printers/", {
         "name": "Test Printer API", "connection_type": "wifi",
         "paper_size": "80mm", "address": "192.168.1.100"
@@ -269,8 +294,9 @@ def run_tests():
     print("  8. CUSTOMER APIs")
     print("="*55)
 
+    connection.set_schema(shop.schema_name)
     from customers.models import Customer
-    Customer.objects.filter(shop=shop, mobile_number="9099099099").delete()
+    Customer.objects.filter(mobile_number="9099099099").delete()
 
     r = client.post("/api/customers/", {
         "name": "Full Test Customer", "mobile_number": "9099099099",
@@ -307,7 +333,8 @@ def run_tests():
     print("  9. VALIDATION TESTS")
     print("="*55)
 
-    Customer.objects.filter(shop=shop, mobile_number__in=["9099099010","9099099011"]).delete()
+    connection.set_schema(shop.schema_name)
+    Customer.objects.filter(mobile_number__in=["9099099010","9099099011"]).delete()
     r = client.post("/api/customers/", {"name":"","mobile_number":"9099099010","address":"A","gst_number":"","status":"active"}, format="json")
     check("Validation", "Customer: empty name rejected (400)", r.status_code == 400)
     r = client.post("/api/customers/", {"name":"AB","mobile_number":"9099099010","address":"A","gst_number":"","status":"active"}, format="json")

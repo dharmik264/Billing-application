@@ -35,12 +35,12 @@ def normalize_phone(p):
     return digits
 
 
-ALLOWED_PAYMENT_MODES = {'cash', 'upi', 'card', 'online', 'net_banking', 'due', 'jama', 'other'}
+ALLOWED_PAYMENT_MODES = {'cash', 'upi', 'card', 'online', 'net_banking', 'due', 'jama', 'credit', 'udhar', 'other'}
 
 
 def get_customer_bills(customer):
     clean_phone = normalize_phone(customer.mobile_number)
-    qs = Token.objects.exclude(status='cancelled').exclude(payment_mode__iexact='udhar').exclude(payment_mode__iexact='credit')
+    qs = Token.objects.exclude(status='cancelled')
     if clean_phone:
         matching_ids = []
         for token_id, c_phone, c_name in qs.values_list('id', 'customer_phone', 'customer_name').iterator():

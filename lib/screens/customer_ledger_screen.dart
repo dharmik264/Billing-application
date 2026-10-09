@@ -99,19 +99,52 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   double get _cashTotal {
     if (_ledger == null) return 0.0;
     double total = 0.0;
+    // 1. Cash from bills where payment mode was cash
     for (final bill in _ledger!.bills) {
       final mode = bill.paymentMode.toLowerCase().trim();
       if (mode == 'cash') {
         total += bill.isPaid ? bill.grandTotal : bill.receivedAmount;
       }
     }
+    // 2. Cash from standalone payments or bill payments with mode='cash'
     for (final p in _ledger!.payments) {
       final mode = p.paymentMode.toLowerCase().trim();
-      final isStandalone = p.paymentNumber.isEmpty || p.note.toLowerCase().contains('credit') || p.note.toLowerCase().contains('advance');
-      if (mode == 'cash' && p.amount > 0 && isStandalone) {
-        bool matchedInBills = _ledger!.bills.any((b) => b.id == p.id || ('P${b.billNumber}' == p.paymentNumber));
-        if (!matchedInBills) {
+      if (mode == 'cash' && p.amount > 0) {
+        if (p.tokenId == null) {
           total += p.amount;
+        } else {
+          final parentBill = _ledger!.bills.firstWhere(
+            (b) => b.id == p.tokenId,
+            orElse: () => ApiToken(
+              id: 0,
+              tokenNumber: 0,
+              billNumber: '',
+              date: '',
+              orderType: '',
+              tableNumber: '',
+              customerName: '',
+              customerPhone: '',
+              customerAddress: '',
+              customerGstNumber: '',
+              status: '',
+              note: '',
+              subtotal: 0,
+              gstAmount: 0,
+              serviceCharge: 0,
+              discount: 0,
+              grandTotal: 0,
+              receivedAmount: 0,
+              balanceDue: 0,
+              isPaid: false,
+              paymentMode: '',
+              itemsSummary: '',
+              items: [],
+              createdAt: '',
+            ),
+          );
+          if (parentBill.id != 0 && parentBill.paymentMode.toLowerCase().trim() != 'cash') {
+            total += p.amount;
+          }
         }
       }
     }
@@ -121,19 +154,52 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   double get _onlineTotal {
     if (_ledger == null) return 0.0;
     double total = 0.0;
+    bool isOnlineMode(String m) {
+      final mode = m.toLowerCase().trim();
+      return mode == 'online' || mode == 'upi' || mode == 'card' || mode == 'qr' || mode.contains('online') || mode.contains('upi');
+    }
     for (final bill in _ledger!.bills) {
-      final mode = bill.paymentMode.toLowerCase().trim();
-      if (mode == 'online' || mode == 'upi' || mode == 'card' || mode == 'qr' || mode.contains('online') || mode.contains('upi')) {
+      if (isOnlineMode(bill.paymentMode)) {
         total += bill.isPaid ? bill.grandTotal : bill.receivedAmount;
       }
     }
     for (final p in _ledger!.payments) {
-      final mode = p.paymentMode.toLowerCase().trim();
-      final isOnline = mode == 'online' || mode == 'upi' || mode == 'card' || mode == 'qr' || mode.contains('online') || mode.contains('upi');
-      if (isOnline && p.amount > 0) {
-        bool matchedInBills = _ledger!.bills.any((b) => b.id == p.id || ('P${b.billNumber}' == p.paymentNumber));
-        if (!matchedInBills) {
+      if (isOnlineMode(p.paymentMode) && p.amount > 0) {
+        if (p.tokenId == null) {
           total += p.amount;
+        } else {
+          final parentBill = _ledger!.bills.firstWhere(
+            (b) => b.id == p.tokenId,
+            orElse: () => ApiToken(
+              id: 0,
+              tokenNumber: 0,
+              billNumber: '',
+              date: '',
+              orderType: '',
+              tableNumber: '',
+              customerName: '',
+              customerPhone: '',
+              customerAddress: '',
+              customerGstNumber: '',
+              status: '',
+              note: '',
+              subtotal: 0,
+              gstAmount: 0,
+              serviceCharge: 0,
+              discount: 0,
+              grandTotal: 0,
+              receivedAmount: 0,
+              balanceDue: 0,
+              isPaid: false,
+              paymentMode: '',
+              itemsSummary: '',
+              items: [],
+              createdAt: '',
+            ),
+          );
+          if (parentBill.id != 0 && !isOnlineMode(parentBill.paymentMode)) {
+            total += p.amount;
+          }
         }
       }
     }
@@ -142,29 +208,17 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
   double get _udharTotal {
     if (_ledger == null) return 0.0;
-    // Udhar bills are excluded from customer's ledger transactions and calculations
-    return 0.0;
+    return _ledger!.summary.netDue;
   }
 
   double get _totalBillAmount {
     if (_ledger == null) return 0.0;
-    double total = 0.0;
-    for (final bill in _ledger!.bills) {
-      total += bill.grandTotal;
-    }
-    return total > 0 ? total : _ledger!.summary.totalBilled;
+    return _ledger!.summary.totalBilled;
   }
 
   double get _totalCreditAmount {
     if (_ledger == null) return 0.0;
-    double total = 0.0;
-    for (final p in _ledger!.payments) {
-      final mode = p.paymentMode.toLowerCase().trim();
-      if (p.amount > 0 && mode != 'debit') {
-        total += p.amount;
-      }
-    }
-    return total > 0 ? total : _ledger!.summary.totalPaid;
+    return _ledger!.summary.totalPaid;
   }
 
   double get _totalDebitAmount {
