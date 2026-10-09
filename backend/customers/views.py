@@ -231,8 +231,13 @@ class CustomerPayDueView(APIView):
                 'error': f'Payment cannot exceed the outstanding amount of {formatted_due}.'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Distribute payment to unpaid tokens (oldest first)
-        unpaid_tokens = get_customer_bills(customer).filter(is_paid=False).order_by('created_at').select_for_update()
+        # Distribute payment to unpaid tokens (or targeted token if token_id provided)
+        target_token_id = request.data.get('token_id') or request.data.get('bill_id')
+        unpaid_tokens = get_customer_bills(customer).filter(is_paid=False)
+        if target_token_id:
+            unpaid_tokens = unpaid_tokens.filter(pk=target_token_id)
+        unpaid_tokens = unpaid_tokens.order_by('created_at').select_for_update()
+
         remaining_pay = amount
         payment_records = []
 
@@ -244,7 +249,8 @@ class CustomerPayDueView(APIView):
 
             pay_this = min(due, remaining_pay)
             token.received_amount = Decimal(str(token.received_amount or 0)) + pay_this
-            token.payment_mode = payment_mode
+            if token.payment_mode not in ['credit', 'udhar']:
+                token.payment_mode = payment_mode
 
             if token.received_amount >= token.total:
                 token.is_paid = True

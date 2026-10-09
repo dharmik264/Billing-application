@@ -637,20 +637,22 @@
       }
     }
 
-    Future<Map<String, dynamic>> payCustomerDue({
-      required String customerId,
-      required double amount,
-      String paymentMode = 'CASH',
-      String? note,
-    }) async {
-      final response = await post('customers/$customerId/pay-due/', {
-        'amount': amount,
-        'payment_mode': paymentMode,
-        if (note != null && note.isNotEmpty) 'note': note,
-      });
-      BillEventNotifier.notifyBillChanged();
-      return response;
-    }
+  Future<Map<String, dynamic>> payCustomerDue({
+    required String customerId,
+    required double amount,
+    String paymentMode = 'CASH',
+    String? note,
+    int? tokenId,
+  }) async {
+    final response = await post('customers/$customerId/pay-due/', {
+      'amount': amount,
+      'payment_mode': paymentMode,
+      if (note != null && note.isNotEmpty) 'note': note,
+      if (tokenId != null) 'token_id': tokenId,
+    });
+    BillEventNotifier.notifyBillChanged();
+    return response;
+  }
 
     Future<Map<String, dynamic>> recordCustomerCredit({
       required String customerId,
@@ -1965,6 +1967,7 @@
       required this.paymentNumber,
       this.customerName = '',
       this.customerPhone = '',
+      this.tokenId,
       this.tokenNumber = '',
       this.billNumber = '',
       required this.amount,
@@ -1980,6 +1983,7 @@
         paymentNumber: json['payment_number']?.toString() ?? '',
         customerName: json['customer_name']?.toString() ?? '',
         customerPhone: json['customer_phone']?.toString() ?? '',
+        tokenId: json['token'] != null ? (json['token'] is int ? json['token'] : int.tryParse(json['token'].toString())) : null,
         tokenNumber: json['token_number']?.toString() ?? '',
         billNumber: json['bill_number']?.toString() ?? '',
         amount: _toDouble(json['amount']),
@@ -1994,6 +1998,7 @@
     final String paymentNumber;
     final String customerName;
     final String customerPhone;
+    final int? tokenId;
     final String tokenNumber;
     final String billNumber;
     final double amount;
