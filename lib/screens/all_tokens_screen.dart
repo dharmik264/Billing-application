@@ -117,6 +117,9 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
       if (_paymentModeFilter == 'online' && t.paymentMode.toLowerCase() != 'online' && t.paymentMode.toLowerCase() != 'upi') {
         return false;
       }
+      if (_paymentModeFilter == 'udhar' && t.paymentMode.toLowerCase() != 'credit') {
+        return false;
+      }
 
       // Date filter
       if (_selectedDate != null) {
@@ -142,6 +145,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
 
   int get _cashCount => _tokens.where((t) => t.paymentMode.toLowerCase() == 'cash').length;
   int get _onlineCount => _tokens.where((t) => t.paymentMode.toLowerCase() == 'online' || t.paymentMode.toLowerCase() == 'upi').length;
+  int get _udharCount => _tokens.where((t) => t.paymentMode.toLowerCase() == 'credit').length;
 
   @override
   Widget build(BuildContext context) {
@@ -250,6 +254,14 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
                         isSelected: _paymentModeFilter == 'online',
                         onTap: () {
                           setState(() => _paymentModeFilter = _paymentModeFilter == 'online' ? 'all' : 'online');
+                        },
+                      ),
+                      const SizedBox(width: 6),
+                      _buildFilterPill(
+                        label: 'Udhar ($_udharCount)',
+                        isSelected: _paymentModeFilter == 'udhar',
+                        onTap: () {
+                          setState(() => _paymentModeFilter = _paymentModeFilter == 'udhar' ? 'all' : 'udhar');
                         },
                       ),
                       const SizedBox(width: 6),
