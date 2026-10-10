@@ -102,7 +102,7 @@ class CustomerListCreateView(generics.ListCreateAPIView):
     ordering           = ['-created_at']
 
     def get_queryset(self):
-        return Customer.objects.filter(status='active')
+        return Customer.objects.all()
 
     def perform_create(self, serializer):
         serializer.save()
@@ -119,11 +119,7 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class   = CustomerSerializer
 
     def get_queryset(self):
-        return Customer.objects.filter(status='active')
-
-    def perform_destroy(self, instance):
-        instance.status = 'inactive'
-        instance.save()
+        return Customer.objects.all()
 
 
 class CustomerLedgerView(APIView):
