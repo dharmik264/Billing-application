@@ -547,6 +547,26 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     );
   }
 
+  bool _isCustomerActive(String phone, String name) {
+    final p = phone.trim();
+    final n = name.trim();
+    if (p.isEmpty && n.isEmpty) return true;
+    final lower = n.toLowerCase();
+    if (p.isEmpty && (lower == 'walk-in' || lower == 'walk-in customer' || lower == 'walkin')) return true;
+
+    if (p.isNotEmpty) {
+      final cleanP = p.replaceAll(RegExp(r'\D'), '');
+      final normP = cleanP.length >= 10 ? cleanP.substring(cleanP.length - 10) : cleanP;
+      return _customers.any((c) {
+        final cPhone = c.mobileNumber.replaceAll(RegExp(r'\D'), '');
+        final cNorm = cPhone.length >= 10 ? cPhone.substring(cPhone.length - 10) : cPhone;
+        return cNorm == normP;
+      });
+    } else {
+      return _customers.any((c) => c.name.trim().toLowerCase() == lower);
+    }
+  }
+
   int _getRecordCountForActiveReport() {
     switch (_activeReportType) {
       case 'Item Detail':
@@ -564,10 +584,11 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         }
         return set.length;
       case 'Customer Detail':
-        return _filteredTokens.where((t) => t.customerName.isNotEmpty || t.customerPhone.isNotEmpty).length;
+        return _filteredTokens.where((t) => (t.customerName.isNotEmpty || t.customerPhone.isNotEmpty) && _isCustomerActive(t.customerPhone, t.customerName)).length;
       case 'Customer Summary':
         final set = <String>{};
         for (final t in _filteredTokens) {
+          if (!_isCustomerActive(t.customerPhone, t.customerName)) continue;
           final key = t.customerName.isNotEmpty ? t.customerName : (t.customerPhone.isNotEmpty ? t.customerPhone : 'Walk-in');
           set.add(key);
         }
@@ -578,6 +599,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         for (final t in _tokens) {
           final name = t.customerName.trim();
           final phone = t.customerPhone.trim();
+          if (!_isCustomerActive(phone, name)) continue;
           final lowerName = name.toLowerCase();
           final isUnnamed = phone.isEmpty && (name.isEmpty || lowerName == 'walk-in' || lowerName == 'walk-in customer' || lowerName == 'walkin');
           if (isUnnamed) continue;
@@ -910,7 +932,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   Widget _buildCustomerDetailList() {
     final list = _filteredTokens
-        .where((t) => t.customerName.isNotEmpty || t.customerPhone.isNotEmpty)
+        .where((t) => (t.customerName.isNotEmpty || t.customerPhone.isNotEmpty) && _isCustomerActive(t.customerPhone, t.customerName))
         .toList()
       ..sort((a, b) => b.rawDate.compareTo(a.rawDate));
 
@@ -977,6 +999,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   Widget _buildCustomerSummaryList() {
     final map = <String, _CustomerSummaryEntry>{};
     for (final token in _filteredTokens) {
+      if (!_isCustomerActive(token.customerPhone, token.customerName)) continue;
       final key = token.customerName.isNotEmpty
           ? token.customerName
           : (token.customerPhone.isNotEmpty ? token.customerPhone : 'Walk-in');
@@ -1066,6 +1089,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     for (final token in _tokens) {
       final name = token.customerName.trim();
       final phone = token.customerPhone.trim();
+      if (!_isCustomerActive(phone, name)) continue;
 
       final lowerName = name.toLowerCase();
       final isUnnamed = phone.isEmpty && (name.isEmpty || lowerName == 'walk-in' || lowerName == 'walk-in customer' || lowerName == 'walkin');
@@ -1950,32 +1974,11 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
       if (!mounted) return;
       setState(() {
-        if (tokens != null && customers != null) {
-          final activeTokens = tokens.where((token) {
-            final name = token.customerName.trim().toLowerCase();
-            final phone = token.customerPhone.trim();
-            final isUnnamed = phone.isEmpty && (name.isEmpty || name == 'walk-in' || name == 'walk-in customer' || name == 'walkin');
-            if (isUnnamed) return true;
-
-            final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
-            final normPhone = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
-            
-            if (normPhone.isNotEmpty) {
-              return customers.any((c) => c.mobileNumber.replaceAll(RegExp(r'\D'), '').endsWith(normPhone));
-            } else {
-              return customers.any((c) => c.name.toLowerCase() == name);
-            }
-          }).toList();
-
-          _tokens
-            ..clear()
-            ..addAll(activeTokens.map(_HistoryToken.fromApiToken));
-        } else if (tokens != null) {
+        if (tokens != null) {
           _tokens
             ..clear()
             ..addAll(tokens.map(_HistoryToken.fromApiToken));
         }
-
         if (customers != null) {
           _customers
             ..clear()
