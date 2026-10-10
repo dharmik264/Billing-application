@@ -23,7 +23,6 @@ class Customer(models.Model):
     address       = models.TextField(blank=True, null=True)
     gst_number    = models.CharField(max_length=15, blank=True, default='')
     status        = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
-    is_deleted    = models.BooleanField(default=False)
     created_at    = models.DateTimeField(auto_now_add=True)
     updated_at    = models.DateTimeField(auto_now=True)
 

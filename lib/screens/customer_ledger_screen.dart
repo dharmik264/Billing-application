@@ -1261,7 +1261,6 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
         final isDebit = payment.paymentMode.toLowerCase() == 'm-debit' || payment.paymentMode.toLowerCase() == 'debit' || payment.amount < 0;
         final hasBillInfo = payment.billNumber.isNotEmpty || payment.tokenNumber.isNotEmpty;
-        final custName = payment.customerName.isNotEmpty ? payment.customerName : widget.customer.name;
 
         String primaryRef;
         String secondaryRef;
@@ -1272,10 +1271,10 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           primaryRef = [billPart, tokenPart].where((s) => s.isNotEmpty).join(' • ');
           secondaryRef = 'Method: ${payment.paymentMode.toUpperCase()}';
         } else {
-          primaryRef = custName;
+          primaryRef = isDebit ? 'M-Debit Transaction' : (payment.paymentMode.toLowerCase() == 'm-credit' ? 'M-Credit Transaction' : 'Credit Transaction');
           secondaryRef = payment.note.isNotEmpty
               ? payment.note
-              : (isDebit ? 'M-Debit Transaction' : (payment.paymentMode.toLowerCase() == 'm-credit' ? 'M-Credit Transaction' : 'Credit Transaction'));
+              : 'Method: ${payment.paymentMode.toUpperCase()}';
         }
 
         return Container(
