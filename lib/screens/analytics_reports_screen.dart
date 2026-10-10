@@ -1950,11 +1950,32 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
       if (!mounted) return;
       setState(() {
-        if (tokens != null) {
+        if (tokens != null && customers != null) {
+          final activeTokens = tokens.where((token) {
+            final name = token.customerName.trim().toLowerCase();
+            final phone = token.customerPhone.trim();
+            final isUnnamed = phone.isEmpty && (name.isEmpty || name == 'walk-in' || name == 'walk-in customer' || name == 'walkin');
+            if (isUnnamed) return true;
+
+            final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+            final normPhone = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
+            
+            if (normPhone.isNotEmpty) {
+              return customers.any((c) => c.mobileNumber.replaceAll(RegExp(r'\D'), '').endsWith(normPhone));
+            } else {
+              return customers.any((c) => c.name.toLowerCase() == name);
+            }
+          }).toList();
+
+          _tokens
+            ..clear()
+            ..addAll(activeTokens.map(_HistoryToken.fromApiToken));
+        } else if (tokens != null) {
           _tokens
             ..clear()
             ..addAll(tokens.map(_HistoryToken.fromApiToken));
         }
+
         if (customers != null) {
           _customers
             ..clear()
