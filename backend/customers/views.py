@@ -35,7 +35,7 @@ def normalize_phone(p):
     return digits
 
 
-ALLOWED_PAYMENT_MODES = {'cash', 'upi', 'card', 'online', 'net_banking', 'due', 'jama', 'credit', 'udhar', 'other'}
+ALLOWED_PAYMENT_MODES = {'cash', 'upi', 'card', 'online', 'net_banking', 'due', 'jama', 'credit', 'udhar', 'other', 'm-credit', 'm-debit'}
 
 
 def get_customer_bills(customer):
