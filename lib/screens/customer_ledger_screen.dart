@@ -715,7 +715,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     const SizedBox(height: 6),
                     Builder(
                       builder: (context) {
-                        final netDue = (_ledger?.summary.netDue ?? 0.0) + _totalDebitAmount - _totalCreditAmount;
+                        final netDue = _ledger?.summary.netDue ?? 0.0;
                         Color textColor = Colors.blue;
                         if (netDue > 0) {
                           textColor = Colors.red;
