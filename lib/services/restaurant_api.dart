@@ -584,13 +584,11 @@
         final customer = await fetchCustomer(customerId);
         final tokens = await fetchTokens();
         final customerTokens = tokens.where((t) {
-          final mode = t.paymentMode.toLowerCase().trim();
-          final isUdhar = mode == 'udhar' || mode == 'credit';
           final isCancelled = t.status.toLowerCase() == 'cancelled';
           final matchesCustomer = (t.customerPhone.contains(customer.mobileNumber) ||
            customer.mobileNumber.contains(t.customerPhone) ||
            t.customerName.toLowerCase() == customer.name.toLowerCase());
-          return !isCancelled && !isUdhar && matchesCustomer;
+          return !isCancelled && matchesCustomer;
         }).toList();
 
         double totalBilled = 0.0;
@@ -607,6 +605,7 @@
               paymentNumber: 'P${token.billNumber}',
               customerName: customer.name,
               customerPhone: customer.mobileNumber,
+              tokenId: int.tryParse(token.id),
               tokenNumber: token.tokenNumber,
               billNumber: token.billNumber,
               amount: pAmt,
@@ -2046,16 +2045,12 @@
     });
 
     factory ApiCustomerLedger.fromJson(Map<String, dynamic> json) {
-      final rawBills = (json['bills'] as List? ?? []).map((e) => ApiToken.fromJson(e as Map<String, dynamic>)).toList();
-      final filteredBills = rawBills.where((b) {
-        final mode = b.paymentMode.toLowerCase().trim();
-        return mode != 'udhar' && mode != 'credit';
-      }).toList();
+      final bills = (json['bills'] as List? ?? []).map((e) => ApiToken.fromJson(e as Map<String, dynamic>)).toList();
 
       return ApiCustomerLedger(
         customer: ApiCustomer.fromJson(json['customer'] is Map<String, dynamic> ? json['customer'] : {}),
         summary: ApiCustomerLedgerSummary.fromJson(json['summary'] is Map<String, dynamic> ? json['summary'] : {}),
-        bills: filteredBills,
+        bills: bills,
         payments: (json['payments'] as List? ?? []).map((e) => ApiCustomerPayment.fromJson(e as Map<String, dynamic>)).toList(),
       );
     }

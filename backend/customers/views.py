@@ -390,15 +390,30 @@ class CustomerDebitView(APIView):
         except (ValueError, TypeError, InvalidOperation):
             return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # A debit is recorded as a negative CustomerPayment (charge).
-        # Using a negative amount makes it visible in payment history and
-        # reduces total_paid in compute_customer_ledger_summary, thus increasing net_due.
-        CustomerPayment.objects.create(
-            customer=customer,
-            token=None,
-            amount=-amount,
-            payment_mode='debit',
+        from tokens.models import Token, TokenItem
+        from django.utils import timezone
+        
+        t = Token.objects.create(
+            token_number=Token.get_next_token_number(),
+            bill_number=Token.get_next_bill_number(),
+            customer_name=customer.name,
+            customer_phone=customer.mobile_number,
+            payment_mode='credit',
+            is_paid=False,
+            status='completed',
+            total=amount,
+            subtotal=amount,
+            balance_due=amount,
+            received_amount=Decimal('0.00'),
             note=note or 'Manual debit charge',
+            items_summary='Debit Entry'
+        )
+        
+        TokenItem.objects.create(
+            token=t,
+            name=note or 'Debit Entry',
+            price=amount,
+            quantity=1
         )
 
         updated_summary = compute_customer_ledger_summary(customer)

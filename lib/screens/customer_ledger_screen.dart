@@ -129,6 +129,8 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           if (parentBill.id != '0' && parentBill.paymentMode.toLowerCase().trim() != 'cash') {
             total += p.amount;
           }
+        } else {
+          total += p.amount;
         }
       }
     }
@@ -169,6 +171,8 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           if (parentBill.id != '0' && !isOnlineMode(parentBill.paymentMode)) {
             total += p.amount;
           }
+        } else {
+          total += p.amount;
         }
       }
     }
@@ -177,7 +181,19 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
   double get _udharTotal {
     if (_ledger == null) return 0.0;
-    return _ledger!.summary.netDue;
+    double total = 0.0;
+    for (final bill in _ledger!.bills) {
+      if (bill.grandTotal > bill.receivedAmount) {
+        total += (bill.grandTotal - bill.receivedAmount);
+      }
+    }
+    for (final p in _ledger!.payments) {
+      final mode = p.paymentMode.toLowerCase().trim();
+      if (p.tokenId == null && (p.amount < 0 || mode == 'debit')) {
+        total += p.amount.abs();
+      }
+    }
+    return total;
   }
 
   double get _totalBillAmount {
@@ -776,7 +792,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     const SizedBox(height: 6),
                     Builder(
                       builder: (context) {
-                        final netDue = _totalDebitAmount - _totalCreditAmount;
+                        final netDue = (_ledger?.summary.netDue ?? 0.0) + _totalDebitAmount - _totalCreditAmount;
                         Color textColor = Colors.blue;
                         if (netDue > 0) textColor = Colors.red;
                         else if (netDue < 0) textColor = Colors.green;
