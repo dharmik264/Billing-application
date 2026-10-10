@@ -723,7 +723,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                           textColor = Colors.green;
                         }
                         return Text(
-                          'Net Due: ${_formatAmount(netDue.abs())}',
+                          'Net Due: ${_formatAmount(netDue)}',
                           style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: textColor),
                         );
                       }

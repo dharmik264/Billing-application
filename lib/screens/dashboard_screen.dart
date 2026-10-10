@@ -160,9 +160,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
           double totalCustomerNetDue = 0.0;
           for (var c in customers) {
-            if (c.netDue > 0) {
-              totalCustomerNetDue += c.netDue;
-            }
+            totalCustomerNetDue += c.netDue;
           }
 
           _tokenCount = summary.totalTokens > 0
@@ -174,7 +172,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
           _todayUdhar = summary.creditTotal > 0 ? summary.creditTotal : calcUdhar;
           _totalCustomerDue = totalCustomerNetDue;
-          _udharSales = _totalCustomerDue > 0 ? _totalCustomerDue : _todayUdhar;
+          _udharSales = _totalCustomerDue;
 
           _recentTokens = tokens.map((t) {
             final date = DateTime.parse(t.createdAt).toLocal();
@@ -414,7 +412,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          'Udhar Outstanding',
+                          'Net Due',
                           style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
