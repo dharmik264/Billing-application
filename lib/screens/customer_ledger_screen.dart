@@ -231,7 +231,6 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   Future<void> _showCreditDialog() async {
     final amountCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
-    String selectedMode = 'CASH';
     String? validationError;
     bool submitting = false;
 
@@ -718,9 +717,11 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                       builder: (context) {
                         final netDue = (_ledger?.summary.netDue ?? 0.0) + _totalDebitAmount - _totalCreditAmount;
                         Color textColor = Colors.blue;
-                        if (netDue > 0) textColor = Colors.red;
-                        else if (netDue < 0) textColor = Colors.green;
-                        
+                        if (netDue > 0) {
+                          textColor = Colors.red;
+                        } else if (netDue < 0) {
+                          textColor = Colors.green;
+                        }
                         return Text(
                           'Net Due: ${_formatAmount(netDue.abs())}',
                           style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: textColor),
