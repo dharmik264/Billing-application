@@ -65,13 +65,16 @@ def compute_customer_ledger_summary(customer):
     unpaid_bills_recv_sum = bills.filter(is_paid=False).aggregate(s=Sum('received_amount'))['s'] or Decimal('0.00')
     bills_paid = paid_bills_sum + unpaid_bills_recv_sum
 
-    # Manual Credit/Debit payments not tied to any bill (T Credit / T Debit)
-    advance_paid = CustomerPayment.objects.filter(customer=customer, token__isnull=True).aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
+    # All advance payments (excluding m-debit) act as credit
+    advance_credits = CustomerPayment.objects.filter(customer=customer, token__isnull=True).exclude(payment_mode='m-debit').aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
+    
+    # Manual Debits
+    m_debits = CustomerPayment.objects.filter(customer=customer, token__isnull=True, payment_mode='m-debit').aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
 
-    # We do NOT add advance_paid to total_paid so that T Credit / T Debit don't alter the Udhar card
+    # We do NOT add advance_credits to total_paid so that M-Credit / M-Debit don't alter the Udhar card.
     total_paid = bills_paid
-    net_due = max(Decimal('0.00'), total_billed - total_paid)
-    payment_status = 'PAID IN FULL' if net_due == Decimal('0.00') else 'UDHAR'
+    net_due = (total_billed - total_paid) + m_debits - advance_credits
+    payment_status = 'PAID IN FULL' if net_due <= Decimal('0.00') else 'UDHAR'
 
     payments = CustomerPayment.objects.filter(customer=customer)
 
@@ -336,21 +339,21 @@ class CustomerCreditView(APIView):
             return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Simply record the credit as an advance payment (token=None)
-        # We do NOT distribute to unpaid bills here, as the user wants Credit
+        # We do NOT distribute to unpaid bills here, as the user wants M-Credit
         # to strictly affect the 'T Credit' tally and NOT affect the 'Udhar' or 'Cash/Online' cards.
         payment_records = []
         p_rec = CustomerPayment.objects.create(
             customer=customer,
             token=None,
             amount=amount,
-            payment_mode=payment_mode,
-            note=note or 'Advance credit',
+            payment_mode='m-credit',
+            note=note or 'Manual credit',
         )
         payment_records.append(p_rec)
 
         updated_summary = compute_customer_ledger_summary(customer)
         return Response({
-            'message': f'Credit of ₹{amount} recorded.',
+            'message': f'M-Credit of ₹{amount} recorded.',
             'summary': {
                 'total_billed': float(updated_summary['total_billed']),
                 'total_paid':   float(updated_summary['total_paid']),
@@ -390,35 +393,17 @@ class CustomerDebitView(APIView):
         except (ValueError, TypeError, InvalidOperation):
             return Response({'error': 'Invalid amount.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        from tokens.models import Token, TokenItem
-        from django.utils import timezone
-        
-        t = Token.objects.create(
-            token_number=Token.get_next_token_number(),
-            bill_number=Token.get_next_bill_number(),
-            customer_name=customer.name,
-            customer_phone=customer.mobile_number,
-            payment_mode='credit',
-            is_paid=False,
-            status='completed',
-            total=amount,
-            subtotal=amount,
-            balance_due=amount,
-            received_amount=Decimal('0.00'),
-            note=note or 'Manual debit charge',
-            items_summary='Debit Entry'
-        )
-        
-        TokenItem.objects.create(
-            token=t,
-            name=note or 'Debit Entry',
-            price=amount,
-            quantity=1
+        p_rec = CustomerPayment.objects.create(
+            customer=customer,
+            token=None,
+            amount=amount,
+            payment_mode='m-debit',
+            note=note or 'Manual debit charge'
         )
 
         updated_summary = compute_customer_ledger_summary(customer)
         return Response({
-            'message': f'Debit of ₹{amount} added to account.',
+            'message': f'M-Debit of ₹{amount} added to account.',
             'summary': {
                 'total_billed': float(updated_summary['total_billed']),
                 'total_paid':   float(updated_summary['total_paid']),

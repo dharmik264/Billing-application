@@ -99,39 +99,10 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   double get _cashTotal {
     if (_ledger == null) return 0.0;
     double total = 0.0;
-    // 1. Cash from bills where payment mode was cash
     for (final bill in _ledger!.bills) {
       final mode = bill.paymentMode.toLowerCase().trim();
       if (mode == 'cash') {
-        total += bill.isPaid ? bill.grandTotal : bill.receivedAmount;
-      }
-    }
-    // 2. Cash from bill payments with mode='cash'
-    for (final p in _ledger!.payments) {
-      final mode = p.paymentMode.toLowerCase().trim();
-      if (mode == 'cash' && p.amount > 0) {
-        if (p.tokenId != null) {
-          final parentBill = _ledger!.bills.firstWhere(
-            (b) => b.id == p.tokenId.toString(),
-            orElse: () => const ApiToken(
-              id: '0',
-              tokenNumber: '0',
-              billNumber: '',
-              status: '',
-              customerName: '',
-              customerPhone: '',
-              grandTotal: 0,
-              paymentMode: '',
-              createdAt: '',
-              items: [],
-            ),
-          );
-          if (parentBill.id != '0' && parentBill.paymentMode.toLowerCase().trim() != 'cash') {
-            total += p.amount;
-          }
-        } else {
-          total += p.amount;
-        }
+        total += bill.grandTotal;
       }
     }
     return total;
@@ -140,40 +111,10 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   double get _onlineTotal {
     if (_ledger == null) return 0.0;
     double total = 0.0;
-    bool isOnlineMode(String m) {
-      final mode = m.toLowerCase().trim();
-      return mode == 'online' || mode == 'upi' || mode == 'card' || mode == 'qr' || mode.contains('online') || mode.contains('upi');
-    }
     for (final bill in _ledger!.bills) {
-      if (isOnlineMode(bill.paymentMode)) {
-        total += bill.isPaid ? bill.grandTotal : bill.receivedAmount;
-      }
-    }
-    // Online from bill payments
-    for (final p in _ledger!.payments) {
-      if (isOnlineMode(p.paymentMode) && p.amount > 0) {
-        if (p.tokenId != null) {
-          final parentBill = _ledger!.bills.firstWhere(
-            (b) => b.id == p.tokenId.toString(),
-            orElse: () => const ApiToken(
-              id: '0',
-              tokenNumber: '0',
-              billNumber: '',
-              status: '',
-              customerName: '',
-              customerPhone: '',
-              grandTotal: 0,
-              paymentMode: '',
-              createdAt: '',
-              items: [],
-            ),
-          );
-          if (parentBill.id != '0' && !isOnlineMode(parentBill.paymentMode)) {
-            total += p.amount;
-          }
-        } else {
-          total += p.amount;
-        }
+      final mode = bill.paymentMode.toLowerCase().trim();
+      if (mode == 'online' || mode == 'upi' || mode == 'card' || mode == 'qr' || mode.contains('online') || mode.contains('upi')) {
+        total += bill.grandTotal;
       }
     }
     return total;
@@ -183,14 +124,9 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     if (_ledger == null) return 0.0;
     double total = 0.0;
     for (final bill in _ledger!.bills) {
-      if (bill.grandTotal > bill.receivedAmount) {
-        total += (bill.grandTotal - bill.receivedAmount);
-      }
-    }
-    for (final p in _ledger!.payments) {
-      final mode = p.paymentMode.toLowerCase().trim();
-      if (p.tokenId == null && (p.amount < 0 || mode == 'debit')) {
-        total += p.amount.abs();
+      final mode = bill.paymentMode.toLowerCase().trim();
+      if (mode == 'udhar' || mode == 'credit') {
+        total += bill.grandTotal;
       }
     }
     return total;
@@ -206,7 +142,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     double total = 0.0;
     for (final p in _ledger!.payments) {
       final mode = p.paymentMode.toLowerCase().trim();
-      if (p.tokenId == null && p.amount > 0 && mode != 'debit') {
+      if (p.tokenId == null && mode != 'm-debit' && mode != 'debit') {
         total += p.amount;
       }
     }
@@ -218,7 +154,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     double total = 0.0;
     for (final p in _ledger!.payments) {
       final mode = p.paymentMode.toLowerCase().trim();
-      if (p.tokenId == null && (p.amount < 0 || mode == 'debit')) {
+      if (p.tokenId == null && (mode == 'm-debit' || mode == 'debit')) {
         total += p.amount.abs();
       }
     }
@@ -322,7 +258,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Credit Entry', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: _slate900)),
+                        Text('M-Credit Entry', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: _slate900)),
                         Text('Customer pays shop', style: GoogleFonts.inter(fontSize: 12, color: _slate600)),
                       ],
                     ),
@@ -351,18 +287,6 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _green, width: 2)),
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text('Payment Mode', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _modeChip('Cash', 'CASH', selectedMode, (m) => setDialogState(() => selectedMode = m)),
-                        const SizedBox(width: 8),
-                        _modeChip('UPI', 'UPI', selectedMode, (m) => setDialogState(() => selectedMode = m)),
-                        const SizedBox(width: 8),
-                        _modeChip('Card', 'CARD', selectedMode, (m) => setDialogState(() => selectedMode = m)),
-                      ],
                     ),
                     const SizedBox(height: 14),
                     Text('Note (Optional)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
@@ -398,13 +322,13 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                       await RestaurantApi.instance.recordCustomerCredit(
                         customerId: widget.customer.id,
                         amount: amt,
-                        paymentMode: selectedMode,
+                        paymentMode: 'm-credit',
                         note: noteCtrl.text.trim(),
                       );
                       if (mounted) {
                         nav.pop();
                         messenger.showSnackBar(SnackBar(
-                          content: Text('Credit of ${_formatAmount(amt)} recorded.'),
+                          content: Text('M-Credit of ${_formatAmount(amt)} recorded.'),
                           backgroundColor: _green,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -426,7 +350,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                   ),
                   child: submitting
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('Save Credit', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                      : Text('Save M-Credit', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
                 ),
               ],
             );
@@ -466,7 +390,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Debit Entry', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: _slate900)),
+                        Text('M-Debit Entry', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 17, color: _slate900)),
                         Text('Shop charges customer', style: GoogleFonts.inter(fontSize: 12, color: _slate600)),
                       ],
                     ),
@@ -535,7 +459,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                       if (mounted) {
                         nav.pop();
                         messenger.showSnackBar(SnackBar(
-                          content: Text('Debit of ${_formatAmount(amt)} added to account.'),
+                          content: Text('M-Debit of ${_formatAmount(amt)} added to account.'),
                           backgroundColor: _red,
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -557,7 +481,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                   ),
                   child: submitting
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('Save Debit', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                      : Text('Save M-Debit', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
                 ),
               ],
             );
@@ -1334,7 +1258,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         final dateStr = DateFormat('dd/MM/yyyy').format(dateTime);
         final timeStr = DateFormat('hh:mm a').format(dateTime);
 
-        final isDebit = payment.paymentMode.toLowerCase() == 'debit' || payment.amount < 0;
+        final isDebit = payment.paymentMode.toLowerCase() == 'm-debit' || payment.paymentMode.toLowerCase() == 'debit' || payment.amount < 0;
         final hasBillInfo = payment.billNumber.isNotEmpty || payment.tokenNumber.isNotEmpty;
         final custName = payment.customerName.isNotEmpty ? payment.customerName : widget.customer.name;
 
@@ -1350,7 +1274,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           primaryRef = custName;
           secondaryRef = payment.note.isNotEmpty
               ? payment.note
-              : (isDebit ? 'Debit Transaction' : 'Credit Transaction');
+              : (isDebit ? 'M-Debit Transaction' : (payment.paymentMode.toLowerCase() == 'm-credit' ? 'M-Credit Transaction' : 'Credit Transaction'));
         }
 
         return Container(
