@@ -44,7 +44,7 @@
     String getMediaUrl(String path) {
       if (path.startsWith('http://') || path.startsWith('https://')) return path;
       // Base URL is typically ending with /api, we might need to go to root for media
-      final base = Uri.parse(_baseUrl);
+      final base = Uri.parse(baseUrl);
       final origin = '${base.scheme}://${base.host}:${base.port}';
       final normalizedPath = path.startsWith('/') ? path : '/$path';
       return '$origin$normalizedPath';
@@ -66,7 +66,7 @@
       setTokens(access, refresh);
     }
 
-    Future<void> clearTokens() async {
+    Future<void> clearTokens({bool preserveSyncQueue = true}) async {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('accessToken');
       await prefs.remove('refreshToken');
@@ -74,7 +74,7 @@
       _cachedShopData = null;
       _cachedItems = null;
       _cachedSummary = null;
-      await LocalDatabase.instance.clearAllData();
+      await LocalDatabase.instance.clearAllData(preserveSyncQueue: preserveSyncQueue);
     }
 
     Map<String, String> _headers() {
@@ -86,7 +86,7 @@
     }
 
     Uri _uri(String path, [Map<String, String>? query]) {
-      final base = Uri.parse(_baseUrl);
+      final base = Uri.parse(baseUrl);
       final normalizedPath = '${base.path.replaceAll(RegExp(r'/$'), '')}/$path'
           .replaceAll('//', '/');
       return base.replace(path: normalizedPath, queryParameters: query);
@@ -171,18 +171,6 @@
       });
     }
 
-    // ── Developer Mode ──────────────────────────────────────────
-    Future<List<dynamic>> fetchDevUsers() async {
-      return await _getPaginatedList('auth/dev/users/');
-    }
-
-    Future<Map<String, dynamic>> devLogin(String phone) async {
-      final response = await post('auth/dev/login/', {'phone': phone});
-      if (response.containsKey('access') && response.containsKey('refresh')) {
-        await saveTokens(response['access'], response['refresh']);
-      }
-      return response;
-    }
 
     Future<ApiUser> fetchProfile() async {
       final data = await _get('auth/profile/');

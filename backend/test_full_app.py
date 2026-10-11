@@ -342,7 +342,8 @@ def run_tests():
     r = client.post("/api/customers/", {"name":"Valid Name","mobile_number":"123456","address":"A","gst_number":"","status":"active"}, format="json")
     check("Validation", "Customer: short mobile rejected (400)", r.status_code == 400)
     r = client.post("/api/customers/", {"name":"Valid Name","mobile_number":"9099099010","address":"","gst_number":"","status":"active"}, format="json")
-    check("Validation", "Customer: empty address rejected (400)", r.status_code == 400)
+    check("Validation", "Customer: optional address allowed (201)", r.status_code == 201)
+    Customer.objects.filter(mobile_number="9099099010").delete()
     r = client.post("/api/customers/", {"name":"Valid Name","mobile_number":"9099099010","address":"Test","gst_number":"BADGST","status":"active"}, format="json")
     check("Validation", "Customer: invalid GST rejected (400)", r.status_code == 400)
     r = client.post("/api/customers/", {"name":"Valid Name","mobile_number":"9099099010","address":"Test","gst_number":"29AAPFU0939F1ZV","status":"active"}, format="json")
@@ -427,25 +428,25 @@ def run_tests():
             sections[sec]["failed"] += 1
         sections[sec]["items"].append(v)
 
-        total  = len(results)
-        passed = sum(1 for v in results.values() if v["passed"])
-        failed = total - passed
+    total  = len(results)
+    passed = sum(1 for v in results.values() if v["passed"])
+    failed = total - passed
 
-        print("\n" + "="*55)
-        print("  FINAL SUMMARY")
-        print("="*55)
-        print(f"  Total: {total}  |  Passed: {passed}  |  Failed: {failed}")
-        for sec, data in sections.items():
-            mark = "[PASS]" if data["failed"] == 0 else "[FAIL]"
-            print(f"  {mark}  {sec}: {data['passed']}/{data['passed']+data['failed']}")
+    print("\n" + "="*55)
+    print("  FINAL SUMMARY")
+    print("="*55)
+    print(f"  Total: {total}  |  Passed: {passed}  |  Failed: {failed}")
+    for sec, data in sections.items():
+        mark = "[PASS]" if data["failed"] == 0 else "[FAIL]"
+        print(f"  {mark}  {sec}: {data['passed']}/{data['passed']+data['failed']}")
 
-        with open("full_test_results.json", "w", encoding="utf-8") as f:
-            json.dump({"total": total, "passed": passed, "failed": failed,
-                       "sections": {k: {"passed": v["passed"], "failed": v["failed"]} for k,v in sections.items()},
-                       "all": results}, f, indent=2, ensure_ascii=False)
+    with open("full_test_results.json", "w", encoding="utf-8") as f:
+        json.dump({"total": total, "passed": passed, "failed": failed,
+                   "sections": {k: {"passed": v["passed"], "failed": v["failed"]} for k,v in sections.items()},
+                   "all": results}, f, indent=2, ensure_ascii=False)
 
-        print(f"\n  Results saved: full_test_results.json")
-        sys.exit(0 if failed == 0 else 1)
+    print(f"\n  Results saved: full_test_results.json")
+    sys.exit(0 if failed == 0 else 1)
 
 if __name__ == '__main__':
     run_tests()

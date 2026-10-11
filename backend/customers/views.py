@@ -42,18 +42,17 @@ def get_customer_bills(customer):
     clean_phone = normalize_phone(customer.mobile_number)
     qs = Token.objects.exclude(status='cancelled')
     
-    if clean_phone:
-        matching_ids = []
-        for token_id, c_phone, c_name in qs.values_list('id', 'customer_phone', 'customer_name').iterator():
-            t_phone = normalize_phone(c_phone)
-            if t_phone and t_phone == clean_phone:
-                matching_ids.append(token_id)
-            elif c_name and c_name.strip().lower() == customer.name.strip().lower():
-                matching_ids.append(token_id)
-        qs = Token.objects.filter(id__in=matching_ids)
-    else:
-        qs = qs.filter(customer_name__iexact=customer.name)
-    return qs.order_by('-created_at')
+    if clean_phone and len(clean_phone) >= 7:
+        q = Q(customer_phone__icontains=clean_phone)
+        if len(clean_phone) == 10:
+            split_phone = f"{clean_phone[:5]} {clean_phone[5:]}"
+            q |= Q(customer_phone__icontains=split_phone)
+        if customer.name and customer.name.strip():
+            q |= Q(customer_name__iexact=customer.name.strip())
+        return qs.filter(q).order_by('-created_at')
+    elif customer.name and customer.name.strip():
+        return qs.filter(customer_name__iexact=customer.name.strip()).order_by('-created_at')
+    return qs.none()
 
 
 def compute_customer_ledger_summary(customer):
@@ -118,7 +117,7 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class   = CustomerSerializer
 
     def get_queryset(self):
-        return Customer.objects.exclude(status='inactive')
+        return Customer.objects.all()
 
     def perform_destroy(self, instance):
         instance.status = 'inactive'

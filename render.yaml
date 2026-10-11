@@ -26,4 +26,4 @@ services:
       - key: DEBUG
         value: "False"
       - key: RETURN_OTP_IN_RESPONSE
-        value: "True"
+        value: "False"

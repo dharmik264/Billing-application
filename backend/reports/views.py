@@ -71,7 +71,7 @@ class WeeklyReportView(APIView):
         result = []
         d = start_date
         while d <= end_date:
-            tokens = Token.objects.filter(date=d, is_paid=True)
+            tokens = Token.objects.filter(date=d).exclude(status='cancelled')
             agg = tokens.aggregate(revenue=Sum('total'), count=Count('id'))
             result.append({
                 'date':    str(d),
@@ -93,7 +93,7 @@ class MonthlyReportView(APIView):
         except (ValueError, TypeError):
             year  = timezone.now().year
             month = timezone.now().month
-        tokens = Token.objects.filter(date__year=year, date__month=month, is_paid=True)
+        tokens = Token.objects.filter(date__year=year, date__month=month).exclude(status='cancelled')
 
         agg = tokens.aggregate(
             revenue  = Sum('total'),
@@ -133,7 +133,8 @@ class TopItemsReportView(APIView):
 
         top_items = (
             TokenItem.objects
-            .filter(token__date__gte=start, token__is_paid=True)
+            .filter(token__date__gte=start)
+            .exclude(token__status='cancelled')
             .values('name')
             .annotate(
                 total_qty     = Sum('quantity'),
@@ -158,7 +159,8 @@ class CategoryReportView(APIView):
 
         data = (
             TokenItem.objects
-            .filter(token__date__gte=start, token__is_paid=True, menu_item__isnull=False)
+            .filter(token__date__gte=start, menu_item__isnull=False)
+            .exclude(token__status='cancelled')
             .values(category_name=F('menu_item__category__name'))
             .annotate(
                 total_qty     = Sum('quantity'),
@@ -179,7 +181,7 @@ class DateRangeReportView(APIView):
         if not start:
             return Response({'error': 'start date required'}, status=400)
 
-        tokens = Token.objects.filter(date__range=[start, end], is_paid=True)
+        tokens = Token.objects.filter(date__range=[start, end]).exclude(status='cancelled')
         agg = tokens.aggregate(
             revenue   = Sum('total'),
             count     = Count('id'),

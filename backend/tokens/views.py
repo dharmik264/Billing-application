@@ -478,12 +478,26 @@ class TodaySummaryView(APIView):
             s=Sum(models.F('total') - models.F('received_amount'))
         )['s'] or 0
 
-        # Cash received today
-        cash_paid = tokens.filter(payment_mode__iexact='cash', is_paid=True).aggregate(s=Sum('total'))['s'] or tokens.filter(payment_mode__iexact='cash').aggregate(s=Sum('received_amount'))['s'] or 0
-        # UPI / Online received today
-        upi_paid = tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI'], is_paid=True).aggregate(s=Sum('total'))['s'] or tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI']).aggregate(s=Sum('received_amount'))['s'] or 0
-        # Card received today
-        card_paid = tokens.filter(payment_mode__iexact='card', is_paid=True).aggregate(s=Sum('total'))['s'] or tokens.filter(payment_mode__iexact='card').aggregate(s=Sum('received_amount'))['s'] or 0
+        # Cash received today on today's tokens
+        cash_paid_tokens = (tokens.filter(payment_mode__iexact='cash', is_paid=True).aggregate(s=Sum('total'))['s'] or 0) + \
+                           (tokens.filter(payment_mode__iexact='cash', is_paid=False).aggregate(s=Sum('received_amount'))['s'] or 0)
+        # UPI / Online received today on today's tokens
+        upi_paid_tokens = (tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI'], is_paid=True).aggregate(s=Sum('total'))['s'] or 0) + \
+                          (tokens.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI'], is_paid=False).aggregate(s=Sum('received_amount'))['s'] or 0)
+        # Card received today on today's tokens
+        card_paid_tokens = (tokens.filter(payment_mode__iexact='card', is_paid=True).aggregate(s=Sum('total'))['s'] or 0) + \
+                           (tokens.filter(payment_mode__iexact='card', is_paid=False).aggregate(s=Sum('received_amount'))['s'] or 0)
+
+        # Standalone customer payments received today (e.g. debt repayment/Jama not tied to today's token)
+        from customers.models import CustomerPayment
+        direct_payments = CustomerPayment.objects.filter(date=today).filter(models.Q(token__isnull=True) | ~models.Q(token__date=today))
+        cash_direct = direct_payments.filter(payment_mode__iexact='cash').aggregate(s=Sum('amount'))['s'] or 0
+        upi_direct = direct_payments.filter(payment_mode__in=['online / upi', 'upi', 'online', 'ONLINE', 'UPI', 'm-credit']).aggregate(s=Sum('amount'))['s'] or 0
+        card_direct = direct_payments.filter(payment_mode__iexact='card').aggregate(s=Sum('amount'))['s'] or 0
+
+        cash_paid = cash_paid_tokens + cash_direct
+        upi_paid = upi_paid_tokens + upi_direct
+        card_paid = card_paid_tokens + card_direct
 
         return Response({
             'date':          str(today),

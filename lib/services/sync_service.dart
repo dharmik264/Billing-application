@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'local_database.dart';
 import 'restaurant_api.dart';
 import 'dart:convert';
+import '../utils/bill_event_notifier.dart';
 
 class SyncService {
   static final SyncService instance = SyncService._init();
@@ -74,31 +75,53 @@ class SyncService {
         final endpoint = item['endpoint'] as String;
         final method = item['method'] as String;
         final bodyStr = item['body'] as String;
+        final attempts = (item['attempts'] as int?) ?? 0;
         final body = jsonDecode(bodyStr) as Map<String, dynamic>;
 
         bool success = false;
+        Map<String, dynamic>? serverResult;
+
         try {
           if (method == 'POST') {
-            await RestaurantApi.instance.post(endpoint, body);
+            serverResult = await RestaurantApi.instance.post(endpoint, body);
             success = true;
           } else if (method == 'PUT') {
-            await RestaurantApi.instance.put(endpoint, body);
+            serverResult = await RestaurantApi.instance.put(endpoint, body);
             success = true;
           } else if (method == 'PATCH') {
-            await RestaurantApi.instance.patch(endpoint, body);
+            serverResult = await RestaurantApi.instance.patch(endpoint, body);
             success = true;
           } else if (method == 'DELETE') {
             await RestaurantApi.instance.delete(endpoint);
             success = true;
           } else if (method == 'POST_MULTIPART') {
-            await RestaurantApi.instance.postMultipart(endpoint, body);
+            serverResult = await RestaurantApi.instance.postMultipart(endpoint, body);
             success = true;
           } else if (method == 'PUT_MULTIPART') {
-            await RestaurantApi.instance.putMultipart(endpoint, body);
+            serverResult = await RestaurantApi.instance.putMultipart(endpoint, body);
             success = true;
+          }
+
+          // If the server returned an authoritative record, update local DB to reflect server IDs
+          if (serverResult != null && serverResult.isNotEmpty) {
+            if (endpoint.contains('tokens/create')) {
+              await LocalDatabase.instance.saveToken(serverResult);
+            } else if (endpoint.contains('customers')) {
+              await LocalDatabase.instance.saveCustomer(serverResult);
+            } else if (endpoint.contains('items')) {
+              await LocalDatabase.instance.saveItem(serverResult);
+            }
           }
         } catch (e) {
           debugPrint('Sync failed for item $id on $endpoint: $e');
+          final newAttempts = attempts + 1;
+          final isClientError = e is ApiException && e.statusCode != null && e.statusCode! >= 400 && e.statusCode! < 500;
+          if (newAttempts >= 5 || isClientError) {
+            debugPrint('Quarantining sync item $id after $newAttempts attempts (client error: $isClientError)');
+            await LocalDatabase.instance.removeFromQueue(id);
+          } else {
+            await LocalDatabase.instance.incrementQueueAttempts(id);
+          }
         }
 
         if (success) {
@@ -110,6 +133,7 @@ class SyncService {
       // Notify listeners how many items were synced.
       if (syncedCount > 0) {
         _syncCountController.add(syncedCount);
+        BillEventNotifier.notifyBillChanged();
       }
 
       // Broadcast updated pending count after sync.

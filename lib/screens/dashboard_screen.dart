@@ -51,7 +51,6 @@ class DashboardScreenState extends State<DashboardScreen> {
   double _cashSales = 0.0;
   double _onlineSales = 0.0;
   double _udharSales = 0.0;
-  double _todayUdhar = 0.0;
   double _totalCustomerDue = 0.0;
 
   List<_LiveToken> _recentTokens = [];
@@ -132,7 +131,6 @@ class DashboardScreenState extends State<DashboardScreen> {
           double calcTotal = 0.0;
           double calcCash = 0.0;
           double calcOnline = 0.0;
-          double calcUdhar = 0.0;
           for (var t in todayTokens) {
             calcTotal += t.grandTotal;
             final pm = t.paymentMode.toLowerCase();
@@ -142,7 +140,6 @@ class DashboardScreenState extends State<DashboardScreen> {
 
             if (dueAmount > 0 || pm == 'credit' || pm == 'udhar' || pm == 'due') {
               final netDue = dueAmount > 0 ? dueAmount : t.grandTotal;
-              calcUdhar += netDue;
               final paidPortion = t.grandTotal - netDue;
               if (paidPortion > 0) {
                 if (pm == 'online' || pm == 'upi' || pm == 'online / upi') {
@@ -170,7 +167,6 @@ class DashboardScreenState extends State<DashboardScreen> {
           _cashSales = summary.cashTotal > 0 ? summary.cashTotal : calcCash;
           _onlineSales = summary.onlineTotal > 0 ? summary.onlineTotal : calcOnline;
 
-          _todayUdhar = summary.creditTotal > 0 ? summary.creditTotal : calcUdhar;
           _totalCustomerDue = totalCustomerNetDue;
           _udharSales = _totalCustomerDue;
 

@@ -251,14 +251,22 @@ class LocalDatabase {
     await db.delete('sync_queue', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<void> clearAllData() async {
+  Future<void> incrementQueueAttempts(int id) async {
+    final db = await instance.database;
+    if (db == null) return;
+    await db.rawUpdate('UPDATE sync_queue SET attempts = COALESCE(attempts, 0) + 1 WHERE id = ?', [id]);
+  }
+
+  Future<void> clearAllData({bool preserveSyncQueue = true}) async {
     final db = await instance.database;
     if (db == null) return;
     await db.delete('shop_data');
     await db.delete('items');
     await db.delete('tokens');
     await db.delete('customers');
-    await db.delete('sync_queue');
+    if (!preserveSyncQueue) {
+      await db.delete('sync_queue');
+    }
   }
 }
 

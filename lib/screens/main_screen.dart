@@ -234,12 +234,9 @@ class _MainScreenState extends State<MainScreen> {
         Expanded(
           child: Container(
             color: StitchColors.background,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: KeyedSubtree(
-                key: ValueKey(_currentIndex),
-                child: _screens[_currentIndex],
-              ),
+            child: IndexedStack(
+              index: _currentIndex,
+              children: _screens,
             ),
           ),
         ),
@@ -290,12 +287,9 @@ class _MainScreenState extends State<MainScreen> {
       builder: (context, hide, _) {
         return Scaffold(
           backgroundColor: StitchColors.background,
-          body: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
-            child: KeyedSubtree(
-              key: ValueKey(_currentIndex),
-              child: _screens[_currentIndex],
-            ),
+          body: IndexedStack(
+            index: _currentIndex,
+            children: _screens,
           ),
           bottomNavigationBar: hide ? null : _buildFlatNavbar(),
         );

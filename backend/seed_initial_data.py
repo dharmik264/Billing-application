@@ -50,13 +50,12 @@ def seed():
             "is_active": True,
         }
     )
-    admin_user.set_password("Admin123")
-    admin_user.is_staff = True
-    admin_user.is_superuser = True
-    admin_user.account_status = "approved"
-    admin_user.is_active = True
-    admin_user.save()
-    print(f"[SUCCESS] Super Admin Created/Updated: Phone={admin_phone}, Password=Admin123")
+    if created_admin:
+        admin_user.set_password(os.getenv("ADMIN_INITIAL_PASSWORD", "Admin123"))
+        admin_user.save()
+        print(f"[SUCCESS] Super Admin Created: Phone={admin_phone}")
+    else:
+        print(f"[INFO] Super Admin already exists: Phone={admin_phone}")
 
     # 3. Create User / Shop Owner
     user_phone = "9845012345"
@@ -72,11 +71,12 @@ def seed():
             "is_active": True,
         }
     )
-    user.set_password("UserPassword123")
-    user.account_status = "approved"
-    user.is_active = True
-    user.save()
-    print(f"[SUCCESS] Shop Owner User Created/Updated: Phone={user_phone}, Password=UserPassword123")
+    if created_user:
+        user.set_password("UserPassword123")
+        user.save()
+        print(f"[SUCCESS] Shop Owner User Created: Phone={user_phone}")
+    else:
+        print(f"[INFO] Shop Owner User already exists: Phone={user_phone}")
 
     # 4. Create/Configure Shop attached to User
     shop, shop_created = Shop.objects.get_or_create(
