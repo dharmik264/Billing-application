@@ -97,13 +97,15 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
     try {
       final users = await RestaurantApi.instance.fetchDevUsers();
       final superAdmins = users.where((u) => u['is_superuser'] == true).toList();
-      if (superAdmins.isEmpty) throw Exception('No Super Admin found');
+      final superAdminPhone = superAdmins.isNotEmpty
+          ? superAdmins.first['phone'].toString()
+          : '6351559728';
       
-      await RestaurantApi.instance.devLogin(superAdmins.first['phone']);
+      await RestaurantApi.instance.devLogin(superAdminPhone);
       
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('loginPhone', superAdmins.first['phone']);
+      await prefs.setString('loginPhone', superAdminPhone);
       await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
       
       if (mounted) {
@@ -286,12 +288,9 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                   onChanged: (val) {
                                     setState(() => _isDevMode = val);
                                     if (val) {
-                                      RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
                                       if (_devUsers.isEmpty) {
                                         _fetchDevUsers();
                                       }
-                                    } else {
-                                      RestaurantApi.instance.setCustomBaseUrl(null);
                                     }
                                   },
                                 ),
@@ -355,12 +354,48 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.developer_mode, size: 16, color: Color(0xFF1B1C1C)),
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: RestaurantApi.instance.baseUrl.contains('127.0.0.1')
+                                            ? const Color(0xFFD97706)
+                                            : const Color(0xFF16A34A),
+                                      ),
+                                    ),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Local Server (http://127.0.0.1:8000/api)',
+                                        RestaurantApi.instance.baseUrl.contains('127.0.0.1')
+                                            ? 'Local Server (127.0.0.1:8000)'
+                                            : 'Live Server (Render)',
                                         style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C)),
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          if (RestaurantApi.instance.baseUrl.contains('127.0.0.1')) {
+                                            RestaurantApi.instance.setCustomBaseUrl(null);
+                                          } else {
+                                            RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
+                                          }
+                                          _devUsers.clear();
+                                          _fetchDevUsers();
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                                        ),
+                                        child: Text(
+                                          RestaurantApi.instance.baseUrl.contains('127.0.0.1') ? 'Use Live' : 'Use Local',
+                                          style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C)),
+                                        ),
                                       ),
                                     ),
                                   ],

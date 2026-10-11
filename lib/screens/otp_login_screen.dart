@@ -119,13 +119,15 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     try {
       final users = await RestaurantApi.instance.fetchDevUsers();
       final superAdmins = users.where((u) => u['is_superuser'] == true).toList();
-      if (superAdmins.isEmpty) throw Exception('No Super Admin found');
+      final superAdminPhone = superAdmins.isNotEmpty
+          ? superAdmins.first['phone'].toString()
+          : '6351559728';
       
-      await RestaurantApi.instance.devLogin(superAdmins.first['phone']);
+      await RestaurantApi.instance.devLogin(superAdminPhone);
       
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('loginPhone', superAdmins.first['phone']);
+      await prefs.setString('loginPhone', superAdminPhone);
       await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
       
       if (mounted) {
@@ -512,12 +514,9 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                               onChanged: (val) {
                                 setState(() => _isDevMode = val);
                                 if (val) {
-                                  RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
                                   if (_devUsers.isEmpty) {
                                     _fetchDevUsers();
                                   }
-                                } else {
-                                  RestaurantApi.instance.setCustomBaseUrl(null);
                                 }
                               },
                             ),
@@ -764,44 +763,104 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
   }
 
   Widget _buildDevUserList() {
-    if (_isLoadingDevUsers) {
-      return const Padding(
-        padding: EdgeInsets.all(24.0),
-        child: CircularProgressIndicator(color: Colors.deepPurple),
-      );
-    }
-    if (_devUsers.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(24.0),
-        child: Text('No active users found'),
-      );
-    }
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 350),
-      margin: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: _devUsers.length,
-        separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final u = _devUsers[index];
-          return ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: Colors.deepPurple,
-              child: Icon(Icons.person, color: Colors.white, size: 20),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: RestaurantApi.instance.baseUrl.contains('127.0.0.1')
+                      ? const Color(0xFFD97706)
+                      : const Color(0xFF16A34A),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  RestaurantApi.instance.baseUrl.contains('127.0.0.1')
+                      ? 'Local Server (127.0.0.1:8000)'
+                      : 'Live Server (Render)',
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    if (RestaurantApi.instance.baseUrl.contains('127.0.0.1')) {
+                      RestaurantApi.instance.setCustomBaseUrl(null);
+                    } else {
+                      RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
+                    }
+                    _devUsers.clear();
+                    _fetchDevUsers();
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                  ),
+                  child: Text(
+                    RestaurantApi.instance.baseUrl.contains('127.0.0.1') ? 'Use Live' : 'Use Local',
+                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_isLoadingDevUsers)
+          const Padding(
+            padding: EdgeInsets.all(24.0),
+            child: CircularProgressIndicator(color: Colors.deepPurple),
+          )
+        else if (_devUsers.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Text('No active users found'),
+          )
+        else
+          Container(
+            constraints: const BoxConstraints(maxHeight: 350),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
-            title: Text(u['name'] ?? 'User', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
-            subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
-            trailing: const Icon(Icons.login, size: 18, color: Color(0xFF94A3B8)),
-            onTap: () => _performDevLogin(u['phone']),
-          );
-        },
-      ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: _devUsers.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final u = _devUsers[index];
+                return ListTile(
+                  leading: const CircleAvatar(
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(Icons.person, color: Colors.white, size: 20),
+                  ),
+                  title: Text(u['name'] ?? 'User', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                  trailing: const Icon(Icons.login, size: 18, color: Color(0xFF94A3B8)),
+                  onTap: () => _performDevLogin(u['phone']),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

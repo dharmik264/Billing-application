@@ -27,8 +27,18 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
     setState(() => _isLoadingDevUsers = true);
     try {
       final users = await RestaurantApi.instance.fetchDevUsers();
+      final list = users.where((u) => u['is_superuser'] == true || u['phone'] == '6351559728' || u['phone'] == '9999999999').toList();
+      if (list.isEmpty) {
+        list.add({
+          'id': 0,
+          'name': 'Super Admin',
+          'phone': '6351559728',
+          'shop_name': 'Headquarters',
+          'is_superuser': true,
+        });
+      }
       setState(() {
-        _devSuperAdmins = users.where((u) => u['is_superuser'] == true).toList();
+        _devSuperAdmins = list;
       });
     } catch (e) {
       String errMsg = e.toString();
@@ -184,12 +194,9 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                                   onChanged: (val) {
                                     setState(() => _isDevMode = val);
                                     if (val) {
-                                      RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
                                       if (_devSuperAdmins.isEmpty) {
                                         _fetchDevUsers();
                                       }
-                                    } else {
-                                      RestaurantApi.instance.setCustomBaseUrl(null);
                                     }
                                   },
                                 ),
@@ -564,46 +571,107 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
   }
 
   Widget _buildDevSuperAdminList() {
-    if (_isLoadingDevUsers) {
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Center(child: CircularProgressIndicator(color: Color(0xFF1B1C1C))),
-      );
-    }
-    if (_devSuperAdmins.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Center(child: Text('No active super admins found')),
-      );
-    }
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 200),
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFBF9F8),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: _devSuperAdmins.length,
-        separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE5E7EB)),
-        itemBuilder: (context, index) {
-          final u = _devSuperAdmins[index];
-          return ListTile(
-            dense: true,
-            leading: const CircleAvatar(
-              radius: 14,
-              backgroundColor: Color(0xFF1B1C1C),
-              child: Icon(Icons.admin_panel_settings, color: Colors.white, size: 14),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFBF9F8),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: RestaurantApi.instance.baseUrl.contains('127.0.0.1')
+                      ? const Color(0xFFD97706)
+                      : const Color(0xFF16A34A),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  RestaurantApi.instance.baseUrl.contains('127.0.0.1')
+                      ? 'Local Server (127.0.0.1:8000)'
+                      : 'Live Server (Render)',
+                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C)),
+                ),
+              ),
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    if (RestaurantApi.instance.baseUrl.contains('127.0.0.1')) {
+                      RestaurantApi.instance.setCustomBaseUrl(null);
+                    } else {
+                      RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
+                    }
+                    _devSuperAdmins.clear();
+                    _fetchDevUsers();
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFE5E7EB)),
+                  ),
+                  child: Text(
+                    RestaurantApi.instance.baseUrl.contains('127.0.0.1') ? 'Use Live' : 'Use Local',
+                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_isLoadingDevUsers)
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: CircularProgressIndicator(color: Color(0xFF1B1C1C))),
+          )
+        else if (_devSuperAdmins.isEmpty)
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Center(child: Text('No active super admins found')),
+          )
+        else
+          Container(
+            constraints: const BoxConstraints(maxHeight: 200),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFBF9F8),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            title: Text(u['name'] ?? 'Super Admin', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF1B1C1C))),
-            subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F))),
-            trailing: const Icon(Icons.login, size: 16, color: Color(0xFF1B1C1C)),
-            onTap: () => _devSuperAdminLogin(u['phone']),
-          );
-        },
-      ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: _devSuperAdmins.length,
+              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFE5E7EB)),
+              itemBuilder: (context, index) {
+                final u = _devSuperAdmins[index];
+                return ListTile(
+                  dense: true,
+                  leading: const CircleAvatar(
+                    radius: 14,
+                    backgroundColor: Color(0xFF1B1C1C),
+                    child: Icon(Icons.admin_panel_settings, color: Colors.white, size: 14),
+                  ),
+                  title: Text(u['name'] ?? 'Super Admin', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF1B1C1C))),
+                  subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F))),
+                  trailing: const Icon(Icons.login, size: 16, color: Color(0xFF1B1C1C)),
+                  onTap: () => _devSuperAdminLogin(u['phone']),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }
