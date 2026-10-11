@@ -12,8 +12,7 @@
 -keep class com.dharmik.billingapp.MainActivity { *; }
 
 # Obfuscation & Shrinking Settings
--repackageclasses ''
--allowaccessmodification
+-dontoptimize
 -dontusemixedcaseclassnames
 
 # Strip sensitive debugging log calls in production build
