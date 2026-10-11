@@ -89,10 +89,11 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   }
 
   String _formatAmount(double amount) {
-    if (amount % 1 == 0) {
-      return _currencyFormat.format(amount);
-    }
-    return NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 2).format(amount);
+    final absAmount = amount.abs();
+    final formatted = (absAmount % 1 == 0)
+        ? _currencyFormat.format(absAmount)
+        : NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 2).format(absAmount);
+    return amount < 0 ? '-$formatted' : formatted;
   }
 
   // ── Six Summary Cards Dynamic Calculations ──────────────────────
@@ -715,12 +716,12 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     const SizedBox(height: 6),
                     Builder(
                       builder: (context) {
-                        final netDue = _ledger?.summary.netDue ?? 0.0;
-                        Color textColor = Colors.blue;
+                        final netDue = _ledger != null ? _ledger!.summary.netDue : widget.customer.netDue;
+                        Color textColor = _slate900;
                         if (netDue > 0) {
-                          textColor = Colors.red;
+                          textColor = _red;
                         } else if (netDue < 0) {
-                          textColor = Colors.green;
+                          textColor = _green;
                         }
                         return Text(
                           'Net Due: ${_formatAmount(netDue)}',
@@ -779,7 +780,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     ),
                     icon: const Icon(Icons.arrow_downward_rounded, size: 18),
                     label: Text(
-                      'Credit',
+                      'M-Credit',
                       style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                   ),
@@ -799,7 +800,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     ),
                     icon: const Icon(Icons.arrow_upward_rounded, size: 18),
                     label: Text(
-                      'Debit',
+                      'M-Debit',
                       style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
                     ),
                   ),

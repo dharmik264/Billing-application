@@ -618,7 +618,6 @@
         }
 
         double netDue = totalBilled - totalPaid;
-        if (netDue < 0) netDue = 0.0;
 
         final summary = ApiCustomerLedgerSummary(
           totalBilled: totalBilled,
@@ -2023,8 +2022,8 @@
       return ApiCustomerLedgerSummary(
         totalBilled: billed,
         totalPaid: paid,
-        netDue: due <= 0 ? 0.0 : due,
-        paymentStatus: due <= 0 ? 'PAID IN FULL' : status,
+        netDue: due,
+        paymentStatus: status,
       );
     }
 

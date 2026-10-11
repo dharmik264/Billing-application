@@ -549,11 +549,15 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
                     style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF666666)),
                   ),
                   Text(
-                    '\u20B9${customer.netDue.toStringAsFixed(2)}',
+                    customer.netDue < 0
+                        ? '-\u20B9${customer.netDue.abs().toStringAsFixed(2)}'
+                        : '\u20B9${customer.netDue.toStringAsFixed(2)}',
                     style: GoogleFonts.jetBrainsMono(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: _brandBlack,
+                      color: customer.netDue > 0
+                          ? _red
+                          : (customer.netDue < 0 ? const Color(0xFF16A34A) : _brandBlack),
                     ),
                   ),
                 ],

@@ -65,11 +65,10 @@ def compute_customer_ledger_summary(customer):
     unpaid_bills_recv_sum = bills.filter(is_paid=False).aggregate(s=Sum('received_amount'))['s'] or Decimal('0.00')
     bills_paid = paid_bills_sum + unpaid_bills_recv_sum
 
-    # All advance payments (excluding m-debit) act as credit
-    advance_credits = CustomerPayment.objects.filter(customer=customer, token__isnull=True).exclude(payment_mode='m-debit').aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
-    
-    # Manual Debits
-    m_debits = CustomerPayment.objects.filter(customer=customer, token__isnull=True, payment_mode='m-debit').aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
+    # Manual Debits vs Credits (case-insensitive and supporting both 'm-debit' and 'debit')
+    debit_q = Q(payment_mode__iexact='m-debit') | Q(payment_mode__iexact='debit')
+    advance_credits = CustomerPayment.objects.filter(customer=customer, token__isnull=True).exclude(debit_q).aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
+    m_debits = CustomerPayment.objects.filter(customer=customer, token__isnull=True).filter(debit_q).aggregate(s=Sum('amount'))['s'] or Decimal('0.00')
 
     # We do NOT add advance_credits to total_paid so that M-Credit / M-Debit don't alter the Udhar card.
     total_paid = bills_paid
