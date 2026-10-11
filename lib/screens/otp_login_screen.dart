@@ -33,6 +33,9 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
   bool _isResendCooldown = false;
   int _resendCountdown = 0;
 
+  bool _isDevMode = false;
+  List<dynamic> _devUsers = [];
+  bool _isLoadingDevUsers = false;
 
   @override
   void initState() {
@@ -55,6 +58,90 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     setState(() {});
   }
 
+  Future<void> _fetchDevUsers() async {
+    setState(() => _isLoadingDevUsers = true);
+    try {
+      final users = await RestaurantApi.instance.fetchDevUsers();
+      setState(() {
+        // Exclude super admins from shop owner login list
+        _devUsers = users.where((u) => u['is_superuser'] != true).toList();
+      });
+    } catch (e) {
+      if (mounted) {
+        String errMsg = e.toString();
+        if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup') || errMsg.contains('TimeoutException')) {
+          errMsg = 'Unable to connect to server. Please try again.';
+        } else {
+          errMsg = 'Failed to load dev users. Error: $errMsg';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingDevUsers = false);
+    }
+  }
+
+  Future<void> _performDevLogin(String phone) async {
+    setState(() => _isLoading = true);
+    try {
+      final responseMap = await RestaurantApi.instance.devLogin(phone);
+      final prefs = await SharedPreferences.getInstance();
+      
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('loginPhone', phone);
+      await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
+      
+      if (responseMap.containsKey('user')) {
+         final userMap = responseMap['user'];
+         await prefs.setString('account_status', userMap['account_status'] ?? '');
+         await prefs.setString('trial_end', userMap['trial_end'] ?? '');
+      }
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Dev Login failed: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _devSuperAdminBypass() async {
+    setState(() => _isLoading = true);
+    try {
+      final users = await RestaurantApi.instance.fetchDevUsers();
+      final superAdmins = users.where((u) => u['is_superuser'] == true).toList();
+      if (superAdmins.isEmpty) throw Exception('No Super Admin found');
+      
+      await RestaurantApi.instance.devLogin(superAdmins.first['phone']);
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      await prefs.setString('loginPhone', superAdmins.first['phone']);
+      await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
+      
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SuperAdminMainScreen()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Super Admin Bypass failed: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _checkPrefilledPhone() async {
     if (widget.prefilledPhone) {
@@ -410,6 +497,33 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                         ),
                       ),
                     
+                    // Dev Mode Toggle (If not OTP)
+                    if (!_showOTPSection)
+                      Positioned(
+                        top: 8,
+                        right: 16,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
+                            Switch(
+                              value: _isDevMode,
+                              activeTrackColor: const Color(0xFF4F46E5),
+                              onChanged: (val) {
+                                setState(() => _isDevMode = val);
+                                if (val) {
+                                  RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
+                                  if (_devUsers.isEmpty) {
+                                    _fetchDevUsers();
+                                  }
+                                } else {
+                                  RestaurantApi.instance.setCustomBaseUrl(null);
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
 
                     // Storefront Illustration
                     Center(
@@ -466,7 +580,9 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                 ),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(32, 40, 32, MediaQuery.of(context).viewInsets.bottom + 24),
-                  child: _showOTPSection ? _buildOTPForm() : _buildPhoneForm(),
+                  child: _isDevMode && !_showOTPSection 
+                      ? _buildDevUserList() 
+                      : (_showOTPSection ? _buildOTPForm() : _buildPhoneForm()),
                 ),
               ),
             ),
@@ -559,7 +675,11 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
             Text('Super Admin? ', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
             GestureDetector(
               onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
+                if (_isDevMode) {
+                  _devSuperAdminBypass();
+                } else {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
+                }
               },
               child: Text('Login here', style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontWeight: FontWeight.w700)),
             ),
@@ -643,4 +763,45 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     );
   }
 
+  Widget _buildDevUserList() {
+    if (_isLoadingDevUsers) {
+      return const Padding(
+        padding: EdgeInsets.all(24.0),
+        child: CircularProgressIndicator(color: Colors.deepPurple),
+      );
+    }
+    if (_devUsers.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24.0),
+        child: Text('No active users found'),
+      );
+    }
+    return Container(
+      constraints: const BoxConstraints(maxHeight: 350),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemCount: _devUsers.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final u = _devUsers[index];
+          return ListTile(
+            leading: const CircleAvatar(
+              backgroundColor: Colors.deepPurple,
+              child: Icon(Icons.person, color: Colors.white, size: 20),
+            ),
+            title: Text(u['name'] ?? 'User', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+            subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+            trailing: const Icon(Icons.login, size: 18, color: Color(0xFF94A3B8)),
+            onTap: () => _performDevLogin(u['phone']),
+          );
+        },
+      ),
+    );
+  }
 }

@@ -141,6 +141,10 @@ class RegisterView(APIView):
             return Response({'error': f'Registration failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         response_data = {'message': 'Registration successful, OTP sent', 'phone': phone}
+        _show_otp = __import__('django.conf', fromlist=['settings']).settings.DEBUG or os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True'
+        if _show_otp:
+            response_data['otp'] = code
+            
         return Response(response_data, status=status.HTTP_201_CREATED)
 
 class SendOTPView(APIView):
@@ -163,7 +167,12 @@ class SendOTPView(APIView):
 
         send_sms_otp(phone, code)
 
+        # For dev/testing, return OTP in response if DEBUG or RETURN_OTP_IN_RESPONSE is True
         response_data = {'message': 'OTP sent successfully', 'phone': phone}
+        _show_otp = __import__('django.conf', fromlist=['settings']).settings.DEBUG or os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True'
+        if _show_otp:
+            response_data['otp'] = code  # Disable RETURN_OTP_IN_RESPONSE in true production!
+
         return Response(response_data, status=status.HTTP_200_OK)
 
 
@@ -249,6 +258,11 @@ class ForgotPasswordRequestView(APIView):
         send_sms_otp(phone, code)
 
         response_data = {'message': 'OTP sent to your registered phone number', 'phone': phone}
+        # In DEBUG mode, return OTP in response for testing
+        from django.conf import settings as dj_settings
+        if dj_settings.DEBUG:
+            response_data['otp'] = code
+
         return Response(response_data, status=status.HTTP_200_OK)
 
 
@@ -538,6 +552,56 @@ class SuperAdminSubscriptionPlanDetailView(generics.RetrieveUpdateDestroyAPIView
         super().check_permissions(request)
         if not request.user.is_superuser and request.user.phone != '9999999999':
             self.permission_denied(request, message="Only Super Admins can manage plans.")
+
+
+# ==============================================================================
+# DEVELOPER MODE BYPASS APIS
+# IMPORTANT: These endpoints bypass authentication and OTP. Remove in production!
+# ==============================================================================
+
+class DevUsersView(APIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        # Fetch all users, super users first, then by creation date
+        users = User.objects.all().order_by('-is_superuser', '-id')
+        data = []
+        for u in users:
+            data.append({
+                'id': u.id,
+                'name': u.name or u.shop_name or u.phone,
+                'phone': u.phone,
+                'shop_name': u.shop_name,
+                'is_superuser': u.is_superuser,
+                'account_status': u.account_status,
+            })
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class DevLoginView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        phone = request.data.get('phone')
+        if not phone:
+            return Response({'error': 'Phone number required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        try:
+            user = User.objects.get(phone=phone)
+            refresh = RefreshToken.for_user(user)
+            
+            # Additional response parameters matching regular VerifyOTP behavior
+            user_data = UserSerializer(user).data
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': user_data,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'message': 'Developer login successful'
+            }, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class PublicSubscriptionPlanListView(generics.ListAPIView):
     permission_classes = [AllowAny]  # Plans must be public for registration & selection flow

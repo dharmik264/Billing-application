@@ -171,6 +171,18 @@
       });
     }
 
+    // ── Developer Mode ──────────────────────────────────────────
+    Future<List<dynamic>> fetchDevUsers() async {
+      return await _getPaginatedList('auth/dev/users/');
+    }
+
+    Future<Map<String, dynamic>> devLogin(String phone) async {
+      final response = await post('auth/dev/login/', {'phone': phone});
+      if (response.containsKey('access') && response.containsKey('refresh')) {
+        await saveTokens(response['access'], response['refresh']);
+      }
+      return response;
+    }
 
     Future<ApiUser> fetchProfile() async {
       final data = await _get('auth/profile/');
