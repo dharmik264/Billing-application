@@ -163,7 +163,7 @@ class _MainScreenState extends State<MainScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC), // Slate 50 background
+        backgroundColor: StitchColors.background,
         body: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth >= 800) {

@@ -10,10 +10,10 @@ class StitchColors {
   static const Color secondary = Color(0xFF0284C7); // Sky Blue accent
 
   // Neutral Surfaces (Flat, crisp Minimal Business)
-  static const Color background = Color(0xFFF8FAFC); // Slate 50
+  static const Color background = Color(0xFFF0F4F8); // Cool Light Ice Blue
   static const Color surface = Color(0xFFFFFFFF); // Pure White
-  static const Color surfaceSubtle = Color(0xFFF1F5F9); // Slate 100
-  static const Color surfaceHover = Color(0xFFF8FAFC);
+  static const Color surfaceSubtle = Color(0xFFE2E8F0); // Subtle surface
+  static const Color surfaceHover = Color(0xFFF0F4F8);
 
   // Text Hierarchy
   static const Color textPrimary = Color(0xFF0F172A); // Slate 900 (High contrast)
@@ -22,8 +22,8 @@ class StitchColors {
   static const Color textDisabled = Color(0xFF94A3B8); // Slate 400
 
   // Crisp 1px Borders & Dividers
-  static const Color border = Color(0xFFE2E8F0); // Slate 200 (Default 1px border)
-  static const Color borderSubtle = Color(0xFFF1F5F9); // Slate 100
+  static const Color border = Color(0xFFCBD5E1); // Slate 300
+  static const Color borderSubtle = Color(0xFFE2E8F0);
   static const Color borderFocus = Color(0xFF4F46E5); // Indigo 600
 
   // Functional Status Badges & Indicators
@@ -50,7 +50,7 @@ class AppColors {
   static const LinearGradient backgroundGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFF8FAFC), Color(0xFFF1F5F9)],
+    colors: [Color(0xFFF0F4F8), Color(0xFFE2E8F0)],
   );
 
   // Primary Colors

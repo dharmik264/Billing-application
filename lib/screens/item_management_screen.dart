@@ -9,6 +9,7 @@ import '../services/restaurant_api.dart';
 import '../utils/local_storage_helper.dart';
 import '../widgets/skeleton_loader.dart';
 import 'edit_item_screen.dart';
+import '../utils/app_constants.dart';
 
 class ItemManagementScreen extends StatefulWidget {
   const ItemManagementScreen({super.key});
@@ -68,7 +69,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F4F4),
+      backgroundColor: StitchColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,

@@ -38,10 +38,13 @@ class BillingApplication extends StatelessWidget {
         textTheme: GoogleFonts.interTextTheme(
           Theme.of(context).textTheme,
         ),
+        scaffoldBackgroundColor: const Color(0xFFF0F4F8),
+        canvasColor: const Color(0xFFF0F4F8),
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF4F46E5),
           primary: const Color(0xFF4F46E5),
           secondary: const Color(0xFF06B6D4),
+          surface: Colors.white,
         ),
         // Global page transitions
         pageTransitionsTheme: const PageTransitionsTheme(

@@ -6,6 +6,7 @@ import '../utils/pdf_export.dart';
 import '../utils/csv_export.dart';
 import '../utils/bill_event_notifier.dart';
 import 'customer_ledger_screen.dart';
+import '../utils/app_constants.dart';
 
 class AnalyticsReportsScreen extends StatefulWidget {
   const AnalyticsReportsScreen({super.key});
@@ -50,7 +51,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBF9F8),
+      backgroundColor: StitchColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -205,7 +206,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
           Builder(builder: (context) {
             final isCustom = !ranges.contains(_selectedRange);
             return GestureDetector(
-              onTap: _pickDateRange,
+              onTap: _showDateFilterOptions,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
@@ -216,16 +217,116 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                     width: 1,
                   ),
                 ),
-                child: Icon(
-                  Icons.calendar_month_outlined,
-                  size: 14,
-                  color: isCustom ? Colors.white : const Color(0xFF111111),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.calendar_month_outlined,
+                      size: 14,
+                      color: isCustom ? Colors.white : const Color(0xFF111111),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      isCustom ? _selectedRange : 'Date Options',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: isCustom ? FontWeight.w600 : FontWeight.w500,
+                        color: isCustom ? Colors.white : const Color(0xFF111111),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(
+                      Icons.arrow_drop_down_rounded,
+                      size: 16,
+                      color: isCustom ? Colors.white : const Color(0xFF555555),
+                    ),
+                  ],
                 ),
               ),
             );
           }),
         ],
       ),
+    );
+  }
+
+  void _showDateFilterOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Select Date Filter',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF111111),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.date_range_rounded, color: Color(0xFF111111)),
+                  title: Text('Custom Date Range', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: Text('Pick start & end date on calendar', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF666666))),
+                  trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickDateRange();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.calendar_view_month_rounded, color: Color(0xFF111111)),
+                  title: Text('This Month', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    final now = DateTime.now();
+                    final start = DateTime(now.year, now.month, 1);
+                    final end = DateTime(now.year, now.month + 1, 0);
+                    setState(() {
+                      _customStart = start;
+                      _customEnd = end;
+                      _selectedRange = '${start.day}/${start.month} - ${end.day}/${end.month}';
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.history_rounded, color: Color(0xFF111111)),
+                  title: Text('Last 30 Days', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    final now = DateTime.now();
+                    final start = now.subtract(const Duration(days: 30));
+                    setState(() {
+                      _customStart = start;
+                      _customEnd = now;
+                      _selectedRange = 'Last 30 Days';
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1989,22 +2090,11 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
               onSurface: Color(0xFF1F2937),
             ),
           ),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 360,
-                maxHeight: 600,
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: MediaQuery(
-                  data: MediaQuery.of(context).copyWith(
-                    size: const Size(360, 600),
-                  ),
-                  child: child!,
-                ),
-              ),
-            ),
+          child: Dialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            clipBehavior: Clip.antiAlias,
+            child: child!,
           ),
         );
       },

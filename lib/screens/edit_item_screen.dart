@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/local_storage_helper.dart';
+import '../utils/app_constants.dart';
 
 class EditItemScreen extends StatefulWidget {
   const EditItemScreen({
@@ -33,7 +34,7 @@ class EditItemScreen extends StatefulWidget {
 }
 
 class _EditItemScreenState extends State<EditItemScreen> {
-  static const Color _bg = Color(0xFFFBF9F8);
+  static const Color _bg = StitchColors.background;
   static const Color _surface = Colors.white;
   static const Color _textOnSurface = Color(0xFF1B1C1C);
   static const Color _textSecondary = Color(0xFF5D5F5F);
@@ -468,49 +469,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
 
-        // Quick Tax & Inventory Meta (Bento style 1px grid)
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: _borderLight),
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('TAX RATE (GST)', style: GoogleFonts.inter(fontSize: 11, color: _textSecondary)),
-                        const SizedBox(height: 2),
-                        Text('5.00% Standard', style: GoogleFonts.inter(fontSize: 14, color: _textOnSurface)),
-                      ],
-                    ),
-                  ),
-                ),
-                const VerticalDivider(width: 1, thickness: 1, color: _borderLight),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('STOCK UNIT', style: GoogleFonts.inter(fontSize: 11, color: _textSecondary)),
-                        const SizedBox(height: 2),
-                        Text('Portion (1 pc)', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: _textOnSurface)),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }

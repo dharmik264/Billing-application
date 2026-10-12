@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/restaurant_api.dart';
 import '../widgets/offline_banner.dart';
+import '../utils/app_constants.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final ApiCustomer? customer; // null = Add mode, non-null = Edit mode
@@ -33,7 +34,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
   bool get _isEdit => widget.customer != null;
 
   // ── Monochromatic Palette ──────────────────────────────────────
-  static const Color _bgCanvas = Color(0xFFFBF9F8);
+  static const Color _bgCanvas = StitchColors.background;
   static const Color _brandBlack = Color(0xFF111111);
   static const Color _mutedText = Color(0xFF71717A);
   static const Color _cardBorder = Color(0xFFE5E5E5);
