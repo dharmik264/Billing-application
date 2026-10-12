@@ -58,28 +58,68 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     @property
     def is_trial_active(self):
-        if self.account_status != 'trial' or not self.trial_end:
+        if self.account_status != 'trial':
             return False
-        return timezone.now() <= self.trial_end
+        import datetime
+        now = timezone.now()
+        if self.trial_end:
+            return now <= self.trial_end
+        if self.created_at:
+            return now <= (self.created_at + datetime.timedelta(days=7))
+        return False
+
+    @property
+    def is_trial_expired(self):
+        """Returns True if user trial is expired or account is expired"""
+        if self.phone in ['9999999999', '6351559728']:
+            return False
+        if self.account_status == 'expired':
+            return True
+        if self.account_status == 'trial':
+            import datetime
+            now = timezone.now()
+            if self.trial_end:
+                return now > self.trial_end
+            if self.created_at:
+                return now > (self.created_at + datetime.timedelta(days=7))
+        return False
 
     @property
     def can_login(self):
-        """User can login if active, not rejected, and not past grace period"""
-        if self.phone == '9999999999':  # Super Admin bypass
+        """User can login if active, not rejected, not expired, and trial is within 7 days"""
+        if self.phone in ['9999999999', '6351559728']:  # Super Admin bypass
             return True
         if not self.is_active:
             return False
-        if self.account_status in ('rejected', 'pending_verification'):
+        if self.account_status in ('rejected', 'pending_verification', 'expired'):
             return False
-            
+
+        import datetime
+        now = timezone.now()
+
+        # Check if 7-day trial period is completed
+        if self.account_status == 'trial':
+            is_expired = False
+            if self.trial_end and now > self.trial_end:
+                is_expired = True
+            elif not self.trial_end and self.created_at and now > (self.created_at + datetime.timedelta(days=7)):
+                is_expired = True
+
+            if is_expired:
+                # Lock the account
+                self.account_status = 'expired'
+                try:
+                    self.save(update_fields=['account_status'])
+                except Exception:
+                    pass
+                return False
+
         # Check for 7-day grace period for approved accounts
         if self.account_status == 'approved' and self.trial_end:
-            import datetime
-            from django.utils import timezone
             grace_period_end = self.trial_end + datetime.timedelta(days=7)
-            if timezone.now() > grace_period_end:
+            if now > grace_period_end:
                 return False
-                
+
         return True
 
 

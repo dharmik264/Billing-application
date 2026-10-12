@@ -10,6 +10,8 @@ import 'screens/super_admin_main_screen.dart';
 import 'services/restaurant_api.dart';
 import 'services/local_database.dart';
 import 'services/sync_service.dart';
+import 'screens/trial_expired_screen.dart';
+import 'utils/app_navigator.dart';
 import 'utils/bill_counter.dart';
 
 void main() async {
@@ -32,6 +34,7 @@ class BillingApplication extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: appNavigatorKey,
       title: 'Easy Bill',
       theme: ThemeData(
         useMaterial3: true,
@@ -122,32 +125,35 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
-      // Check Trial/Plan Expiry
-      if (isLoggedIn) {
+      // Check Trial/Plan Expiry (7-day Trial Lock)
+      final loginPhone = prefs.getString('loginPhone') ?? '';
+      bool isTrialLocked = false;
+      if (isLoggedIn && loginPhone != '9999999999' && loginPhone != '6351559728') {
         final status = prefs.getString('account_status');
         final trialEndStr = prefs.getString('trial_end');
-        if (trialEndStr != null && trialEndStr.isNotEmpty) {
+        if (status == 'expired') {
+          isTrialLocked = true;
+        } else if (trialEndStr != null && trialEndStr.isNotEmpty) {
           final trialEnd = DateTime.tryParse(trialEndStr);
           if (trialEnd != null) {
-            bool isExpired = false;
             if (status == 'trial' && DateTime.now().isAfter(trialEnd)) {
-              isExpired = true;
+              isTrialLocked = true;
+              await prefs.setString('account_status', 'expired');
             } else if (status == 'approved') {
               // 7 days grace period for approved plans
               final graceEnd = trialEnd.add(const Duration(days: 7));
               if (DateTime.now().isAfter(graceEnd)) {
-                isExpired = true;
+                isTrialLocked = true;
+                await prefs.setString('account_status', 'expired');
               }
-            }
-            
-            if (isExpired) {
-              isLoggedIn = false;
-              await prefs.setBool('isLoggedIn', false);
-              // In a real app, clear token from secure storage here
-              debugPrint('Plan/Trial expired. Logging out.');
             }
           }
         }
+      }
+
+      if (isTrialLocked) {
+        _navigateTo(const TrialExpiredScreen());
+        return;
       }
 
       // Ensure total splash screen display duration is fast & smooth (~1.2s)
@@ -160,7 +166,6 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
 
       // Super Admin auto-login routing
-      final loginPhone = prefs.getString('loginPhone') ?? '';
       if (isLoggedIn && loginPhone == '9999999999') {
         _navigateTo(const SuperAdminMainScreen());
         return;

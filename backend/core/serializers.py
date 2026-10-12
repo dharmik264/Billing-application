@@ -33,12 +33,20 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.ModelSerializer):
     shop_setup = serializers.SerializerMethodField()
+    is_trial_expired = serializers.BooleanField(read_only=True)
 
     class Meta:
         model  = User
         fields = ['id', 'phone', 'name', 'email', 'shop_name', 
-                  'account_status', 'trial_end', 'approved_plan', 'permissions', 'created_at', 'shop_setup']
+                  'account_status', 'trial_end', 'approved_plan', 'permissions', 'created_at', 'shop_setup', 'is_trial_expired']
         read_only_fields = ['id', 'created_at']
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if getattr(instance, 'is_trial_expired', False):
+            ret['account_status'] = 'expired'
+            ret['is_trial_expired'] = True
+        return ret
 
     def get_shop_setup(self, obj):
         try:

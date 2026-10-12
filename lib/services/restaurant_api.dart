@@ -1,10 +1,13 @@
   import 'dart:async';
   import 'dart:convert';
 
+  import 'package:flutter/material.dart';
   import 'package:http/http.dart' as http;
   import 'package:shared_preferences/shared_preferences.dart';
   import 'local_database.dart';
   import 'sync_service.dart';
+  import '../screens/trial_expired_screen.dart';
+  import '../utils/app_navigator.dart';
   import '../utils/bill_event_notifier.dart';
 
   class RestaurantApi {
@@ -792,6 +795,7 @@
           .timeout(_timeout);
       final decoded = jsonDecode(response.body);
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        _checkAndTriggerTrialLock(decoded, response.statusCode);
         throw ApiException(_errorMessage(decoded, response.statusCode),
             statusCode: response.statusCode);
       }
@@ -894,8 +898,13 @@
       final response =
           await _client.delete(_uri(path), headers: _headers()).timeout(_timeout);
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        dynamic decoded;
+        try {
+          decoded = jsonDecode(response.body);
+        } catch (_) {}
+        _checkAndTriggerTrialLock(decoded, response.statusCode);
         throw ApiException(
-            _errorMessage(jsonDecode(response.body), response.statusCode),
+            _errorMessage(decoded, response.statusCode),
             statusCode: response.statusCode);
       }
     }
@@ -917,6 +926,7 @@
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {
+        _checkAndTriggerTrialLock(decoded, response.statusCode);
         throw ApiException(_errorMessage(decoded, response.statusCode),
             statusCode: response.statusCode);
       }
@@ -924,6 +934,29 @@
         throw const ApiException('Expected an object response');
       }
       return decoded;
+    }
+
+    static void _checkAndTriggerTrialLock(dynamic decoded, int statusCode) {
+      if (statusCode == 403 && decoded is Map) {
+        final code = decoded['code']?.toString() ?? '';
+        final status = decoded['account_status']?.toString() ?? '';
+        final error = decoded['error']?.toString().toLowerCase() ?? '';
+        if (code == 'TRIAL_EXPIRED' ||
+            status == 'expired' ||
+            error.contains('trial has expired')) {
+          SharedPreferences.getInstance().then((prefs) {
+            prefs.setString('account_status', 'expired');
+          });
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (appNavigatorKey.currentState != null) {
+              appNavigatorKey.currentState!.pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const TrialExpiredScreen()),
+                (route) => false,
+              );
+            }
+          });
+        }
+      }
     }
 
     String _errorMessage(Object? decoded, int statusCode) {

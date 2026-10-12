@@ -29,6 +29,33 @@ class JWTAuthenticationTenantMiddleware(MiddlewareMixin):
             user = jwt_authenticator.get_user(validated_token)
             
             if user:
+                request.user = user
+                
+                # Check 7-day trial expiration / application lock
+                is_super = getattr(user, 'is_superuser', False) or user.phone in ['9999999999', '6351559728']
+                if not is_super:
+                    allowed_endpoints = (
+                        '/api/auth/logout/',
+                        '/api/auth/profile/',
+                        '/api/auth/plans/',
+                        '/api/plans/',
+                        '/api/auth/subscriptions/pay/',
+                        '/api/subscriptions/pay/',
+                        '/api/auth/system-settings/',
+                        '/api/system-settings/',
+                        '/api/auth/token/refresh/',
+                    )
+                    path = request.path
+                    if not any(path.startswith(ep) for ep in allowed_endpoints):
+                        if not user.can_login:
+                            from django.http import JsonResponse
+                            return JsonResponse({
+                                'error': 'Your 7-day free trial has expired. Application is locked.',
+                                'code': 'TRIAL_EXPIRED',
+                                'detail': 'Your 7-day free trial has expired. Application is locked.',
+                                'account_status': 'expired'
+                            }, status=403)
+
                 from shop.models import Shop
                 shop = None
                 try:

@@ -67,6 +67,12 @@ class PasswordLoginView(APIView):
             return Response({'error': 'Invalid mobile number or password'}, status=status.HTTP_401_UNAUTHORIZED)
             
         if not user.can_login:
+            if getattr(user, 'is_trial_expired', False) or user.account_status == 'expired':
+                return Response({
+                    'error': 'Your 7-day free trial has expired. Application is locked.',
+                    'code': 'TRIAL_EXPIRED',
+                    'account_status': 'expired',
+                }, status=status.HTTP_403_FORBIDDEN)
             return Response({'error': 'Your account is pending approval or inactive.'}, status=status.HTTP_403_FORBIDDEN)
             
         refresh = RefreshToken.for_user(user)
@@ -210,6 +216,12 @@ class VerifyOTPView(APIView):
             user.is_staff = True
             user.save()
         elif not user.can_login:
+            if getattr(user, 'is_trial_expired', False) or user.account_status == 'expired':
+                return Response({
+                    'error': 'Your 7-day free trial has expired. Application is locked.',
+                    'code': 'TRIAL_EXPIRED',
+                    'account_status': 'expired',
+                }, status=status.HTTP_403_FORBIDDEN)
             return Response({'error': 'Trial expired or account not approved'}, status=status.HTTP_403_FORBIDDEN)
         else:
             # Grant admin panel access for existing users
@@ -617,6 +629,15 @@ class DevLoginView(APIView):
                 user.save()
             else:
                 return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not user.can_login:
+            if getattr(user, 'is_trial_expired', False) or user.account_status == 'expired':
+                return Response({
+                    'error': 'Your 7-day free trial has expired. Application is locked.',
+                    'code': 'TRIAL_EXPIRED',
+                    'account_status': 'expired',
+                }, status=status.HTTP_403_FORBIDDEN)
+            return Response({'error': 'Account not approved or inactive'}, status=status.HTTP_403_FORBIDDEN)
 
         refresh = RefreshToken.for_user(user)
         is_super = user.is_superuser or user.phone in ['6351559728', '9999999999']

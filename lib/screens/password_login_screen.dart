@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'registration_screen.dart';
 import 'super_admin_login_screen.dart';
 import 'forgot_password_screen.dart';
+import 'trial_expired_screen.dart';
 
 class PasswordLoginScreen extends StatefulWidget {
   const PasswordLoginScreen({Key? key}) : super(key: key);
@@ -71,8 +72,24 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
       
       if (responseMap.containsKey('user')) {
          final userMap = responseMap['user'];
-         await prefs.setString('account_status', userMap['account_status'] ?? '');
-         await prefs.setString('trial_end', userMap['trial_end'] ?? '');
+         final status = userMap['account_status']?.toString() ?? '';
+         final trialEndStr = userMap['trial_end']?.toString() ?? '';
+         await prefs.setString('account_status', status);
+         await prefs.setString('trial_end', trialEndStr);
+
+         final trialEnd = DateTime.tryParse(trialEndStr);
+         final isExpired = status == 'expired' || 
+             (status == 'trial' && trialEnd != null && DateTime.now().isAfter(trialEnd));
+         if (isExpired && phone != '9999999999' && phone != '6351559728') {
+           await prefs.setString('account_status', 'expired');
+           if (mounted) {
+             Navigator.pushReplacement(
+               context,
+               MaterialPageRoute(builder: (context) => TrialExpiredScreen(phone: phone)),
+             );
+           }
+           return;
+         }
       }
 
       if (mounted) {
@@ -83,6 +100,17 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String errMsg = e.toString().replaceAll('Exception: ', '');
+        if (errMsg.toLowerCase().contains('trial has expired') || errMsg.contains('TRIAL_EXPIRED')) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('account_status', 'expired');
+          if (!mounted) return;
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => TrialExpiredScreen(phone: phone)),
+          );
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Dev Login failed: $e'), backgroundColor: Colors.red),
         );
@@ -156,11 +184,26 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
       final prefs = await SharedPreferences.getInstance();
       if (responseMap.containsKey('user')) {
          final userMap = responseMap['user'];
-         await prefs.setString('account_status', userMap['account_status'] ?? '');
-         await prefs.setString('trial_end', userMap['trial_end'] ?? '');
+         final status = userMap['account_status']?.toString() ?? '';
+         final trialEndStr = userMap['trial_end']?.toString() ?? '';
+         await prefs.setString('account_status', status);
+         await prefs.setString('trial_end', trialEndStr);
          
          if (userMap.containsKey('permissions') && userMap['permissions'] != null) {
            await prefs.setString('permissions', jsonEncode(userMap['permissions']));
+         }
+
+         final trialEnd = DateTime.tryParse(trialEndStr);
+         final isExpired = status == 'expired' || 
+             (status == 'trial' && trialEnd != null && DateTime.now().isAfter(trialEnd));
+         if (isExpired && mobile != '9999999999' && mobile != '6351559728') {
+           await prefs.setString('account_status', 'expired');
+           if (mounted) {
+             Navigator.of(context).pushReplacement(
+               MaterialPageRoute(builder: (context) => TrialExpiredScreen(phone: mobile, shopName: userMap['shop_name'])),
+             );
+           }
+           return;
          }
       }
 
@@ -207,6 +250,15 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
     } catch (e) {
       if (mounted) {
         String errMsg = e.toString().replaceAll('Exception: ', '');
+        if (errMsg.toLowerCase().contains('trial has expired') || errMsg.contains('TRIAL_EXPIRED')) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('account_status', 'expired');
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => TrialExpiredScreen(phone: mobile)),
+          );
+          return;
+        }
         if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup')) {
           errMsg = 'No internet connection. Please try again.';
         }
