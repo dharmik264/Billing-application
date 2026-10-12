@@ -164,35 +164,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
 
 
-  Widget _modeChip(String label, String value, String selected, Function(String) onSelect) {
-    final isSelected = selected == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => onSelect(value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? _indigo.withValues(alpha: 0.12) : _slate50,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isSelected ? _indigo : _slate200,
-              width: isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? _indigo : _slate700,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
 
 
@@ -493,146 +465,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
 
 
-  // ── Pay Udhar Bill Dialog ─────────────────────────────────────
-  Future<void> _showPayBillDialog(ApiToken bill, double dueAmt) async {
-    final amountCtrl = TextEditingController(text: dueAmt.toStringAsFixed(2));
-    String selectedMode = 'CASH';
-    String? validationError;
-    bool submitting = false;
 
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: _indigo.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(Icons.payment_rounded, color: _indigo, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Pay Udhar Bill #${bill.billNumber}',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16, color: _slate900),
-                        ),
-                        Text(
-                          'Token #${bill.tokenNumber} • Due: ${_formatAmount(dueAmt)}',
-                          style: GoogleFonts.inter(fontSize: 12, color: _slate600),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Payment Amount (₹)', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: amountCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      autofocus: true,
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate900),
-                      onChanged: (_) => setDialogState(() => validationError = null),
-                      decoration: InputDecoration(
-                        prefixText: '₹ ',
-                        prefixStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: _slate700),
-                        hintText: '0',
-                        errorText: validationError,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _indigo, width: 2)),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    Text('Payment Mode', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: _slate700)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _modeChip('Cash', 'CASH', selectedMode, (m) => setDialogState(() => selectedMode = m)),
-                        const SizedBox(width: 8),
-                        _modeChip('Online', 'ONLINE', selectedMode, (m) => setDialogState(() => selectedMode = m)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting ? null : () => Navigator.pop(ctx),
-                  child: Text('Cancel', style: GoogleFonts.inter(color: _slate600, fontWeight: FontWeight.w600)),
-                ),
-                ElevatedButton(
-                  onPressed: submitting ? null : () async {
-                    final amt = double.tryParse(amountCtrl.text.trim());
-                    if (amt == null || amt <= 0) {
-                      setDialogState(() => validationError = 'Enter a valid amount greater than zero.');
-                      return;
-                    }
-                    if (amt > dueAmt + 0.01) {
-                      setDialogState(() => validationError = 'Amount cannot exceed due balance of ${_formatAmount(dueAmt)}');
-                      return;
-                    }
-                    final nav = Navigator.of(ctx);
-                    final messenger = ScaffoldMessenger.of(context);
-                    setDialogState(() => submitting = true);
-                    try {
-                      await RestaurantApi.instance.payCustomerDue(
-                        customerId: widget.customer.id,
-                        amount: amt,
-                        paymentMode: selectedMode,
-                        tokenId: int.tryParse(bill.id),
-                        note: 'Payment for Bill #${bill.billNumber}',
-                      );
-                      if (mounted) {
-                        nav.pop();
-                        messenger.showSnackBar(SnackBar(
-                          content: Text('Payment of ${_formatAmount(amt)} for Bill #${bill.billNumber} recorded.'),
-                          backgroundColor: _green,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ));
-                        _loadLedger();
-                      }
-                    } catch (e) {
-                      setDialogState(() {
-                        submitting = false;
-                        validationError = e.toString().replaceAll('Exception: ', '');
-                      });
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _indigo,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: submitting
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('Confirm Payment', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
 
   Widget _buildBody() {
     final summary = _ledger!.summary;
@@ -829,7 +662,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                 ),
               ),
               if (onTap != null)
-                Icon(Icons.add_circle_outline_rounded, size: 12, color: color),
+                Icon(Icons.add_circle_rounded, size: 18, color: color),
             ],
           ),
           const SizedBox(height: 5),
@@ -997,30 +830,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                         _tableMetric('Due Amount', _formatAmount(dueAmt), dueAmt > 0 ? _red : _slate600, isBold: dueAmt > 0),
                       ],
                     ),
-                    if (!billPaid && dueAmt > 0) ...[
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: SizedBox(
-                          height: 34,
-                          child: ElevatedButton.icon(
-                            onPressed: () => _showPayBillDialog(bill, dueAmt),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _green,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
-                            ),
-                            icon: const Icon(Icons.payment_rounded, size: 15),
-                            label: Text(
-                              'Pay ${_formatAmount(dueAmt)}',
-                              style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+
                   ],
                 ),
               ),

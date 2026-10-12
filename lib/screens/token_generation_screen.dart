@@ -12,6 +12,7 @@ import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'edit_item_screen.dart';
+import 'item_management_screen.dart';
 import '../services/native_sms_service.dart';
 import '../utils/bill_settings_helper.dart';
 import '../services/printer_service.dart';
@@ -770,7 +771,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
             onPressed: () async {
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const EditItemScreen()),
+                MaterialPageRoute(builder: (_) => const ItemManagementScreen()),
               );
               if (mounted) {
                 _loadInitialData();
@@ -790,23 +791,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF4F4F5),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: const Color(0xFFE4E4E7)),
-            ),
-            child: Text(
-              'Terminal 01',
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF3F3F46),
               ),
             ),
           ),
