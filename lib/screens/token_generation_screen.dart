@@ -1116,13 +1116,13 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               ),
               InkWell(
                 onTap: () => _addProduct(product),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(4),
                 child: Container(
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: const Color(0xFF000000),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Center(
                     child: inCartQty > 0
@@ -1131,10 +1131,10 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                             style: GoogleFonts.jetBrainsMono(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 11,
+                              fontSize: 12,
                             ),
                           )
-                        : const Icon(Icons.add, size: 14, color: Colors.white),
+                        : const Icon(Icons.add, size: 18, color: Colors.white),
                   ),
                 ),
               ),
