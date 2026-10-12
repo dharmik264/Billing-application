@@ -48,7 +48,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     BillEventNotifier.billRefreshNotifier.addListener(_onBillChanged);
     _loadLedger();
   }
@@ -178,6 +178,24 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         icon: Icons.account_balance_wallet_rounded,
         subtitle: widget.customer.mobileNumber,
         actions: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+            child: ElevatedButton.icon(
+              onPressed: _openLedgerReport,
+              icon: const Icon(Icons.menu_book_rounded, size: 14),
+              label: const Text(
+                'LEDGER',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.5),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF111111),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                elevation: 0,
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded, color: _slate600),
             onPressed: _loadLedger,
@@ -499,6 +517,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
               tabs: [
                 Tab(text: 'Billing History (${_ledger!.bills.length})'),
                 Tab(text: 'Payment History (${_ledger!.payments.length})'),
+                Tab(text: 'Ledger (${_computeLedgerRows().length})'),
               ],
             ),
           ),
@@ -510,6 +529,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
               children: [
                 _buildBillsTable(),
                 _buildPaymentsTable(),
+                _buildLedgerReportTable(),
               ],
             ),
           ),
@@ -977,6 +997,432 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     );
   }
 
+  // ── Ledger Report Table (DETAILS, CREDIT, DEBIT, OUTSTANDING AMOUNT) ────
+  void _openLedgerReport() {
+    _tabController.animateTo(2);
+    _showLedgerReportModal();
+  }
+
+  void _showLedgerReportModal() {
+    if (_ledger == null) return;
+    final totalDebit = _totalBillAmount + _totalDebitAmount;
+    final totalCredit = _cashTotal + _onlineTotal + _totalCreditAmount;
+    final netDue = _ledger!.summary.netDue;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.5,
+          maxChildSize: 0.96,
+          builder: (_, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 10, bottom: 6),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  // Sheet Header
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'LEDGER STATEMENT',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: _slate900,
+                              ),
+                            ),
+                            Text(
+                              '${widget.customer.name} • ${widget.customer.mobileNumber}',
+                              style: GoogleFonts.inter(fontSize: 12, color: _slate400),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 22),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // Summary Banner
+                  Container(
+                    color: const Color(0xFFF8FAFC),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _metricSummaryText('Total Debit', _formatAmount(totalDebit), _red),
+                        _metricSummaryText('Total Credit', _formatAmount(totalCredit), _green),
+                        _metricSummaryText('Outstanding', _formatAmount(netDue), netDue > 0 ? _red : _green),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  // The Table
+                  Expanded(
+                    child: _buildLedgerReportTable(scrollController: scrollController),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _metricSummaryText(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(label, style: GoogleFonts.inter(fontSize: 10, color: _slate400, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 2),
+        Text(value, style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.w800, color: color)),
+      ],
+    );
+  }
+
+  List<_CustomerLedgerRow> _computeLedgerRows() {
+    if (_ledger == null) return [];
+    final List<_CustomerLedgerRow> rows = [];
+
+    // 1. Bills (Invoice Debits & Customer Payments on bill)
+    for (final bill in _ledger!.bills) {
+      final dt = DateTime.tryParse(bill.createdAt)?.toLocal() ?? DateTime.now();
+      final dateStr = DateFormat('dd/MM/yyyy').format(dt);
+      final timeStr = DateFormat('hh:mm a').format(dt);
+
+      final double billTotal = bill.grandTotal;
+      final pm = bill.paymentMode.toLowerCase().trim();
+      final bool isUdhar = pm == 'udhar' || pm == 'credit';
+
+      final double debit = billTotal;
+      final double credit = isUdhar
+          ? 0.0
+          : (bill.isPaid ? billTotal : (bill.receivedAmount > 0 ? bill.receivedAmount : 0.0));
+
+      final itemsText = bill.items.map((it) => '${it.name} x${it.quantity}').join(', ');
+      final subtitle = itemsText.isNotEmpty ? itemsText : 'Invoice items';
+
+      final String badgeText = isUdhar ? 'UDHAR' : (bill.isPaid ? 'PAID (${bill.paymentMode.toUpperCase()})' : 'BILL');
+      final Color badgeBg = isUdhar
+          ? const Color(0xFFFFFBEB)
+          : (bill.isPaid ? const Color(0xFFF0FDF4) : const Color(0xFFEFF6FF));
+      final Color badgeFg = isUdhar
+          ? const Color(0xFFD97706)
+          : (bill.isPaid ? const Color(0xFF16A34A) : const Color(0xFF2563EB));
+
+      rows.add(_CustomerLedgerRow(
+        dateTime: dt,
+        dateStr: dateStr,
+        timeStr: timeStr,
+        title: 'Bill #${bill.billNumber} • Token #${bill.tokenNumber}',
+        subtitle: subtitle,
+        badgeText: badgeText,
+        badgeBg: badgeBg,
+        badgeFg: badgeFg,
+        debit: debit,
+        credit: credit,
+      ));
+    }
+
+    // 2. Standalone Manual Payments (M-Credit / M-Debit / Advance)
+    for (final p in _ledger!.payments) {
+      if (p.tokenId != null) continue; // Already represented in bill payment above
+
+      final dt = DateTime.tryParse(p.createdAt)?.toLocal() ??
+                 DateTime.tryParse(p.date)?.toLocal() ??
+                 DateTime.now();
+      final dateStr = DateFormat('dd/MM/yyyy').format(dt);
+      final timeStr = DateFormat('hh:mm a').format(dt);
+
+      final mode = p.paymentMode.toLowerCase().trim();
+      final bool isDebit = mode == 'm-debit' || mode == 'debit' || p.amount < 0;
+
+      final double debit = isDebit ? p.amount.abs() : 0.0;
+      final double credit = !isDebit ? p.amount.abs() : 0.0;
+
+      final String badgeText = isDebit ? 'M-DEBIT' : (mode == 'm-credit' ? 'M-CREDIT' : p.paymentMode.toUpperCase());
+      final Color badgeBg = isDebit ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5);
+      final Color badgeFg = isDebit ? const Color(0xFFDC2626) : const Color(0xFF059669);
+
+      final String title = isDebit ? 'M-Debit Transaction' : 'Payment Received (${p.paymentMode.toUpperCase()})';
+      final String subtitle = p.note.isNotEmpty
+          ? p.note
+          : (isDebit ? 'Manual Debit on account' : 'Payment received from customer');
+
+      rows.add(_CustomerLedgerRow(
+        dateTime: dt,
+        dateStr: dateStr,
+        timeStr: timeStr,
+        title: title,
+        subtitle: subtitle,
+        badgeText: badgeText,
+        badgeBg: badgeBg,
+        badgeFg: badgeFg,
+        debit: debit,
+        credit: credit,
+      ));
+    }
+
+    // Sort chronologically (oldest first) to compute running balance
+    rows.sort((a, b) => a.dateTime.compareTo(b.dateTime));
+
+    double runningBalance = 0.0;
+    for (final row in rows) {
+      runningBalance += (row.debit - row.credit);
+      row.outstanding = runningBalance;
+    }
+
+    // Return newest to oldest for display
+    return rows.reversed.toList();
+  }
+
+  Widget _buildLedgerReportTable({ScrollController? scrollController}) {
+    final rows = _computeLedgerRows();
+    if (rows.isEmpty) {
+      return _buildEmptyState('No transactions found in customer ledger.');
+    }
+
+    return Column(
+      children: [
+        // Column Header: DETAILS | CREDIT | DEBIT | OUTSTANDING AMOUNT
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: const BoxDecoration(
+            color: Color(0xFFF1F5F9),
+            border: Border(bottom: BorderSide(color: Color(0xFFCBD5E1), width: 1)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 5,
+                child: Text(
+                  'DETAILS',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF475569),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'CREDIT',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF16A34A),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'DEBIT',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFDC2626),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Text(
+                  'OUTSTANDING AMOUNT',
+                  textAlign: TextAlign.right,
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Table Rows List
+        Expanded(
+          child: ListView.separated(
+            controller: scrollController,
+            itemCount: rows.length,
+            separatorBuilder: (_, __) => const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+            itemBuilder: (ctx, i) {
+              final row = rows[i];
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                color: i % 2 == 0 ? Colors.white : const Color(0xFFFAFAFA),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // DETAILS Column
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: row.badgeBg,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  row.badgeText,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    color: row.badgeFg,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  row.title,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time_rounded, size: 10, color: Color(0xFF94A3B8)),
+                              const SizedBox(width: 3),
+                              Text(
+                                '${row.dateStr} • ${row.timeStr}',
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  color: const Color(0xFF64748B),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (row.subtitle.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              row.subtitle,
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: const Color(0xFF334155),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+
+                    // CREDIT Column
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        row.credit > 0 ? _formatAmount(row.credit) : '₹0.00',
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: row.credit > 0 ? const Color(0xFF16A34A) : const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ),
+
+                    // DEBIT Column
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        row.debit > 0 ? _formatAmount(row.debit) : '₹0.00',
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: row.debit > 0 ? const Color(0xFFDC2626) : const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ),
+
+                    // OUTSTANDING AMOUNT Column
+                    Expanded(
+                      flex: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            _formatAmount(row.outstanding),
+                            textAlign: TextAlign.right,
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: row.outstanding > 0
+                                  ? const Color(0xFFDC2626)
+                                  : (row.outstanding < 0 ? const Color(0xFF16A34A) : const Color(0xFF0F172A)),
+                            ),
+                          ),
+                          if (row.outstanding != 0)
+                            Text(
+                              row.outstanding > 0 ? 'DUE' : 'ADVANCE',
+                              style: GoogleFonts.inter(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                                color: row.outstanding > 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _tableMetric(String label, String value, Color color, {bool isBold = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1043,4 +1489,31 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
       ),
     );
   }
+}
+
+class _CustomerLedgerRow {
+  final DateTime dateTime;
+  final String dateStr;
+  final String timeStr;
+  final String title;
+  final String subtitle;
+  final String badgeText;
+  final Color badgeBg;
+  final Color badgeFg;
+  final double debit;
+  final double credit;
+  double outstanding = 0.0;
+
+  _CustomerLedgerRow({
+    required this.dateTime,
+    required this.dateStr,
+    required this.timeStr,
+    required this.title,
+    required this.subtitle,
+    required this.badgeText,
+    required this.badgeBg,
+    required this.badgeFg,
+    required this.debit,
+    required this.credit,
+  });
 }
