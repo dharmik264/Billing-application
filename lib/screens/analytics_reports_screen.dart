@@ -1280,22 +1280,24 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                         _money(summary.totalBilled),
                         style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
                       ),
-                      const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: isDue ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          isDue ? 'Due: ${_money(netDueAmount)}' : 'Paid in Full',
-                          style: GoogleFonts.inter(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: isDue ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                      if (isDue) ...[
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'Due: ${_money(netDueAmount)}',
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFDC2626),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),
