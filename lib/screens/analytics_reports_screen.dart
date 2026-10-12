@@ -296,13 +296,29 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.date_range_rounded, color: Color(0xFF111111)),
-                  title: Text('Custom Date Range', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
-                  subtitle: Text('Pick start & end date on calendar', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF666666))),
-                  trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                  leading: const Icon(Icons.history_toggle_off_rounded, color: Color(0xFF111111)),
+                  title: Text('Yesterday', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: Text('Bills from yesterday', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF666666))),
                   onTap: () {
                     Navigator.pop(ctx);
-                    _pickDateRange();
+                    setState(() {
+                      _selectedRange = 'Yesterday';
+                      _customStart = null;
+                      _customEnd = null;
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.view_week_rounded, color: Color(0xFF111111)),
+                  title: Text('This Week', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: Text('Past 7 days of transactions', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF666666))),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _selectedRange = 'This Week';
+                      _customStart = null;
+                      _customEnd = null;
+                    });
                   },
                 ),
                 ListTile(
@@ -332,6 +348,16 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                       _customEnd = now;
                       _selectedRange = 'Last 30 Days';
                     });
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.date_range_rounded, color: Color(0xFF111111)),
+                  title: Text('Custom Date Range', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
+                  subtitle: Text('Pick start & end date on calendar', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF666666))),
+                  trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickDateRange();
                   },
                 ),
               ],
