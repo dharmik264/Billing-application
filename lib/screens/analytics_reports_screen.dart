@@ -204,7 +204,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   }
 
   Widget _buildPeriodFilters() {
-    final ranges = ['All', 'Today', 'Yesterday', 'This Week'];
+    final ranges = ['All', 'Today'];
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

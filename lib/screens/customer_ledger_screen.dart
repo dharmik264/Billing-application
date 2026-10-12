@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+
 import '../services/restaurant_api.dart';
 import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
@@ -181,10 +185,10 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
           Container(
             margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
             child: ElevatedButton.icon(
-              onPressed: _openLedgerReport,
-              icon: const Icon(Icons.menu_book_rounded, size: 14),
+              onPressed: _printA4Ledger,
+              icon: const Icon(Icons.print_rounded, size: 14),
               label: const Text(
-                'LEDGER',
+                'PRINT',
                 style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 0.5),
               ),
               style: ElevatedButton.styleFrom(
@@ -515,8 +519,8 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
               labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13),
               unselectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 13),
               tabs: [
-                Tab(text: 'Billing History (${_ledger!.bills.length})'),
-                Tab(text: 'Payment History (${_ledger!.payments.length})'),
+                Tab(text: 'Billing (${_ledger!.bills.length})'),
+                Tab(text: 'Payment (${_ledger!.payments.length})'),
                 Tab(text: 'Ledger (${_computeLedgerRows().length})'),
               ],
             ),
@@ -997,114 +1001,391 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     );
   }
 
-  // ── Ledger Report Table (DETAILS, CREDIT, DEBIT, OUTSTANDING AMOUNT) ────
-  void _openLedgerReport() {
-    _tabController.animateTo(2);
-    _showLedgerReportModal();
-  }
+  // ── A4 Ledger Printing ─────────────────────────────────────────
+  Future<void> _printA4Ledger() async {
+    if (_ledger == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ledger data is loading... Please try again in a moment.')),
+      );
+      return;
+    }
 
-  void _showLedgerReportModal() {
-    if (_ledger == null) return;
-    final totalDebit = _totalBillAmount + _totalDebitAmount;
-    final totalCredit = _cashTotal + _onlineTotal + _totalCreditAmount;
-    final netDue = _ledger!.summary.netDue;
+    final rows = _computeLedgerRows();
+    if (rows.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No transactions found in this customer ledger.')),
+      );
+      return;
+    }
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.9,
-          minChildSize: 0.5,
-          maxChildSize: 0.96,
-          builder: (_, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Column(
+    try {
+      final totalDebit = _totalBillAmount + _totalDebitAmount;
+      final totalCredit = _cashTotal + _onlineTotal + _totalCreditAmount;
+      final netDue = _ledger!.summary.netDue;
+
+      ApiShopData? shop;
+      try {
+        shop = await RestaurantApi.instance.fetchShop();
+      } catch (_) {}
+
+      final pdf = pw.Document()
+        ..addPage(
+          pw.MultiPage(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.symmetric(horizontal: 28, vertical: 26),
+            header: (pw.Context context) {
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  // Handle bar
-                  Center(
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 10, bottom: 6),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                  pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            shop != null && shop.name.isNotEmpty ? shop.name : 'BILLING APPLICATION',
+                            style: const pw.TextStyle(
+                              fontSize: 16,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.blueGrey900,
+                            ),
+                          ),
+                        if (shop != null && shop.address != null && shop.address!.isNotEmpty)
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.only(top: 2),
+                            child: pw.Text(
+                              shop.address!,
+                              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                            ),
+                          ),
+                        if (shop != null && shop.phone != null && shop.phone!.isNotEmpty)
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.only(top: 1),
+                            child: pw.Text(
+                              'Phone: ${shop.phone!}',
+                              style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                  // Sheet Header
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.end,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'LEDGER STATEMENT',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: _slate900,
-                              ),
+                        pw.Container(
+                          padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: pw.BoxDecoration(
+                            color: PdfColors.blueGrey800,
+                            borderRadius: pw.BorderRadius.circular(4),
+                          ),
+                          child: pw.Text(
+                            'CUSTOMER LEDGER',
+                            style: const pw.TextStyle(
+                              fontSize: 11,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.white,
                             ),
-                            Text(
-                              '${widget.customer.name} • ${widget.customer.mobileNumber}',
-                              style: GoogleFonts.inter(fontSize: 12, color: _slate400),
-                            ),
-                          ],
+                          ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, size: 22),
-                          onPressed: () => Navigator.pop(ctx),
+                        pw.SizedBox(height: 4),
+                        pw.Text(
+                          'Printed: ${DateFormat('dd/MM/yyyy hh:mm a').format(DateTime.now())}',
+                          style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
                         ),
                       ],
                     ),
+                  ],
+                ),
+                pw.SizedBox(height: 8),
+                pw.Divider(thickness: 1, color: PdfColors.grey400),
+                pw.SizedBox(height: 6),
+              ],
+            );
+          },
+          footer: (pw.Context context) {
+            return pw.Container(
+              margin: const pw.EdgeInsets.only(top: 8),
+              padding: const pw.EdgeInsets.only(top: 6),
+              decoration: const pw.BoxDecoration(
+                border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text(
+                    'Customer Statement • Generated automatically',
+                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
                   ),
-                  const Divider(height: 1),
-                  // Summary Banner
-                  Container(
-                    color: const Color(0xFFF8FAFC),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _metricSummaryText('Total Debit', _formatAmount(totalDebit), _red),
-                        _metricSummaryText('Total Credit', _formatAmount(totalCredit), _green),
-                        _metricSummaryText('Outstanding', _formatAmount(netDue), netDue > 0 ? _red : _green),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // The Table
-                  Expanded(
-                    child: _buildLedgerReportTable(scrollController: scrollController),
+                  pw.Text(
+                    'Page ${context.pageNumber} of ${context.pagesCount}',
+                    style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
                   ),
                 ],
               ),
             );
           },
+          build: (pw.Context context) => [
+            // Customer Info Box & Account Summary
+            pw.Container(
+              padding: const pw.EdgeInsets.all(10),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey100,
+                borderRadius: pw.BorderRadius.circular(6),
+                border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'CUSTOMER DETAILS',
+                        style: const pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700),
+                      ),
+                      pw.SizedBox(height: 2),
+                      pw.Text(
+                        widget.customer.name,
+                        style: const pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold, color: PdfColors.black),
+                      ),
+                      if (widget.customer.mobileNumber.isNotEmpty)
+                        pw.Text(
+                          'Mobile: ${widget.customer.mobileNumber}',
+                          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey800),
+                        ),
+                      if (widget.customer.address.isNotEmpty)
+                        pw.Text(
+                          'Address: ${widget.customer.address}',
+                          style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey800),
+                        ),
+                    ],
+                  ),
+                  pw.Row(
+                    children: [
+                      _pdfMetricBox('TOTAL DEBIT', 'Rs. ${totalDebit.toStringAsFixed(2)}', PdfColors.red800),
+                      pw.SizedBox(width: 12),
+                      _pdfMetricBox('TOTAL CREDIT', 'Rs. ${totalCredit.toStringAsFixed(2)}', PdfColors.green800),
+                      pw.SizedBox(width: 12),
+                      _pdfMetricBox(
+                        'OUTSTANDING',
+                        'Rs. ${netDue.abs().toStringAsFixed(2)} ${netDue > 0 ? "DUE" : (netDue < 0 ? "ADV" : "")}',
+                        netDue > 0 ? PdfColors.red800 : (netDue < 0 ? PdfColors.green800 : PdfColors.black),
+                        isHighlight: true,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 12),
+
+            // Ledger Statement Table
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+              columnWidths: const {
+                0: pw.FlexColumnWidth(5.2), // DETAILS
+                1: pw.FlexColumnWidth(2.2), // CREDIT
+                2: pw.FlexColumnWidth(2.2), // DEBIT
+                3: pw.FlexColumnWidth(2.6), // OUTSTANDING AMOUNT
+              },
+              children: [
+                // Table Header: DETAILS, CREDIT, DEBIT, OUTSTANDING AMOUNT
+                pw.TableRow(
+                  decoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
+                  children: [
+                    _pdfCell('DETAILS', isHeader: true),
+                    _pdfCell('CREDIT', isHeader: true, align: pw.TextAlign.right),
+                    _pdfCell('DEBIT', isHeader: true, align: pw.TextAlign.right),
+                    _pdfCell('OUTSTANDING AMOUNT', isHeader: true, align: pw.TextAlign.right),
+                  ],
+                ),
+                // Table Data Rows
+                for (int i = 0; i < rows.length; i++)
+                  _buildPdfTableRow(rows[i], i % 2 == 1),
+              ],
+            ),
+          ],
+        ),
+      );
+
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => pdf.save(),
+        name: 'Ledger_${widget.customer.name.replaceAll(' ', '_')}_A4',
+        format: PdfPageFormat.a4,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to print ledger: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
-      },
+      }
+    }
+  }
+
+  static pw.Widget _pdfMetricBox(String label, String value, PdfColor color, {bool isHighlight = false}) {
+    return pw.Container(
+      padding: isHighlight
+          ? const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4)
+          : const pw.EdgeInsets.all(2),
+      decoration: isHighlight
+          ? pw.BoxDecoration(
+              color: PdfColors.white,
+              borderRadius: pw.BorderRadius.circular(4),
+              border: pw.Border.all(color: PdfColors.grey400, width: 0.5),
+            )
+          : null,
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.end,
+        children: [
+          pw.Text(
+            label,
+            style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey700),
+          ),
+          pw.SizedBox(height: 1),
+          pw.Text(
+            value,
+            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: color),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _metricSummaryText(String label, String value, Color color) {
-    return Column(
+  static pw.Widget _pdfCell(String text, {bool isHeader = false, pw.TextAlign align = pw.TextAlign.left}) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: pw.Text(
+        text,
+        textAlign: align,
+        style: pw.TextStyle(
+          fontSize: 9,
+          fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal,
+          color: isHeader ? PdfColors.white : PdfColors.black,
+        ),
+      ),
+    );
+  }
+
+  static pw.TableRow _buildPdfTableRow(_CustomerLedgerRow row, bool isAlt) {
+    return pw.TableRow(
+      decoration: pw.BoxDecoration(
+        color: isAlt ? PdfColors.grey50 : PdfColors.white,
+      ),
       children: [
-        Text(label, style: GoogleFonts.inter(fontSize: 10, color: _slate400, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 2),
-        Text(value, style: GoogleFonts.jetBrainsMono(fontSize: 13, fontWeight: FontWeight.w800, color: color)),
+        // DETAILS
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                children: [
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.grey200,
+                      borderRadius: pw.BorderRadius.circular(2),
+                    ),
+                    child: pw.Text(
+                      row.badgeText,
+                      style: const pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold, color: PdfColors.black),
+                    ),
+                  ),
+                  pw.SizedBox(width: 4),
+                  pw.Expanded(
+                    child: pw.Text(
+                      row.title,
+                      style: const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold, color: PdfColors.black),
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 2),
+              pw.Text(
+                '${row.dateStr} • ${row.timeStr}',
+                style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+              ),
+              if (row.subtitle.isNotEmpty) ...[
+                pw.SizedBox(height: 1),
+                pw.Text(
+                  row.subtitle,
+                  style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey800),
+                  maxLines: 2,
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // CREDIT
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          alignment: pw.Alignment.centerRight,
+          child: pw.Text(
+            row.credit > 0 ? 'Rs. ${row.credit.toStringAsFixed(2)}' : '-',
+            textAlign: pw.TextAlign.right,
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              color: row.credit > 0 ? PdfColors.green800 : PdfColors.grey500,
+            ),
+          ),
+        ),
+
+        // DEBIT
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          alignment: pw.Alignment.centerRight,
+          child: pw.Text(
+            row.debit > 0 ? 'Rs. ${row.debit.toStringAsFixed(2)}' : '-',
+            textAlign: pw.TextAlign.right,
+            style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              color: row.debit > 0 ? PdfColors.red800 : PdfColors.grey500,
+            ),
+          ),
+        ),
+
+        // OUTSTANDING AMOUNT
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+          alignment: pw.Alignment.centerRight,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
+            children: [
+              pw.Text(
+                'Rs. ${row.outstanding.abs().toStringAsFixed(2)}',
+                textAlign: pw.TextAlign.right,
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                  color: row.outstanding > 0
+                      ? PdfColors.red800
+                      : (row.outstanding < 0 ? PdfColors.green800 : PdfColors.black),
+                ),
+              ),
+              if (row.outstanding != 0)
+                pw.Text(
+                  row.outstanding > 0 ? 'DUE' : 'ADV',
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                    color: row.outstanding > 0 ? PdfColors.red800 : PdfColors.green800,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
+
 
   List<_CustomerLedgerRow> _computeLedgerRows() {
     if (_ledger == null) return [];
