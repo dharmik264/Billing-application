@@ -140,7 +140,7 @@ class SuperAdminDashboardScreenState extends State<SuperAdminDashboardScreen> {
                       _buildShopRequests().animate().fadeIn().slideY(begin: 0.1, delay: 200.ms),
                       const SizedBox(height: 24),
                       _buildSystemHealth().animate().fadeIn().slideY(begin: 0.1, delay: 300.ms),
-                      const SizedBox(height: 140),
+                      const SizedBox(height: 88),
                     ],
                   ),
                 ),

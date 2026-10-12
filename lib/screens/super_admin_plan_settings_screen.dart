@@ -55,7 +55,7 @@ class _SuperAdminPlanSettingsScreenState extends State<SuperAdminPlanSettingsScr
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF4F46E5)))
           : ListView.builder(
-              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 100),
+              padding: const EdgeInsets.only(left: 20, right: 20, top: 20, bottom: 80),
               itemCount: _plans.length,
               itemBuilder: (context, index) {
                 return _buildPlanCard(_plans[index]);

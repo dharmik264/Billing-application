@@ -298,7 +298,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
   Widget _buildItemList() {
     if (_loading) {
       return ListView.builder(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
         itemCount: 6,
         itemBuilder: (context, index) => const SkeletonListItem(),
       );
@@ -309,7 +309,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     if (items.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.only(bottom: 60),
+          padding: const EdgeInsets.only(bottom: 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -329,7 +329,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
       builder: (context, constraints) {
         if (constraints.maxWidth >= 600) {
           return GridView.builder(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
             physics: const BouncingScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 400,
@@ -343,7 +343,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
           physics: const BouncingScrollPhysics(),
           itemCount: items.length,
           itemBuilder: (context, index) => _itemCard(items[index]),

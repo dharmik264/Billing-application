@@ -128,7 +128,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
                       // Data Table Frame Container
                       _buildDataTableContainer(),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 16),
                     ],
                   ),
                 ),
