@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.db import models
 from django.utils import timezone
 import random, string
+from typing import Any
 
 
 ACCOUNT_STATUS_CHOICES = [
@@ -42,7 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     trial_end      = models.DateTimeField(null=True, blank=True)
     approved_plan  = models.CharField(max_length=50, blank=True)
     approved_at    = models.DateTimeField(null=True, blank=True)
-    is_active      = models.BooleanField(default=True)
+    is_active: Any = models.BooleanField(default=True)  # type: ignore[assignment]
     is_staff       = models.BooleanField(default=False)
     permissions    = models.JSONField(default=dict, blank=True)
     created_at     = models.DateTimeField(auto_now_add=True)
@@ -52,8 +53,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
     DoesNotExist = models.ObjectDoesNotExist
 
-    def __str__(self):
-        return self.phone
+    def __str__(self) -> str:
+        return str(self.phone)
 
     @property
     def is_trial_active(self):
@@ -94,10 +95,11 @@ class OTP(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    def is_expired(self):
+    def is_expired(self) -> bool:
         from django.conf import settings
-        from datetime import timedelta
-        expiry = self.created_at + timedelta(minutes=getattr(settings, 'OTP_EXPIRY_MINUTES', 5))
+        from datetime import datetime, timedelta
+        created: Any = self.created_at
+        expiry: datetime = created + timedelta(minutes=getattr(settings, 'OTP_EXPIRY_MINUTES', 5))
         return timezone.now() > expiry
 
     @classmethod
@@ -167,8 +169,8 @@ class SubscriptionPlan(models.Model):
     class Meta:
         ordering = ['display_order', 'id']
 
-    def __str__(self):
-        return self.name
+    def __str__(self) -> str:
+        return str(self.name)
 
 class SystemSettings(models.Model):
     objects = models.Manager()

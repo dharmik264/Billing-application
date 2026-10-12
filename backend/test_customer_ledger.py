@@ -8,6 +8,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'restaurant_pos.settings')
 django.setup()
 
+from typing import Any
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
@@ -21,6 +22,8 @@ User = get_user_model()
 
 
 class CustomerLedgerTestCase(TestCase):
+    client: Any
+
     def setUp(self):
         super().setUp()
         self.user, _ = User.objects.get_or_create(
@@ -33,7 +36,7 @@ class CustomerLedgerTestCase(TestCase):
         connection.set_schema(self.shop.schema_name)
 
         self.client = APIClient()
-        refresh = RefreshToken.for_user(self.user)
+        refresh: Any = RefreshToken.for_user(self.user)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(refresh.access_token)}")
 
         self.cust_a = Customer.objects.create(

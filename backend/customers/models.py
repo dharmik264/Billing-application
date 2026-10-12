@@ -1,3 +1,4 @@
+from typing import Any
 import re
 from django.db import models
 
@@ -35,6 +36,7 @@ class Customer(models.Model):
 
 
 class CustomerPayment(models.Model):
+    id: Any
     objects = models.Manager()
     DoesNotExist = models.ObjectDoesNotExist
 
@@ -51,8 +53,8 @@ class CustomerPayment(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    def __str__(self):
-        return f"Payment #{self.payment_number or self.id} - ₹{self.amount} ({self.customer.name})"
+    def __str__(self) -> str:
+        return f"Payment #{self.payment_number or self.pk} - ₹{self.amount} ({self.customer.name})"
 
     @classmethod
     def get_next_payment_number(cls):
@@ -62,6 +64,6 @@ class CustomerPayment(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         if not self.payment_number:
-            self.payment_number = f"P{self.id:04d}"
+            self.payment_number = f"P{self.pk:04d}"  # type: ignore[assignment]
             super().save(update_fields=['payment_number'])
 

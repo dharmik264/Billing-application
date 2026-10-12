@@ -15,8 +15,8 @@ class Category(models.Model):
         ordering    = ['sort_order', 'name']
         verbose_name_plural = 'Categories'
 
-    def __str__(self):
-        return self.name
+    def __str__(self) -> str:
+        return str(self.name)
 
 
 class MenuItem(models.Model):
@@ -44,5 +44,5 @@ class MenuItem(models.Model):
     class Meta:
         ordering = ['sort_order', 'name']
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.name} - ₹{self.price}"
