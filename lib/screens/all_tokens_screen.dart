@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/restaurant_api.dart';
 import '../widgets/custom_page_header.dart';
+import '../utils/app_constants.dart';
 import 'print_preview_screen.dart';
 import 'token_generation_screen.dart';
 import '../utils/bill_event_notifier.dart';
@@ -178,7 +179,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
         children: [
           // Search & Filter header section
           Container(
-            color: Colors.white,
+            color: StitchColors.background,
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5))),

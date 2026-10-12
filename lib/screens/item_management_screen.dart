@@ -71,7 +71,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
     return Scaffold(
       backgroundColor: StitchColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: StitchColors.background,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(
@@ -155,7 +155,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
 
   Widget _buildSearchAndFilters(List<String> categories) {
     return Container(
-      color: Colors.white,
+      color: StitchColors.background,
       padding: const EdgeInsets.all(16),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0xFFD8D8D8), width: 1)),

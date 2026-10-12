@@ -98,7 +98,7 @@ class _EditItemScreenState extends State<EditItemScreen> {
     return Scaffold(
       backgroundColor: _bg,
       appBar: AppBar(
-        backgroundColor: _surface,
+        backgroundColor: _bg,
         elevation: 0,
         scrolledUnderElevation: 0,
         bottom: const PreferredSize(

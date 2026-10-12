@@ -295,7 +295,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildFlatNavbar() {
     return Container(
       decoration: const BoxDecoration(
-        color: StitchColors.surface,
+        color: StitchColors.background,
         border: Border(top: BorderSide(color: StitchColors.border, width: 1.0)),
       ),
       height: 56,

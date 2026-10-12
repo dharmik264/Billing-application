@@ -215,7 +215,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
     return Scaffold(
       backgroundColor: _bgCanvas,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: _bgCanvas,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(

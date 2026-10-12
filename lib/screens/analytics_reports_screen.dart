@@ -53,7 +53,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     return Scaffold(
       backgroundColor: StitchColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: StitchColors.background,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(
@@ -110,7 +110,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   children: [
                     // Search bar pinned directly under the header
                     Container(
-                      color: Colors.white,
+                      color: StitchColors.background,
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                       decoration: const BoxDecoration(
                         border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5), width: 1)),
@@ -1209,7 +1209,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
       final existing = map[key]!;
       final isCancelled = token.status.toLowerCase() == 'cancelled';
-      final isPaid = token.isPaid || (token.payment.isNotEmpty && token.payment.toLowerCase() != 'credit' && token.payment.toLowerCase() != 'due' && !isCancelled);
+      final pm = token.payment.toLowerCase();
+      final isUdharOrCredit = pm == 'credit' || pm == 'udhar' || pm == 'due';
+      final isPaid = !isUdharOrCredit && (token.isPaid || (pm.isNotEmpty && !isCancelled));
 
       final billed = isCancelled ? 0.0 : token.amount;
       double paid = 0.0;
@@ -1240,7 +1242,39 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
       );
     }
 
-    final summaries = map.values.toList()..sort((a, b) => b.totalBilled.compareTo(a.totalBilled));
+    // Also include registered customers from _customers who may not have tokens in current list
+    for (final c in _customers) {
+      final name = c.name.trim();
+      final phone = c.mobileNumber.trim();
+      final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+      final normPhone = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
+      final key = normPhone.isNotEmpty ? 'phone_$normPhone' : 'name_${name.toLowerCase()}';
+
+      if (!map.containsKey(key)) {
+        if (query.isNotEmpty) {
+          final matchesName = name.toLowerCase().contains(query);
+          final matchesPhone = phone.toLowerCase().contains(query);
+          if (!matchesName && !matchesPhone) continue;
+        }
+        map[key] = _CustomerLedgerSummary(
+          customerName: name.isNotEmpty ? name : (phone.isNotEmpty ? phone : 'Customer'),
+          customerPhone: phone,
+          totalOrders: 0,
+          totalBilled: 0.0,
+          totalPaid: 0.0,
+          dueBalance: c.netDue,
+          lastTransactionDate: '',
+          tokens: [],
+        );
+      }
+    }
+
+    final summaries = map.values.toList()
+      ..sort((a, b) {
+        final cmp = b.totalBilled.compareTo(a.totalBilled);
+        if (cmp != 0) return cmp;
+        return b.dueBalance.compareTo(a.dueBalance);
+      });
 
     return ListView.separated(
       shrinkWrap: true,
@@ -1250,7 +1284,6 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
       itemBuilder: (context, index) {
         final summary = summaries[index];
         final netDueAmount = _getNetDueForCustomer(summary.customerName, summary.customerPhone, summary.dueBalance);
-        final isDue = netDueAmount > 0;
 
         return InkWell(
           onTap: () => _openFullLedgerForSummary(summary),
@@ -1292,24 +1325,28 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                         _money(summary.totalBilled),
                         style: GoogleFonts.jetBrainsMono(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF111111)),
                       ),
-                      if (isDue) ...[
-                        const SizedBox(height: 2),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFEF2F2),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'Due: ${_money(netDueAmount)}',
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFFDC2626),
-                            ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: netDueAmount > 0
+                              ? const Color(0xFFFEF2F2)
+                              : (netDueAmount < 0 ? const Color(0xFFF0FDF4) : const Color(0xFFF1F5F9)),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          netDueAmount > 0
+                              ? 'Due: ${_money(netDueAmount)}'
+                              : (netDueAmount < 0 ? 'Adv: -${_money(netDueAmount.abs())}' : 'Due: ₹0.00'),
+                          style: GoogleFonts.jetBrainsMono(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: netDueAmount > 0
+                                ? const Color(0xFFDC2626)
+                                : (netDueAmount < 0 ? const Color(0xFF16A34A) : const Color(0xFF64748B)),
                           ),
                         ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
@@ -1665,7 +1702,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
     for (final t in sortedTokens) {
       final isCancelled = t.status.toLowerCase() == 'cancelled';
-      final isPaid = t.payment.isNotEmpty && t.payment.toLowerCase() != 'credit' && t.payment.toLowerCase() != 'due' && !isCancelled;
+      final pm = t.payment.toLowerCase();
+      final isUdhar = pm == 'credit' || pm == 'udhar' || pm == 'due';
+      final isPaid = !isUdhar && (t.isPaid || (pm.isNotEmpty && !isCancelled));
 
       final debit = isCancelled ? 0.0 : t.amount;
       final credit = (isCancelled || !isPaid) ? 0.0 : t.amount;
@@ -2024,26 +2063,35 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
 
   String _money(double amount) => '\u20B9${amount.toStringAsFixed(2)}';
 
-  double _getNetDueForCustomer(String name, String phone, double fallbackDue) {
+  ApiCustomer? _findCustomer(String name, String phone) {
     final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+    final normPhone = cleanPhone.length >= 10 ? cleanPhone.substring(cleanPhone.length - 10) : cleanPhone;
 
-    if (cleanPhone.isNotEmpty) {
+    if (normPhone.isNotEmpty) {
       for (final c in _customers) {
-        final cPhone = c.mobileNumber.replaceAll(RegExp(r'\D'), '');
-        if (cPhone.isNotEmpty && cPhone == cleanPhone) {
-          return c.hasNetDue ? c.netDue : fallbackDue;
+        final cClean = c.mobileNumber.replaceAll(RegExp(r'\D'), '');
+        final cNorm = cClean.length >= 10 ? cClean.substring(cClean.length - 10) : cClean;
+        if (cNorm.isNotEmpty && (cNorm == normPhone || cClean.endsWith(cleanPhone) || cleanPhone.endsWith(cClean))) {
+          return c;
         }
       }
-      return fallbackDue;
     }
 
     final lowerName = name.trim().toLowerCase();
-    if (lowerName.isNotEmpty) {
+    if (lowerName.isNotEmpty && lowerName != 'walk-in' && lowerName != 'walkin') {
       for (final c in _customers) {
         if (c.name.trim().toLowerCase() == lowerName) {
-          return c.hasNetDue ? c.netDue : fallbackDue;
+          return c;
         }
       }
+    }
+    return null;
+  }
+
+  double _getNetDueForCustomer(String name, String phone, double fallbackDue) {
+    final match = _findCustomer(name, phone);
+    if (match != null) {
+      return match.netDue;
     }
     return fallbackDue;
   }

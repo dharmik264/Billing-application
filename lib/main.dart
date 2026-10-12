@@ -43,6 +43,15 @@ class BillingApplication extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFFF0F4F8),
         canvasColor: const Color(0xFFF0F4F8),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF0F4F8),
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Color(0xFFF0F4F8),
+          elevation: 0,
+        ),
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF4F46E5),
           primary: const Color(0xFF4F46E5),
