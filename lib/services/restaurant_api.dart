@@ -549,6 +549,9 @@
         await LocalDatabase.instance.saveCustomer(data);
         return ApiCustomer.fromJson(data);
       } catch (e) {
+        if (e is ApiException) {
+          rethrow;
+        }
         final localCustomer = {
           'id': DateTime.now().millisecondsSinceEpoch.toString(),
           ...payload

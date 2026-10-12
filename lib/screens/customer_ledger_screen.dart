@@ -634,189 +634,8 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     );
   }
 
-  Widget _buildCustomerProfileCard(bool isPaidInFull, double netDue) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: _slate900.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: _slate200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [_indigo, Color(0xFF6366F1)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: Text(
-                    widget.customer.name.isNotEmpty ? widget.customer.name[0].toUpperCase() : 'C',
-                    style: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            widget.customer.name,
-                            style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: _slate900),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: widget.customer.isActive ? _green.withValues(alpha: 0.12) : _slate200,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            widget.customer.isActive ? 'Active' : 'Inactive',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: widget.customer.isActive ? _green : _slate600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.phone_outlined, size: 14, color: _slate600),
-                        const SizedBox(width: 4),
-                        Text(widget.customer.mobileNumber, style: GoogleFonts.inter(fontSize: 13, color: _slate700, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Builder(
-                      builder: (context) {
-                        final netDue = _ledger != null ? _ledger!.summary.netDue : widget.customer.netDue;
-                        Color textColor = _slate900;
-                        if (netDue > 0) {
-                          textColor = _red;
-                        } else if (netDue < 0) {
-                          textColor = _green;
-                        }
-                        return Text(
-                          'Net Due: ${_formatAmount(netDue)}',
-                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: textColor),
-                        );
-                      }
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (widget.customer.address.isNotEmpty || widget.customer.gstNumber.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 12,
-              runSpacing: 4,
-              children: [
-                if (widget.customer.address.isNotEmpty)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.location_on_outlined, size: 13, color: _slate400),
-                      const SizedBox(width: 3),
-                      Text(widget.customer.address, style: GoogleFonts.inter(fontSize: 12, color: _slate600)),
-                    ],
-                  ),
-                if (widget.customer.gstNumber.isNotEmpty)
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.receipt_long_outlined, size: 13, color: _slate400),
-                      const SizedBox(width: 3),
-                      Text('GST: ${widget.customer.gstNumber}', style: GoogleFonts.inter(fontSize: 12, color: _slate600)),
-                    ],
-                  ),
-              ],
-            ),
-          ],
-          const SizedBox(height: 14),
-          const Divider(height: 1, color: _slate200),
-          const SizedBox(height: 14),
-          // Actions Row: Credit & Debit
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 44,
-                  child: ElevatedButton.icon(
-                    onPressed: _showCreditDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _green,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    icon: const Icon(Icons.arrow_downward_rounded, size: 18),
-                    label: Text(
-                      'M-Credit',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: SizedBox(
-                  height: 44,
-                  child: ElevatedButton.icon(
-                    onPressed: _showDebitDialog,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _red,
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    icon: const Icon(Icons.arrow_upward_rounded, size: 18),
-                    label: Text(
-                      'M-Debit',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-        ],
-      ),
-    );
-  }
-
   Widget _buildBody() {
     final summary = _ledger!.summary;
-    final isPaidInFull = summary.netDue <= 0;
 
     return RefreshIndicator(
       onRefresh: _loadLedger,
@@ -830,15 +649,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
               color: Colors.white,
               border: Border(bottom: BorderSide(color: _slate200, width: 1)),
             ),
-            child: Column(
-              children: [
-                // Customer Profile Card with Pay Due & Jama Options
-                _buildCustomerProfileCard(isPaidInFull, summary.netDue),
-
-                // Six Customer Ledger Summary Cards
-                _buildSixSummaryCards(),
-              ],
-            ),
+            child: _buildThreeColumnSummaryCards(summary),
           ),
 
           // Tabs Header for Bills & Payments
@@ -874,147 +685,111 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     );
   }
 
-  Widget _buildSixSummaryCards() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= 640) {
-          return Row(
+  Widget _buildThreeColumnSummaryCards(ApiCustomerLedgerSummary summary) {
+    final totalCredit = _cashTotal + _onlineTotal + _totalCreditAmount;
+    final totalDebit = _totalBillAmount + _totalDebitAmount;
+    final netDue = summary.netDue;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── First Column: Bill Cash, Bill Online, M Credit ────────
+        Expanded(
+          child: Column(
             children: [
-              Expanded(
-                child: _buildMetricCard(
-                  title: 'CASH',
-                  value: _formatAmount(_cashTotal),
-                  color: const Color(0xFF16A34A),
-                  bgColor: const Color(0xFFF0FDF4),
-                  icon: Icons.payments_rounded,
-                ),
+              _buildMetricCard(
+                title: 'Bill Cash',
+                value: _formatAmount(_cashTotal),
+                color: const Color(0xFF16A34A),
+                bgColor: const Color(0xFFF0FDF4),
+                icon: Icons.payments_rounded,
               ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: _buildMetricCard(
-                  title: 'ONLINE',
-                  value: _formatAmount(_onlineTotal),
-                  color: const Color(0xFF2563EB),
-                  bgColor: const Color(0xFFEFF6FF),
-                  icon: Icons.qr_code_2_rounded,
-                ),
+              const SizedBox(height: 8),
+              _buildMetricCard(
+                title: 'Bill Online',
+                value: _formatAmount(_onlineTotal),
+                color: const Color(0xFF2563EB),
+                bgColor: const Color(0xFFEFF6FF),
+                icon: Icons.qr_code_2_rounded,
               ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: _buildMetricCard(
-                  title: 'UDHAR',
-                  value: _formatAmount(_udharTotal),
-                  color: const Color(0xFFD97706),
-                  bgColor: const Color(0xFFFFFBEB),
-                  icon: Icons.pending_actions_rounded,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: _buildMetricCard(
-                  title: 'TOTAL BILL',
-                  value: _formatAmount(_totalBillAmount),
-                  color: const Color(0xFF1F2937),
-                  bgColor: const Color(0xFFF3F4F6),
-                  icon: Icons.receipt_long_rounded,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: _buildMetricCard(
-                  title: 'T CREDIT',
-                  value: _formatAmount(_totalCreditAmount),
-                  color: const Color(0xFF059669),
-                  bgColor: const Color(0xFFECFDF5),
-                  icon: Icons.arrow_downward_rounded,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: _buildMetricCard(
-                  title: 'T DEBIT',
-                  value: _formatAmount(_totalDebitAmount),
-                  color: const Color(0xFFDC2626),
-                  bgColor: const Color(0xFFFEF2F2),
-                  icon: Icons.arrow_upward_rounded,
-                ),
+              const SizedBox(height: 8),
+              _buildMetricCard(
+                title: 'M Credit',
+                value: _formatAmount(_totalCreditAmount),
+                color: const Color(0xFF059669),
+                bgColor: const Color(0xFFECFDF5),
+                icon: Icons.arrow_downward_rounded,
+                onTap: _showCreditDialog,
               ),
             ],
-          );
-        }
+          ),
+        ),
+        const SizedBox(width: 8),
 
-        return Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'CASH',
-                    value: _formatAmount(_cashTotal),
-                    color: const Color(0xFF16A34A),
-                    bgColor: const Color(0xFFF0FDF4),
-                    icon: Icons.payments_rounded,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'ONLINE',
-                    value: _formatAmount(_onlineTotal),
-                    color: const Color(0xFF2563EB),
-                    bgColor: const Color(0xFFEFF6FF),
-                    icon: Icons.qr_code_2_rounded,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'UDHAR',
-                    value: _formatAmount(_udharTotal),
-                    color: const Color(0xFFD97706),
-                    bgColor: const Color(0xFFFFFBEB),
-                    icon: Icons.pending_actions_rounded,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'TOTAL BILL',
-                    value: _formatAmount(_totalBillAmount),
-                    color: const Color(0xFF1F2937),
-                    bgColor: const Color(0xFFF3F4F6),
-                    icon: Icons.receipt_long_rounded,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'T CREDIT',
-                    value: _formatAmount(_totalCreditAmount),
-                    color: const Color(0xFF059669),
-                    bgColor: const Color(0xFFECFDF5),
-                    icon: Icons.arrow_downward_rounded,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildMetricCard(
-                    title: 'T DEBIT',
-                    value: _formatAmount(_totalDebitAmount),
-                    color: const Color(0xFFDC2626),
-                    bgColor: const Color(0xFFFEF2F2),
-                    icon: Icons.arrow_upward_rounded,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
+        // ── Second Column: Bill Udhar, Bill Total, M Debit ────────
+        Expanded(
+          child: Column(
+            children: [
+              _buildMetricCard(
+                title: 'Bill Udhar',
+                value: _formatAmount(_udharTotal),
+                color: const Color(0xFFD97706),
+                bgColor: const Color(0xFFFFFBEB),
+                icon: Icons.pending_actions_rounded,
+              ),
+              const SizedBox(height: 8),
+              _buildMetricCard(
+                title: 'Bill Total',
+                value: _formatAmount(_totalBillAmount),
+                color: const Color(0xFF1F2937),
+                bgColor: const Color(0xFFF3F4F6),
+                icon: Icons.receipt_long_rounded,
+              ),
+              const SizedBox(height: 8),
+              _buildMetricCard(
+                title: 'M Debit',
+                value: _formatAmount(_totalDebitAmount),
+                color: const Color(0xFFDC2626),
+                bgColor: const Color(0xFFFEF2F2),
+                icon: Icons.arrow_upward_rounded,
+                onTap: _showDebitDialog,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+
+        // ── Third Column: Total Credit, Total Debit, Net Due ──────
+        Expanded(
+          child: Column(
+            children: [
+              _buildMetricCard(
+                title: 'Total Credit',
+                value: _formatAmount(totalCredit),
+                color: const Color(0xFF0D9488),
+                bgColor: const Color(0xFFF0FDFA),
+                icon: Icons.account_balance_rounded,
+              ),
+              const SizedBox(height: 8),
+              _buildMetricCard(
+                title: 'Total Debit',
+                value: _formatAmount(totalDebit),
+                color: const Color(0xFF9333EA),
+                bgColor: const Color(0xFFFAF5FF),
+                icon: Icons.calculate_rounded,
+              ),
+              const SizedBox(height: 8),
+              _buildMetricCard(
+                title: 'Net Due',
+                value: _formatAmount(netDue),
+                color: netDue > 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
+                bgColor: netDue > 0 ? const Color(0xFFFEF2F2) : const Color(0xFFF0FDF4),
+                icon: Icons.account_balance_wallet_rounded,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -1024,12 +799,13 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     required Color color,
     required Color bgColor,
     required IconData icon,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+    final cardContent = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Column(
@@ -1037,31 +813,33 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         children: [
           Row(
             children: [
-              Icon(icon, size: 13, color: color),
+              Icon(icon, size: 12, color: color),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   title,
                   style: GoogleFonts.inter(
-                    fontSize: 10,
+                    fontSize: 9.5,
                     fontWeight: FontWeight.w700,
                     color: color,
-                    letterSpacing: 0.3,
+                    letterSpacing: 0.2,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (onTap != null)
+                Icon(Icons.add_circle_outline_rounded, size: 12, color: color),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 5),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
               value,
               style: GoogleFonts.inter(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w800,
                 color: _slate900,
               ),
@@ -1070,6 +848,18 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
         ],
       ),
     );
+
+    if (onTap != null) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: cardContent,
+        ),
+      );
+    }
+    return cardContent;
   }
 
   // ── Billing History Table ───────────────────────────────────────

@@ -766,6 +766,34 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         icon: Icons.confirmation_number_rounded,
         subtitle: 'Dhara Food POS',
         actions: [
+          ElevatedButton.icon(
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const EditItemScreen()),
+              );
+              if (mounted) {
+                _loadInitialData();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF111111),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            ),
+            icon: const Icon(Icons.add_rounded, size: 16, color: Colors.white),
+            label: Text(
+              'Add Item',
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
@@ -930,7 +958,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       physics: const BouncingScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 220,
-                        childAspectRatio: 0.92,
+                        mainAxisExtent: 124,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
                       ),
@@ -938,7 +966,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                       itemBuilder: (context, index) => _productCard(_filteredProducts[index]),
                     ),
         ),
-        _buildBottomDockedBar(),
       ],
     );
   }
@@ -1053,74 +1080,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
     );
   }
 
-  Widget _buildBottomDockedBar() {
-    final tokenNo = widget.editToken != null ? '#${widget.editToken!.tokenNumber}' : '#049';
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFE5E5E5)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'FAST LANE',
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF5D5F5F),
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Auto Print Receipt $tokenNo',
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF111111),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 40,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                if (_billItems.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please add items to generate token')),
-                  );
-                  return;
-                }
-                _saveBill();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF111111),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-              ),
-              icon: const Icon(Icons.print_outlined, size: 16),
-              label: Text(
-                'Generate Token',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _productCard(_TokenProduct product) {
     final cartItemIndex = _billItems.indexWhere((i) => i.product.id == product.id);
     final inCartQty = cartItemIndex >= 0 ? _billItems[cartItemIndex].quantity : 0;
@@ -1136,105 +1095,64 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 48,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4F4F5),
-                  borderRadius: BorderRadius.circular(2),
-                  border: Border.all(color: const Color(0xFFE5E5E5)),
-                ),
-                child: Stack(
-                  children: [
-                    Center(child: _buildCardImage(product)),
-                    Positioned(
-                      top: 4,
-                      left: 4,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(2),
-                          border: Border.all(color: const Color(0xFFE5E5E5)),
-                        ),
-                        child: Text(
-                          product.category.isNotEmpty ? product.category.toUpperCase() : 'VEG',
-                          style: GoogleFonts.inter(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF5D5F5F),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                product.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF111111),
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                product.category,
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  color: const Color(0xFF5D5F5F),
-                ),
-              ),
-            ],
+          Container(
+            height: 46,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F4F5),
+              borderRadius: BorderRadius.circular(2),
+              border: Border.all(color: const Color(0xFFE5E5E5)),
+            ),
+            child: Center(child: _buildCardImage(product)),
           ),
-          Column(
+          const SizedBox(height: 4),
+          Text(
+            product.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF111111),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E5)),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Divider(height: 1, thickness: 1, color: Color(0xFFE5E5E5)),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '\u20B9${product.price.toStringAsFixed(0)}',
-                    style: GoogleFonts.jetBrainsMono(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF000000),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () => _addProduct(product),
+              Text(
+                '\u20B9${product.price.toStringAsFixed(0)}',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF000000),
+                ),
+              ),
+              InkWell(
+                onTap: () => _addProduct(product),
+                borderRadius: BorderRadius.circular(2),
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF000000),
                     borderRadius: BorderRadius.circular(2),
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF000000),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                      child: Center(
-                        child: inCartQty > 0
-                            ? Text(
-                                '$inCartQty',
-                                style: GoogleFonts.jetBrainsMono(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                ),
-                              )
-                            : const Icon(Icons.add, size: 14, color: Colors.white),
-                      ),
-                    ),
                   ),
-                ],
+                  child: Center(
+                    child: inCartQty > 0
+                        ? Text(
+                            '$inCartQty',
+                            style: GoogleFonts.jetBrainsMono(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          )
+                        : const Icon(Icons.add, size: 14, color: Colors.white),
+                  ),
+                ),
               ),
             ],
           ),

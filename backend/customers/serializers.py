@@ -53,6 +53,13 @@ class CustomerSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Mobile number must be between 10 and 15 digits.'
             )
+        qs = Customer.objects.filter(mobile_number=digits)
+        if self.instance is not None:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise serializers.ValidationError(
+                'A customer with this mobile number already exists.'
+            )
         return digits
 
     def validate_gst_number(self, value):

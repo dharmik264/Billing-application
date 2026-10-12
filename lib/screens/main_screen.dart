@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dashboard_screen.dart';
 import 'token_generation_screen.dart';
-import 'item_management_screen.dart';
 import 'analytics_reports_screen.dart';
 import 'settings_screen.dart';
 import 'customer_management_screen.dart';
@@ -59,10 +58,6 @@ class _MainScreenState extends State<MainScreen> {
     if (perms['customers'] ?? true) {
       _screens.add(const CustomerManagementScreen());
       _navItems.add({'icon': Icons.people_rounded, 'inactive': Icons.people_outline_rounded, 'label': 'Customers'});
-    }
-    if (perms['inventory'] ?? true) {
-      _screens.add(const ItemManagementScreen());
-      _navItems.add({'icon': Icons.inventory_2_rounded, 'inactive': Icons.inventory_2_outlined, 'label': 'Items'});
     }
     if (perms['reports'] ?? true) {
       _screens.add(const AnalyticsReportsScreen());

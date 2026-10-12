@@ -141,9 +141,30 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSaving = true);
 
+    final cleanMobile = _mobileCtrl.text.trim();
+    try {
+      final existingCustomers = await RestaurantApi.instance.fetchCustomers();
+      final isDuplicate = existingCustomers.any((c) =>
+          c.mobileNumber == cleanMobile &&
+          (_isEdit ? c.id != widget.customer!.id : true));
+      if (isDuplicate) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('A customer with this mobile number already exists.'),
+              backgroundColor: _red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          );
+        }
+        return;
+      }
+    } catch (_) {}
+
     final draft = ApiCustomerDraft(
       name: _nameCtrl.text.trim(),
-      mobileNumber: _mobileCtrl.text.trim(),
+      mobileNumber: cleanMobile,
       address: _addressCtrl.text.trim(),
       gstNumber: _gstCtrl.text.trim(),
       status: _status,
@@ -170,9 +191,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen>
       Navigator.of(context).pop(true);
     } catch (e) {
       if (mounted) {
+        final cleanMsg = e.toString()
+            .replaceAll('ApiException: ', '')
+            .replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(cleanMsg),
             backgroundColor: _red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
