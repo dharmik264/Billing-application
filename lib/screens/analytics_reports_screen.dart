@@ -105,33 +105,45 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
             constraints: const BoxConstraints(maxWidth: 900),
             child: Stack(
               children: [
-                SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Search Input Container
-                      _buildSearchBar(),
-                      const SizedBox(height: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Search bar pinned directly under the header
+                    Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      decoration: const BoxDecoration(
+                        border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5), width: 1)),
+                      ),
+                      child: _buildSearchBar(),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Period Horizontal Filters (Date Range)
+                            _buildPeriodFilters(),
+                            const SizedBox(height: 10),
 
-                      // Period Horizontal Filters (Date Range)
-                      _buildPeriodFilters(),
-                      const SizedBox(height: 10),
+                            // Report Category Segmented Tabs
+                            _buildCategoryTabs(),
+                            const SizedBox(height: 12),
 
-                      // Report Category Segmented Tabs
-                      _buildCategoryTabs(),
-                      const SizedBox(height: 12),
+                            // Minimal Business Export Action Buttons
+                            _buildExportActions(),
+                            const SizedBox(height: 14),
 
-                      // Minimal Business Export Action Buttons
-                      _buildExportActions(),
-                      const SizedBox(height: 14),
-
-                      // Data Table Frame Container
-                      _buildDataTableContainer(),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+                            // Data Table Frame Container
+                            _buildDataTableContainer(),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 if (_loading)
                   Positioned.fill(
