@@ -179,20 +179,6 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           
           _isLoading = false;
         });
-
-        if (products.isEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No items found. Please add an item first.'))
-            );
-            await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const EditItemScreen(initialCode: 'C-9001'),
-              ),
-            );
-            _loadInitialData();
-          });
-        }
       }
     } catch (e) {
       if (mounted) {
@@ -904,9 +890,39 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               ? const Center(child: CircularProgressIndicator(color: Color(0xFF111111)))
               : _filteredProducts.isEmpty
                   ? Center(
-                      child: Text(
-                        'No items found',
-                        style: GoogleFonts.inter(color: const Color(0xFF5D5F5F), fontSize: 14),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.inventory_2_outlined, size: 52, color: Color(0xFFCBD5E1)),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No items available',
+                            style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Add items in the Items tab or click below',
+                            style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => const EditItemScreen(initialCode: 'C-9001'),
+                                ),
+                              );
+                              _loadInitialData();
+                            },
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Add Item'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF111111),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ],
                       ),
                     )
                   : GridView.builder(
