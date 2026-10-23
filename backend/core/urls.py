@@ -7,10 +7,11 @@ from .views import (
     SuperAdminDeleteUserView, SuperAdminSubscriptionPlanListCreateView, SuperAdminSubscriptionPlanDetailView,
     DevUsersView, DevLoginView,
     PublicSubscriptionPlanListView, SystemSettingsView, SubmitSubscriptionPaymentView, SuperAdminPaymentsView,
-    ForgotPasswordRequestView, ForgotPasswordResetView,
+    ForgotPasswordRequestView, ForgotPasswordResetView, TestSMSView,
 )
 
 urlpatterns = [
+    path('test-sms/', TestSMSView.as_view(), name='test-sms'),
     path('send-otp/',    SendOTPView.as_view(),    name='send-otp'),
     path('verify-otp/',  VerifyOTPView.as_view(),  name='verify-otp'),
     path('register/',    RegisterView.as_view(),   name='register'),

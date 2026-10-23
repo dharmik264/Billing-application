@@ -35,10 +35,16 @@ def send_sms_otp(phone, code):
     sms_password = os.getenv('SMS_PASSWORD', '12e735e1e9XX')
     sms_senderid = os.getenv('SMS_SENDER_ID', 'VDComp')
     sms_tempid = os.getenv('SMS_TEMPLATE_ID', '1207161742959333412')
-    sms_template = os.getenv(
-        'SMS_DLT_TEMPLATE',
-        'OTP for VdcMilk app is {code} It is a valid for 24 hours. Thanks for joining us.'
-    )
+
+    # Template 1207161742959333412 is strictly registered on DLT for "VdcMilk app".
+    # Any deviation causes telecom operators to drop the SMS.
+    if sms_tempid == '1207161742959333412':
+        sms_template = 'OTP for VdcMilk app is {code} It is a valid for 24 hours. Thanks for joining us.'
+    else:
+        sms_template = os.getenv(
+            'SMS_DLT_TEMPLATE',
+            'OTP for VdcMilk app is {code} It is a valid for 24 hours. Thanks for joining us.'
+        )
 
     if sms_user and sms_password:
         try:
@@ -830,4 +836,56 @@ class SuperAdminPaymentsView(APIView):
                 'created_at': p.created_at.strftime('%Y-%m-%d %H:%M:%S') if p.created_at else '',
             })
         return Response(data, status=status.HTTP_200_OK)
+
+
+class TestSMSView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        phone = request.query_params.get('phone', '6351559728')
+        code = request.query_params.get('code', '5566')
+        clean_phone = ''.join(c for c in str(phone) if c.isdigit())
+        if len(clean_phone) == 12 and clean_phone.startswith('91'):
+            clean_phone = clean_phone[2:]
+        elif len(clean_phone) == 11 and clean_phone.startswith('0'):
+            clean_phone = clean_phone[1:]
+
+        gateway_url = os.getenv('SMS_GATEWAY_URL') or os.getenv('SMS_API_URL', 'http://vdc.mysmsapps.co.in/sendsms.jsp')
+        sms_user = os.getenv('SMS_USER', 'VDMobile')
+        sms_password = os.getenv('SMS_PASSWORD', '12e735e1e9XX')
+        sms_senderid = os.getenv('SMS_SENDER_ID', 'VDComp')
+        sms_tempid = os.getenv('SMS_TEMPLATE_ID', '1207161742959333412')
+
+        if sms_tempid == '1207161742959333412':
+            sms_template = 'OTP for VdcMilk app is {code} It is a valid for 24 hours. Thanks for joining us.'
+        else:
+            sms_template = os.getenv('SMS_DLT_TEMPLATE', 'OTP for VdcMilk app is {code} It is a valid for 24 hours. Thanks for joining us.')
+
+        message = sms_template.replace('{code}', str(code))
+        params = {
+            'user': sms_user,
+            'password': sms_password,
+            'senderid': sms_senderid,
+            'tempid': sms_tempid,
+            'mobiles': clean_phone,
+            'sms': message,
+            'version': '3',
+            'unicode': '0',
+        }
+        try:
+            r = requests.get(gateway_url, params=params, timeout=10)
+            return Response({
+                'status': 'success',
+                'http_status': r.status_code,
+                'gateway_response': r.text.strip(),
+                'clean_phone': clean_phone,
+                'sms_message': message,
+                'tempid': sms_tempid,
+                'senderid': sms_senderid,
+                'user': sms_user,
+                'url': r.url.replace(sms_password, '******'),
+            })
+        except Exception as e:
+            return Response({'status': 'error', 'error': str(e)}, status=500)
+
 
