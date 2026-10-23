@@ -20,38 +20,82 @@ logger = logging.getLogger(__name__)
 
 def send_sms_otp(phone, code):
     """
-    Sends an OTP via a configured SMS gateway.
+    Sends an OTP via configured SMS gateway (supports MySMSApps / VDC Gateway and generic HTTP gateways).
     Falls back to console print and logger in local development/server logs.
     """
-    sms_url = os.getenv('SMS_API_URL')
-    sms_key = os.getenv('SMS_API_KEY')
-    
-    if sms_url and sms_key:
+    clean_phone = ''.join(c for c in str(phone) if c.isdigit())
+    if len(clean_phone) == 12 and clean_phone.startswith('91'):
+        clean_phone = clean_phone[2:]
+    elif len(clean_phone) == 11 and clean_phone.startswith('0'):
+        clean_phone = clean_phone[1:]
+
+    # Priority 1: VDC / MySMSApps Gateway
+    gateway_url = os.getenv('SMS_GATEWAY_URL') or os.getenv('SMS_API_URL', 'http://vdc.mysmsapps.co.in/sendsms.jsp')
+    sms_user = os.getenv('SMS_USER')
+    sms_password = os.getenv('SMS_PASSWORD')
+    sms_senderid = os.getenv('SMS_SENDER_ID', 'VDComp')
+    sms_tempid = os.getenv('SMS_TEMPLATE_ID', '1207161742959333412')
+    sms_template = os.getenv(
+        'SMS_DLT_TEMPLATE',
+        'otp for Billing application is {code} It is a valid for 24 hours. Thanks for joining us.'
+    )
+
+    if sms_user and sms_password:
         try:
-            # Standard DLT-compliant format
-            template = os.getenv('SMS_DLT_TEMPLATE', 'Your verification code is {code}. Please do not share this with anyone.')
+            message = sms_template.replace('{code}', str(code))
+            params = {
+                'user': sms_user,
+                'password': sms_password,
+                'senderid': sms_senderid,
+                'tempid': sms_tempid,
+                'mobiles': clean_phone,
+                'sms': message,
+                'version': '3',
+                'unicode': '0',
+            }
+            response = requests.get(gateway_url, params=params, timeout=10)
+            logger.info(f"SMS Gateway Response for {clean_phone}: Status {response.status_code}, Body: {response.text}")
+
+            if '<status>error</status>' in response.text:
+                logger.error(f"SMS Gateway returned error for {clean_phone}: {response.text.strip()}")
+                return False
+
+            logger.info(f"OTP successfully sent to {clean_phone} via SMS.")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to send SMS to {clean_phone}: {str(e)}")
+            logger.info(f"FALLBACK OTP FOR {clean_phone}: {code}")
+            return False
+
+    # Priority 2: Generic JSON POST Gateway
+    sms_key = os.getenv('SMS_API_KEY')
+    if gateway_url and sms_key:
+        try:
+            template = os.getenv('SMS_DLT_TEMPLATE', 'Your verification code is {code}.')
             message = template.replace('{code}', str(code))
-            
             payload = {
                 "route": "otp",
                 "variables_values": str(code),
                 "message": message,
-                "numbers": str(phone),
+                "numbers": str(clean_phone),
             }
             headers = {
                 "authorization": sms_key,
                 "Content-Type": "application/json"
             }
-            response = requests.post(sms_url, json=payload, headers=headers, timeout=5)
+            response = requests.post(gateway_url, json=payload, headers=headers, timeout=5)
             response.raise_for_status()
-            logger.info(f"OTP sent to {phone} via SMS.")
+            logger.info(f"OTP sent to {clean_phone} via SMS.")
+            return True
         except Exception as e:
-            logger.error(f"Failed to send SMS to {phone}: {str(e)}")
-            logger.info(f"FALLBACK OTP FOR {phone}: {code}")
-    else:
-        # Development / Server log fallback
-        logger.warning(f"[OTP] DEVELOPMENT OTP FOR {phone}: {code}")
-        import sys; sys.stderr.write(f"\n{'='*45}\n[OTP] DEVELOPMENT OTP FOR {phone}: {code}\n{'='*45}\n"); sys.stderr.flush()
+            logger.error(f"Failed to send SMS to {clean_phone}: {str(e)}")
+            logger.info(f"FALLBACK OTP FOR {clean_phone}: {code}")
+            return False
+
+    # Development / Server log fallback
+    logger.warning(f"[OTP] DEVELOPMENT OTP FOR {clean_phone}: {code}")
+    import sys; sys.stderr.write(f"\n{'='*45}\n[OTP] DEVELOPMENT OTP FOR {clean_phone}: {code}\n{'='*45}\n"); sys.stderr.flush()
+    return False
 
 
 
