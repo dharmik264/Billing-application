@@ -31,8 +31,8 @@ def send_sms_otp(phone, code):
 
     # Priority 1: VDC / MySMSApps Gateway
     gateway_url = os.getenv('SMS_GATEWAY_URL') or os.getenv('SMS_API_URL', 'http://vdc.mysmsapps.co.in/sendsms.jsp')
-    sms_user = os.getenv('SMS_USER')
-    sms_password = os.getenv('SMS_PASSWORD')
+    sms_user = os.getenv('SMS_USER', 'VDMobile')
+    sms_password = os.getenv('SMS_PASSWORD', '12e735e1e9XX')
     sms_senderid = os.getenv('SMS_SENDER_ID', 'VDComp')
     sms_tempid = os.getenv('SMS_TEMPLATE_ID', '1207161742959333412')
     sms_template = os.getenv(
@@ -191,8 +191,7 @@ class RegisterView(APIView):
             return Response({'error': f'Registration failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         response_data = {'message': 'Registration successful, OTP sent', 'phone': phone}
-        _show_otp = __import__('django.conf', fromlist=['settings']).settings.DEBUG or os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True'
-        if _show_otp:
+        if os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True':
             response_data['otp'] = code
             
         return Response(response_data, status=status.HTTP_201_CREATED)
@@ -217,11 +216,9 @@ class SendOTPView(APIView):
 
         send_sms_otp(phone, code)
 
-        # For dev/testing, return OTP in response if DEBUG or RETURN_OTP_IN_RESPONSE is True
         response_data = {'message': 'OTP sent successfully', 'phone': phone}
-        _show_otp = __import__('django.conf', fromlist=['settings']).settings.DEBUG or os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True'
-        if _show_otp:
-            response_data['otp'] = code  # Disable RETURN_OTP_IN_RESPONSE in true production!
+        if os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True':
+            response_data['otp'] = code
 
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -314,9 +311,7 @@ class ForgotPasswordRequestView(APIView):
         send_sms_otp(phone, code)
 
         response_data = {'message': 'OTP sent to your registered phone number', 'phone': phone}
-        # In DEBUG mode, return OTP in response for testing
-        from django.conf import settings as dj_settings
-        if dj_settings.DEBUG:
+        if os.getenv('RETURN_OTP_IN_RESPONSE', 'False') == 'True':
             response_data['otp'] = code
 
         return Response(response_data, status=status.HTTP_200_OK)
