@@ -37,7 +37,7 @@ def send_sms_otp(phone, code):
     sms_tempid = os.getenv('SMS_TEMPLATE_ID', '1207161742959333412')
     sms_template = os.getenv(
         'SMS_DLT_TEMPLATE',
-        'otp for Billing application is {code} It is a valid for 24 hours. Thanks for joining us.'
+        'OTP for VdcMilk app is {code} It is a valid for 24 hours. Thanks for joining us.'
     )
 
     if sms_user and sms_password:
