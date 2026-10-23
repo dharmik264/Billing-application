@@ -149,8 +149,24 @@ class RegisterView(APIView):
         email = serializer.validated_data.get('email', '').strip()
         shop_name = serializer.validated_data['shop_name'].strip()
         
-        if User.objects.filter(phone=phone).exists():
-            return Response({'error': 'Phone number already registered'}, status=status.HTTP_400_BAD_REQUEST)
+        existing_user = User.objects.filter(phone=phone).first()
+        if existing_user:
+            if existing_user.account_status == 'pending_verification':
+                # User previously tried to register but hasn't verified OTP yet
+                existing_user.name = name
+                existing_user.email = email
+                existing_user.shop_name = shop_name
+                existing_user.set_password(serializer.validated_data['password'])
+                existing_user.save()
+
+                OTP.objects.filter(phone=phone, is_used=False).update(is_used=True)
+                code = OTP.generate_code()
+                OTP.objects.create(phone=phone, code=code)
+                send_sms_otp(phone, code)
+
+                return Response({'message': 'Registration successful, OTP sent', 'phone': phone}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'error': 'Phone number already registered'}, status=status.HTTP_400_BAD_REQUEST)
 
         if email and User.objects.filter(email__iexact=email).exists():
             return Response({'error': 'Email address already registered'}, status=status.HTTP_400_BAD_REQUEST)
