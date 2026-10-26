@@ -174,37 +174,21 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                 child: Column(
                   children: [
                     // Header Bar
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFBF9F8),
-                        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+                    if (Navigator.canPop(context))
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFBF9F8),
+                          border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+                        ),
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back, size: 20, color: Color(0xFF1B1C1C)),
+                          onPressed: () => Navigator.pop(context),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          if (Navigator.canPop(context))
-                            IconButton(
-                              icon: const Icon(Icons.arrow_back, size: 20, color: Color(0xFF1B1C1C)),
-                              onPressed: () => Navigator.pop(context),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            )
-                          else
-                            const SizedBox(width: 20),
-                          Expanded(
-                            child: Text(
-                              'Dhara Food POS',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1B1C1C),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
 
                     // Body scrollable content
                     Expanded(
@@ -230,7 +214,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                             ),
 
                             Text(
-                              'Welcome Back!',
+                              'Welcome',
                               style: GoogleFonts.inter(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w700,
@@ -401,41 +385,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 24),
 
-                            // Terminal POS info ledger
-                            Container(
-                              padding: const EdgeInsets.only(top: 12),
-                              decoration: const BoxDecoration(
-                                border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Terminal POS #04',
-                                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F)),
-                                  ),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 6,
-                                        height: 6,
-                                        decoration: const BoxDecoration(
-                                          color: Color(0xFF1B1C1C),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Store Node Online',
-                                        style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F)),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
                       ),

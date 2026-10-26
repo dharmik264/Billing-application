@@ -70,7 +70,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
             ),
             const SizedBox(height: 2),
             Text(
-              'DHARA FOOD POS',
+              'BILLING REPORTS',
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,

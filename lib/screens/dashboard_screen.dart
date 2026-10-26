@@ -43,7 +43,7 @@ class DashboardScreen extends StatefulWidget {
 
 class DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
-  String _shopName = 'Dhara Food POS';
+  String _shopName = 'Billing POS';
 
   int _tokenCount = 0;
   int _smsCredits = 0;
@@ -94,7 +94,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     if (!forceRefresh) {
       final cachedShop = RestaurantApi.instance.shopData;
       if (cachedShop != null) {
-        _shopName = cachedShop.name.isNotEmpty ? cachedShop.name : 'Dhara Food POS';
+        _shopName = cachedShop.name.isNotEmpty ? cachedShop.name : 'Billing POS';
         _smsCredits = cachedShop.smsCredits;
         _isLoading = false;
       }
@@ -119,7 +119,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
       if (mounted) {
         setState(() {
-          _shopName = shop.name.isNotEmpty ? shop.name : 'Dhara Food POS';
+          _shopName = shop.name.isNotEmpty ? shop.name : 'Billing POS';
           _smsCredits = shop.smsCredits;
 
           final now = DateTime.now();

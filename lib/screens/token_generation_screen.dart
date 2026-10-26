@@ -11,7 +11,6 @@ import 'print_preview_screen.dart';
 import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'edit_item_screen.dart';
 import 'item_management_screen.dart';
 import '../services/native_sms_service.dart';
 import '../utils/bill_settings_helper.dart';
@@ -776,7 +775,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
       appBar: CustomAppBar(
         title: widget.editToken != null ? 'Edit Bill #${widget.editToken!.billNumber}' : 'Token Generation',
         icon: Icons.confirmation_number_rounded,
-        subtitle: 'Dhara Food POS',
+        
         actions: [
           ElevatedButton.icon(
             onPressed: () async {
@@ -946,25 +945,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                                 height: 1.4,
                               ),
                             ),
-                            const SizedBox(height: 20),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                await Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const EditItemScreen(initialCode: 'C-9001'),
-                                  ),
-                                );
-                                _loadInitialData();
-                              },
-                              icon: const Icon(Icons.add, size: 18),
-                              label: Text('Add Item', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF111111),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                            ),
+
                           ],
                         ),
                       ),

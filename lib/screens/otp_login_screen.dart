@@ -486,7 +486,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Welcome Back!',
+          'Welcome',
           style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: const Color(0xFF0F172A)),
           textAlign: TextAlign.center,
         ),

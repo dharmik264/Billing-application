@@ -144,7 +144,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           ),
                           Expanded(
                             child: Text(
-                              'Dhara Food POS',
+                              'Register Shop',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 fontSize: 13,

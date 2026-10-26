@@ -108,7 +108,7 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                           ),
                           Expanded(
                             child: Text(
-                              'Dhara Food POS',
+                              'Super Admin Login',
                               textAlign: TextAlign.center,
                               style: GoogleFonts.inter(
                                 fontSize: 13,
@@ -454,10 +454,10 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              Text('DHARA CORE v2.4.1', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F), fontWeight: FontWeight.w500)),
+                              const SizedBox.shrink(),
                             ],
                           ),
-                          Text('TERMINAL #09', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF5D5F5F), fontWeight: FontWeight.w500)),
+                          const SizedBox.shrink(),
                         ],
                       ),
                     ),

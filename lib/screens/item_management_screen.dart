@@ -88,7 +88,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
             ),
             const SizedBox(height: 1),
             Text(
-              'DHARA FOOD POS',
+              'ITEMS',
               style: GoogleFonts.inter(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
@@ -101,7 +101,7 @@ class _ItemManagementScreenState extends State<ItemManagementScreen> {
         actions: [
           IconButton(
             tooltip: 'Manage Categories',
-            icon: const Icon(Icons.category_outlined, size: 20, color: Color(0xFF111111)),
+            icon: const Icon(Icons.grid_view_rounded, size: 20, color: Color(0xFF111111)),
             onPressed: _isProcessing ? null : _manageCategories,
           ),
           IconButton(

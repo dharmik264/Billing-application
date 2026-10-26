@@ -475,7 +475,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         children: [
           Text(
-            'POS Version 2.4.0 (Build 842)',
+            'Billing App v1.0.0 (First Release)',
             style: GoogleFonts.jetBrainsMono(
               fontSize: 11,
               color: const Color(0xFF71717A),
@@ -483,7 +483,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'LEDGER PROTOCOL • OPERATIONAL',
+            'FIRST RELEASE • OPERATIONAL',
             style: GoogleFonts.jetBrainsMono(
               fontSize: 10,
               fontWeight: FontWeight.w600,
