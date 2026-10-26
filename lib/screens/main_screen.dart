@@ -10,7 +10,6 @@ import 'token_generation_screen.dart';
 import 'analytics_reports_screen.dart';
 import 'settings_screen.dart';
 import 'customer_management_screen.dart';
-import '../services/restaurant_api.dart';
 import '../services/printer_service.dart';
 import '../utils/app_constants.dart';
 
@@ -76,28 +75,7 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void _onTabTapped(int index) async {
-    int tokenIndex = _navItems.indexWhere((nav) => nav['label'] == 'Token');
-    if (index == tokenIndex) {
-      try {
-        final items = await RestaurantApi.instance.fetchItems();
-        if (items.isEmpty) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('No items available. Please add an item first, then create a bill.'),
-                backgroundColor: Color(0xFFEF4444),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-          return;
-        }
-      } catch (e) {
-        // Allow navigation if API call fails
-      }
-    }
-
+  void _onTabTapped(int index) {
     if (index == 0 && _currentIndex != 0) {
       _dashboardKey.currentState?.refreshData();
     }

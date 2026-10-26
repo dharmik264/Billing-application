@@ -180,6 +180,17 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
           
           _isLoading = false;
         });
+
+        if (products.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No items added in this account. Please add an item first.'),
+              backgroundColor: Color(0xFFD97706),
+              duration: Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -900,44 +911,84 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator(color: Color(0xFF111111)))
-              : _filteredProducts.isEmpty
+              : _allProducts.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.inventory_2_outlined, size: 52, color: Color(0xFFCBD5E1)),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No items available',
-                            style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Add items in the Items tab or click below',
-                            style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => const EditItemScreen(initialCode: 'C-9001'),
-                                ),
-                              );
-                              _loadInitialData();
-                            },
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Add Item'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF111111),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFEF3C7),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.inventory_2_outlined, size: 48, color: Color(0xFFD97706)),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 16),
+                            Text(
+                              'No items added in this account',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF1E293B),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Please add an item to start creating bills and tokens.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF64748B),
+                                fontSize: 14,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton.icon(
+                              onPressed: () async {
+                                await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const EditItemScreen(initialCode: 'C-9001'),
+                                  ),
+                                );
+                                _loadInitialData();
+                              },
+                              icon: const Icon(Icons.add, size: 18),
+                              label: Text('Add Item', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF111111),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     )
-                  : GridView.builder(
+                  : _filteredProducts.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.search_off_rounded, size: 48, color: Color(0xFF94A3B8)),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No matching items found',
+                                style: GoogleFonts.inter(color: const Color(0xFF64748B), fontSize: 15, fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Try a different search or category filter',
+                                style: GoogleFonts.inter(color: const Color(0xFF94A3B8), fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        )
+                      : GridView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       physics: const BouncingScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
