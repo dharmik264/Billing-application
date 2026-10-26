@@ -33,10 +33,6 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
   bool _isResendCooldown = false;
   int _resendCountdown = 0;
 
-  bool _isDevMode = false;
-  List<dynamic> _devUsers = [];
-  bool _isLoadingDevUsers = false;
-
   @override
   void initState() {
     super.initState();
@@ -45,122 +41,6 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     _otpFocusNodes = List.generate(4, (_) => FocusNode());
     _checkPrefilledPhone();
     // Auto-fill removed: user must enter OTP received via SMS
-  }
-
-
-
-  Future<void> _fetchDevUsers() async {
-    setState(() => _isLoadingDevUsers = true);
-    try {
-      final users = await RestaurantApi.instance.fetchDevUsers();
-      setState(() {
-        // Exclude super admins from shop owner login list
-        _devUsers = users.where((u) => u['is_superuser'] != true).toList();
-      });
-    } catch (e) {
-      if (mounted) {
-        String errMsg = e.toString();
-        if (errMsg.contains('SocketException') || errMsg.contains('Failed host lookup') || errMsg.contains('TimeoutException')) {
-          errMsg = 'Unable to connect to server. Please try again.';
-        } else {
-          errMsg = 'Failed to load dev users. Error: $errMsg';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errMsg), backgroundColor: Colors.red));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoadingDevUsers = false);
-    }
-  }
-
-  Future<void> _performDevLogin(String phone) async {
-    setState(() => _isLoading = true);
-    try {
-      final responseMap = await RestaurantApi.instance.devLogin(phone);
-      final prefs = await SharedPreferences.getInstance();
-      
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('loginPhone', phone);
-      await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
-      
-      if (responseMap.containsKey('user')) {
-         final userMap = responseMap['user'];
-         final status = userMap['account_status']?.toString() ?? '';
-         final trialEndStr = userMap['trial_end']?.toString() ?? '';
-         await prefs.setString('account_status', status);
-         await prefs.setString('trial_end', trialEndStr);
-
-         final trialEnd = DateTime.tryParse(trialEndStr);
-         final isExpired = status == 'expired' || 
-             (status == 'trial' && trialEnd != null && DateTime.now().isAfter(trialEnd));
-         if (isExpired && phone != '9999999999' && phone != '6351559728') {
-           await prefs.setString('account_status', 'expired');
-           if (mounted) {
-             Navigator.pushReplacement(
-               context,
-               MaterialPageRoute(builder: (context) => TrialExpiredScreen(phone: phone)),
-             );
-           }
-           return;
-         }
-      }
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        String errMsg = e.toString().replaceAll('Exception: ', '');
-        if (errMsg.toLowerCase().contains('trial has expired') || errMsg.contains('TRIAL_EXPIRED')) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('account_status', 'expired');
-          if (!mounted) return;
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => TrialExpiredScreen(phone: phone)),
-          );
-          return;
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Dev Login failed: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _devSuperAdminBypass() async {
-    setState(() => _isLoading = true);
-    try {
-      final users = await RestaurantApi.instance.fetchDevUsers();
-      final superAdmins = users.where((u) => u['is_superuser'] == true).toList();
-      final superAdminPhone = superAdmins.isNotEmpty
-          ? superAdmins.first['phone'].toString()
-          : '6351559728';
-      
-      await RestaurantApi.instance.devLogin(superAdminPhone);
-      
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('loginPhone', superAdminPhone);
-      await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
-      
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SuperAdminMainScreen()),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Super Admin Bypass failed: $e')));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   Future<void> _checkPrefilledPhone() async {
@@ -535,30 +415,6 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                         ),
                       ),
                     
-                    // Dev Mode Toggle (If not OTP)
-                    if (!_showOTPSection)
-                      Positioned(
-                        top: 8,
-                        right: 16,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('Dev Mode', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF4F46E5))),
-                            Switch(
-                              value: _isDevMode,
-                              activeTrackColor: const Color(0xFF4F46E5),
-                              onChanged: (val) {
-                                setState(() => _isDevMode = val);
-                                if (val) {
-                                  if (_devUsers.isEmpty) {
-                                    _fetchDevUsers();
-                                  }
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
 
                     // Storefront Illustration
                     Center(
@@ -615,9 +471,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
                 ),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(32, 40, 32, MediaQuery.of(context).viewInsets.bottom + 24),
-                  child: _isDevMode && !_showOTPSection 
-                      ? _buildDevUserList() 
-                      : (_showOTPSection ? _buildOTPForm() : _buildPhoneForm()),
+                  child: _showOTPSection ? _buildOTPForm() : _buildPhoneForm(),
                 ),
               ),
             ),
@@ -710,11 +564,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
             Text('Super Admin? ', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
             GestureDetector(
               onTap: () {
-                if (_isDevMode) {
-                  _devSuperAdminBypass();
-                } else {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
-                }
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
               },
               child: Text('Login here', style: GoogleFonts.inter(color: const Color(0xFF4F46E5), fontWeight: FontWeight.w700)),
             ),
@@ -798,105 +648,4 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     );
   }
 
-  Widget _buildDevUserList() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: RestaurantApi.instance.baseUrl.contains('127.0.0.1')
-                      ? const Color(0xFFD97706)
-                      : const Color(0xFF16A34A),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  RestaurantApi.instance.baseUrl.contains('127.0.0.1')
-                      ? 'Local Server (127.0.0.1:8000)'
-                      : 'Live Server (Render)',
-                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  setState(() {
-                    if (RestaurantApi.instance.baseUrl.contains('127.0.0.1')) {
-                      RestaurantApi.instance.setCustomBaseUrl(null);
-                    } else {
-                      RestaurantApi.instance.setCustomBaseUrl('http://127.0.0.1:8000/api');
-                    }
-                    _devUsers.clear();
-                    _fetchDevUsers();
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFCBD5E1)),
-                  ),
-                  child: Text(
-                    RestaurantApi.instance.baseUrl.contains('127.0.0.1') ? 'Use Live' : 'Use Local',
-                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (_isLoadingDevUsers)
-          const Padding(
-            padding: EdgeInsets.all(24.0),
-            child: CircularProgressIndicator(color: Colors.deepPurple),
-          )
-        else if (_devUsers.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(24.0),
-            child: Text('No active users found'),
-          )
-        else
-          Container(
-            constraints: const BoxConstraints(maxHeight: 350),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: _devUsers.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final u = _devUsers[index];
-                return ListTile(
-                  leading: const CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
-                    child: Icon(Icons.person, color: Colors.white, size: 20),
-                  ),
-                  title: Text(u['name'] ?? 'User', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14)),
-                  subtitle: Text(u['phone'] ?? '', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
-                  trailing: const Icon(Icons.login, size: 18, color: Color(0xFF94A3B8)),
-                  onTap: () => _performDevLogin(u['phone']),
-                );
-              },
-            ),
-          ),
-      ],
-    );
-  }
 }
