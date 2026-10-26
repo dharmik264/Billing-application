@@ -181,28 +181,15 @@ class RegisterView(APIView):
                     name=name,
                     email=email,
                     shop_name=shop_name,
-                    account_status='pending_verification',  # Activated after OTP verify
-                    is_active=False,  # Cannot login until OTP verified
+                    account_status='pending_verification',  # Activated ONLY after OTP verify
+                    is_active=False,                        # Cannot login until OTP verified
                 )
                 password = serializer.validated_data['password']
                 user.set_password(password)
                 user.save()
                 
-                schema_name = generate_schema_name(shop_name, user.id)
-                shop = Shop.objects.create(
-                    owner=user,
-                    name=shop_name,
-                    email=email,
-                    phone=phone,
-                    schema_name=schema_name
-                )
-
-                Domain.objects.get_or_create(
-                    domain=f"{schema_name}.local",
-                    defaults={'tenant': shop, 'is_primary': True}
-                )
-
-                BillTemplate.get_template(shop)
+                # NOTE: Shop, Domain, and PostgreSQL Tenant Database are NOT created here!
+                # They are created ONLY after the correct OTP is entered in VerifyOTPView!
                 
                 code = OTP.generate_code()
                 OTP.objects.create(phone=phone, code=code)
@@ -278,6 +265,26 @@ class VerifyOTPView(APIView):
             user.trial_end = trial_end
             user.is_staff = True
             user.save()
+
+            # NOW AND ONLY NOW: Create Shop, Domain, and PostgreSQL Tenant Database for the registered user!
+            shop_name = user.shop_name or f"Shop {user.name}"
+            schema_name = generate_schema_name(shop_name, user.id)
+            shop, _ = Shop.objects.get_or_create(
+                owner=user,
+                defaults={
+                    'name': shop_name,
+                    'email': user.email,
+                    'phone': user.phone,
+                    'schema_name': schema_name
+                }
+            )
+
+            Domain.objects.get_or_create(
+                domain=f"{schema_name}.local",
+                defaults={'tenant': shop, 'is_primary': True}
+            )
+
+            BillTemplate.get_template(shop)
         elif not user.can_login:
             if getattr(user, 'is_trial_expired', False) or user.account_status == 'expired':
                 return Response({
