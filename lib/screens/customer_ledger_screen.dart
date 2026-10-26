@@ -544,7 +544,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
 
   Widget _buildThreeColumnSummaryCards(ApiCustomerLedgerSummary summary) {
     final totalCredit = _cashTotal + _onlineTotal + _totalCreditAmount;
-    final totalDebit = _totalBillAmount + _totalDebitAmount;
+    final totalDebit = (_totalBillAmount - _udharTotal > 0 ? _totalBillAmount - _udharTotal : 0.0) + _totalDebitAmount;
     final netDue = summary.netDue;
 
     return Row(
@@ -1019,7 +1019,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
     }
 
     try {
-      final totalDebit = _totalBillAmount + _totalDebitAmount;
+      final totalDebit = (_totalBillAmount - _udharTotal > 0 ? _totalBillAmount - _udharTotal : 0.0) + _totalDebitAmount;
       final totalCredit = _cashTotal + _onlineTotal + _totalCreditAmount;
       final netDue = _ledger!.summary.netDue;
 
