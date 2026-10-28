@@ -13,14 +13,10 @@ import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
 import '../utils/bill_settings_helper.dart';
 import '../widgets/bill_receipt_widget.dart';
+import '../widgets/app_bottom_navbar.dart';
 
-import 'analytics_reports_screen.dart';
-import 'customer_management_screen.dart';
-import 'item_management_screen.dart';
 import 'main_screen.dart';
 import 'printer_setup_screen.dart';
-import 'settings_screen.dart';
-import 'token_generation_screen.dart';
 
 class PrintPreviewScreen extends StatefulWidget {
   const PrintPreviewScreen({
@@ -181,12 +177,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     });
   }
 
-  void _navigateToHome() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const MainScreen()),
-      (route) => false,
-    );
-  }
+
 
   void _handleBackNavigation() {
     if (widget.fromTokenGeneration) {
@@ -258,8 +249,16 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                     ),
                   ),
 
-                  // Bottom 6-Tab Navigation Bar
-                  _buildBottomNavigation(),
+                  // Bottom Navigation Bar (Matching Home page navbar component)
+                  AppBottomNavbar(
+                    currentIndex: 1, // Token active tab
+                    onTap: (index) {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (context) => MainScreen(initialIndex: index)),
+                        (route) => false,
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -548,76 +547,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
-  Widget _buildBottomNavigation() {
-    return Container(
-      height: 56,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: _brandBorder)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(Icons.home_outlined, 'Home', false, () => _navigateToHome()),
-          _navItem(Icons.confirmation_number_outlined, 'Token', true, () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const TokenGenerationScreen()),
-            );
-          }),
-          _navItem(Icons.people_outline_rounded, 'Customers', false, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const CustomerManagementScreen()),
-            );
-          }),
-          _navItem(Icons.grid_view_rounded, 'Items', false, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ItemManagementScreen()),
-            );
-          }),
-          _navItem(Icons.bar_chart_rounded, 'Analytics', false, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AnalyticsReportsScreen()),
-            );
-          }),
-          _navItem(Icons.settings_outlined, 'Settings', false, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SettingsScreen()),
-            );
-          }),
-        ],
-      ),
-    );
-  }
 
-  Widget _navItem(IconData icon, String label, bool isActive, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 20,
-            color: isActive ? _brandPrimary : _brandMuted,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-              color: isActive ? _brandPrimary : _brandMuted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   ApiToken _generatePreviewToken() {
     return ApiToken(

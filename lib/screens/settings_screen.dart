@@ -8,7 +8,6 @@ import 'printer_setup_screen.dart';
 import 'shop_setup_screen.dart';
 import 'payment_modes_screen.dart';
 import 'tax_settings_screen.dart';
-import 'token_prefix_screen.dart';
 import 'subscription_plans_screen.dart';
 import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
@@ -144,12 +143,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Tax Settings',
                 subtitle: 'GST, VAT, Service Charge',
                 onTap: () => _open(const TaxSettingsScreen()),
-              ),
-              _SettingsRowData(
-                icon: Icons.local_offer_outlined,
-                title: 'Token Prefix Settings',
-                subtitle: 'Customize Order Numbers',
-                onTap: () => _open(const TokenPrefixScreen()),
               ),
             ]),
             const SizedBox(height: 20),

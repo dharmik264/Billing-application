@@ -12,6 +12,7 @@ import 'settings_screen.dart';
 import 'customer_management_screen.dart';
 import '../services/printer_service.dart';
 import '../utils/app_constants.dart';
+import '../widgets/app_bottom_navbar.dart';
 
 class MainScreen extends StatefulWidget {
   final int initialIndex;
@@ -29,7 +30,7 @@ class _MainScreenState extends State<MainScreen> {
 
   bool _isLoading = true;
   final List<Widget> _screens = [];
-  final List<Map<String, dynamic>> _navItems = [];
+  final List<AppNavItem> _navItems = [];
 
   @override
   void initState() {
@@ -48,24 +49,49 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     _screens.add(DashboardScreen(key: _dashboardKey));
-    _navItems.add({'icon': Icons.home_rounded, 'inactive': Icons.home_outlined, 'label': 'Home'});
+    _navItems.add(const AppNavItem(
+      activeIcon: Icons.home_rounded,
+      inactiveIcon: Icons.home_outlined,
+      label: 'Home',
+      targetIndex: 0,
+    ));
 
     if (perms['billing'] ?? true) {
       _screens.add(const TokenGenerationScreen());
-      _navItems.add({'icon': Icons.receipt_long_rounded, 'inactive': Icons.receipt_long_outlined, 'label': 'Token'});
+      _navItems.add(const AppNavItem(
+        activeIcon: Icons.receipt_long_rounded,
+        inactiveIcon: Icons.receipt_long_outlined,
+        label: 'Token',
+        targetIndex: 1,
+      ));
     }
     if (perms['customers'] ?? true) {
       _screens.add(const CustomerManagementScreen());
-      _navItems.add({'icon': Icons.people_rounded, 'inactive': Icons.people_outline_rounded, 'label': 'Customers'});
+      _navItems.add(const AppNavItem(
+        activeIcon: Icons.people_rounded,
+        inactiveIcon: Icons.people_outline_rounded,
+        label: 'Customers',
+        targetIndex: 2,
+      ));
     }
     if (perms['reports'] ?? true) {
       _screens.add(const AnalyticsReportsScreen());
-      _navItems.add({'icon': Icons.bar_chart_rounded, 'inactive': Icons.bar_chart_outlined, 'label': 'Analytics'});
+      _navItems.add(const AppNavItem(
+        activeIcon: Icons.bar_chart_rounded,
+        inactiveIcon: Icons.bar_chart_outlined,
+        label: 'Analytics',
+        targetIndex: 3,
+      ));
     }
     
     // Always show settings
     _screens.add(const SettingsScreen());
-    _navItems.add({'icon': Icons.settings_rounded, 'inactive': Icons.settings_outlined, 'label': 'Settings'});
+    _navItems.add(const AppNavItem(
+      activeIcon: Icons.settings_rounded,
+      inactiveIcon: Icons.settings_outlined,
+      label: 'Settings',
+      targetIndex: 4,
+    ));
 
     setState(() {
       _isLoading = false;
@@ -193,9 +219,9 @@ class _MainScreenState extends State<MainScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: _desktopNavItem(
                         i,
-                        _navItems[i]['icon'],
-                        _navItems[i]['inactive'],
-                        _navItems[i]['label'],
+                        _navItems[i].activeIcon,
+                        _navItems[i].inactiveIcon,
+                        _navItems[i].label,
                       ),
                     );
                   },
@@ -264,61 +290,15 @@ class _MainScreenState extends State<MainScreen> {
             index: _currentIndex,
             children: _screens,
           ),
-          bottomNavigationBar: hide ? null : _buildFlatNavbar(),
+          bottomNavigationBar: hide
+              ? null
+              : AppBottomNavbar(
+                  currentIndex: _currentIndex,
+                  onTap: _onTabTapped,
+                  items: _navItems,
+                ),
         );
       },
-    );
-  }
-
-  Widget _buildFlatNavbar() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: StitchColors.background,
-        border: Border(top: BorderSide(color: StitchColors.border, width: 1.0)),
-      ),
-      height: 56,
-      child: Row(
-        children: _navItems.map((nav) {
-          final index = _navItems.indexOf(nav);
-          return _flatNavItem(index, nav['icon'], nav['inactive'], nav['label']);
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _flatNavItem(int index, IconData activeIcon, IconData inactiveIcon, String label) {
-    final isSelected = _currentIndex == index;
-
-    return Expanded(
-      child: InkWell(
-        onTap: () => _onTabTapped(index),
-        splashColor: StitchColors.primary.withValues(alpha: 0.08),
-        highlightColor: Colors.transparent,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              height: 2,
-              margin: const EdgeInsets.only(bottom: 4),
-              color: isSelected ? StitchColors.primary : Colors.transparent,
-            ),
-            Icon(
-              isSelected ? activeIcon : inactiveIcon,
-              color: isSelected ? StitchColors.primary : StitchColors.textMuted,
-              size: 20,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? StitchColors.primary : StitchColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

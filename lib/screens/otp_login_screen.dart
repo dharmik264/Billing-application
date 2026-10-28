@@ -381,97 +381,115 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Top half (Pastel Indigo Background)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: MediaQuery.of(context).size.height * 0.45,
-            child: Container(
-              color: const Color(0xFFEEF2FF),
-              child: SafeArea(
-                child: Stack(
-                  children: [
-                    // Back Button (If OTP shown)
-                    if (_showOTPSection)
-                      Positioned(
-                        top: 16,
-                        left: 16,
-                        child: InkWell(
-                          onTap: _resetForm,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              borderRadius: BorderRadius.circular(12),
+          if (!isKeyboardOpen)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: MediaQuery.of(context).size.height * 0.45,
+              child: Container(
+                color: const Color(0xFFEEF2FF),
+                child: SafeArea(
+                  child: Stack(
+                    children: [
+                      // Back Button (If OTP shown)
+                      if (_showOTPSection)
+                        Positioned(
+                          top: 16,
+                          left: 16,
+                          child: InkWell(
+                            onTap: _resetForm,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.8),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xFF0F172A)),
                             ),
-                            child: const Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xFF0F172A)),
                           ),
                         ),
-                      ),
-                    
 
-                    // Storefront Illustration
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-                                  blurRadius: 30,
-                                  spreadRadius: 5,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
+                      // Storefront Illustration
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                                    blurRadius: 30,
+                                    spreadRadius: 5,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.storefront_rounded, size: 64, color: Color(0xFF4F46E5)),
                             ),
-                            child: const Icon(Icons.storefront_rounded, size: 64, color: Color(0xFF4F46E5)),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
+                            const SizedBox(height: 20),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
           
           // Bottom half (White Card)
           Positioned(
-            top: MediaQuery.of(context).size.height * 0.4,
+            top: isKeyboardOpen ? 0 : MediaQuery.of(context).size.height * 0.4,
             left: 0,
             right: 0,
             bottom: 0,
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(36),
-                ),
-                boxShadow: [
-                  BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
-                ],
+                borderRadius: isKeyboardOpen
+                    ? BorderRadius.zero
+                    : const BorderRadius.only(
+                        topLeft: Radius.circular(36),
+                        topRight: Radius.circular(36),
+                      ),
+                boxShadow: isKeyboardOpen
+                    ? null
+                    : const [
+                        BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
+                      ],
               ),
               child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(36),
-                  topRight: Radius.circular(36),
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(32, 40, 32, MediaQuery.of(context).viewInsets.bottom + 24),
-                  child: _showOTPSection ? _buildOTPForm() : _buildPhoneForm(),
+                borderRadius: isKeyboardOpen
+                    ? BorderRadius.zero
+                    : const BorderRadius.only(
+                        topLeft: Radius.circular(36),
+                        topRight: Radius.circular(36),
+                      ),
+                child: SafeArea(
+                  top: isKeyboardOpen,
+                  child: SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      24,
+                      isKeyboardOpen ? 16 : 40,
+                      24,
+                      20,
+                    ),
+                    child: _showOTPSection ? _buildOTPForm() : _buildPhoneForm(),
+                  ),
                 ),
               ),
             ),

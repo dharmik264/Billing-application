@@ -156,14 +156,20 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFFF5F3F3),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              margin: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: isKeyboardOpen ? 2 : 12,
+              ),
               decoration: BoxDecoration(
                 color: const Color(0xFFFBF9F8),
                 borderRadius: BorderRadius.circular(16),
@@ -176,7 +182,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                     // Header Bar
                     if (Navigator.canPop(context))
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: const BoxDecoration(
                           color: Color(0xFFFBF9F8),
                           border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
@@ -193,44 +199,65 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                     // Body scrollable content
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(24),
+                        physics: const ClampingScrollPhysics(),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: isKeyboardOpen ? 6 : 24,
+                        ),
                         child: Column(
                           children: [
-                            // Monochromatic Brand Icon Anchor
-                            Container(
-                              width: 56,
-                              height: 56,
-                              margin: const EdgeInsets.only(bottom: 16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFFE5E7EB)),
+                            if (!isKeyboardOpen) ...[
+                              // Monochromatic Brand Icon Anchor
+                              Container(
+                                width: 56,
+                                height: 56,
+                                margin: const EdgeInsets.only(bottom: 16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                                ),
+                                child: const Icon(
+                                  Icons.storefront_outlined,
+                                  size: 28,
+                                  color: Color(0xFF1B1C1C),
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.storefront_outlined,
-                                size: 28,
-                                color: Color(0xFF1B1C1C),
-                              ),
-                            ),
+                            ],
 
-                            Text(
-                              'Welcome',
-                              style: GoogleFonts.inter(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF1B1C1C),
-                                letterSpacing: -0.5,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (isKeyboardOpen) ...[
+                                  const Icon(
+                                    Icons.storefront_outlined,
+                                    size: 20,
+                                    color: Color(0xFF1B1C1C),
+                                  ),
+                                  const SizedBox(width: 8),
+                                ],
+                                Text(
+                                  'Welcome',
+                                  style: GoogleFonts.inter(
+                                    fontSize: isKeyboardOpen ? 18 : 24,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF1B1C1C),
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Log in to securely manage your shop.',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                color: const Color(0xFF5D5F5F),
+                            if (!isKeyboardOpen) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'Log in to securely manage your shop.',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  color: const Color(0xFF5D5F5F),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 24),
+                            ],
+                            SizedBox(height: isKeyboardOpen ? 8 : 24),
 
                             // Form Fields
                             Column(
@@ -239,15 +266,15 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                 Text(
                                   'MOBILE NUMBER',
                                   style: GoogleFonts.inter(
-                                    fontSize: 11,
+                                    fontSize: isKeyboardOpen ? 10 : 11,
                                     fontWeight: FontWeight.w500,
                                     color: const Color(0xFF5D5F5F),
                                     letterSpacing: 0.5,
                                   ),
                                 ),
-                                const SizedBox(height: 6),
+                                SizedBox(height: isKeyboardOpen ? 3 : 6),
                                 Container(
-                                  height: 48,
+                                  height: isKeyboardOpen ? 42 : 48,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
@@ -279,11 +306,17 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                         child: TextField(
                                           controller: _mobileController,
                                           keyboardType: TextInputType.phone,
+                                          textInputAction: TextInputAction.next,
+                                          scrollPadding: EdgeInsets.only(bottom: isKeyboardOpen ? 16 : 90),
                                           inputFormatters: [
                                             FilteringTextInputFormatter.digitsOnly,
                                             LengthLimitingTextInputFormatter(10),
                                           ],
-                                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1B1C1C)),
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xFF1B1C1C),
+                                          ),
                                           decoration: InputDecoration(
                                             hintText: 'Enter Phone Number',
                                             hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F)),
@@ -295,20 +328,20 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 16),
+                                SizedBox(height: isKeyboardOpen ? 8 : 16),
 
                                 Text(
                                   'SECURITY PASSWORD',
                                   style: GoogleFonts.inter(
-                                    fontSize: 11,
+                                    fontSize: isKeyboardOpen ? 10 : 11,
                                     fontWeight: FontWeight.w500,
                                     color: const Color(0xFF5D5F5F),
                                     letterSpacing: 0.5,
                                   ),
                                 ),
-                                const SizedBox(height: 6),
+                                SizedBox(height: isKeyboardOpen ? 3 : 6),
                                 Container(
-                                  height: 48,
+                                  height: isKeyboardOpen ? 42 : 48,
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
@@ -324,7 +357,14 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                         child: TextField(
                                           controller: _passwordController,
                                           obscureText: _obscurePassword,
-                                          style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: const Color(0xFF1B1C1C)),
+                                          textInputAction: TextInputAction.done,
+                                          onSubmitted: (_) => _login(),
+                                          scrollPadding: EdgeInsets.only(bottom: isKeyboardOpen ? 16 : 90),
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                            color: const Color(0xFF1B1C1C),
+                                          ),
                                           decoration: InputDecoration(
                                             hintText: 'Enter password',
                                             hintStyle: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F)),
@@ -346,7 +386,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: isKeyboardOpen ? 4 : 8),
 
                                 Align(
                                   alignment: Alignment.centerRight,
@@ -357,7 +397,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                     child: Text(
                                       'Forgot Password?',
                                       style: GoogleFonts.inter(
-                                        fontSize: 13,
+                                        fontSize: isKeyboardOpen ? 12 : 13,
                                         fontWeight: FontWeight.w500,
                                         color: const Color(0xFF5D5F5F),
                                         decoration: TextDecoration.underline,
@@ -365,11 +405,11 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 20),
+                                SizedBox(height: isKeyboardOpen ? 8 : 20),
 
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 48,
+                                  height: isKeyboardOpen ? 44 : 48,
                                   child: ElevatedButton(
                                     onPressed: _isLoading ? null : _login,
                                     style: ElevatedButton.styleFrom(
@@ -379,8 +419,18 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                       elevation: 0,
                                     ),
                                     child: _isLoading
-                                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                        : Text('Login', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600)),
+                                        ? const SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                          )
+                                        : Text(
+                                            'Login',
+                                            style: GoogleFonts.inter(
+                                              fontSize: isKeyboardOpen ? 15 : 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                   ),
                                 ),
                               ],
@@ -391,44 +441,45 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                       ),
                     ),
 
-                    // Bottom Navigation Footer
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF5F3F3),
-                        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+                    // Bottom Navigation Footer (Hidden when keyboard is open)
+                    if (!isKeyboardOpen)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF5F3F3),
+                          border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('New user? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F))),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const RegistrationScreen()));
+                                  },
+                                  child: Text('Register here', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C), decoration: TextDecoration.underline)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Super Admin? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F))),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
+                                  },
+                                  child: Text('Login here', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C), decoration: TextDecoration.underline)),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('New user? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F))),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const RegistrationScreen()));
-                                },
-                                child: Text('Register here', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C), decoration: TextDecoration.underline)),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text('Super Admin? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F))),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
-                                },
-                                child: Text('Login here', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C), decoration: TextDecoration.underline)),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -439,4 +490,3 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
     );
   }
 }
-

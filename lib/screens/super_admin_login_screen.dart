@@ -74,6 +74,7 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F3F3),
       body: SafeArea(
@@ -81,7 +82,7 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              margin: EdgeInsets.symmetric(horizontal: 12, vertical: isKeyboardOpen ? 4 : 12),
               decoration: BoxDecoration(
                 color: const Color(0xFFFBF9F8),
                 borderRadius: BorderRadius.circular(16),
@@ -124,12 +125,12 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                     // Body
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
+                        padding: EdgeInsets.symmetric(horizontal: isKeyboardOpen ? 12 : 20, vertical: isKeyboardOpen ? 10 : 20),
                         child: Column(
                           children: [
                             // Main Card Container
                             Container(
-                              padding: const EdgeInsets.all(20),
+                              padding: EdgeInsets.symmetric(horizontal: isKeyboardOpen ? 12 : 20, vertical: isKeyboardOpen ? 10 : 20),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
@@ -137,40 +138,42 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                               ),
                               child: Column(
                                 children: [
-                                  // Security Shield Badge Icon
-                                  Stack(
-                                    children: [
-                                      Container(
-                                        width: 56,
-                                        height: 56,
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFFFBF9F8),
-                                          borderRadius: BorderRadius.circular(12),
-                                          border: Border.all(color: const Color(0xFFE5E7EB)),
-                                        ),
-                                        child: const Icon(
-                                          Icons.verified_user_outlined,
-                                          size: 28,
-                                          color: Color(0xFF1B1C1C),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        right: 0,
-                                        bottom: 0,
-                                        child: Container(
-                                          width: 20,
-                                          height: 20,
+                                  if (!isKeyboardOpen) ...[
+                                    // Security Shield Badge Icon
+                                    Stack(
+                                      children: [
+                                        Container(
+                                          width: 56,
+                                          height: 56,
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFF1B1C1C),
-                                            shape: BoxShape.circle,
-                                            border: Border.all(color: Colors.white, width: 1.5),
+                                            color: const Color(0xFFFBF9F8),
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(color: const Color(0xFFE5E7EB)),
                                           ),
-                                          child: const Icon(Icons.person, size: 12, color: Colors.white),
+                                          child: const Icon(
+                                            Icons.verified_user_outlined,
+                                            size: 28,
+                                            color: Color(0xFF1B1C1C),
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
+                                        Positioned(
+                                          right: 0,
+                                          bottom: 0,
+                                          child: Container(
+                                            width: 20,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF1B1C1C),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(color: Colors.white, width: 1.5),
+                                            ),
+                                            child: const Icon(Icons.person, size: 12, color: Colors.white),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                  ],
                                   Text(
                                     'Super Admin',
                                     style: GoogleFonts.inter(
@@ -180,15 +183,17 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                                       letterSpacing: -0.5,
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Sign in to platform control center',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      color: const Color(0xFF5D5F5F),
+                                  if (!isKeyboardOpen) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Sign in to platform control center',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 13,
+                                        color: const Color(0xFF5D5F5F),
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 20),
+                                  ],
+                                  SizedBox(height: isKeyboardOpen ? 12 : 20),
 
 
                                   // Field 1: LOGIN ID
@@ -221,6 +226,7 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                                             Expanded(
                                               child: TextField(
                                                 controller: _idController,
+                                                scrollPadding: EdgeInsets.only(bottom: isKeyboardOpen ? 16 : 90),
                                                 style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF1B1C1C)),
                                                 decoration: InputDecoration(
                                                   hintText: 'Enter admin ID',
@@ -286,6 +292,7 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                                               Expanded(
                                                 child: TextField(
                                                   controller: _passwordController,
+                                                  scrollPadding: EdgeInsets.only(bottom: isKeyboardOpen ? 16 : 90),
                                                   obscureText: _obscurePassword,
                                                   style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF1B1C1C)),
                                                   decoration: InputDecoration(
@@ -385,7 +392,8 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                             ),
                             const SizedBox(height: 12),
 
-                            // Security Metadata Grid Matrix
+                            if (!isKeyboardOpen) ...[
+                              // Security Metadata Grid Matrix
                             Container(
                               padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                               decoration: BoxDecoration(
@@ -427,12 +435,14 @@ class _SuperAdminLoginScreenState extends State<SuperAdminLoginScreen> {
                                 ],
                               ),
                             ),
+                            ],
                           ],
                         ),
                       ),
                     ),
 
                     // Bottom Footer
+                    if (!isKeyboardOpen)
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
