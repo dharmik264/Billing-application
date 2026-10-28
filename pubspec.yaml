@@ -3,7 +3,7 @@ description: A new Flutter project for billing application with OTP login.
 
 publish_to: 'none'
 
-version: 1.0.15+16
+version: 1.0.16+17
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

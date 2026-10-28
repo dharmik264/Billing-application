@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
+  <defs>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00A0FF" />
+      <stop offset="100%" stop-color="#004BEB" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="80" y="80" width="864" height="864" rx="210" ry="210" fill="url(#blueGradient)" stroke="rgba(255,255,255,0.25)" stroke-width="6" />
+
+  <!-- Cash Drawer (Bottom) -->
+  <rect x="305" y="605" width="414" height="75" rx="12" ry="12" fill="none" stroke="#FFFFFF" stroke-width="21" stroke-linejoin="round" />
+  
+  <!-- Drawer Handle -->
+  <rect x="485" y="635" width="54" height="15" rx="7.5" ry="7.5" fill="#FFFFFF" />
+
+  <!-- Cash Register Body / Counter Trapezoid -->
+  <path d="M 315 605 L 330 480 L 694 480 L 709 605" fill="none" stroke="#FFFFFF" stroke-width="21" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Shelf Behind Counter -->
+  <path d="M 330 480 L 360 415 L 664 415 L 694 480" fill="none" stroke="#FFFFFF" stroke-width="21" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Left Guide Tab -->
+  <line x1="342" y1="425" x2="342" y2="470" stroke="#FFFFFF" stroke-width="21" stroke-linecap="round" />
+
+  <!-- POS Display Monitor -->
+  <line x1="615" y1="415" x2="615" y2="380" stroke="#FFFFFF" stroke-width="21" stroke-linecap="round" />
+  <rect x="558" y="308" width="114" height="72" rx="10" ry="10" fill="none" stroke="#FFFFFF" stroke-width="21" stroke-linejoin="round" />
+
+  <!-- Keypad Buttons (3x3 grid) -->
+  <circle cx="554" cy="505" r="11" fill="#FFFFFF" />
+  <circle cx="594" cy="505" r="11" fill="#FFFFFF" />
+  <circle cx="634" cy="505" r="11" fill="#FFFFFF" />
+  <circle cx="554" cy="535" r="11" fill="#FFFFFF" />
+  <circle cx="594" cy="535" r="11" fill="#FFFFFF" />
+  <circle cx="634" cy="535" r="11" fill="#FFFFFF" />
+  <circle cx="554" cy="565" r="11" fill="#FFFFFF" />
+  <circle cx="594" cy="565" r="11" fill="#FFFFFF" />
+  <circle cx="634" cy="565" r="11" fill="#FFFFFF" />
+
+  <!-- Paper Roll Left Back Shell -->
+  <rect x="378" y="310" width="44" height="160" rx="18" ry="18" fill="none" stroke="#FFFFFF" stroke-width="21" />
+
+  <!-- Receipt Paper Sheet -->
+  <path d="M 400 330
+           C 400 310, 420 310, 420 310
+           L 505 310
+           C 525 310, 525 330, 525 330
+           L 525 555
+           L 500 531
+           L 475 555
+           L 450 531
+           L 425 555
+           L 400 531
+           Z" fill="#FFFFFF" />
+
+  <!-- Printed Text Lines on Receipt -->
+  <rect x="444" y="390" width="36" height="12" rx="6" ry="6" fill="#0072EA" />
+  <rect x="494" y="390" width="16" height="12" rx="6" ry="6" fill="#0072EA" />
+
+  <rect x="444" y="416" width="36" height="12" rx="6" ry="6" fill="#0072EA" />
+  <rect x="494" y="416" width="16" height="12" rx="6" ry="6" fill="#0072EA" />
+
+  <rect x="444" y="442" width="28" height="12" rx="6" ry="6" fill="#0072EA" />
+  <rect x="494" y="442" width="16" height="12" rx="6" ry="6" fill="#0072EA" />
+</svg>
