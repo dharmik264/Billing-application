@@ -1692,9 +1692,22 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Tax',
-                        style: GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 12, fontWeight: FontWeight.w500),
+                      Builder(
+                        builder: (context) {
+                          final billSettings = RestaurantApi.instance.shopData?.billSettings ?? {};
+                          final taxPercentVal = billSettings['tax_percent'] ?? 0.0;
+                          double tPercent = 0.0;
+                          if (taxPercentVal is num) {
+                            tPercent = taxPercentVal.toDouble();
+                          } else if (taxPercentVal is String) {
+                            tPercent = double.tryParse(taxPercentVal) ?? 0.0;
+                          }
+                          final tStr = (tPercent % 1 == 0) ? tPercent.toStringAsFixed(1) : tPercent.toString();
+                          return Text(
+                            tPercent > 0 ? 'Tax ($tStr%)' : 'Tax',
+                            style: GoogleFonts.inter(color: const Color(0xFF71717A), fontSize: 12, fontWeight: FontWeight.w500),
+                          );
+                        },
                       ),
                       Text(
                         '\u20B9${_taxAmount.toStringAsFixed(2)}',

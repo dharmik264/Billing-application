@@ -245,17 +245,15 @@ class PdfExport {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey300),
       columnWidths: const {
-        0: pw.FlexColumnWidth(1.1), // Bill No
-        1: pw.FlexColumnWidth(1.0), // Token No
-        2: pw.FlexColumnWidth(1.2), // Type
-        3: pw.FlexColumnWidth(1.8), // Customer
-        4: pw.FlexColumnWidth(1.8), // Date
-        5: pw.FlexColumnWidth(2.8), // Items
-        6: pw.FlexColumnWidth(1.3), // Subtotal
-        7: pw.FlexColumnWidth(1.1), // GST
-        8: pw.FlexColumnWidth(1.4), // Final Amount
-        9: pw.FlexColumnWidth(1.3), // Payment
-        10: pw.FlexColumnWidth(1.2), // Status
+        0: pw.FlexColumnWidth(1.2), // Bill No
+        1: pw.FlexColumnWidth(1.1), // Token No
+        2: pw.FlexColumnWidth(2.2), // Customer
+        3: pw.FlexColumnWidth(2.0), // Date & Time
+        4: pw.FlexColumnWidth(3.2), // Items
+        5: pw.FlexColumnWidth(1.5), // Subtotal
+        6: pw.FlexColumnWidth(1.3), // GST
+        7: pw.FlexColumnWidth(1.7), // Final Amount
+        8: pw.FlexColumnWidth(1.6), // Payment Mode
       },
       children: [
         pw.TableRow(
@@ -263,7 +261,6 @@ class PdfExport {
           children: [
             _headerCell('Bill No'),
             _headerCell('Token No'),
-            _headerCell('Type'),
             _headerCell('Customer'),
             _headerCell('Date & Time'),
             _headerCell('Items'),
@@ -271,7 +268,6 @@ class PdfExport {
             _headerCell('GST (Rs.)', align: pw.TextAlign.right),
             _headerCell('Final Amt (Rs.)', align: pw.TextAlign.right),
             _headerCell('Payment Mode', align: pw.TextAlign.center),
-            _headerCell('Status', align: pw.TextAlign.center),
           ],
         ),
         for (var t in tokens)
@@ -279,7 +275,6 @@ class PdfExport {
             children: [
               _dataCell(t.billNumber),
               _dataCell(t.tokenNumber),
-              _dataCell(t.orderType),
               _dataCell(t.customerName.isEmpty
                   ? '-'
                   : '${t.customerName}\n${t.customerPhone}'),
@@ -292,7 +287,6 @@ class PdfExport {
               _dataCell(t.finalAmount.toStringAsFixed(2),
                   align: pw.TextAlign.right),
               _dataCell(t.payment, align: pw.TextAlign.center),
-              _statusBadge(t.status),
             ],
           ),
       ],
@@ -326,36 +320,6 @@ class PdfExport {
     );
   }
 
-  static pw.Widget _statusBadge(String status) {
-    PdfColor bgColor;
-    PdfColor textColor;
-
-    if (status.toLowerCase() == 'completed') {
-      bgColor = PdfColors.green50;
-      textColor = PdfColors.green800;
-    } else if (status.toLowerCase() == 'cancelled') {
-      bgColor = PdfColors.red50;
-      textColor = PdfColors.red800;
-    } else {
-      bgColor = PdfColors.orange50;
-      textColor = PdfColors.orange800;
-    }
-
-    return pw.Container(
-      margin: const pw.EdgeInsets.all(4),
-      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: pw.BoxDecoration(
-        color: bgColor,
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
-      ),
-      child: pw.Text(
-        status,
-        textAlign: pw.TextAlign.center,
-        style: pw.TextStyle(
-            fontSize: 8, fontWeight: pw.FontWeight.bold, color: textColor),
-      ),
-    );
-  }
 
   static Future<String> exportItemDetailReport({
     required List<PdfItemDetailRow> items,

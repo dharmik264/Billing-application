@@ -131,6 +131,17 @@ class BillReceiptWidget extends StatelessWidget {
 
     final upiIdStr = shopData?.upiId;
 
+    final billSettings = shopData?.billSettings ?? RestaurantApi.instance.shopData?.billSettings ?? {};
+    final taxPercentValue = billSettings['tax_percent'] ?? 0.0;
+    double taxPercent = 0.0;
+    if (taxPercentValue is num) {
+      taxPercent = taxPercentValue.toDouble();
+    } else if (taxPercentValue is String) {
+      taxPercent = double.tryParse(taxPercentValue) ?? 0.0;
+    }
+    final effectiveTax = taxPercent > 0.0 ? (tax > 0 ? tax : (subtotal * taxPercent) / 100.0) : 0.0;
+    final effectiveGrandTotal = grandTotal > 0 ? grandTotal : (subtotal + effectiveTax);
+
     final printFontSize = customFontSize ?? (is80mm ? 55.0 : 16.0);
     final baseStyle = TextStyle(fontSize: isForPrint ? printFontSize : 10, color: isForPrint ? Colors.black : textSecondary, fontWeight: isForPrint ? FontWeight.bold : FontWeight.normal);
 
@@ -425,26 +436,19 @@ class BillReceiptWidget extends StatelessWidget {
             _receiptTotalRow('Subtotal', _money(subtotal), size: isForPrint ? 24 : 11),
             const SizedBox(height: 3),
             _receiptTotalRow('Discount', _money(discount), size: isForPrint ? 24 : 11),
-            const SizedBox(height: 3),
-            Builder(
-              builder: (context) {
-                final billSettings = shopData?.billSettings ?? {};
-                final taxPercentValue = billSettings['tax_percent'] ?? 0.0;
-                double taxPercent = 0.0;
-                if (taxPercentValue is num) {
-                  taxPercent = taxPercentValue.toDouble();
-                } else if (taxPercentValue is String) {
-                  taxPercent = double.tryParse(taxPercentValue) ?? 0.0;
-                }
-                final label = taxPercent > 0 ? 'Tax (GST ${taxPercent.toStringAsFixed(0)}%)' : 'Tax';
-                return _receiptTotalRow(label, _money(tax), size: isForPrint ? 24 : 11);
-              },
-            ),
+            if (taxPercent > 0.0) ...[
+              const SizedBox(height: 3),
+              _receiptTotalRow(
+                'Tax (${(taxPercent % 1 == 0) ? taxPercent.toStringAsFixed(1) : taxPercent.toString()}%)',
+                _money(effectiveTax),
+                size: isForPrint ? 24 : 11,
+              ),
+            ],
             const SizedBox(height: 3),
             _receiptTotalRow('Round Off', _money(roundOff), size: isForPrint ? 24 : 11),
             const SizedBox(height: 7),
             _receiptTotalRow(
-                'Grand Total', _money(grandTotal > 0 ? grandTotal : subtotal),
+                'Grand Total', _money(effectiveGrandTotal),
                 bold: true, size: isForPrint ? 28 : 10),
             const SizedBox(height: 8),
             if (template.showPaymentMethod) ...[
@@ -463,7 +467,7 @@ class BillReceiptWidget extends StatelessWidget {
             const SizedBox(height: 8),
             if (upiIdStr != null && upiIdStr.isNotEmpty) ...[
               QrImageView(
-                data: 'upi://pay?pa=$upiIdStr&pn=${Uri.encodeComponent(shopName)}&am=${(grandTotal > 0 ? grandTotal : subtotal).toStringAsFixed(2)}&cu=INR',
+                data: 'upi://pay?pa=$upiIdStr&pn=${Uri.encodeComponent(shopName)}&am=${effectiveGrandTotal.toStringAsFixed(2)}&cu=INR',
                 version: QrVersions.auto,
                 size: 64.0,
               ),
@@ -473,7 +477,7 @@ class BillReceiptWidget extends StatelessWidget {
                     style: TextStyle(fontSize: isForPrint ? 19 : 9, color: isForPrint ? Colors.black : textPrimary)),
               ],
               const SizedBox(height: 4),
-              Text('Scan to Pay ${_money(grandTotal > 0 ? grandTotal : subtotal)}',
+              Text('Scan to Pay ${_money(effectiveGrandTotal)}',
                   style: TextStyle(fontSize: isForPrint ? 22 : 10, color: isForPrint ? Colors.black : textPrimary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
             ]
@@ -491,7 +495,7 @@ class BillReceiptWidget extends StatelessWidget {
                         errorBuilder: (c, e, s) => const SizedBox()),
               ),
               const SizedBox(height: 4),
-              Text('Scan to Pay ${_money(grandTotal > 0 ? grandTotal : subtotal)}',
+              Text('Scan to Pay ${_money(effectiveGrandTotal)}',
                   style: TextStyle(fontSize: isForPrint ? 22 : 10, color: isForPrint ? Colors.black : textPrimary, fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
             ],

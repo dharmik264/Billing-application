@@ -39,7 +39,7 @@ class PdfReceiptService {
           final computedTax = token.grandTotal - computedSubtotal;
           
           final double gstPercent = (computedSubtotal > 0 && computedTax > 0) ? (computedTax / computedSubtotal) * 100 : 0.0;
-          final String gstPercentStr = (gstPercent % 1 == 0) ? gstPercent.toStringAsFixed(0) : gstPercent.toStringAsFixed(1);
+          final String gstPercentStr = (gstPercent % 1 == 0) ? gstPercent.toStringAsFixed(1) : gstPercent.toString();
 
           if (!isThermal) {
             return _buildA4Layout(
@@ -179,13 +179,14 @@ class PdfReceiptService {
                   pw.Text('Rs. 0.00'),
                 ],
               ),
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Text('GST ($gstPercentStr%):'),
-                  pw.Text('Rs. ${computedTax.toStringAsFixed(2)}'),
-                ],
-              ),
+              if (computedTax > 0.001)
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Text('Tax ($gstPercentStr%):'),
+                    pw.Text('Rs. ${computedTax.toStringAsFixed(2)}'),
+                  ],
+                ),
               pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
@@ -413,14 +414,16 @@ class PdfReceiptService {
                       pw.Text(computedSubtotal.toStringAsFixed(2)),
                     ]
                   ),
-                  pw.SizedBox(height: 6),
-                  pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: [
-                      pw.Text('GST ($gstPercentStr%):'),
-                      pw.Text(computedTax.toStringAsFixed(2)),
-                    ]
-                  ),
+                  if (computedTax > 0.001) ...[
+                    pw.SizedBox(height: 6),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('Tax ($gstPercentStr%):'),
+                        pw.Text(computedTax.toStringAsFixed(2)),
+                      ]
+                    ),
+                  ],
                   pw.SizedBox(height: 6),
                   pw.Divider(thickness: 1),
                   pw.SizedBox(height: 6),

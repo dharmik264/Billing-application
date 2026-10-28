@@ -500,15 +500,6 @@ class DashboardScreenState extends State<DashboardScreen> {
                     style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF5D5F5F)),
                   ),
                 ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 65,
-                  child: Text(
-                    'Status',
-                    textAlign: TextAlign.right,
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF5D5F5F)),
-                  ),
-                ),
               ],
             ),
           ),
@@ -575,21 +566,6 @@ class DashboardScreenState extends State<DashboardScreen> {
     final name = token.rawToken.customerName.trim().isNotEmpty
         ? token.rawToken.customerName.trim()
         : 'Token #${token.tokenNumber}';
-    
-    // Status text mapping
-    String statusStr = 'Paid';
-    final pm = token.paymentMode.toLowerCase();
-    if (token.status.toUpperCase() == 'CANCELLED') {
-      statusStr = 'Cancelled';
-    } else if (pm == 'credit' || pm == 'udhar' || pm == 'due' || token.rawToken.balanceDue > 0) {
-      if (token.rawToken.receivedAmount > 0) {
-        statusStr = 'Partial';
-      } else {
-        statusStr = 'Pending';
-      }
-    } else {
-      statusStr = 'Paid';
-    }
 
     return InkWell(
       onTap: () => _showTokenOptions(token),
@@ -616,33 +592,13 @@ class DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
             ),
-            // Middle: Amount
+            // Right: Amount
             SizedBox(
               width: 90,
               child: Text(
                 '\u20B9${token.amount.toStringAsFixed(0)}',
                 textAlign: TextAlign.right,
                 style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF111111)),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Right: Status Badge
-            SizedBox(
-              width: 65,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFEDED),
-                    border: Border.all(color: const Color(0xFFE5E5E5)),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    statusStr,
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFF111111)),
-                  ),
-                ),
               ),
             ),
           ],

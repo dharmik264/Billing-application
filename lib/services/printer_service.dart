@@ -353,8 +353,10 @@
         final computedTax = token.grandTotal - computedSubtotal;
 
         bluetooth.printCustom(_justify('Subtotal:', computedSubtotal.toStringAsFixed(2), 32), 1, 0);
-        if (computedTax > 0) {
-          bluetooth.printCustom(_justify('Tax:', computedTax.toStringAsFixed(2), 32), 1, 0);
+        if (computedTax > 0.001) {
+          final gstPercent = (computedSubtotal > 0) ? (computedTax / computedSubtotal) * 100 : 0.0;
+          final gstPercentStr = (gstPercent % 1 == 0) ? gstPercent.toStringAsFixed(1) : gstPercent.toString();
+          bluetooth.printCustom(_justify('Tax ($gstPercentStr%):', computedTax.toStringAsFixed(2), 32), 1, 0);
         }
         bluetooth
           ..printCustom('=' * 32, 1, 0)
