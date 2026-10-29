@@ -23,15 +23,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   bool _isLoading = false;
 
   final _phoneCtrl = TextEditingController();
-  final _otpCtrl = TextEditingController();
+  final List<TextEditingController> _otpControllers = List.generate(4, (_) => TextEditingController());
+  final List<FocusNode> _otpFocusNodes = List.generate(4, (_) => FocusNode());
   final _newPassCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
 
   bool _obscureNew = true;
   bool _obscureConfirm = true;
   String _phone = '';
+  String? _serverOtp;
   int _secondsLeft = 60;
   Timer? _timer;
+
+  String get _enteredOtp => _otpControllers.map((c) => c.text.trim()).join();
 
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
@@ -50,7 +54,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   @override
   void dispose() {
     _phoneCtrl.dispose();
-    _otpCtrl.dispose();
+    for (var c in _otpControllers) {
+      c.dispose();
+    }
+    for (var f in _otpFocusNodes) {
+      f.dispose();
+    }
     _newPassCtrl.dispose();
     _confirmPassCtrl.dispose();
     _timer?.cancel();
@@ -73,15 +82,52 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     _animCtrl.forward();
   }
 
+  void _onOtpChanged(String value, int index) {
+    if (value.length > 1) {
+      final clean = value.replaceAll(RegExp(r'[^\d]'), '');
+      for (int i = 0; i < 4 && i < clean.length; i++) {
+        _otpControllers[i].text = clean[i];
+      }
+      if (clean.length >= 4) {
+        _otpFocusNodes[3].unfocus();
+      } else {
+        FocusScope.of(context).requestFocus(_otpFocusNodes[clean.length.clamp(0, 3)]);
+      }
+      setState(() {});
+      return;
+    }
+    if (value.isNotEmpty) {
+      if (index < 3) {
+        FocusScope.of(context).requestFocus(_otpFocusNodes[index + 1]);
+      } else {
+        _otpFocusNodes[index].unfocus();
+      }
+    } else if (value.isEmpty && index > 0) {
+      FocusScope.of(context).requestFocus(_otpFocusNodes[index - 1]);
+    }
+    setState(() {});
+  }
+
   Future<void> _sendOtp() async {
     final phone = _phoneCtrl.text.trim().replaceAll(RegExp(r'[^\d]'), '');
     if (phone.length != 10) { _showError('Please enter a valid 10-digit phone number'); return; }
     setState(() => _isLoading = true);
     try {
-      await RestaurantApi.instance.forgotPasswordRequest(phone);
+      final res = await RestaurantApi.instance.forgotPasswordRequest(phone);
       _phone = phone;
+      if (res.containsKey('otp')) {
+        _serverOtp = res['otp']?.toString();
+      }
+      for (var c in _otpControllers) {
+        c.clear();
+      }
       _startTimer();
       _nextStep();
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          FocusScope.of(context).requestFocus(_otpFocusNodes[0]);
+        }
+      });
     } catch (e) {
       _showError(e.toString().replaceAll('Exception: ', ''));
     } finally {
@@ -90,8 +136,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   }
 
   Future<void> _verifyOtp() async {
-    final otp = _otpCtrl.text.trim();
-    if (otp.length != 6) { _showError('Please enter the 6-digit OTP'); return; }
+    final otp = _enteredOtp;
+    if (otp.length != 4) {
+      _showError('Please enter the 4-digit OTP');
+      return;
+    }
+    if (_serverOtp != null && _serverOtp!.isNotEmpty && otp != _serverOtp) {
+      _showError('Invalid OTP. Please check and try again.');
+      return;
+    }
     _nextStep();
   }
 
@@ -102,14 +155,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     if (newPass != confirm) { _showError('Passwords do not match'); return; }
     setState(() => _isLoading = true);
     try {
+      final otp = _enteredOtp;
       await RestaurantApi.instance.resetPassword(
         phone: _phone,
-        otp: _otpCtrl.text.trim(),
+        otp: otp,
         newPassword: newPass,
       );
       _showSuccess();
     } catch (e) {
-      _showError(e.toString().replaceAll('Exception: ', ''));
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
+      _showError(errorMsg);
+      // If error is related to invalid or expired OTP, return to OTP step
+      if (errorMsg.toLowerCase().contains('otp')) {
+        _animCtrl.reset();
+        setState(() => _step = 1);
+        _animCtrl.forward();
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            FocusScope.of(context).requestFocus(_otpFocusNodes[0]);
+          }
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -119,11 +185,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     if (_secondsLeft > 0) return;
     setState(() => _isLoading = true);
     try {
-      await RestaurantApi.instance.forgotPasswordRequest(_phone);
+      final res = await RestaurantApi.instance.forgotPasswordRequest(_phone);
+      if (res.containsKey('otp')) {
+        _serverOtp = res['otp']?.toString();
+      }
+      for (var c in _otpControllers) {
+        c.clear();
+      }
       _startTimer();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('OTP resent!'), backgroundColor: Color(0xFF10B981)));
+        FocusScope.of(context).requestFocus(_otpFocusNodes[0]);
       }
     } catch (e) { _showError(e.toString().replaceAll('Exception: ', '')); }
     finally { if (mounted) setState(() => _isLoading = false); }
@@ -275,14 +348,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         TextSpan(text: 'OTP sent to ', style: GoogleFonts.inter(fontSize: 15, color: _textSecondary)),
         TextSpan(text: '+91 $_phone', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: _textPrimary)),
       ]), textAlign: TextAlign.center),
+      const SizedBox(height: 8),
+      Text('Enter the 4-digit OTP',
+        style: GoogleFonts.inter(fontSize: 14, color: _textSecondary), textAlign: TextAlign.center),
       const SizedBox(height: 32),
-      _inputField(controller: _otpCtrl, hintText: '6-digit OTP',
-        prefix: const Padding(padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Icon(Icons.pin_rounded, color: Color(0xFF94A3B8), size: 20)),
-        keyboardType: TextInputType.number,
-        formatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(6)],
-        letterSpacing: 8),
-      const SizedBox(height: 12),
+      _buildOtpBoxes(),
+      const SizedBox(height: 20),
       Center(child: _secondsLeft > 0
         ? Text.rich(TextSpan(children: [
             TextSpan(text: 'Resend OTP in ', style: GoogleFonts.inter(color: _textSecondary, fontSize: 13)),
@@ -293,6 +364,61 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       const SizedBox(height: 32),
       _primaryButton(label: 'Verify OTP', onTap: _verifyOtp),
     ]);
+  }
+
+  Widget _buildOtpBoxes() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(4, (index) {
+        final hasFocus = _otpFocusNodes[index].hasFocus;
+        final hasValue = _otpControllers[index].text.isNotEmpty;
+        return Container(
+          width: 58,
+          height: 60,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            color: hasFocus ? Colors.white : _softBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: hasFocus
+                  ? _primary
+                  : (hasValue ? _primary.withValues(alpha: 0.5) : const Color(0xFFE2E8F0)),
+              width: hasFocus ? 2 : 1,
+            ),
+            boxShadow: hasFocus
+                ? [
+                    BoxShadow(
+                      color: _primary.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    )
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: TextField(
+              controller: _otpControllers[index],
+              focusNode: _otpFocusNodes[index],
+              maxLength: 1,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (value) => _onOtpChanged(value, index),
+              style: GoogleFonts.inter(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: _textPrimary,
+              ),
+              decoration: const InputDecoration(
+                counterText: '',
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+        );
+      }),
+    );
   }
 
   Widget _buildStep2() {
