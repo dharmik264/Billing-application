@@ -87,4 +87,6 @@ app.*.map.json
 **/venv/
 backend/db.sqlite3
 backend/backups/
+.env
+*.env
 

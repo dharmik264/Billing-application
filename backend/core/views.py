@@ -1,7 +1,7 @@
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from datetime import timedelta
@@ -535,35 +535,50 @@ class SuperAdminLoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        username = str(request.data.get('username') or '').strip()
+        password = str(request.data.get('password') or '').strip()
 
-        if username == 'admin' and password == 'admin':
-            # Get or create the '9999999999' super admin account
-            user, created = User.objects.get_or_create(
-                phone='9999999999',
-                defaults={
-                    'name': 'Super Admin',
-                    'is_staff': True,
-                    'is_superuser': True,
-                    'account_status': 'approved'
-                }
-            )
-            
-            # Ensure it always has privileges
-            if not user.is_staff or not user.is_superuser:
-                user.is_staff = True
-                user.is_superuser = True
-                user.save()
-            
+        if not username or not password:
+            return Response({'error': 'Admin ID and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = None
+
+        # 1. Check environment variables for super admin credentials if explicitly configured
+        env_admin_user = os.getenv('SUPER_ADMIN_USERNAME')
+        env_admin_pass = os.getenv('SUPER_ADMIN_PASSWORD')
+        if env_admin_user and env_admin_pass:
+            if username == env_admin_user and password == env_admin_pass:
+                user = User.objects.filter(is_superuser=True).first()
+                if not user:
+                    user, _ = User.objects.get_or_create(
+                        phone='9999999999',
+                        defaults={
+                            'name': 'Super Admin',
+                            'is_staff': True,
+                            'is_superuser': True,
+                            'account_status': 'approved'
+                        }
+                    )
+                    user.is_staff = True
+                    user.is_superuser = True
+                    user.save()
+
+        # 2. Check database credentials by phone or email
+        if not user:
+            candidate = User.objects.filter(phone=username).first()
+            if not candidate:
+                candidate = User.objects.filter(email__iexact=username).first()
+            if candidate and candidate.check_password(password) and (candidate.is_staff or candidate.is_superuser):
+                user = candidate
+
+        if user:
             refresh = RefreshToken.for_user(user)
-
             return Response({
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
                 'user': UserSerializer(user).data,
             }, status=status.HTTP_200_OK)
-            
+
         return Response({'error': 'Invalid admin credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class SuperAdminUsersView(APIView):
@@ -640,7 +655,7 @@ class SuperAdminSubscriptionPlanDetailView(generics.RetrieveUpdateDestroyAPIView
 # ==============================================================================
 
 class DevUsersView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
     
     def get(self, request):
         # Fetch all users, super users first, then by creation date
@@ -672,7 +687,7 @@ class DevUsersView(APIView):
 
 
 class DevLoginView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
     
     def post(self, request):
         phone = request.data.get('phone')
@@ -862,7 +877,7 @@ class SuperAdminPaymentsView(APIView):
 
 
 class TestSMSView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
         phone = request.query_params.get('phone', '6351559728')

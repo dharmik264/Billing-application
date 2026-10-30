@@ -5,13 +5,11 @@ from .views import (
     RegisterView, PasswordLoginView, ShopRequestsView, ShopRequestActionView, SuperAdminStatsView,
     SuperAdminLoginView, SuperAdminUsersView, SuperAdminUpdatePermissionsView,
     SuperAdminDeleteUserView, SuperAdminSubscriptionPlanListCreateView, SuperAdminSubscriptionPlanDetailView,
-    DevUsersView, DevLoginView,
     PublicSubscriptionPlanListView, SystemSettingsView, SubmitSubscriptionPaymentView, SuperAdminPaymentsView,
-    ForgotPasswordRequestView, ForgotPasswordResetView, TestSMSView,
+    ForgotPasswordRequestView, ForgotPasswordResetView,
 )
 
 urlpatterns = [
-    path('test-sms/', TestSMSView.as_view(), name='test-sms'),
     path('send-otp/',    SendOTPView.as_view(),    name='send-otp'),
     path('verify-otp/',  VerifyOTPView.as_view(),  name='verify-otp'),
     path('register/',    RegisterView.as_view(),   name='register'),
@@ -35,13 +33,8 @@ urlpatterns = [
     path('forgot-password/', ForgotPasswordRequestView.as_view(), name='forgot-password'),
     path('reset-password/',  ForgotPasswordResetView.as_view(),   name='reset-password'),
 
-    # Developer Mode Endpoints
-    path('dev/users/', DevUsersView.as_view(), name='dev-users'),
-    path('dev/login/', DevLoginView.as_view(), name='dev-login'),
-
     # Subscription Endpoints (Public/User)
     path('plans/', PublicSubscriptionPlanListView.as_view(), name='public-plans'),
     path('system-settings/', SystemSettingsView.as_view(), name='system-settings'),
     path('subscriptions/pay/', SubmitSubscriptionPaymentView.as_view(), name='subscription-pay'),
 ]
-
