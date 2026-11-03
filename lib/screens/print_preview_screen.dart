@@ -13,6 +13,7 @@ import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
 import '../utils/bill_settings_helper.dart';
 import '../widgets/bill_receipt_widget.dart';
+import '../widgets/bill_a4_receipt_widget.dart';
 import '../widgets/app_bottom_navbar.dart';
 
 import 'main_screen.dart';
@@ -37,6 +38,7 @@ class PrintPreviewScreen extends StatefulWidget {
     required this.grandTotal,
     this.onSaveBill,
     this.fromTokenGeneration = false,
+    this.billFormat,
   });
 
   final String orderId;
@@ -49,6 +51,7 @@ class PrintPreviewScreen extends StatefulWidget {
   final String paymentMode;
   final Future<ApiToken?> Function()? onSaveBill;
   final bool fromTokenGeneration;
+  final String? billFormat;
 
   final String? logoBase64;
   final String? qrBase64;
@@ -80,6 +83,8 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   ApiToken? _savedToken;
   String _billFormat = 'Bill Slip';
 
+  bool get _isA4 => _billFormat.toLowerCase().contains('a4');
+
   final bool _printCustomerSlip = true;
   final bool _printKitchenSlip = true;
   final GlobalKey _receiptKey = GlobalKey();
@@ -103,6 +108,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
   void initState() {
     super.initState();
     _actualTokenNumber = widget.tokenNumber;
+    if (widget.billFormat != null && widget.billFormat!.isNotEmpty) {
+      _billFormat = widget.billFormat!;
+    }
     _initImages();
     PrinterService.instance.attemptAutoConnect();
   }
@@ -165,7 +173,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       } catch (_) {}
     }
 
-    final billFormat = await BillSettingsHelper.getBillFormat();
+    final billFormat = widget.billFormat ?? await BillSettingsHelper.getBillFormat();
 
     setState(() {
       _logoBytes = logo;
@@ -176,8 +184,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       _isLoading = false;
     });
   }
-
-
 
   void _handleBackNavigation() {
     if (widget.fromTokenGeneration) {
@@ -208,7 +214,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         body: SafeArea(
           child: Center(
             child: Container(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: BoxConstraints(maxWidth: _isA4 ? 650 : 420),
               color: _brandBg,
               child: Column(
                 children: [
@@ -222,11 +228,15 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Hardware Status Banner
+                          // Format Selector Tabs (Bill Slip vs Bill A4)
+                          _buildFormatSelector(),
+                          const SizedBox(height: 12),
+
+                          // Hardware / Document Status Banner
                           _buildHardwareStatus(),
                           const SizedBox(height: 16),
 
-                          // Main Invoice Receipt Sheet
+                          // Main Invoice Receipt Sheet (Slip or A4)
                           _buildInvoiceCard(),
                           const SizedBox(height: 16),
 
@@ -236,7 +246,9 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
                           // Helper Text
                           Text(
-                            'Bill stored in daily ledger · Order completed',
+                            _isA4
+                                ? 'A4 Invoice format · Ready for standard printer or sharing'
+                                : 'Thermal Slip format · Order completed',
                             textAlign: TextAlign.center,
                             style: GoogleFonts.inter(
                               fontSize: 11,
@@ -328,7 +340,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
               border: Border.all(color: _brandBorder),
             ),
             child: Text(
-              'TAX INVOICE',
+              _isA4 ? 'A4 INVOICE' : 'TAX INVOICE SLIP',
               style: GoogleFonts.spaceMono(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -341,7 +353,162 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     );
   }
 
+  Widget _buildFormatSelector() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _brandBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() => _billFormat = 'Bill Slip');
+                BillSettingsHelper.setBillFormat('Bill Slip');
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: !_isA4 ? _brandPrimary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.receipt_outlined,
+                        size: 15,
+                        color: !_isA4 ? Colors.white : _brandSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Bill Slip (POS)',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: !_isA4 ? Colors.white : _brandSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                setState(() => _billFormat = 'Bill A4');
+                BillSettingsHelper.setBillFormat('Bill A4');
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: _isA4 ? _brandPrimary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.description_outlined,
+                        size: 15,
+                        color: _isA4 ? Colors.white : _brandSecondary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Bill A4',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: _isA4 ? Colors.white : _brandSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHardwareStatus() {
+    if (_isA4) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _brandBorder),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2563EB),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2563EB).withValues(alpha: 0.4),
+                        blurRadius: 4,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Format: A4 Page',
+                  style: GoogleFonts.spaceMono(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _brandPrimary,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Standard Print / PDF',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: _brandSecondary,
+                  ),
+                ),
+              ],
+            ),
+            GestureDetector(
+              onTap: () {
+                setState(() => _billFormat = 'Bill Slip');
+                BillSettingsHelper.setBillFormat('Bill Slip');
+              },
+              child: Text(
+                'Switch to Slip',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF2563EB),
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return FutureBuilder<bool>(
       future: PrinterService.instance.isConnected,
       builder: (context, snapshot) {
@@ -432,40 +599,73 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       );
     }
 
+    final isA4 = _isA4;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: _brandBorder),
+        boxShadow: isA4
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: RepaintBoundary(
         key: _receiptKey,
-        child: BillReceiptWidget(
-          template: _billTemplate!,
-          shopData: _shopData,
-          tokenNumber: _actualTokenNumber,
-          billNumber: widget.billNumber,
-          customerName: widget.customerName,
-          customerPhone: widget.customerPhone,
-          customerAddress: widget.customerAddress,
-          customerGstNumber: widget.customerGstNumber,
-          date: _formatDate(DateTime.now()),
-          time: _formatTime(DateTime.now()),
-          items: widget.items,
-          subtotal: widget.subtotal,
-          tax: widget.tax,
-          grandTotal: widget.grandTotal,
-          paymentMode: widget.paymentMode,
-          logoBytesOverride: _logoBytes,
-          qrBytesOverride: _qrBytes,
-          isForPrint: _isCapturingForPrint,
-          is80mm: PrinterService.instance.is80mm,
-        ),
+        child: isA4
+            ? BillA4ReceiptWidget(
+                template: _billTemplate!,
+                shopData: _shopData,
+                tokenNumber: _actualTokenNumber,
+                billNumber: widget.billNumber,
+                customerName: widget.customerName,
+                customerPhone: widget.customerPhone,
+                customerAddress: widget.customerAddress,
+                customerGstNumber: widget.customerGstNumber,
+                date: _formatDate(DateTime.now()),
+                time: _formatTime(DateTime.now()),
+                items: widget.items,
+                subtotal: widget.subtotal,
+                tax: widget.tax,
+                grandTotal: widget.grandTotal,
+                paymentMode: widget.paymentMode,
+                logoBytesOverride: _logoBytes,
+                qrBytesOverride: _qrBytes,
+              )
+            : BillReceiptWidget(
+                template: _billTemplate!,
+                shopData: _shopData,
+                tokenNumber: _actualTokenNumber,
+                billNumber: widget.billNumber,
+                customerName: widget.customerName,
+                customerPhone: widget.customerPhone,
+                customerAddress: widget.customerAddress,
+                customerGstNumber: widget.customerGstNumber,
+                date: _formatDate(DateTime.now()),
+                time: _formatTime(DateTime.now()),
+                items: widget.items,
+                subtotal: widget.subtotal,
+                tax: widget.tax,
+                grandTotal: widget.grandTotal,
+                paymentMode: widget.paymentMode,
+                logoBytesOverride: _logoBytes,
+                qrBytesOverride: _qrBytes,
+                isForPrint: _isCapturingForPrint,
+                is80mm: PrinterService.instance.is80mm,
+              ),
       ),
     );
   }
 
   Widget _buildActionButtons() {
+    final isA4 = _isA4;
+
     return Row(
       children: [
         // Solid Black Primary CTA: Print Bill
@@ -497,7 +697,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
                         const Icon(Icons.print_outlined, size: 18),
                         const SizedBox(width: 8),
                         Text(
-                          'Print Bill',
+                          isA4 ? 'Print A4 Bill' : 'Print Bill',
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -528,10 +728,10 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.share_outlined, size: 18),
+                  Icon(isA4 ? Icons.picture_as_pdf_outlined : Icons.share_outlined, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'Share Bill',
+                    isA4 ? 'Share A4 PDF' : 'Share Bill',
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -546,8 +746,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       ],
     );
   }
-
-
 
   ApiToken _generatePreviewToken() {
     return ApiToken(
@@ -610,7 +808,7 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
         updatedAt: DateTime.now().toIso8601String(),
       );
 
-      final isA4 = _billFormat == 'Bill A4';
+      final isA4 = _isA4;
       final pdfBytes = await PdfReceiptService.generateReceipt(token, isThermal: !isA4);
       await Printing.sharePdf(
         bytes: pdfBytes,
@@ -653,14 +851,19 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
 
     final tokenToPrint = _savedToken ?? _generatePreviewToken();
 
-    if (_billFormat == 'Bill A4') {
+    if (_isA4) {
       try {
         await PdfReceiptService.printReceipt(tokenToPrint, isThermal: false);
       } catch (e) {
         debugPrint('Print error: $e');
         _showSnackBar('Unable to print A4 bill.');
       } finally {
-        if (mounted) setState(() { _isPrinting = false; _isCapturingForPrint = false; });
+        if (mounted) {
+          setState(() {
+            _isPrinting = false;
+            _isCapturingForPrint = false;
+          });
+        }
       }
       return;
     }

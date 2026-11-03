@@ -708,7 +708,8 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               orderType: 'dine_in',
             );
             
-            if (billFormat == 'Bill A4') {
+            final isA4Format = billFormat.toLowerCase().contains('a4');
+            if (isA4Format) {
               // The user specifically requested not to automatically show the A4/PDF print dialog upon Save
               // So we do nothing here for A4. The user can manually print from Print Preview if needed.
             } else {
@@ -739,6 +740,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
               tax: currentTax,
               grandTotal: currentGrandTotal,
               fromTokenGeneration: true,
+              billFormat: billFormat,
             ),
           )).then((_) {
             if (mounted) {

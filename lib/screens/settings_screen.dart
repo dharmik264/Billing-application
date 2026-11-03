@@ -13,6 +13,7 @@ import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
 import '../widgets/custom_page_header.dart';
 import '../utils/app_constants.dart';
+import '../utils/bill_settings_helper.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -30,6 +31,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   ApiShopData? _shopData;
   ApiUser? _user;
   bool _isPrinterConnected = false;
+  String _currentBillFormat = 'Bill Slip';
 
   @override
   void initState() {
@@ -43,12 +45,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           await RestaurantApi.instance.fetchShop();
       final user = await RestaurantApi.instance.fetchProfile();
       final isConnected = await PrinterService.instance.isConnected;
+      final billFormat = await BillSettingsHelper.getBillFormat();
 
       if (!mounted) return;
       setState(() {
         _shopData = shop;
         _user = user;
         _isPrinterConnected = isConnected;
+        _currentBillFormat = billFormat;
       });
     } catch (_) {}
   }
@@ -143,6 +147,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Tax Settings',
                 subtitle: 'GST, VAT, Service Charge',
                 onTap: () => _open(const TaxSettingsScreen()),
+              ),
+              _SettingsRowData(
+                icon: Icons.description_outlined,
+                title: 'Bill Format',
+                subtitle: 'Choose Bill Slip (POS) or A4 Format',
+                badge: _currentBillFormat,
+                badgeBg: const Color(0xFFEFF6FF),
+                badgeColor: const Color(0xFF1D4ED8),
+                badgeBorder: const Color(0xFFBFDBFE),
+                onTap: _showBillFormatDialog,
               ),
             ]),
             const SizedBox(height: 20),
@@ -486,6 +500,81 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showBillFormatDialog() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Select Bill Format',
+                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(Icons.receipt_outlined, color: Color(0xFF4F46E5)),
+                  title: Text('Bill Slip (Thermal / POS)', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                  subtitle: Text('Thermal roll format (58mm / 80mm)', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                  trailing: _currentBillFormat == 'Bill Slip'
+                      ? const Icon(Icons.check_circle, color: Color(0xFF4F46E5))
+                      : null,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onTap: () async {
+                    final nav = Navigator.of(context);
+                    await BillSettingsHelper.setBillFormat('Bill Slip');
+                    if (mounted) {
+                      setState(() => _currentBillFormat = 'Bill Slip');
+                    }
+                    nav.pop();
+                  },
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  leading: const Icon(Icons.description_outlined, color: Color(0xFF4F46E5)),
+                  title: Text('Bill A4 (Standard Invoice)', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                  subtitle: Text('Full page A4 format with table & header', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                  trailing: _currentBillFormat == 'Bill A4'
+                      ? const Icon(Icons.check_circle, color: Color(0xFF4F46E5))
+                      : null,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  onTap: () async {
+                    final nav = Navigator.of(context);
+                    await BillSettingsHelper.setBillFormat('Bill A4');
+                    if (mounted) {
+                      setState(() => _currentBillFormat = 'Bill A4');
+                    }
+                    nav.pop();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
