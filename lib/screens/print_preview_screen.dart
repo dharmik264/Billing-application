@@ -111,6 +111,13 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
     if (widget.billFormat != null && widget.billFormat!.isNotEmpty) {
       _billFormat = widget.billFormat!;
     }
+    BillSettingsHelper.getBillFormat().then((format) {
+      if (mounted && (widget.billFormat == null || widget.billFormat!.isEmpty)) {
+        setState(() {
+          _billFormat = format;
+        });
+      }
+    });
     _initImages();
     PrinterService.instance.attemptAutoConnect();
   }
@@ -173,14 +180,18 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
       } catch (_) {}
     }
 
-    final billFormat = widget.billFormat ?? await BillSettingsHelper.getBillFormat();
+    final defaultBillFormat = widget.billFormat ?? await BillSettingsHelper.getBillFormat();
 
     setState(() {
       _logoBytes = logo;
       _qrBytes = qr;
       _billTemplate = finalTemplate;
       _shopData = finalShop;
-      _billFormat = billFormat;
+      if (widget.billFormat != null && widget.billFormat!.isNotEmpty) {
+        _billFormat = widget.billFormat!;
+      } else {
+        _billFormat = defaultBillFormat;
+      }
       _isLoading = false;
     });
   }
@@ -367,7 +378,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
             child: GestureDetector(
               onTap: () {
                 setState(() => _billFormat = 'Bill Slip');
-                BillSettingsHelper.setBillFormat('Bill Slip');
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -404,7 +414,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
             child: GestureDetector(
               onTap: () {
                 setState(() => _billFormat = 'Bill A4');
-                BillSettingsHelper.setBillFormat('Bill A4');
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -492,7 +501,6 @@ class _PrintPreviewScreenState extends State<PrintPreviewScreen> {
             GestureDetector(
               onTap: () {
                 setState(() => _billFormat = 'Bill Slip');
-                BillSettingsHelper.setBillFormat('Bill Slip');
               },
               child: Text(
                 'Switch to Slip',

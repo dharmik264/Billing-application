@@ -7,6 +7,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'password_login_screen.dart';
 import 'print_preview_screen.dart';
+import '../utils/bill_settings_helper.dart';
 import 'all_tokens_screen.dart';
 import 'token_generation_screen.dart';
 import '../widgets/custom_page_header.dart';
@@ -657,9 +658,12 @@ class DashboardScreenState extends State<DashboardScreen> {
               ListTile(
                 leading: const Icon(Icons.print_outlined, color: Color(0xFF111111)),
                 title: Text('Print / View Preview', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500)),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.of(context).push(MaterialPageRoute(
+                onTap: () async {
+                  final navigator = Navigator.of(context);
+                  final billFormat = await BillSettingsHelper.getBillFormat();
+                  navigator
+                    ..pop()
+                    ..push(MaterialPageRoute(
                     builder: (_) => PrintPreviewScreen(
                       tokenNumber: token.tokenNumber,
                       billNumber: token.rawToken.billNumber,
@@ -679,6 +683,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                       subtotal: token.amount,
                       tax: 0.0,
                       grandTotal: token.amount,
+                      billFormat: billFormat,
                     ),
                   ));
                 },

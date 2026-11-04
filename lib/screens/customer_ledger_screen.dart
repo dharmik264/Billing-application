@@ -11,6 +11,7 @@ import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
 import '../utils/app_constants.dart';
 import 'print_preview_screen.dart';
+import '../utils/bill_settings_helper.dart';
 
 class CustomerLedgerScreen extends StatefulWidget {
   final ApiCustomer customer;
@@ -760,8 +761,10 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             child: InkWell(
-              onTap: () {
-                Navigator.of(context).push(MaterialPageRoute(
+              onTap: () async {
+                final navigator = Navigator.of(context);
+                final billFormat = await BillSettingsHelper.getBillFormat();
+                navigator.push(MaterialPageRoute(
                   builder: (_) => PrintPreviewScreen(
                     tokenNumber: bill.tokenNumber,
                     billNumber: bill.billNumber,
@@ -777,6 +780,7 @@ class _CustomerLedgerScreenState extends State<CustomerLedgerScreen>
                     subtotal: bill.grandTotal,
                     tax: 0.0,
                     grandTotal: bill.grandTotal,
+                    billFormat: billFormat,
                   ),
                 ));
               },

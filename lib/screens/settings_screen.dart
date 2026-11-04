@@ -160,9 +160,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ]),
             const SizedBox(height: 20),
-            _buildSectionHeader('SYSTEM & SECURITY'),
+            _buildSectionHeader('SUPPORT & SECURITY'),
             const SizedBox(height: 8),
             _buildGroupedSection([
+              _SettingsRowData(
+                icon: Icons.support_agent_rounded,
+                title: 'Support Helpdesk',
+                subtitle: '+91 9825614003 · Call / WhatsApp',
+                onTap: _showSupportDialog,
+              ),
               _SettingsRowData(
                 icon: Icons.logout_rounded,
                 title: 'Logout',
@@ -497,6 +503,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: const Color(0xFFA1A1AA),
               letterSpacing: 1.5,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSupportDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.support_agent_rounded, color: Color(0xFF4F46E5)),
+            const SizedBox(width: 8),
+            Text(
+              'Support Helpdesk',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'For technical support, plan upgrades, or application assistance, please contact:',
+              style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF475569)),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('📞 Phone / WhatsApp: +91 9825614003', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
+                  const SizedBox(height: 6),
+                  Text('✉️ Email: admin@billingapp.com', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Close', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
           ),
         ],
       ),

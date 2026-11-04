@@ -5,6 +5,7 @@ import '../services/restaurant_api.dart';
 import '../widgets/custom_page_header.dart';
 import '../utils/app_constants.dart';
 import 'print_preview_screen.dart';
+import '../utils/bill_settings_helper.dart';
 import 'token_generation_screen.dart';
 import '../utils/bill_event_notifier.dart';
 
@@ -78,10 +79,12 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
     }
   }
 
-  void _openPrintPreview(ApiToken token) {
+  void _openPrintPreview(ApiToken token) async {
     final subtotal = token.items.fold(0.0, (sum, item) => sum + item.subtotal);
     final tax = token.grandTotal - subtotal;
+    final billFormat = await BillSettingsHelper.getBillFormat();
 
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => PrintPreviewScreen(
@@ -104,6 +107,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
           subtotal: subtotal,
           tax: tax > 0 ? tax : 0.0,
           grandTotal: token.grandTotal,
+          billFormat: billFormat,
         ),
       ),
     );
