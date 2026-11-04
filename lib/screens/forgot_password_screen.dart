@@ -49,6 +49,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     _slideAnim = Tween<Offset>(begin: const Offset(0.08, 0), end: Offset.zero)
         .animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut));
     _animCtrl.forward();
+    for (var f in _otpFocusNodes) {
+      f.addListener(() {
+        if (mounted) setState(() {});
+      });
+    }
   }
 
   @override
@@ -123,10 +128,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       }
       _startTimer();
       _nextStep();
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) {
-          FocusScope.of(context).requestFocus(_otpFocusNodes[0]);
-        }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (mounted && _otpFocusNodes.isNotEmpty) {
+            FocusScope.of(context).requestFocus(_otpFocusNodes[0]);
+          }
+        });
       });
     } catch (e) {
       _showError(e.toString().replaceAll('Exception: ', ''));
@@ -289,7 +296,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             child: ClipRRect(
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(36), topRight: Radius.circular(36)),
               child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(32, 36, 32, MediaQuery.of(context).viewInsets.bottom + 32),
+                padding: const EdgeInsets.fromLTRB(32, 36, 32, 32),
                 child: FadeTransition(opacity: _fadeAnim,
                   child: SlideTransition(position: _slideAnim, child: _buildStepContent())))))),
         ])),
@@ -372,36 +379,45 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
       children: List.generate(4, (index) {
         final hasFocus = _otpFocusNodes[index].hasFocus;
         final hasValue = _otpControllers[index].text.isNotEmpty;
-        return Container(
-          width: 58,
-          height: 60,
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          decoration: BoxDecoration(
-            color: hasFocus ? Colors.white : _softBg,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: hasFocus
-                  ? _primary
-                  : (hasValue ? _primary.withValues(alpha: 0.5) : const Color(0xFFE2E8F0)),
-              width: hasFocus ? 2 : 1,
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            FocusScope.of(context).requestFocus(_otpFocusNodes[index]);
+          },
+          child: Container(
+            width: 58,
+            height: 60,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            decoration: BoxDecoration(
+              color: hasFocus ? Colors.white : _softBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: hasFocus
+                    ? _primary
+                    : (hasValue ? _primary.withValues(alpha: 0.5) : const Color(0xFFE2E8F0)),
+                width: hasFocus ? 2 : 1,
+              ),
+              boxShadow: hasFocus
+                  ? [
+                      BoxShadow(
+                        color: _primary.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      )
+                    ]
+                  : null,
             ),
-            boxShadow: hasFocus
-                ? [
-                    BoxShadow(
-                      color: _primary.withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    )
-                  ]
-                : null,
-          ),
-          child: Center(
+            alignment: Alignment.center,
             child: TextField(
               controller: _otpControllers[index],
               focusNode: _otpFocusNodes[index],
               maxLength: 1,
               textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: false,
+                signed: false,
+              ),
+              textInputAction: index < 3 ? TextInputAction.next : TextInputAction.done,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               onChanged: (value) => _onOtpChanged(value, index),
               style: GoogleFonts.inter(
@@ -412,6 +428,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
               decoration: const InputDecoration(
                 counterText: '',
                 border: InputBorder.none,
+                isDense: true,
                 contentPadding: EdgeInsets.zero,
               ),
             ),

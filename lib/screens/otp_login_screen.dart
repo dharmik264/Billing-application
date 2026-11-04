@@ -39,6 +39,11 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
     _mobileController = TextEditingController();
     _otpControllers = List.generate(4, (_) => TextEditingController());
     _otpFocusNodes = List.generate(4, (_) => FocusNode());
+    for (var node in _otpFocusNodes) {
+      node.addListener(() {
+        if (mounted) setState(() {});
+      });
+    }
     _checkPrefilledPhone();
     // Auto-fill removed: user must enter OTP received via SMS
   }
@@ -51,6 +56,11 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
         setState(() {
           _mobileController.text = phone;
           _showOTPSection = true; // Show OTP fields directly
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _otpFocusNodes.isNotEmpty) {
+            FocusScope.of(context).requestFocus(_otpFocusNodes[0]);
+          }
         });
       }
     }
@@ -120,17 +130,37 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
       _attemptsRemaining = 2;
     });
 
-    FocusScope.of(context).requestFocus(_otpFocusNodes[0]);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _otpFocusNodes.isNotEmpty) {
+        FocusScope.of(context).requestFocus(_otpFocusNodes[0]);
+      }
+    });
   }
 
   void _onOTPFieldChanged(String value, int index) {
-    if (value.length == 1 && value.isNotEmpty) {
+    if (value.length > 1) {
+      final clean = value.replaceAll(RegExp(r'[^\d]'), '');
+      for (int i = 0; i < 4 && i < clean.length; i++) {
+        _otpControllers[i].text = clean[i];
+      }
+      if (clean.length >= 4) {
+        _otpFocusNodes[3].unfocus();
+      } else {
+        FocusScope.of(context).requestFocus(_otpFocusNodes[clean.length.clamp(0, 3)]);
+      }
+      setState(() {});
+      return;
+    }
+    if (value.isNotEmpty) {
       if (index < 3) {
         FocusScope.of(context).requestFocus(_otpFocusNodes[index + 1]);
+      } else {
+        _otpFocusNodes[index].unfocus();
       }
     } else if (value.isEmpty && index > 0) {
       FocusScope.of(context).requestFocus(_otpFocusNodes[index - 1]);
     }
+    setState(() {});
   }
 
   Future<void> _verifyOTP() async {
@@ -343,37 +373,60 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
   }
 
   Widget _buildOTPField(int index) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(
-          color: _otpFocusNodes[index].hasFocus
-              ? const Color(0xFF2563EB)
-              : const Color(0xFFDDDDDD),
-          width: _otpFocusNodes[index].hasFocus ? 2 : 0.5,
+    final hasFocus = _otpFocusNodes[index].hasFocus;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        FocusScope.of(context).requestFocus(_otpFocusNodes[index]);
+      },
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+            color: hasFocus
+                ? const Color(0xFF2563EB)
+                : const Color(0xFFCBD5E1),
+            width: hasFocus ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: hasFocus
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: _otpControllers[index],
-        focusNode: _otpFocusNodes[index],
-        maxLength: 1,
-        textAlign: TextAlign.center,
-        keyboardType: TextInputType.number,
-        inputFormatters: [
-          FilteringTextInputFormatter.digitsOnly,
-        ],
-        onChanged: (value) => _onOTPFieldChanged(value, index),
-        decoration: const InputDecoration(
-          counterText: '',
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
-        ),
-        style: const TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w500,
+        alignment: Alignment.center,
+        child: TextField(
+          controller: _otpControllers[index],
+          focusNode: _otpFocusNodes[index],
+          maxLength: 1,
+          textAlign: TextAlign.center,
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: false,
+            signed: false,
+          ),
+          textInputAction: index < 3 ? TextInputAction.next : TextInputAction.done,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+          ],
+          onChanged: (value) => _onOTPFieldChanged(value, index),
+          decoration: const InputDecoration(
+            counterText: '',
+            border: InputBorder.none,
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
+          ),
+          style: GoogleFonts.inter(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF0F172A),
+          ),
         ),
       ),
     );
@@ -381,120 +434,88 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // Top half (Pastel Indigo Background)
-          if (!isKeyboardOpen)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: MediaQuery.of(context).size.height * 0.45,
-              child: Container(
-                color: const Color(0xFFEEF2FF),
-                child: SafeArea(
-                  child: Stack(
-                    children: [
-                      // Back Button (If OTP shown)
-                      if (_showOTPSection)
-                        Positioned(
-                          top: 16,
-                          left: 16,
-                          child: InkWell(
-                            onTap: _resetForm,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xFF0F172A)),
-                            ),
-                          ),
-                        ),
-
-                      // Storefront Illustration
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
-                                    blurRadius: 30,
-                                    spreadRadius: 5,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(Icons.storefront_rounded, size: 64, color: Color(0xFF4F46E5)),
-                            ),
-                            const SizedBox(height: 20),
+      backgroundColor: const Color(0xFFEEF2FF),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // Header Bar (Back Button if OTP shown)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  if (_showOTPSection)
+                    InkWell(
+                      onTap: _resetForm,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
                           ],
                         ),
+                        child: const Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xFF0F172A)),
                       ),
-                    ],
-                  ),
-                ),
+                    )
+                  else
+                    const SizedBox(height: 40),
+                ],
               ),
             ),
-          
-          // Bottom half (White Card)
-          Positioned(
-            top: isKeyboardOpen ? 0 : MediaQuery.of(context).size.height * 0.4,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
+
+            // Storefront Illustration Anchor
+            Container(
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: isKeyboardOpen
-                    ? BorderRadius.zero
-                    : const BorderRadius.only(
-                        topLeft: Radius.circular(36),
-                        topRight: Radius.circular(36),
-                      ),
-                boxShadow: isKeyboardOpen
-                    ? null
-                    : const [
-                        BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))
-                      ],
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.15),
+                    blurRadius: 24,
+                    spreadRadius: 4,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: ClipRRect(
-                borderRadius: isKeyboardOpen
-                    ? BorderRadius.zero
-                    : const BorderRadius.only(
-                        topLeft: Radius.circular(36),
-                        topRight: Radius.circular(36),
-                      ),
-                child: SafeArea(
-                  top: isKeyboardOpen,
+              child: const Icon(Icons.storefront_rounded, size: 52, color: Color(0xFF4F46E5)),
+            ),
+            const SizedBox(height: 16),
+
+            // Bottom White Card
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(36),
+                    topRight: Radius.circular(36),
+                  ),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5)),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(36),
+                    topRight: Radius.circular(36),
+                  ),
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
-                    padding: EdgeInsets.fromLTRB(
-                      24,
-                      isKeyboardOpen ? 16 : 40,
-                      24,
-                      20,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
                     child: _showOTPSection ? _buildOTPForm() : _buildPhoneForm(),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
