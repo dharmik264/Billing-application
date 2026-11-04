@@ -70,7 +70,15 @@ class JWTAuthenticationTenantMiddleware(MiddlewareMixin):
                         logger.error(f"Error in Shop.get_shop for user {user.id}: {err}")
 
                 if shop and shop.schema_name:
-                    connection.set_schema(shop.schema_name)
-                    request.tenant = shop
+                    try:
+                        connection.set_schema(shop.schema_name)
+                        request.tenant = shop
+                    except Exception as err:
+                        logger.error(f"Failed to set schema {shop.schema_name}: {err}")
+                        connection.set_schema(public_schema)
         except Exception as e:
             logger.error(f"Tenant schema middleware error: {e}")
+            try:
+                connection.set_schema(public_schema)
+            except Exception:
+                pass

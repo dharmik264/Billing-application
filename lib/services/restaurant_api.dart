@@ -48,7 +48,8 @@
       if (path.startsWith('http://') || path.startsWith('https://')) return path;
       // Base URL is typically ending with /api, we might need to go to root for media
       final base = Uri.parse(baseUrl);
-      final origin = '${base.scheme}://${base.host}:${base.port}';
+      final portStr = (base.hasPort && base.port != 80 && base.port != 443) ? ':${base.port}' : '';
+      final origin = '${base.scheme}://${base.host}$portStr';
       final normalizedPath = path.startsWith('/') ? path : '/$path';
       return '$origin$normalizedPath';
     }
@@ -462,14 +463,7 @@
     }
 
     Future<void> updateTokenPaymentMode(String id, String paymentMode) async {
-      final response = await _client.patch(
-        Uri.parse('$baseUrl/tokens/$id/'),
-        headers: _headers(),
-        body: jsonEncode({'payment_mode': paymentMode}),
-      );
-      if (response.statusCode != 200) {
-        throw Exception('Failed to update payment mode: ${response.body}');
-      }
+      await patch('tokens/$id/', {'payment_mode': paymentMode});
       BillEventNotifier.notifyBillChanged();
     }
 
@@ -781,7 +775,25 @@
       final response = await _client
           .get(_uri(path, query), headers: _headers())
           .timeout(_timeout);
-      final decoded = jsonDecode(response.body);
+      dynamic decoded;
+      try {
+        decoded = jsonDecode(response.body);
+      } catch (e) {
+        if (response.statusCode >= 500) {
+          throw ApiException(
+              'Server is temporarily unavailable (${response.statusCode}). Please try again shortly.',
+              statusCode: response.statusCode);
+        }
+        String snippet = response.body;
+        final match = RegExp(r'<title>(.*?)</title>', caseSensitive: false).firstMatch(snippet);
+        if (match != null) {
+          snippet = match.group(1) ?? snippet;
+        } else if (snippet.length > 200) {
+          snippet = snippet.substring(0, 200);
+        }
+        throw ApiException('Server Error (${response.statusCode}): $snippet',
+            statusCode: response.statusCode);
+      }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         _checkAndTriggerTrialLock(decoded, response.statusCode);
         throw ApiException(_errorMessage(decoded, response.statusCode),
@@ -903,14 +915,20 @@
       try {
         decoded = jsonDecode(response.body);
       } catch (e) {
+        if (response.statusCode >= 500) {
+          throw ApiException(
+              'Server is temporarily unavailable (${response.statusCode}). Please try again shortly.',
+              statusCode: response.statusCode);
+        }
         String snippet = response.body;
-        final match = RegExp(r'<title>(.*?)</title>').firstMatch(snippet);
+        final match = RegExp(r'<title>(.*?)</title>', caseSensitive: false).firstMatch(snippet);
         if (match != null) {
           snippet = match.group(1) ?? snippet;
         } else if (snippet.length > 200) {
           snippet = snippet.substring(0, 200);
         }
-        throw ApiException('Server Error ${response.statusCode}: $snippet');
+        throw ApiException('Server Error (${response.statusCode}): $snippet',
+            statusCode: response.statusCode);
       }
 
       if (response.statusCode < 200 || response.statusCode >= 300) {

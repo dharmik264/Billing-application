@@ -7,8 +7,11 @@ import re
 def generate_schema_name(shop_name, user_id=None):
     cleaned = re.sub(r'[^a-zA-Z0-9]', '_', str(shop_name or '').lower()).strip('_')
     cleaned = re.sub(r'_+', '_', cleaned)[:50]
-    if not cleaned or cleaned in ('public', 'pg_catalog', 'information_schema', 'select', 'table', 'user', 'group'):
-        cleaned = f"shop_{cleaned}" if cleaned else "shop"
+    if not cleaned or not cleaned[0].isalpha() or cleaned in ('public', 'pg_catalog', 'information_schema', 'select', 'table', 'user', 'group', 'all'):
+        prefix = f"shop_{user_id}_" if user_id else "shop_"
+        cleaned = f"{prefix}{cleaned}".strip('_')[:50]
+        if not cleaned or not cleaned[0].isalpha():
+            cleaned = f"shop_{cleaned}".strip('_')[:50]
     
     candidate = cleaned
     counter = 1
