@@ -14,7 +14,6 @@ import 'standalone_expense_screen.dart';
 import '../widgets/custom_page_header.dart';
 import '../services/sync_service.dart';
 import '../utils/bill_event_notifier.dart';
-import '../utils/app_constants.dart';
 
 class _LiveToken {
   final ApiToken rawToken;
@@ -207,7 +206,7 @@ class DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: StitchColors.background,
+      backgroundColor: Colors.transparent,
       appBar: CustomAppBar(
         title: _shopName,
         icon: Icons.storefront_rounded,

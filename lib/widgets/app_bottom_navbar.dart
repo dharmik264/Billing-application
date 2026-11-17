@@ -82,7 +82,7 @@ class AppBottomNavbar extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: StitchColors.background,
+        color: StitchColors.surface,
         border: Border(top: BorderSide(color: StitchColors.border, width: 1.0)),
       ),
       height: 56,

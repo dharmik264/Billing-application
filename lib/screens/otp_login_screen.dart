@@ -1,3 +1,4 @@
+import '../utils/app_constants.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -423,9 +424,13 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: const Color(0xFFEEF2FF),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppColors.backgroundGradient,
+      ),
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -505,6 +510,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -10,7 +10,7 @@ class StitchColors {
   static const Color secondary = Color(0xFF0284C7); // Sky Blue accent
 
   // Neutral Surfaces (Flat, crisp Minimal Business)
-  static const Color background = Color(0xFFF0F4F8); // Cool Light Ice Blue
+  static const Color background = Color(0xFFF0F6FD); // Cool Light Ice Blue
   static const Color surface = Color(0xFFFFFFFF); // Pure White
   static const Color surfaceSubtle = Color(0xFFE2E8F0); // Subtle surface
   static const Color surfaceHover = Color(0xFFF0F4F8);
@@ -47,11 +47,19 @@ class StitchColors {
 /// App-wide color constants (Compatible with Stitch System)
 class AppColors {
   // Gradients (Subtle flat fallback)
+  // Blue and White Gradient
   static const LinearGradient backgroundGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [Color(0xFFF0F4F8), Color(0xFFE2E8F0)],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      Color(0xFFCCE4FD), // Soft Sky / Powder Blue
+      Color(0xFFEAF2FD), // Subtle ice transition
+      Color(0xFFFFFFFF), // Crisp pure white
+    ],
+    stops: [0.0, 0.40, 1.0],
   );
+
+  static const LinearGradient blueWhiteGradient = backgroundGradient;
 
   // Primary Colors
   static const Color primary = StitchColors.primary;

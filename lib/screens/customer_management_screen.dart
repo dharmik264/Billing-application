@@ -5,7 +5,6 @@ import '../utils/bill_event_notifier.dart';
 import '../widgets/custom_page_header.dart';
 import 'add_customer_screen.dart';
 import 'customer_ledger_screen.dart';
-import '../utils/app_constants.dart';
 
 class CustomerManagementScreen extends StatefulWidget {
   const CustomerManagementScreen({super.key});
@@ -188,7 +187,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     final inactiveCount = _customers.where((c) => !c.isActive).length;
 
     return Scaffold(
-      backgroundColor: StitchColors.background,
+      backgroundColor: Colors.transparent,
       appBar: CustomAppBar(
         title: 'Customer Management',
         icon: Icons.people_rounded,

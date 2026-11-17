@@ -24,7 +24,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const Color _panelBackground = StitchColors.background;
   static const Color _textPrimary = StitchColors.textPrimary;
   static const Color _textSecondary = StitchColors.textSecondary;
   static const Color _cardBorder = Color(0xFFE5E5E5);
@@ -61,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _panelBackground,
+      backgroundColor: Colors.transparent,
       appBar: CustomAppBar(
         title: 'Settings',
         icon: Icons.settings_rounded,

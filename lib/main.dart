@@ -40,15 +40,15 @@ class BillingApplication extends StatelessWidget {
         textTheme: GoogleFonts.interTextTheme(
           Theme.of(context).textTheme,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF0F4F8),
-        canvasColor: const Color(0xFFF0F4F8),
+        scaffoldBackgroundColor: const Color(0xFFF0F6FD),
+        canvasColor: const Color(0xFFF0F6FD),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFFF0F4F8),
+          backgroundColor: Colors.transparent,
           elevation: 0,
           surfaceTintColor: Colors.transparent,
         ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Color(0xFFF0F4F8),
+          backgroundColor: Colors.transparent,
           elevation: 0,
         ),
         colorScheme: ColorScheme.fromSeed(

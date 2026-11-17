@@ -7,7 +7,6 @@ import '../utils/csv_export.dart';
 import '../utils/bill_event_notifier.dart';
 import 'customer_ledger_screen.dart';
 import 'standalone_expense_report_screen.dart';
-import '../utils/app_constants.dart';
 
 class AnalyticsReportsScreen extends StatefulWidget {
   const AnalyticsReportsScreen({super.key});
@@ -52,9 +51,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: StitchColors.background,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: StitchColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(
@@ -121,9 +120,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
                   children: [
                     // Search bar pinned directly under the header
                     Container(
-                      color: StitchColors.background,
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                       decoration: const BoxDecoration(
+                        color: Colors.transparent,
                         border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5), width: 1)),
                       ),
                       child: _buildSearchBar(),
