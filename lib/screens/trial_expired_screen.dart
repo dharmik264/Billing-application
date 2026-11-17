@@ -379,7 +379,7 @@ class _TrialExpiredScreenState extends State<TrialExpiredScreen> {
                 children: [
                   Text('📞 Phone / WhatsApp: +91 9825614003', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(height: 6),
-                  Text('✉️ Email: admin@billingapp.com', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
+                  Text('✉️ Email: vdgroup@gmail.com', style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
                 ],
               ),
             ),

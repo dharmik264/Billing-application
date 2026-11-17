@@ -701,7 +701,7 @@ class DevLoginView(APIView):
                 user = User.objects.create(
                     phone=phone,
                     name='Super Admin',
-                    email='admin@billingapp.com',
+                    email='vdgroup@gmail.com',
                     shop_name='Headquarters',
                     account_status='approved',
                     is_staff=True,

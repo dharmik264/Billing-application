@@ -42,7 +42,7 @@ def seed():
         phone=admin_phone,
         defaults={
             "name": "Super Admin",
-            "email": "admin@billingapp.com",
+            "email": "vdgroup@gmail.com",
             "shop_name": "Headquarters",
             "account_status": "approved",
             "is_staff": True,
