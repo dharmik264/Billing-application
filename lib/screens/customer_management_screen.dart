@@ -1,3 +1,4 @@
+import '../utils/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
@@ -187,7 +188,7 @@ class _CustomerManagementScreenState extends State<CustomerManagementScreen>
     final inactiveCount = _customers.where((c) => !c.isActive).length;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
         title: 'Customer Management',
         icon: Icons.people_rounded,

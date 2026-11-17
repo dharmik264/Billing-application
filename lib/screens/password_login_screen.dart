@@ -1,4 +1,3 @@
-import '../utils/app_constants.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -149,13 +148,9 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
   Widget build(BuildContext context) {
     final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppColors.backgroundGradient,
-      ),
-      child: Scaffold(
-        resizeToAvoidBottomInset: true,
-        backgroundColor: Colors.transparent,
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      backgroundColor: const Color(0xFFF5F3F3),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -469,7 +464,6 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
             ),
           ),
         ),
-      ),
       ),
     );
   }

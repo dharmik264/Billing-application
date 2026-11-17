@@ -1,3 +1,4 @@
+import '../utils/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -51,9 +52,9 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: StitchColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: StitchColors.background,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(

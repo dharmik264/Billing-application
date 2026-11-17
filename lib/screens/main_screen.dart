@@ -152,14 +152,9 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.backgroundGradient,
-        ),
-        child: const Scaffold(
-          backgroundColor: Colors.transparent,
-          body: Center(child: CircularProgressIndicator()),
-        ),
+      return const Scaffold(
+        backgroundColor: StitchColors.background,
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -172,12 +167,8 @@ class _MainScreenState extends State<MainScreen> {
           SystemNavigator.pop();
         }
       },
-      child: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.backgroundGradient,
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
+      child: Scaffold(
+        backgroundColor: StitchColors.background,
         body: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth >= 800) {
@@ -186,7 +177,6 @@ class _MainScreenState extends State<MainScreen> {
               return _buildMobileLayout();
             }
           },
-        ),
         ),
       ),
     );
@@ -243,7 +233,7 @@ class _MainScreenState extends State<MainScreen> {
         ),
         Expanded(
           child: Container(
-            color: Colors.transparent,
+            color: StitchColors.background,
             child: IndexedStack(
               index: _currentIndex,
               children: _screens,
@@ -296,7 +286,7 @@ class _MainScreenState extends State<MainScreen> {
       valueListenable: MainScreen.hideNavbar,
       builder: (context, hide, _) {
         return Scaffold(
-          backgroundColor: Colors.transparent,
+          backgroundColor: StitchColors.background,
           body: IndexedStack(
             index: _currentIndex,
             children: _screens,

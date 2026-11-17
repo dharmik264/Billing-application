@@ -773,7 +773,7 @@ class _TokenGenerationScreenState extends State<TokenGenerationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
         title: widget.editToken != null ? 'Edit Bill #${widget.editToken!.billNumber}' : 'Token Generation',
         icon: Icons.confirmation_number_rounded,

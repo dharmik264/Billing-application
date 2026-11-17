@@ -408,12 +408,8 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppColors.backgroundGradient,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
+    return Scaffold(
+      backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
         title: 'Expense & Cashflow Report',
         subtitle: 'નાણાકીય અને ખર્ચ રિપોર્ટ',
@@ -472,7 +468,6 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
             ),
           ),
         ),
-      ),
       ),
     );
   }

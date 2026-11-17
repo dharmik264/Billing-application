@@ -437,12 +437,8 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: AppColors.backgroundGradient,
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
+    return Scaffold(
+      backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
         title: 'Expense & Cashbook',
         subtitle: 'ખર્ચ અને જમા મોડ્યુલ',
@@ -498,7 +494,6 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                 ),
               ),
             ),
-      ),
     );
   }
 

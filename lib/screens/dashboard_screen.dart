@@ -1,3 +1,4 @@
+import '../utils/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -205,8 +206,12 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppColors.backgroundGradient,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
       appBar: CustomAppBar(
         title: _shopName,
         icon: Icons.storefront_rounded,
@@ -297,6 +302,7 @@ class DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
