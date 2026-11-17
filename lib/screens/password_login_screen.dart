@@ -7,10 +7,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/restaurant_api.dart';
 import 'shop_setup_screen.dart';
 import 'main_screen.dart';
-import 'super_admin_main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'registration_screen.dart';
-import 'super_admin_login_screen.dart';
 import 'forgot_password_screen.dart';
 import 'trial_expired_screen.dart';
 
@@ -100,15 +98,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
       await prefs.setString('loginPhone', mobile);
       await prefs.setInt('loginTimestamp', DateTime.now().millisecondsSinceEpoch);
 
-      if (mobile == '9999999999') {
-        if (mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const SuperAdminMainScreen()),
-            (route) => false,
-          );
-        }
-        return;
-      }
+      
 
       bool isSetupComplete = prefs.getBool('isSetupComplete') ?? false;
       try {
@@ -464,19 +454,7 @@ class _PasswordLoginScreenState extends State<PasswordLoginScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text('Super Admin? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F))),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SuperAdminLoginScreen()));
-                                  },
-                                  child: Text('Login here', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF1B1C1C), decoration: TextDecoration.underline)),
-                                ),
-                              ],
-                            ),
+                            
                           ],
                         ),
                       ),

@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/password_login_screen.dart';
 import 'screens/shop_setup_screen.dart';
 import 'screens/main_screen.dart';
-import 'screens/super_admin_main_screen.dart';
 import 'services/restaurant_api.dart';
 import 'services/local_database.dart';
 import 'services/sync_service.dart';
@@ -174,15 +173,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
       if (!mounted) return;
 
-      // Super Admin auto-login routing
-      if (isLoggedIn && loginPhone == '9999999999') {
-        _navigateTo(const SuperAdminMainScreen());
-        return;
-      }
+      
 
       // Verify setup status if locally false but user is logged in
       bool actualSetupComplete = isSetupComplete;
-      if (isLoggedIn && !isSetupComplete && loginPhone != '9999999999') {
+      if (isLoggedIn && !isSetupComplete) {
         try {
           final shop = await RestaurantApi.instance.fetchShop(forceRefresh: true);
           if (shop.paymentModesConfig != null && shop.paymentModesConfig!.isNotEmpty) {
