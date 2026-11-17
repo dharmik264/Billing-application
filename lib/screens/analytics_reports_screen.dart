@@ -6,6 +6,7 @@ import '../utils/pdf_export.dart';
 import '../utils/csv_export.dart';
 import '../utils/bill_event_notifier.dart';
 import 'customer_ledger_screen.dart';
+import 'standalone_expense_report_screen.dart';
 import '../utils/app_constants.dart';
 
 class AnalyticsReportsScreen extends StatefulWidget {
@@ -81,6 +82,16 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Expense Reports (ખર્ચ રિપોર્ટ)',
+            icon: const Icon(Icons.account_balance_wallet_outlined, size: 20, color: Color(0xFF111111)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const StandaloneExpenseReportScreen()),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Refresh data',
             icon: const Icon(Icons.refresh_rounded, size: 20, color: Color(0xFF111111)),

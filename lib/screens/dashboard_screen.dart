@@ -10,6 +10,7 @@ import 'print_preview_screen.dart';
 import '../utils/bill_settings_helper.dart';
 import 'all_tokens_screen.dart';
 import 'token_generation_screen.dart';
+import 'standalone_expense_screen.dart';
 import '../widgets/custom_page_header.dart';
 import '../services/sync_service.dart';
 import '../utils/bill_event_notifier.dart';
@@ -274,8 +275,20 @@ class DashboardScreenState extends State<DashboardScreen> {
                     // 1. Metric Summary Matrix (3x2 Ledger Grid)
                     _buildMetricMatrix(),
                     const SizedBox(height: 16),
-                    // 2. Primary Action Button ("New Bill")
-                    _buildNewBillButton(),
+                    // 2. Primary Action Buttons ("New Bill" & "Expenses")
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: _buildNewBillButton(),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: _buildExpensesButton(),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 16),
                     // 3. Transaction Section (Ledger Table)
                     _buildTransactionLedger(),
@@ -459,6 +472,31 @@ class DashboardScreenState extends State<DashboardScreen> {
         label: Text(
           'New Bill',
           style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpensesButton() {
+    return SizedBox(
+      height: 44,
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF111111),
+          side: const BorderSide(color: Color(0xFF111111), width: 1.2),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const StandaloneExpenseScreen()),
+          );
+        },
+        icon: const Icon(Icons.account_balance_wallet_outlined, size: 16),
+        label: Text(
+          'Expenses',
+          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
         ),
       ),
     );

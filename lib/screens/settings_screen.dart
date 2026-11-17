@@ -9,6 +9,7 @@ import 'shop_setup_screen.dart';
 import 'payment_modes_screen.dart';
 import 'tax_settings_screen.dart';
 import 'subscription_plans_screen.dart';
+import 'standalone_expense_screen.dart';
 import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
 import '../widgets/custom_page_header.dart';
@@ -157,6 +158,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 badgeColor: const Color(0xFF1D4ED8),
                 badgeBorder: const Color(0xFFBFDBFE),
                 onTap: _showBillFormatDialog,
+              ),
+              _SettingsRowData(
+                icon: Icons.account_balance_wallet_outlined,
+                title: 'Expense & Cashbook',
+                subtitle: 'Daily Expenses, Inflows & Reports (ખર્ચ-જમા)',
+                onTap: () => _open(const StandaloneExpenseScreen()),
               ),
             ]),
             const SizedBox(height: 20),
