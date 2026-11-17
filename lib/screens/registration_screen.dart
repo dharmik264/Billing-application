@@ -108,57 +108,44 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFBF9F8),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Column(
-                  children: [
-                    // Header Bar
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFBF9F8),
-                        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+            child: Column(
+              children: [
+                // Header Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, size: 22, color: Color(0xFF1B1C1C)),
+                        onPressed: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) => const PasswordLoginScreen()),
+                            );
+                          }
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, size: 20, color: Color(0xFF1B1C1C)),
-                            onPressed: () {
-                              if (Navigator.canPop(context)) {
-                                Navigator.pop(context);
-                              } else {
-                                Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(builder: (context) => const PasswordLoginScreen()),
-                                );
-                              }
-                            },
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                      Expanded(
+                        child: Text(
+                          'Register Shop',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1B1C1C),
                           ),
-                          Expanded(
-                            child: Text(
-                              'Register Shop',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF1B1C1C),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 32),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 22),
+                    ],
+                  ),
+                ),
 
-                    // Body
+                // Body
                     Expanded(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(24),
@@ -346,40 +333,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       ),
                     ),
 
-                    // Footer
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFBF9F8),
-                        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Already registered? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF5D5F5F))),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(builder: (context) => const PasswordLoginScreen()),
-                              );
-                            },
-                            child: Text(
-                              'Login here',
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1B1C1C),
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
+                // Footer
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Already registered? ', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF475569))),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (context) => const PasswordLoginScreen()),
+                          );
+                        },
+                        child: Text(
+                          'Login here',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1E40AF),
+                            decoration: TextDecoration.underline,
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),

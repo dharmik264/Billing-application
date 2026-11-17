@@ -476,31 +476,12 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Bottom White Card
+            // Content directly on gradient
             Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(36),
-                    topRight: Radius.circular(36),
-                  ),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5)),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(36),
-                    topRight: Radius.circular(36),
-                  ),
-                  child: SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                    child: _showOTPSection ? _buildOTPForm() : _buildPhoneForm(),
-                  ),
-                ),
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: _showOTPSection ? _buildOTPForm() : _buildPhoneForm(),
               ),
             ),
           ],
@@ -527,8 +508,16 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
         const SizedBox(height: 32),
         Container(
           decoration: BoxDecoration(
-            color: const Color(0xFFF1F5F9),
-            borderRadius: BorderRadius.circular(24),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFCBD5E1)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
