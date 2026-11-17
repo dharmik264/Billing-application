@@ -425,7 +425,7 @@ class _OTPLoginScreenState extends State<OTPLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: const Color(0xFFEEF2FF),
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
         child: Column(

@@ -1,3 +1,4 @@
+import 'utils/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -40,8 +41,8 @@ class BillingApplication extends StatelessWidget {
         textTheme: GoogleFonts.interTextTheme(
           Theme.of(context).textTheme,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF0F6FD),
-        canvasColor: const Color(0xFFF0F6FD),
+        scaffoldBackgroundColor: Colors.transparent,
+        canvasColor: Colors.transparent,
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -65,6 +66,14 @@ class BillingApplication extends StatelessWidget {
           },
         ),
       ),
+      builder: (context, child) {
+        return Container(
+          decoration: const BoxDecoration(
+            gradient: AppColors.backgroundGradient,
+          ),
+          child: child,
+        );
+      },
       home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );

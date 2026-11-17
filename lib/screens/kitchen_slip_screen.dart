@@ -34,7 +34,7 @@ class _KitchenSlipScreenState extends State<KitchenSlipScreen> {
         _goBack();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {

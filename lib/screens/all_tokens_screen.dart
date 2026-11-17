@@ -155,7 +155,7 @@ class _AllTokensScreenState extends State<AllTokensScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBF9F8),
+      backgroundColor: Colors.transparent,
       appBar: CustomAppBar(
         title: 'Token & Bill History',
         icon: Icons.history_rounded,

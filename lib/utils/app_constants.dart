@@ -10,7 +10,7 @@ class StitchColors {
   static const Color secondary = Color(0xFF0284C7); // Sky Blue accent
 
   // Neutral Surfaces (Flat, crisp Minimal Business)
-  static const Color background = Color(0xFFF0F6FD); // Cool Light Ice Blue
+  static const Color background = Colors.transparent; // Cool Light Ice Blue
   static const Color surface = Color(0xFFFFFFFF); // Pure White
   static const Color surfaceSubtle = Color(0xFFE2E8F0); // Subtle surface
   static const Color surfaceHover = Color(0xFFF0F4F8);

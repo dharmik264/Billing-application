@@ -221,7 +221,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Stack(
           children: [
@@ -868,7 +868,7 @@ class _ShopSetupScreenState extends State<ShopSetupScreen> {
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
               side: const BorderSide(color: Color(0xFFD4D4D8)),
-              backgroundColor: Colors.white,
+              backgroundColor: Colors.transparent,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),

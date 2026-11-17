@@ -70,7 +70,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     final double amount = widget.billingCycle == 'monthly' ? widget.plan.priceMonthly : widget.plan.priceYearly;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Payment', style: GoogleFonts.inter(fontWeight: FontWeight.w800, color: const Color(0xFF0F172A), fontSize: 20)),
         backgroundColor: const Color(0xFFEEF2FF),

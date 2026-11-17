@@ -11,7 +11,7 @@ class PaymentModesScreen extends StatefulWidget {
 }
 
 class _PaymentModesScreenState extends State<PaymentModesScreen> {
-  static const Color _bgCanvas = Color(0xFFFBF9F8);
+  static const Color _bgCanvas = Colors.transparent;
   static const Color _brandDark = Color(0xFF111111);
   static const Color _mutedText = Color(0xFF71717A);
   static const Color _brandBorder = Color(0xFFE5E5E5);

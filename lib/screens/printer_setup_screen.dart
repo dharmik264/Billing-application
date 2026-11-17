@@ -59,7 +59,7 @@ class _PrinterSetupScreenState extends State<PrinterSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Stack(
           children: [

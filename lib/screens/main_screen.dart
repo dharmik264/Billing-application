@@ -153,7 +153,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: StitchColors.background,
+        backgroundColor: Colors.transparent,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -168,7 +168,7 @@ class _MainScreenState extends State<MainScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: StitchColors.background,
+        backgroundColor: Colors.transparent,
         body: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth >= 800) {
@@ -233,7 +233,7 @@ class _MainScreenState extends State<MainScreen> {
         ),
         Expanded(
           child: Container(
-            color: StitchColors.background,
+            color: Colors.transparent,
             child: IndexedStack(
               index: _currentIndex,
               children: _screens,
@@ -286,7 +286,7 @@ class _MainScreenState extends State<MainScreen> {
       valueListenable: MainScreen.hideNavbar,
       builder: (context, hide, _) {
         return Scaffold(
-          backgroundColor: StitchColors.background,
+          backgroundColor: Colors.transparent,
           body: IndexedStack(
             index: _currentIndex,
             children: _screens,

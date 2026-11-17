@@ -54,7 +54,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
     return Scaffold(
       backgroundColor: StitchColors.background,
       appBar: AppBar(
-        backgroundColor: StitchColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         title: Column(
