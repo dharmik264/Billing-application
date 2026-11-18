@@ -815,30 +815,18 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
 
                 const SizedBox(height: 18),
 
-                // Selected Category Preview Box directly on gradient (Compact & sleek)
+                // Selected Category Preview directly on gradient (Card enclosure removed; items & text preserved)
                 if (currentSelection != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFCBD5E1)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ],
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                     child: Row(
                       children: [
                         Container(
                           width: 32,
                           height: 32,
                           decoration: BoxDecoration(
-                            color: currentSelection.color.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
+                            color: currentSelection.color.withValues(alpha: 0.18),
+                            shape: BoxShape.circle,
                           ),
                           child: Icon(currentSelection.icon, size: 18, color: currentSelection.color),
                         ),
@@ -852,7 +840,8 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                                 style: GoogleFonts.jetBrainsMono(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF64748B),
+                                  color: const Color(0xFF475569),
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                               Text(
@@ -870,8 +859,11 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: currentSelection.isDefault ? const Color(0xFFF1F5F9) : const Color(0xFFEFF6FF),
+                            color: currentSelection.isDefault ? Colors.white.withValues(alpha: 0.7) : const Color(0xFFEFF6FF),
                             borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: currentSelection.isDefault ? const Color(0xFFCBD5E1) : const Color(0xFFBFDBFE),
+                            ),
                           ),
                           child: Text(
                             currentSelection.isDefault ? 'Default' : 'Custom',
@@ -997,55 +989,47 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
           ),
           const SizedBox(height: 6),
 
-          // Selected Category Floating Pill Banner (Compact & sleek)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
+          // Selected Category directly on gradient (Card enclosure removed; items & text preserved)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             child: Row(
               children: [
                 Container(
-                  width: 28,
-                  height: 28,
+                  width: 30,
+                  height: 30,
                   decoration: BoxDecoration(
-                    color: _selectedCategory?.color.withValues(alpha: 0.15) ?? const Color(0xFFE2E8F0),
+                    color: _selectedCategory?.color.withValues(alpha: 0.18) ?? const Color(0xFFE2E8F0),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(_selectedCategory?.icon ?? Icons.category, color: _selectedCategory?.color ?? Colors.black, size: 15),
+                  child: Icon(_selectedCategory?.icon ?? Icons.category, color: _selectedCategory?.color ?? Colors.black, size: 16),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('SELECTED CATEGORY', style: GoogleFonts.jetBrainsMono(fontSize: 9, fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+                      Text(
+                        'SELECTED CATEGORY',
+                        style: GoogleFonts.jetBrainsMono(fontSize: 9, fontWeight: FontWeight.w700, color: const Color(0xFF475569), letterSpacing: 0.5),
+                      ),
                       Text(
                         _selectedCategory?.name ?? 'General',
-                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                       ),
                     ],
                   ),
                 ),
-                TextButton(
+                TextButton.icon(
                   onPressed: () {
                     _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
                   },
+                  icon: const Icon(Icons.edit_rounded, size: 14, color: Color(0xFF1D4ED8)),
+                  label: Text('Edit', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8))),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: Text('Edit', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8))),
                 ),
               ],
             ),
