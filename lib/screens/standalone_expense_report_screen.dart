@@ -707,6 +707,23 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
         icon: Icons.bar_chart_rounded,
         actions: [
           IconButton(
+            tooltip: 'All Itemized Transactions',
+            icon: const Icon(Icons.receipt_long_rounded, size: 20, color: Color(0xFF111111)),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => StandaloneItemizedTransactionsScreen(
+                    initialStartDate: _startDate,
+                    initialEndDate: _endDate,
+                    initialPreset: _dateRangePreset,
+                    initialCategoryId: _selectedCategoryId,
+                    initialType: _selectedType,
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
             tooltip: 'Thermal Print (58/80mm)',
             icon: const Icon(Icons.print_rounded, size: 20, color: Color(0xFF111111)),
             onPressed: _printThermalReport,
@@ -749,8 +766,8 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                                 const SizedBox(height: 16),
                               ],
 
-                              // 3. Transactions List Table
-                              _buildTransactionsListCard(),
+                              // 3. Itemized Transactions Action Button Card (Opens dedicated transactions screen)
+                              _buildItemizedTransactionsActionCard(),
                             ],
                           ),
                         ),
@@ -1593,169 +1610,107 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
     );
   }
 
-  /// 3. Transactions List Table
-  Widget _buildTransactionsListCard() {
-    final displayedExpenses = _filteredExpenses.take(4).toList();
-
+  /// 3. Dedicated Itemized Transactions Button Card (Opens All Itemized Transactions Screen)
+  Widget _buildItemizedTransactionsActionCard() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE5E5E5)),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFBFDBFE), width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1D4ED8).withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: const BoxDecoration(
-              color: Color(0xFFF9FAFB),
-              border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5))),
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(7), topRight: Radius.circular(7)),
-            ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => StandaloneItemizedTransactionsScreen(
+                  initialStartDate: _startDate,
+                  initialEndDate: _endDate,
+                  initialPreset: _dateRangePreset,
+                  initialCategoryId: _selectedCategoryId,
+                  initialType: _selectedType,
+                ),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'ITEMIZED TRANSACTIONS (${_filteredExpenses.length})',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF555555),
-                    letterSpacing: 0.5,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                  ),
+                  child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF1D4ED8), size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'ITEMIZED TRANSACTIONS',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1D4ED8),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${_filteredExpenses.length}',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Tap here to view all itemized transactions & details',
+                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  _dateRangeLabel,
-                  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF666666)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF1D4ED8)),
                 ),
               ],
             ),
           ),
-          if (_filteredExpenses.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Center(
-                child: Text(
-                  'No transactions found for selected filters.',
-                  style: GoogleFonts.inter(fontSize: 13, color: Colors.grey.shade500),
-                ),
-              ),
-            )
-          else ...[
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: displayedExpenses.length,
-              separatorBuilder: (_, __) => const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
-              itemBuilder: (context, index) {
-                final exp = displayedExpenses[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                  leading: CircleAvatar(
-                    backgroundColor: exp.typeColor.withAlpha(30),
-                    child: Icon(
-                      exp.isCredit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                      color: exp.typeColor,
-                      size: 18,
-                    ),
-                  ),
-                  title: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          exp.categoryName,
-                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF111111)),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        '${exp.isCredit ? '+' : '-'} \u20B9${exp.amount.toStringAsFixed(2)}',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: exp.typeColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  subtitle: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF4F4F5),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          exp.formattedPaymentMode,
-                          style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF555555)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        exp.expenseDate,
-                        style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF888888)),
-                      ),
-                      if (exp.note != null && exp.note!.isNotEmpty) ...[
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            '• ${exp.note}',
-                            style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF666666)),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              },
-            ),
-            if (_filteredExpenses.length > 4) ...[
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => StandaloneItemizedTransactionsScreen(
-                          initialStartDate: _startDate,
-                          initialEndDate: _endDate,
-                          initialPreset: _dateRangePreset,
-                          initialCategoryId: _selectedCategoryId,
-                          initialType: _selectedType,
-                        ),
-                      ),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFBFDBFE)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF1D4ED8)),
-                        const SizedBox(width: 8),
-                        Text(
-                          'View All Transactions (${_filteredExpenses.length})',
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF1D4ED8)),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ],
+        ),
       ),
     );
   }

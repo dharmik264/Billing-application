@@ -7,6 +7,7 @@ import '../services/standalone_expense_service.dart';
 import '../widgets/custom_page_header.dart';
 import 'standalone_category_breakdown_screen.dart';
 import 'standalone_expense_report_screen.dart';
+import 'standalone_itemized_transactions_screen.dart';
 
 class StandaloneExpenseScreen extends StatefulWidget {
   const StandaloneExpenseScreen({super.key});
@@ -436,6 +437,27 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
         subtitle: 'Daily Expenses & Cash Flow',
         showIcon: false,
         actions: [
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF1D4ED8),
+              side: const BorderSide(color: Color(0xFF93C5FD)),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const StandaloneItemizedTransactionsScreen()),
+              );
+            },
+            icon: const Icon(Icons.receipt_long_rounded, size: 15, color: Color(0xFF1D4ED8)),
+            label: Text(
+              'Transactions',
+              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+            ),
+          ),
+          const SizedBox(width: 8),
           TextButton.icon(
             style: TextButton.styleFrom(
               backgroundColor: const Color(0xFF111111),
@@ -1515,6 +1537,32 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               label: Text(
                 _isSaving ? 'Saving Entry...' : 'Save Transaction',
                 style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Secondary Action: View All Itemized Transactions Button
+          SizedBox(
+            width: double.infinity,
+            height: 42,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: const Color(0xFF1D4ED8),
+                side: const BorderSide(color: Color(0xFF93C5FD), width: 1.2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StandaloneItemizedTransactionsScreen()),
+                );
+              },
+              icon: const Icon(Icons.receipt_long_rounded, size: 18, color: Color(0xFF1D4ED8)),
+              label: Text(
+                'View All Itemized Transactions',
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
               ),
             ),
           ),
