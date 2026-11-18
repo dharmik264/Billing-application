@@ -8,7 +8,6 @@ import '../models/standalone_expense_model.dart';
 import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
 import '../services/standalone_expense_service.dart';
-import '../utils/app_constants.dart';
 import '../widgets/custom_page_header.dart';
 
 class StandaloneExpenseReportScreen extends StatefulWidget {
@@ -85,40 +84,264 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
     }
   }
 
-  Future<void> _pickCustomRange() async {
-    final picked = await showDateRangePicker(
+  Future<void> _pickCustomRangeWithPresets() async {
+    final now = DateTime.now();
+    DateTime tempStart = _startDate ?? DateTime(now.year, now.month, 1);
+    DateTime tempEnd = _endDate ?? DateTime(now.year, now.month, now.day);
+    String tempPreset = _dateRangePreset;
+    bool isSelectingStart = true;
+
+    await showDialog<void>(
       context: context,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      initialDateRange: _startDate != null && _endDate != null
-          ? DateTimeRange(start: _startDate!, end: _endDate!)
-          : DateTimeRange(
-              start: DateTime.now().subtract(const Duration(days: 7)),
-              end: DateTime.now(),
-            ),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF111111),
-              onPrimary: Colors.white,
-              onSurface: Color(0xFF111111),
-            ),
-          ),
-          child: child!,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Widget buildQuickPresetChip(String label, VoidCallback onSelected) {
+              final isSelected = tempPreset == label;
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: ChoiceChip(
+                  label: Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500)),
+                  selected: isSelected,
+                  selectedColor: const Color(0xFF1D4ED8),
+                  labelStyle: TextStyle(color: isSelected ? Colors.white : const Color(0xFF1E293B)),
+                  backgroundColor: const Color(0xFFF1F5F9),
+                  side: BorderSide(color: isSelected ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1)),
+                  onSelected: (_) => onSelected(),
+                ),
+              );
+            }
+
+            return Dialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Dialog Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.date_range_rounded, color: Color(0xFF1D4ED8), size: 22),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Select Date Range',
+                                  style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Date Pickers indicators (From / To)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => setDialogState(() => isSelectingStart = true),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSelectingStart ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isSelectingStart ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1),
+                                      width: isSelectingStart ? 1.5 : 1.0,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('FROM DATE', style: GoogleFonts.jetBrainsMono(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        DateFormat('dd MMM yyyy').format(tempStart),
+                                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 6),
+                              child: Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF94A3B8)),
+                            ),
+                            Expanded(
+                              child: InkWell(
+                                onTap: () => setDialogState(() => isSelectingStart = false),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: !isSelectingStart ? const Color(0xFFEFF6FF) : const Color(0xFFF8FAFC),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: !isSelectingStart ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1),
+                                      width: !isSelectingStart ? 1.5 : 1.0,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('TO DATE', style: GoogleFonts.jetBrainsMono(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF64748B))),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        DateFormat('dd MMM yyyy').format(tempEnd),
+                                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Calendar Picker
+                        Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                              primary: Color(0xFF1D4ED8),
+                              onPrimary: Colors.white,
+                              onSurface: Color(0xFF0F172A),
+                            ),
+                          ),
+                          child: CalendarDatePicker(
+                            initialDate: isSelectingStart ? tempStart : tempEnd,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime.now(),
+                            onDateChanged: (picked) {
+                              setDialogState(() {
+                                tempPreset = 'Custom';
+                                if (isSelectingStart) {
+                                  tempStart = picked;
+                                  if (tempEnd.isBefore(tempStart)) {
+                                    tempEnd = tempStart;
+                                  }
+                                  isSelectingStart = false; // automatically switch to End date
+                                } else {
+                                  if (picked.isBefore(tempStart)) {
+                                    tempStart = picked;
+                                  } else {
+                                    tempEnd = picked;
+                                  }
+                                }
+                              });
+                            },
+                          ),
+                        ),
+                        const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                        const SizedBox(height: 10),
+
+                        // Requirement 2: Quick Presets directly underneath the calendar!
+                        Text(
+                          'QUICK PRESETS',
+                          style: GoogleFonts.jetBrainsMono(fontSize: 10, fontWeight: FontWeight.w700, color: const Color(0xFF64748B), letterSpacing: 0.5),
+                        ),
+                        const SizedBox(height: 6),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              buildQuickPresetChip('Today', () {
+                                final n = DateTime.now();
+                                setDialogState(() {
+                                  tempStart = DateTime(n.year, n.month, n.day);
+                                  tempEnd = DateTime(n.year, n.month, n.day);
+                                  tempPreset = 'Today';
+                                });
+                              }),
+                              buildQuickPresetChip('Yesterday', () {
+                                final n = DateTime.now();
+                                final yest = n.subtract(const Duration(days: 1));
+                                setDialogState(() {
+                                  tempStart = DateTime(yest.year, yest.month, yest.day);
+                                  tempEnd = DateTime(yest.year, yest.month, yest.day);
+                                  tempPreset = 'Yesterday';
+                                });
+                              }),
+                              buildQuickPresetChip('This Week', () {
+                                final n = DateTime.now();
+                                setDialogState(() {
+                                  tempStart = DateTime(n.year, n.month, n.day).subtract(Duration(days: n.weekday - 1));
+                                  tempEnd = DateTime(n.year, n.month, n.day);
+                                  tempPreset = 'This Week';
+                                });
+                              }),
+                              buildQuickPresetChip('This Month', () {
+                                final n = DateTime.now();
+                                setDialogState(() {
+                                  tempStart = DateTime(n.year, n.month, 1);
+                                  tempEnd = DateTime(n.year, n.month, n.day);
+                                  tempPreset = 'This Month';
+                                });
+                              }),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Actions
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text('Cancel', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1D4ED8),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                                elevation: 1,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _startDate = tempStart;
+                                  _endDate = tempEnd;
+                                  _dateRangePreset = tempPreset;
+                                });
+                                Navigator.pop(ctx);
+                                _loadReportData();
+                              },
+                              child: Text('Apply Range', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
-
-    if (picked != null) {
-      setState(() {
-        _dateRangePreset = 'Custom';
-        _startDate = picked.start;
-        _endDate = picked.end;
-      });
-      _loadReportData();
-    }
   }
+
 
   Future<void> _loadReportData() async {
     setState(() => _isLoading = true);
@@ -290,7 +513,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.center,
                       children: [
-                        pw.Text('TOTAL INFLOW (CREDIT)', style: const pw.TextStyle(fontSize: 10, color: PdfColors.green800)),
+                        pw.Text('CREDIT (INFLOW)', style: const pw.TextStyle(fontSize: 10, color: PdfColors.green800)),
                         pw.SizedBox(height: 4),
                         pw.Text('+ Rs. ${credit.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 14, color: PdfColors.green800)),
                       ],
@@ -299,7 +522,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.center,
                       children: [
-                        pw.Text('TOTAL OUTFLOW (DEBIT)', style: const pw.TextStyle(fontSize: 10, color: PdfColors.red800)),
+                        pw.Text('DEBIT (OUTFLOW)', style: const pw.TextStyle(fontSize: 10, color: PdfColors.red800)),
                         pw.SizedBox(height: 4),
                         pw.Text('- Rs. ${debit.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 14, color: PdfColors.red800)),
                       ],
@@ -409,7 +632,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: StitchColors.background,
+      backgroundColor: Colors.transparent,
       appBar: CustomAppBar(
         title: 'Expense & Cashflow Report',
         subtitle: 'Financial & Cash Flow Report',
@@ -472,130 +695,421 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
     );
   }
 
-  /// Top Filter Controls Header
+  /// Top Filter Controls Header (No white background strip - sits directly on gradient)
   Widget _buildFilterControls() {
-    final presets = ['Today', 'Yesterday', 'This Week', 'This Month'];
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE5E5E5))),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Range Presets Row
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                ...presets.map((p) {
-                  final isSelected = _dateRangePreset == p;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: Text(p, style: GoogleFonts.inter(fontSize: 12, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500)),
-                      selected: isSelected,
-                      selectedColor: const Color(0xFF111111),
-                      labelStyle: TextStyle(color: isSelected ? Colors.white : const Color(0xFF333333)),
-                      backgroundColor: const Color(0xFFF5F5F5),
-                      side: BorderSide(color: isSelected ? const Color(0xFF111111) : const Color(0xFFE0E0E0)),
-                      onSelected: (val) {
-                        if (val) _applyPresetRange(p);
-                      },
-                    ),
-                  );
-                }),
-                // Custom Range Pill
-                ActionChip(
-                  avatar: const Icon(Icons.date_range_rounded, size: 14, color: Color(0xFF1976D2)),
-                  label: Text(
-                    _dateRangePreset == 'Custom' ? _dateRangeLabel : 'Custom Range',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: _dateRangePreset == 'Custom' ? FontWeight.w700 : FontWeight.w500,
-                      color: const Color(0xFF1976D2),
-                    ),
-                  ),
-                  backgroundColor: _dateRangePreset == 'Custom' ? const Color(0xFFE3F2FD) : const Color(0xFFF5F5F5),
-                  side: BorderSide(color: _dateRangePreset == 'Custom' ? const Color(0xFF1976D2) : const Color(0xFFE0E0E0)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  onPressed: _pickCustomRange,
-                ),
-              ],
-            ),
-          ),
+          // 1. Single Date Range Dropdown with Icon and Label directly on front
+          _buildDateRangeDropdown(),
           const SizedBox(height: 8),
 
-          // Filters Row: Category Dropdown & Type Dropdown
+          // 2. Filter Row: Category Dropdown & Type Dropdown (Properly styled & responsive)
           Row(
             children: [
-              // Category Filter Dropdown
               Expanded(
                 flex: 3,
-                child: Container(
-                  height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFAFAFA),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedCategoryId,
-                      isExpanded: true,
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF111111)),
-                      items: [
-                        const DropdownMenuItem(value: 'ALL', child: Text('All Categories')),
-                        ..._categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
-                      ],
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() => _selectedCategoryId = val);
-                          _loadReportData();
-                        }
-                      },
-                    ),
-                  ),
-                ),
+                child: _buildCategoryDropdown(),
               ),
               const SizedBox(width: 8),
-              // Type Filter (All, Credit, Debit)
               Expanded(
                 flex: 2,
-                child: Container(
-                  height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFAFAFA),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedType,
-                      isExpanded: true,
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF111111)),
-                      items: const [
-                        DropdownMenuItem(value: 'ALL', child: Text('All Types')),
-                        DropdownMenuItem(value: 'CREDIT', child: Text('Credit (Inflow)')),
-                        DropdownMenuItem(value: 'DEBIT', child: Text('Debit (Outflow)')),
-                      ],
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() => _selectedType = val);
-                          _loadReportData();
-                        }
-                      },
-                    ),
-                  ),
-                ),
+                child: _buildTypeDropdown(),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  /// 1. Single Date Range Dropdown
+  Widget _buildDateRangeDropdown() {
+    final String displayLabel = _dateRangePreset == 'Custom'
+        ? 'Custom Range: $_dateRangeLabel'
+        : '$_dateRangePreset ($_dateRangeLabel)';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: ['Today', 'Yesterday', 'This Week', 'This Month', 'Custom'].contains(_dateRangePreset)
+              ? _dateRangePreset
+              : 'Custom',
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 22),
+          dropdownColor: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          selectedItemBuilder: (context) {
+            return ['Today', 'Yesterday', 'This Week', 'This Month', 'Custom'].map((p) {
+              return Row(
+                children: [
+                  const Icon(Icons.date_range_rounded, size: 18, color: Color(0xFF1D4ED8)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      displayLabel,
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              );
+            }).toList();
+          },
+          items: [
+            DropdownMenuItem(
+              value: 'Today',
+              child: Row(
+                children: [
+                  const Icon(Icons.today_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                  const SizedBox(width: 8),
+                  Text('Today', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: 'Yesterday',
+              child: Row(
+                children: [
+                  const Icon(Icons.history_rounded, size: 16, color: Color(0xFF64748B)),
+                  const SizedBox(width: 8),
+                  Text('Yesterday', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: 'This Week',
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_view_week_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                  const SizedBox(width: 8),
+                  Text('This Week', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: 'This Month',
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_month_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                  const SizedBox(width: 8),
+                  Text('This Month', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: 'Custom',
+              child: Row(
+                children: [
+                  const Icon(Icons.edit_calendar_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Custom Range (Pick Dates...)',
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          onChanged: (val) {
+            if (val == null) return;
+            if (val == 'Custom') {
+              _pickCustomRangeWithPresets();
+            } else {
+              _applyPresetRange(val);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  /// 2. Category Filter Dropdown (Clean, spacious & responsive)
+  Widget _buildCategoryDropdown() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedCategoryId,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 20),
+          dropdownColor: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          selectedItemBuilder: (context) {
+            return [
+              // 'ALL' item
+              Row(
+                children: [
+                  const Icon(Icons.category_outlined, size: 16, color: Color(0xFF64748B)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'All Categories',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              ..._categories.map((c) {
+                return Row(
+                  children: [
+                    Icon(c.icon, size: 16, color: c.color),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        c.name,
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ];
+          },
+          items: [
+            DropdownMenuItem(
+              value: 'ALL',
+              child: Row(
+                children: [
+                  const Icon(Icons.category_outlined, size: 16, color: Color(0xFF64748B)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'All Categories (${_categories.length})',
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (_selectedCategoryId == 'ALL')
+                    const Icon(Icons.check, size: 16, color: Color(0xFF1D4ED8)),
+                ],
+              ),
+            ),
+            ..._categories.map((c) {
+              final isSelected = c.id == _selectedCategoryId;
+              return DropdownMenuItem(
+                value: c.id,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: c.color.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(c.icon, size: 14, color: c.color),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        c.name,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (isSelected)
+                      const Icon(Icons.check, size: 16, color: Color(0xFF1D4ED8)),
+                  ],
+                ),
+              );
+            }),
+          ],
+          onChanged: (val) {
+            if (val != null) {
+              setState(() => _selectedCategoryId = val);
+              _loadReportData();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  /// 3. Type Filter Dropdown (Clean, spacious & responsive)
+  Widget _buildTypeDropdown() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedType,
+          isExpanded: true,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 20),
+          dropdownColor: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          selectedItemBuilder: (context) {
+            return [
+              // 'ALL' item
+              Row(
+                children: [
+                  const Icon(Icons.swap_vert_rounded, size: 16, color: Color(0xFF64748B)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'All Types',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              // 'CREDIT' item
+              Row(
+                children: [
+                  const Icon(Icons.arrow_downward_rounded, size: 16, color: Color(0xFF2E7D32)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Credit (Inflow)',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF2E7D32)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              // 'DEBIT' item
+              Row(
+                children: [
+                  const Icon(Icons.arrow_upward_rounded, size: 16, color: Color(0xFFC62828)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Debit (Outflow)',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFFC62828)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ];
+          },
+          items: [
+            DropdownMenuItem(
+              value: 'ALL',
+              child: Row(
+                children: [
+                  const Icon(Icons.swap_vert_rounded, size: 16, color: Color(0xFF64748B)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'All Types',
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (_selectedType == 'ALL')
+                    const Icon(Icons.check, size: 16, color: Color(0xFF1D4ED8)),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: 'CREDIT',
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE8F5E9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_downward_rounded, size: 14, color: Color(0xFF2E7D32)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Credit (Inflow)',
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (_selectedType == 'CREDIT')
+                    const Icon(Icons.check, size: 16, color: Color(0xFF2E7D32)),
+                ],
+              ),
+            ),
+            DropdownMenuItem(
+              value: 'DEBIT',
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFEBEE),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.arrow_upward_rounded, size: 14, color: Color(0xFFC62828)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Debit (Outflow)',
+                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFFC62828)),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (_selectedType == 'DEBIT')
+                    const Icon(Icons.check, size: 16, color: Color(0xFFC62828)),
+                ],
+              ),
+            ),
+          ],
+          onChanged: (val) {
+            if (val != null) {
+              setState(() => _selectedType = val);
+              _loadReportData();
+            }
+          },
+        ),
       ),
     );
   }
@@ -627,7 +1141,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total Inflow (Credit)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
+                    Text('Credit (Inflow)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
                     Text('$creditCount txns', style: GoogleFonts.inter(fontSize: 10, color: Colors.grey.shade600)),
                   ],
                 ),
@@ -659,7 +1173,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total Outflow (Debit)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFC62828))),
+                    Text('Debit (Outflow)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFC62828))),
                     Text('$debitCount txns', style: GoogleFonts.inter(fontSize: 10, color: Colors.grey.shade600)),
                   ],
                 ),

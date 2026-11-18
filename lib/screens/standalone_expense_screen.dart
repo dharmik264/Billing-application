@@ -32,11 +32,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
 
   // 0 = Add Entry Process (2 pages: Step 1 Category, Step 2 Amount)
   // 1 = Cashbook & History (Today's summary & recent transactions)
-  int _activeTab = 0;
   int _currentProcessStep = 0; // 0 = Category, 1 = Amount & Details
-
-  Map<String, double> _todaySummary = {'credit': 0.0, 'debit': 0.0, 'net': 0.0};
-  List<StandaloneExpense> _recentExpenses = [];
 
   final List<String> _paymentModes = ['CASH', 'ONLINE', 'BANK_TRANSFER', 'CHEQUE'];
 
@@ -73,16 +69,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
   }
 
   Future<void> _loadData() async {
-    final now = DateTime.now();
     final categories = await _service.getCategories();
-    final summary = await _service.getSummary(
-      startDate: now,
-      endDate: now,
-    );
-    final recents = await _service.getExpenses(
-      startDate: now.subtract(const Duration(days: 3)),
-      endDate: now,
-    );
 
     if (mounted) {
       setState(() {
@@ -97,8 +84,6 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             _selectedCategory = _categories.first;
           }
         }
-        _todaySummary = summary;
-        _recentExpenses = recents;
       });
     }
   }
@@ -398,10 +383,13 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             backgroundColor: _selectedType.color,
             duration: const Duration(seconds: 2),
             action: SnackBarAction(
-              label: 'View Cashbook',
+              label: 'View Report',
               textColor: Colors.white,
               onPressed: () {
-                setState(() => _activeTab = 1);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const StandaloneExpenseReportScreen()),
+                );
               },
             ),
           ),
@@ -419,38 +407,6 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             content: Text('Failed to save transaction. Please try again.'),
             backgroundColor: Color(0xFFC62828),
           ),
-        );
-      }
-    }
-  }
-
-  Future<void> _deleteExpense(StandaloneExpense exp) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Delete Transaction', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
-        content: Text('Are you sure you want to delete this ${exp.typeLabel} of ₹${exp.amount.toStringAsFixed(2)}?', style: GoogleFonts.inter()),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(c, false),
-            child: Text('Cancel', style: GoogleFonts.inter(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(c, true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFC62828)),
-            child: Text('Delete', style: GoogleFonts.inter(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await _service.deleteExpense(exp.id);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Transaction deleted')),
         );
       }
     }
@@ -494,115 +450,10 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 800),
-                  child: Column(
-                    children: [
-                      // Top Navigation Switcher: [➕ New Entry Process (2 Pages)] | [📖 Cashbook & History]
-                      _buildTopNavigationTabs(),
-
-                      // Active View Body
-                      Expanded(
-                        child: _activeTab == 0
-                            ? _buildAddEntryProcessView()
-                            : _buildCashbookHistoryView(),
-                      ),
-                    ],
-                  ),
+                  child: _buildAddEntryProcessView(),
                 ),
               ),
             ),
-    );
-  }
-
-  /// Top Segmented Navigation (No heavy cards - sits directly on gradient)
-  Widget _buildTopNavigationTabs() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFCBD5E1)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Tab 1: New Entry Process (2 Pages)
-            Expanded(
-              child: InkWell(
-                onTap: () => setState(() => _activeTab = 0),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: _activeTab == 0 ? const Color(0xFF111111) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.add_circle_outline_rounded,
-                        size: 16,
-                        color: _activeTab == 0 ? Colors.white : const Color(0xFF555555),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'New Entry (2 Pages)',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: _activeTab == 0 ? Colors.white : const Color(0xFF555555),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 4),
-            // Tab 2: Cashbook & Ledger
-            Expanded(
-              child: InkWell(
-                onTap: () => setState(() => _activeTab = 1),
-                borderRadius: BorderRadius.circular(8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: _activeTab == 1 ? const Color(0xFF111111) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.menu_book_rounded,
-                        size: 16,
-                        color: _activeTab == 1 ? Colors.white : const Color(0xFF555555),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Cashbook & Ledger',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: _activeTab == 1 ? Colors.white : const Color(0xFF555555),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -1504,326 +1355,5 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
     );
   }
 
-  /// --------------------------------------------------------------------------
-  /// CASHBOOK & LEDGER VIEW: TODAY'S TOTALS + TRANSACTIONS (NO CARD ENCLOSURE)
-  /// Sits directly on top of gradient without any outer Card container!
-  /// --------------------------------------------------------------------------
-  Widget _buildCashbookHistoryView() {
-    final credit = _todaySummary['credit'] ?? 0.0;
-    final debit = _todaySummary['debit'] ?? 0.0;
-    final net = _todaySummary['net'] ?? 0.0;
-    final isSurplus = net >= 0;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Section Title directly on gradient
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "TODAY'S CASHBOOK",
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
-                  letterSpacing: 0.5,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFCBD5E1)),
-                ),
-                child: Text(
-                  DateFormat('dd MMM yyyy').format(DateTime.now()),
-                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF334155)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // 3 Financial Summary Pills directly on gradient (No enclosing Card!)
-          Row(
-            children: [
-              // Total Credit (Green Pill)
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFF86EFAC)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF16A34A).withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.arrow_downward_rounded, size: 14, color: Color(0xFF16A34A)),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Credit (Inflow)',
-                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF16A34A)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '+ ₹${credit.toStringAsFixed(2)}',
-                          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF15803D)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Total Debit (Red Pill)
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFFCA5A5)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFDC2626).withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.arrow_upward_rounded, size: 14, color: Color(0xFFDC2626)),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Debit (Outflow)',
-                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFDC2626)),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '- ₹${debit.toStringAsFixed(2)}',
-                          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFFB91C1C)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Net Movement Bar directly on gradient
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Net Cash Movement:',
-                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
-                ),
-                Text(
-                  '${isSurplus ? '+' : ''}₹${net.toStringAsFixed(2)}',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: isSurplus ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Transactions Header directly on gradient
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'RECENT TRANSACTIONS',
-                style: GoogleFonts.jetBrainsMono(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
-                  letterSpacing: 0.5,
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const StandaloneExpenseReportScreen()),
-                  );
-                },
-                child: Text('View Full Report >', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8))),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // List of individual floating transaction items directly on gradient (No card enclosure!)
-          if (_recentExpenses.isEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
-              alignment: Alignment.center,
-              child: Column(
-                children: [
-                  Icon(Icons.receipt_long_outlined, size: 48, color: Colors.grey.shade400),
-                  const SizedBox(height: 10),
-                  Text(
-                    'No transactions recorded today yet.',
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Go to "➕ New Entry" tab to record a transaction.',
-                    style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
-                  ),
-                ],
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _recentExpenses.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final exp = _recentExpenses[index];
-                return Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: exp.typeColor.withValues(alpha: 0.15),
-                        child: Icon(
-                          exp.isCredit ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                          color: exp.typeColor,
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              exp.categoryName,
-                              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    exp.formattedPaymentMode,
-                                    style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: const Color(0xFF475569)),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  exp.expenseDate,
-                                  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8)),
-                                ),
-                              ],
-                            ),
-                            if (exp.note != null && exp.note!.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                exp.note!,
-                                style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B)),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '${exp.isCredit ? '+' : '-'} ₹${exp.amount.toStringAsFixed(2)}',
-                            style: GoogleFonts.inter(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: exp.typeColor,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFF94A3B8)),
-                            tooltip: 'Delete',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () => _deleteExpense(exp),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-        ],
-      ),
-    );
-  }
 }
