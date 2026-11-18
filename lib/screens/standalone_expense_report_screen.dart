@@ -707,23 +707,6 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
         icon: Icons.bar_chart_rounded,
         actions: [
           IconButton(
-            tooltip: 'All Itemized Transactions',
-            icon: const Icon(Icons.receipt_long_rounded, size: 20, color: Color(0xFF111111)),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => StandaloneItemizedTransactionsScreen(
-                    initialStartDate: _startDate,
-                    initialEndDate: _endDate,
-                    initialPreset: _dateRangePreset,
-                    initialCategoryId: _selectedCategoryId,
-                    initialType: _selectedType,
-                  ),
-                ),
-              );
-            },
-          ),
-          IconButton(
             tooltip: 'Thermal Print (58/80mm)',
             icon: const Icon(Icons.print_rounded, size: 20, color: Color(0xFF111111)),
             onPressed: _printThermalReport,

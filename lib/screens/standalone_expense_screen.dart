@@ -7,7 +7,6 @@ import '../services/standalone_expense_service.dart';
 import '../widgets/custom_page_header.dart';
 import 'standalone_category_breakdown_screen.dart';
 import 'standalone_expense_report_screen.dart';
-import 'standalone_itemized_transactions_screen.dart';
 
 class StandaloneExpenseScreen extends StatefulWidget {
   const StandaloneExpenseScreen({super.key});
@@ -20,6 +19,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
   final StandaloneExpenseService _service = StandaloneExpenseService.instance;
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _categorySearchController = TextEditingController();
   final FocusNode _amountFocusNode = FocusNode();
   late final PageController _pageController;
 
@@ -71,6 +71,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
     _service.changeNotifier.removeListener(_onServiceChanged);
     _amountController.dispose();
     _noteController.dispose();
+    _categorySearchController.dispose();
     _amountFocusNode.dispose();
     _pageController.dispose();
     super.dispose();
@@ -437,27 +438,6 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
         subtitle: 'Daily Expenses & Cash Flow',
         showIcon: false,
         actions: [
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF1D4ED8),
-              side: const BorderSide(color: Color(0xFF93C5FD)),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const StandaloneItemizedTransactionsScreen()),
-              );
-            },
-            icon: const Icon(Icons.receipt_long_rounded, size: 15, color: Color(0xFF1D4ED8)),
-            label: Text(
-              'Transactions',
-              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
-            ),
-          ),
-          const SizedBox(width: 8),
           TextButton.icon(
             style: TextButton.styleFrom(
               backgroundColor: const Color(0xFF111111),
@@ -650,10 +630,10 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
   /// PAGE 1: CATEGORY SELECTION & ADD CATEGORY (NO CARD ENCLOSURE)
   /// --------------------------------------------------------------------------
   Widget _buildPage1CategorySelection() {
-    // Ensure currently selected category is valid within _categories list
-    final StandaloneExpenseCategory? currentSelection = _categories.any((c) => c.id == _selectedCategory?.id)
-        ? _categories.firstWhere((c) => c.id == _selectedCategory?.id)
-        : (_categories.isNotEmpty ? _categories.first : null);
+    final searchQuery = _categorySearchController.text.trim();
+    final filteredCategories = searchQuery.isEmpty
+        ? _categories
+        : _categories.where((c) => c.name.toLowerCase().contains(searchQuery.toLowerCase())).toList();
 
     return Column(
       children: [
@@ -683,7 +663,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Choose or add category',
+                            'Choose one category (single select)',
                             style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -726,62 +706,157 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // All Categories Single Dropdown Container
+                // Search category bar
                 Container(
+                  height: 42,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF93C5FD), width: 1.5),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFCBD5E1)),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF1D4ED8).withValues(alpha: 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<StandaloneExpenseCategory>(
-                      value: currentSelection,
-                      isExpanded: true,
-                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 26),
-                      hint: Row(
+                  child: TextField(
+                    controller: _categorySearchController,
+                    onChanged: (_) => setState(() {}),
+                    style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF0F172A)),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search_rounded, size: 18, color: Color(0xFF64748B)),
+                      suffixIcon: _categorySearchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, size: 16, color: Color(0xFF64748B)),
+                              onPressed: () {
+                                _categorySearchController.clear();
+                                setState(() {});
+                              },
+                            )
+                          : null,
+                      hintText: 'Search categories...',
+                      hintStyle: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Single-Select Checkbox Category List
+                if (filteredCategories.isEmpty)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Center(
+                      child: Column(
                         children: [
-                          const Icon(Icons.category_outlined, color: Color(0xFF94A3B8), size: 20),
-                          const SizedBox(width: 10),
-                          Text('Select Category', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B))),
+                          const Icon(Icons.search_off_rounded, size: 36, color: Color(0xFF94A3B8)),
+                          const SizedBox(height: 8),
+                          Text(
+                            'No category found matching "$searchQuery"',
+                            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
+                          ),
                         ],
                       ),
-                      dropdownColor: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      selectedItemBuilder: (BuildContext context) {
-                        return _categories.map((category) {
-                          return Row(
+                    ),
+                  )
+                else
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredCategories.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final category = filteredCategories[index];
+                      final isChecked = _selectedCategory?.id == category.id;
+
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            if (_selectedCategory?.id == category.id) {
+                              _selectedCategory = null;
+                            } else {
+                              _selectedCategory = category;
+                            }
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isChecked ? const Color(0xFFEFF6FF) : Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isChecked ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1),
+                              width: isChecked ? 1.8 : 1.0,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isChecked
+                                    ? const Color(0xFF1D4ED8).withValues(alpha: 0.08)
+                                    : Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: Row(
                             children: [
+                              // Single-select Checkbox
+                              Checkbox(
+                                value: isChecked,
+                                activeColor: const Color(0xFF1D4ED8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                onChanged: (bool? val) {
+                                  setState(() {
+                                    if (val == true) {
+                                      _selectedCategory = category;
+                                    } else {
+                                      if (_selectedCategory?.id == category.id) {
+                                        _selectedCategory = null;
+                                      }
+                                    }
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                              // Category Icon
                               Container(
-                                width: 30,
-                                height: 30,
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
                                   color: category.color.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(category.icon, size: 16, color: category.color),
+                                child: Icon(category.icon, size: 18, color: category.color),
                               ),
                               const SizedBox(width: 10),
+                              // Category Name
                               Expanded(
                                 child: Text(
                                   category.name,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF0F172A),
+                                    fontWeight: isChecked ? FontWeight.w700 : FontWeight.w600,
+                                    color: isChecked ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              // Default / Custom Tag
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: category.isDefault ? const Color(0xFFF1F5F9) : const Color(0xFFEFF6FF),
                                   borderRadius: BorderRadius.circular(6),
@@ -799,139 +874,10 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                                 ),
                               ),
                             ],
-                          );
-                        }).toList();
-                      },
-                      items: _categories.map((category) {
-                        final isItemCurrent = currentSelection?.id == category.id;
-                        return DropdownMenuItem<StandaloneExpenseCategory>(
-                          value: category,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: category.color.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(category.icon, size: 18, color: category.color),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    category.name,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14,
-                                      fontWeight: isItemCurrent ? FontWeight.w700 : FontWeight.w600,
-                                      color: isItemCurrent ? const Color(0xFF1D4ED8) : const Color(0xFF1E293B),
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: category.isDefault ? const Color(0xFFF1F5F9) : const Color(0xFFEFF6FF),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(
-                                      color: category.isDefault ? const Color(0xFFCBD5E1) : const Color(0xFFBFDBFE),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    category.isDefault ? 'Default' : 'Custom',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: category.isDefault ? const Color(0xFF64748B) : const Color(0xFF1D4ED8),
-                                    ),
-                                  ),
-                                ),
-                                if (isItemCurrent) ...[
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.check_circle_rounded, color: Color(0xFF1D4ED8), size: 18),
-                                ],
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (StandaloneExpenseCategory? newCat) {
-                        if (newCat != null) {
-                          setState(() => _selectedCategory = newCat);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                // Selected Category Preview directly on gradient (Card enclosure removed; items & text preserved)
-                if (currentSelection != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: currentSelection.color.withValues(alpha: 0.18),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(currentSelection.icon, size: 18, color: currentSelection.color),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'SELECTED CATEGORY',
-                                style: GoogleFonts.jetBrainsMono(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF475569),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              Text(
-                                currentSelection.name,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF0F172A),
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: currentSelection.isDefault ? Colors.white.withValues(alpha: 0.7) : const Color(0xFFEFF6FF),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: currentSelection.isDefault ? const Color(0xFFCBD5E1) : const Color(0xFFBFDBFE),
-                            ),
-                          ),
-                          child: Text(
-                            currentSelection.isDefault ? 'Default' : 'Custom',
-                            style: GoogleFonts.inter(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w600,
-                              color: currentSelection.isDefault ? const Color(0xFF64748B) : const Color(0xFF1D4ED8),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
-                      ],
-                    ),
+                      );
+                    },
                   ),
               ],
             ),
@@ -1043,12 +989,12 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
           ),
           const SizedBox(height: 6),
 
-          // Category Selector Dropdown directly on gradient with "View All Breakdown" option
+          // Selected Category directly on gradient with "Change" button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'CATEGORY',
+                'SELECTED CATEGORY',
                 style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
               ),
               InkWell(
@@ -1075,133 +1021,51 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             ],
           ),
           const SizedBox(height: 5),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedCategory?.id,
-                isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 24),
-                hint: Row(
-                  children: [
-                    const Icon(Icons.category_outlined, color: Color(0xFF94A3B8), size: 18),
-                    const SizedBox(width: 8),
-                    Text('Select Category', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
-                  ],
-                ),
-                dropdownColor: Colors.white,
+          InkWell(
+            onTap: () {
+              _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+            },
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                selectedItemBuilder: (context) {
-                  return _categories.map((cat) {
-                    return Row(
-                      children: [
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(
-                            color: cat.color.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(cat.icon, size: 15, color: cat.color),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            cat.name,
-                            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList();
-                },
-                items: [
-                  // 1. View All Breakdown Action Option
-                  DropdownMenuItem<String>(
-                    value: '__VIEW_ALL_BREAKDOWN__',
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEFF6FF),
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFBFDBFE)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.pie_chart_rounded, size: 16, color: Color(0xFF1D4ED8)),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'View All (Expense Breakdown by Category)',
-                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF1D4ED8)),
-                        ],
-                      ),
+                border: Border.all(color: const Color(0xFFCBD5E1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: _selectedCategory?.color.withValues(alpha: 0.15) ?? const Color(0xFFE2E8F0),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(_selectedCategory?.icon ?? Icons.category_rounded, size: 18, color: _selectedCategory?.color ?? const Color(0xFF1D4ED8)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _selectedCategory?.name ?? 'Select Category',
+                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // 2. Category Items
-                  ..._categories.map((cat) {
-                    final isCurrent = _selectedCategory?.id == cat.id;
-                    return DropdownMenuItem<String>(
-                      value: cat.id,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: cat.color.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(cat.icon, size: 16, color: cat.color),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              cat.name,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-                                color: isCurrent ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (isCurrent)
-                            const Icon(Icons.check_circle_rounded, color: Color(0xFF1D4ED8), size: 18),
-                        ],
-                      ),
-                    );
-                  }),
+                  const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Change',
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                  ),
                 ],
-                onChanged: (val) {
-                  if (val == '__VIEW_ALL_BREAKDOWN__') {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const StandaloneCategoryBreakdownScreen()),
-                    );
-                  } else if (val != null) {
-                    final found = _categories.cast<StandaloneExpenseCategory?>().firstWhere((c) => c?.id == val, orElse: () => null);
-                    if (found != null) {
-                      setState(() => _selectedCategory = found);
-                    }
-                  }
-                },
               ),
             ),
           ),
@@ -1537,32 +1401,6 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               label: Text(
                 _isSaving ? 'Saving Entry...' : 'Save Transaction',
                 style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Secondary Action: View All Itemized Transactions Button
-          SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: const Color(0xFF1D4ED8),
-                side: const BorderSide(color: Color(0xFF93C5FD), width: 1.2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const StandaloneItemizedTransactionsScreen()),
-                );
-              },
-              icon: const Icon(Icons.receipt_long_rounded, size: 18, color: Color(0xFF1D4ED8)),
-              label: Text(
-                'View All Itemized Transactions',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
               ),
             ),
           ),
