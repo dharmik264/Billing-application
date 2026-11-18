@@ -34,7 +34,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
   // 1 = Cashbook & History (Today's summary & recent transactions)
   int _currentProcessStep = 0; // 0 = Category, 1 = Amount & Details
 
-  final List<String> _paymentModes = ['CASH', 'ONLINE'];
+  final List<String> _paymentModes = ['CASH', 'ONLINE', 'BANK_TRANSFER', 'CHEQUE'];
 
   @override
   void initState() {
@@ -961,7 +961,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
     final activeColor = _selectedType.color;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -978,6 +978,11 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                   'Change Category',
                   style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
                 ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -990,7 +995,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
 
           // Selected Category Floating Pill Banner (Compact & sleek)
           Container(
@@ -1010,15 +1015,15 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 30,
-                  height: 30,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: _selectedCategory?.color.withValues(alpha: 0.15) ?? const Color(0xFFE2E8F0),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(_selectedCategory?.icon ?? Icons.category, color: _selectedCategory?.color ?? Colors.black, size: 16),
+                  child: Icon(_selectedCategory?.icon ?? Icons.category, color: _selectedCategory?.color ?? Colors.black, size: 15),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1045,14 +1050,14 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           // High-Contrast Credit / Debit Switcher directly on gradient
           Text(
             'TRANSACTION TYPE',
             style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           Row(
             children: [
               // Debit Button (Red)
@@ -1062,7 +1067,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                   borderRadius: BorderRadius.circular(10),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                     decoration: BoxDecoration(
                       color: _selectedType == StandaloneExpenseType.debit ? const Color(0xFFDC2626) : Colors.white,
                       borderRadius: BorderRadius.circular(10),
@@ -1105,7 +1110,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               // Credit Button (Green)
               Expanded(
                 child: InkWell(
@@ -1113,7 +1118,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                   borderRadius: BorderRadius.circular(10),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                     decoration: BoxDecoration(
                       color: _selectedType == StandaloneExpenseType.credit ? const Color(0xFF16A34A) : Colors.white,
                       borderRadius: BorderRadius.circular(10),
@@ -1158,14 +1163,14 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
 
           // Enter Money Amount TextField directly on gradient
           Text(
             'ENTER AMOUNT',
             style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -1187,77 +1192,86 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
               ],
-              style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+              style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
               decoration: InputDecoration(
                 prefixIcon: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Text(
                     '₹',
-                    style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w800, color: activeColor),
+                    style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w800, color: activeColor),
                   ),
                 ),
                 hintText: '0.00',
-                hintStyle: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8)),
+                hintStyle: GoogleFonts.inter(fontSize: 22, fontWeight: FontWeight.w500, color: const Color(0xFF94A3B8)),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
-          // Payment Mode Selector directly on gradient (Cash and Online/UPI only)
+          // Payment Mode Selector directly on gradient (Cash, Online, Bank, Cheque)
           Text(
             'PAYMENT MODE',
             style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
           ),
-          const SizedBox(height: 8),
-          Row(
+          const SizedBox(height: 5),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
             children: _paymentModes.map((mode) {
               final isSelected = _paymentMode == mode;
-              final label = mode == 'ONLINE' ? 'Online / UPI' : 'Cash';
-              final icon = mode == 'ONLINE' ? Icons.account_balance_wallet_rounded : Icons.payments_rounded;
+              String label = 'Cash';
+              IconData icon = Icons.payments_rounded;
+              if (mode == 'ONLINE') {
+                label = 'Online / UPI';
+                icon = Icons.account_balance_wallet_rounded;
+              } else if (mode == 'BANK_TRANSFER') {
+                label = 'Bank';
+                icon = Icons.account_balance_rounded;
+              } else if (mode == 'CHEQUE') {
+                label = 'Cheque';
+                icon = Icons.receipt_long_rounded;
+              }
 
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: ChoiceChip(
-                  avatar: Icon(
-                    icon,
-                    size: 16,
-                    color: isSelected ? Colors.white : const Color(0xFF475569),
-                  ),
-                  label: Text(
-                    label,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                      color: isSelected ? Colors.white : const Color(0xFF334155),
-                    ),
-                  ),
-                  selected: isSelected,
-                  selectedColor: const Color(0xFF1E293B),
-                  backgroundColor: Colors.white,
-                  side: BorderSide(
-                    color: isSelected ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
-                    width: 1.2,
-                  ),
-                  elevation: isSelected ? 2 : 0,
-                  shadowColor: Colors.black.withValues(alpha: 0.08),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  onSelected: (val) {
-                    if (val) setState(() => _paymentMode = mode);
-                  },
+              return ChoiceChip(
+                avatar: Icon(
+                  icon,
+                  size: 15,
+                  color: isSelected ? Colors.white : const Color(0xFF475569),
                 ),
+                label: Text(
+                  label,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                    color: isSelected ? Colors.white : const Color(0xFF334155),
+                  ),
+                ),
+                selected: isSelected,
+                selectedColor: const Color(0xFF1E293B),
+                backgroundColor: Colors.white,
+                side: BorderSide(
+                  color: isSelected ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
+                  width: 1.2,
+                ),
+                elevation: isSelected ? 2 : 0,
+                shadowColor: Colors.black.withValues(alpha: 0.08),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                onSelected: (val) {
+                  if (val) setState(() => _paymentMode = mode);
+                },
               );
             }).toList(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Date Selection Container directly on gradient
           InkWell(
             onTap: _pickDate,
             borderRadius: BorderRadius.circular(10),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
@@ -1265,19 +1279,19 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today_rounded, size: 18, color: Color(0xFF64748B)),
-                  const SizedBox(width: 10),
-                  Text('Date: ', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
+                  const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF64748B)),
+                  const SizedBox(width: 8),
+                  Text('Date: ', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
                   Text(
                     DateFormat('dd MMMM yyyy').format(_selectedDate),
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
                   ),
                   const Spacer(),
                   Text(
@@ -1288,7 +1302,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Notes / Remark Input directly on gradient
           Container(
@@ -1299,8 +1313,8 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
                 ),
               ],
             ),
@@ -1309,19 +1323,19 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               maxLines: 2,
               style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF0F172A)),
               decoration: InputDecoration(
-                hintText: 'Add remark or notes (optional, e.g. Paid to Ramu for shop supplies)...',
-                hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF94A3B8)),
+                hintText: 'Add remark or notes (optional, e.g. Paid to Ramu)...',
+                hintStyle: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 14),
 
           // Primary Save Action Button
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: 48,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: activeColor,
@@ -1340,7 +1354,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                   : const Icon(Icons.check_circle_rounded, size: 20, color: Colors.white),
               label: Text(
                 _isSaving ? 'Saving Entry...' : 'Save Transaction',
-                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
               ),
             ),
           ),
