@@ -91,19 +91,41 @@ class LocalDatabase {
     if (count == 0) {
       final now = DateTime.now().toIso8601String();
       final defaults = [
-        {'id': 'cat_tea', 'name': 'Tea & Snacks (ચા-નાસ્તો)', 'icon_name': 'local_cafe', 'color_hex': '#FF7043', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_rent', 'name': 'Shop Rent (દુકાન ભાડું)', 'icon_name': 'storefront', 'color_hex': '#5C6BC0', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_electricity', 'name': 'Electricity Bill (લાઈટ બિલ)', 'icon_name': 'bolt', 'color_hex': '#FBC02D', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_salary', 'name': 'Staff Salary (પગાર)', 'icon_name': 'badge', 'color_hex': '#00897B', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_transport', 'name': 'Transport (ભાડું / ટ્રાન્સપોર્ટ)', 'icon_name': 'local_shipping', 'color_hex': '#8D6E63', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_repairs', 'name': 'Repairs & Maintenance (રિપેરિંગ)', 'icon_name': 'build', 'color_hex': '#78909C', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_supplier', 'name': 'Supplier Payment (વેપારી ચુકવણી)', 'icon_name': 'account_balance', 'color_hex': '#8E24AA', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_capital', 'name': 'Personal / Owner Capital (માલિકની મૂડી)', 'icon_name': 'account_balance_wallet', 'color_hex': '#2E7D32', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_refund', 'name': 'Refund Received (રીફંડ)', 'icon_name': 'assignment_return', 'color_hex': '#0288D1', 'is_default': 1, 'created_at': now},
-        {'id': 'cat_other_income', 'name': 'Other Income (અન્ય આવક)', 'icon_name': 'savings', 'color_hex': '#43A047', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_tea', 'name': 'Tea & Snacks', 'icon_name': 'local_cafe', 'color_hex': '#FF7043', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_rent', 'name': 'Shop Rent', 'icon_name': 'storefront', 'color_hex': '#5C6BC0', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_electricity', 'name': 'Electricity Bill', 'icon_name': 'bolt', 'color_hex': '#FBC02D', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_salary', 'name': 'Staff Salary', 'icon_name': 'badge', 'color_hex': '#00897B', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_transport', 'name': 'Transport', 'icon_name': 'local_shipping', 'color_hex': '#8D6E63', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_repairs', 'name': 'Repairs & Maintenance', 'icon_name': 'build', 'color_hex': '#78909C', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_supplier', 'name': 'Supplier Payment', 'icon_name': 'account_balance', 'color_hex': '#8E24AA', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_capital', 'name': 'Owner Capital', 'icon_name': 'account_balance_wallet', 'color_hex': '#2E7D32', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_refund', 'name': 'Refund Received', 'icon_name': 'assignment_return', 'color_hex': '#0288D1', 'is_default': 1, 'created_at': now},
+        {'id': 'cat_other_income', 'name': 'Other Income', 'icon_name': 'savings', 'color_hex': '#43A047', 'is_default': 1, 'created_at': now},
       ];
       for (final cat in defaults) {
         await db.insert('standalone_expense_categories', cat, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    } else {
+      // Migrate any existing category names to clean English names
+      final cleanups = {
+        'cat_tea': 'Tea & Snacks',
+        'cat_rent': 'Shop Rent',
+        'cat_electricity': 'Electricity Bill',
+        'cat_salary': 'Staff Salary',
+        'cat_transport': 'Transport',
+        'cat_repairs': 'Repairs & Maintenance',
+        'cat_supplier': 'Supplier Payment',
+        'cat_capital': 'Owner Capital',
+        'cat_refund': 'Refund Received',
+        'cat_other_income': 'Other Income',
+      };
+      for (final entry in cleanups.entries) {
+        await db.update(
+          'standalone_expense_categories',
+          {'name': entry.value},
+          where: 'id = ?',
+          whereArgs: [entry.key],
+        );
       }
     }
   }

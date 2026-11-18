@@ -161,7 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _SettingsRowData(
                 icon: Icons.account_balance_wallet_outlined,
                 title: 'Expense & Cashbook',
-                subtitle: 'Daily Expenses, Inflows & Reports (ખર્ચ-જમા)',
+                subtitle: 'Daily Expenses, Inflows & Reports',
                 onTap: () => _open(const StandaloneExpenseScreen()),
               ),
             ]),

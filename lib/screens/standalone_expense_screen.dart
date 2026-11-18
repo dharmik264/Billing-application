@@ -194,7 +194,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Category Name (કેટેગરીનું નામ)',
+                        'Category Name',
                         style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF555555)),
                       ),
                       const SizedBox(height: 6),
@@ -305,7 +305,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     final isDuplicate = _categories.any((c) => c.name.toLowerCase() == trimmed.toLowerCase());
                     if (isDuplicate) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('આ કેટેગરી પહેલેથી હાજર છે (Category already exists)')),
+                        const SnackBar(content: Text('Category already exists')),
                       );
                       return;
                     }
@@ -348,7 +348,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('મહેરબાની કરીને માન્ય રકમ દાખલ કરો (Please enter a valid amount > 0)'),
+          content: Text('Please enter a valid amount > 0'),
           backgroundColor: Color(0xFFC62828),
         ),
       );
@@ -359,7 +359,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
     if (_selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('મહેરબાની કરીને કેટેગરી પસંદ કરો (Please select a category)'),
+          content: Text('Please select a category'),
           backgroundColor: Color(0xFFC62828),
         ),
       );
@@ -391,7 +391,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
         _noteController.clear();
         FocusScope.of(context).unfocus();
 
-        final typeStr = _selectedType == StandaloneExpenseType.credit ? 'Credit (જમા)' : 'Debit (ખર્ચ)';
+        final typeStr = _selectedType == StandaloneExpenseType.credit ? 'Credit' : 'Debit';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('$typeStr of ₹${amount.toStringAsFixed(2)} saved successfully!'),
@@ -462,7 +462,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
       backgroundColor: Colors.transparent,
       appBar: CustomAppBar(
         title: 'Expense & Cashbook',
-        subtitle: 'ખર્ચ અને જમા મોડ્યુલ',
+        subtitle: 'Daily Expenses & Cash Flow',
         icon: Icons.account_balance_wallet_rounded,
         actions: [
           TextButton.icon(
@@ -554,7 +554,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '➕ New Entry (૨ પેજ)',
+                        '➕ New Entry (2 Pages)',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -588,7 +588,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '📖 Cashbook (હિસાબ)',
+                        '📖 Cashbook & Ledger',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -680,7 +680,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '1. કેટેગરી પસંદ કરો',
+                        '1. Select Category',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: _currentProcessStep == 0 ? FontWeight.w700 : FontWeight.w500,
@@ -739,7 +739,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '2. રકમ & પ્રકાર',
+                        '2. Amount & Type',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: _currentProcessStep == 1 ? FontWeight.w700 : FontWeight.w500,
@@ -778,7 +778,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'SELECT CATEGORY (કેટેગરી પસંદ કરો)',
+                          'SELECT CATEGORY',
                           style: GoogleFonts.jetBrainsMono(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -788,7 +788,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'ખર્ચ કે જમા માટે કેટેગરી પર ક્લિક કરો',
+                          'Select a category for expense or cash entry',
                           style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
                         ),
                       ],
@@ -858,7 +858,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      '+ Add New\n(નવી કેટેગરી)',
+                                      '+ Add New\nCategory',
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w700,
@@ -995,7 +995,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Next: Enter Amount & Details (આગળ વધો)',
+                        'Next: Enter Amount & Details',
                         style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(width: 8),
@@ -1032,7 +1032,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                 },
                 icon: const Icon(Icons.arrow_back_rounded, size: 18, color: Color(0xFF1D4ED8)),
                 label: Text(
-                  'Change Category (કેટેગરી બદલો)',
+                  'Change Category',
                   style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
                 ),
               ),
@@ -1101,7 +1101,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
 
           // High-Contrast Credit / Debit Switcher directly on gradient
           Text(
-            'TRANSACTION TYPE (પ્રકાર પસંદ કરો)',
+            'TRANSACTION TYPE',
             style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
           ),
           const SizedBox(height: 8),
@@ -1142,7 +1142,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'DEBIT / ખર્ચ (Outflow)',
+                          'DEBIT / Expense (Outflow)',
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -1190,7 +1190,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'CREDIT / જમા (Inflow)',
+                          'CREDIT / Income (Inflow)',
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
@@ -1208,7 +1208,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
 
           // Enter Money Amount TextField directly on gradient
           Text(
-            'ENTER MONEY (રકમ ઉમેરો)',
+            'ENTER AMOUNT',
             style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
           ),
           const SizedBox(height: 8),
@@ -1376,7 +1376,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     )
                   : const Icon(Icons.check_circle_rounded, size: 20, color: Colors.white),
               label: Text(
-                _isSaving ? 'Saving Entry...' : 'Save Transaction (સેવ કરો)',
+                _isSaving ? 'Saving Entry...' : 'Save Transaction',
                 style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
               ),
             ),
@@ -1406,7 +1406,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "TODAY'S CASHBOOK (આજનો હિસાબ)",
+                "TODAY'S CASHBOOK",
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -1457,7 +1457,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                           const Icon(Icons.arrow_downward_rounded, size: 14, color: Color(0xFF16A34A)),
                           const SizedBox(width: 4),
                           Text(
-                            'Credit (જમા)',
+                            'Credit (Inflow)',
                             style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF16A34A)),
                           ),
                         ],
@@ -1499,7 +1499,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                           const Icon(Icons.arrow_upward_rounded, size: 14, color: Color(0xFFDC2626)),
                           const SizedBox(width: 4),
                           Text(
-                            'Debit (ખર્ચ)',
+                            'Debit (Outflow)',
                             style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFDC2626)),
                           ),
                         ],
@@ -1539,7 +1539,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Net Cash Movement (ચોખ્ખું બેલેન્સ):',
+                  'Net Cash Movement:',
                   style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF475569)),
                 ),
                 Text(
@@ -1560,7 +1560,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'RECENT TRANSACTIONS (છેલ્લા વ્યવહારો)',
+                'RECENT TRANSACTIONS',
                 style: GoogleFonts.jetBrainsMono(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -1596,7 +1596,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'નવી એન્ટ્રી ઉમેરવા માટે "➕ New Entry" ટેબ પર જાઓ.',
+                    'Go to "➕ New Entry" tab to record a transaction.',
                     style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8)),
                   ),
                 ],

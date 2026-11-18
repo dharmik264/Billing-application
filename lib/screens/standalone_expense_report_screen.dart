@@ -412,7 +412,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
       backgroundColor: StitchColors.background,
       appBar: CustomAppBar(
         title: 'Expense & Cashflow Report',
-        subtitle: 'નાણાકીય અને ખર્ચ રિપોર્ટ',
+        subtitle: 'Financial & Cash Flow Report',
         icon: Icons.bar_chart_rounded,
         actions: [
           IconButton(
@@ -548,7 +548,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                       isExpanded: true,
                       style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF111111)),
                       items: [
-                        const DropdownMenuItem(value: 'ALL', child: Text('All Categories (બધી કેટેગરી)')),
+                        const DropdownMenuItem(value: 'ALL', child: Text('All Categories')),
                         ..._categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))),
                       ],
                       onChanged: (val) {
@@ -580,8 +580,8 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                       style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF111111)),
                       items: const [
                         DropdownMenuItem(value: 'ALL', child: Text('All Types')),
-                        DropdownMenuItem(value: 'CREDIT', child: Text('Credit (જમા)')),
-                        DropdownMenuItem(value: 'DEBIT', child: Text('Debit (ખર્ચ)')),
+                        DropdownMenuItem(value: 'CREDIT', child: Text('Credit (Inflow)')),
+                        DropdownMenuItem(value: 'DEBIT', child: Text('Debit (Outflow)')),
                       ],
                       onChanged: (val) {
                         if (val != null) {
@@ -627,7 +627,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total Inflow (જમા)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
+                    Text('Total Inflow (Credit)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
                     Text('$creditCount txns', style: GoogleFonts.inter(fontSize: 10, color: Colors.grey.shade600)),
                   ],
                 ),
@@ -659,7 +659,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total Outflow (ખર્ચ)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFC62828))),
+                    Text('Total Outflow (Debit)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFC62828))),
                     Text('$debitCount txns', style: GoogleFonts.inter(fontSize: 10, color: Colors.grey.shade600)),
                   ],
                 ),
@@ -726,7 +726,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'EXPENSE BREAKDOWN BY CATEGORY (ખર્ચનું વિશ્લેષણ)',
+            'EXPENSE BREAKDOWN BY CATEGORY',
             style: GoogleFonts.jetBrainsMono(
               fontSize: 11,
               fontWeight: FontWeight.w700,

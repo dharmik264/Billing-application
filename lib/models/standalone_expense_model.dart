@@ -7,8 +7,8 @@ enum StandaloneExpenseType {
 
 extension StandaloneExpenseTypeExt on StandaloneExpenseType {
   String get value => this == StandaloneExpenseType.credit ? 'CREDIT' : 'DEBIT';
-  String get displayLabel => this == StandaloneExpenseType.credit ? 'Credit (જમા)' : 'Debit (ખર્ચ)';
-  String get shortLabel => this == StandaloneExpenseType.credit ? 'જમા' : 'ખર્ચ';
+  String get displayLabel => this == StandaloneExpenseType.credit ? 'Credit' : 'Debit';
+  String get shortLabel => this == StandaloneExpenseType.credit ? 'Credit' : 'Debit';
   Color get color => this == StandaloneExpenseType.credit ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
 }
 
@@ -132,12 +132,12 @@ class StandaloneExpense {
   bool get isDebit => type.toUpperCase() == 'DEBIT';
 
   Color get typeColor => isCredit ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
-  String get typeLabel => isCredit ? 'Credit (જમા)' : 'Debit (ખર્ચ)';
+  String get typeLabel => isCredit ? 'Credit' : 'Debit';
 
   String get formattedPaymentMode {
     switch (paymentMode.toUpperCase()) {
       case 'CASH':
-        return 'Cash (રોકડ)';
+        return 'Cash';
       case 'ONLINE':
       case 'UPI':
         return 'Online / UPI';

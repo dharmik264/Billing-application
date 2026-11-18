@@ -83,7 +83,7 @@ class _AnalyticsReportsScreenState extends State<AnalyticsReportsScreen> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Expense Reports (ખર્ચ રિપોર્ટ)',
+            tooltip: 'Expense Reports',
             icon: const Icon(Icons.account_balance_wallet_outlined, size: 20, color: Color(0xFF111111)),
             onPressed: () {
               Navigator.push(
