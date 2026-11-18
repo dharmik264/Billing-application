@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../models/standalone_expense_model.dart';
 import '../services/standalone_expense_service.dart';
 import '../widgets/custom_page_header.dart';
+import 'standalone_category_breakdown_screen.dart';
 import 'standalone_expense_report_screen.dart';
 
 class StandaloneExpenseScreen extends StatefulWidget {
@@ -35,6 +36,20 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
   int _currentProcessStep = 0; // 0 = Category, 1 = Amount & Details
 
   final List<String> _paymentModes = ['CASH', 'ONLINE', 'BANK_TRANSFER', 'CHEQUE'];
+
+  ({IconData icon, String label, Color color}) _getPaymentModeInfo(String mode) {
+    switch (mode) {
+      case 'ONLINE':
+        return (icon: Icons.account_balance_wallet_rounded, label: 'Online / UPI', color: const Color(0xFF2563EB));
+      case 'BANK_TRANSFER':
+        return (icon: Icons.account_balance_rounded, label: 'Bank Transfer', color: const Color(0xFF7C3AED));
+      case 'CHEQUE':
+        return (icon: Icons.receipt_long_rounded, label: 'Cheque', color: const Color(0xFFD97706));
+      case 'CASH':
+      default:
+        return (icon: Icons.payments_rounded, label: 'Cash', color: const Color(0xFF16A34A));
+    }
+  }
 
   @override
   void initState() {
@@ -655,6 +670,23 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
+                    // View Breakdown Action
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const StandaloneCategoryBreakdownScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.pie_chart_rounded, size: 15, color: Color(0xFF1D4ED8)),
+                      label: Text('Breakdown', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8))),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF93C5FD)),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                     // Add Category Action Button (Properly positioned & fitted)
                     ElevatedButton.icon(
                       onPressed: _showAddCategoryDialog,
@@ -989,49 +1021,166 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
           ),
           const SizedBox(height: 6),
 
-          // Selected Category directly on gradient (Card enclosure removed; items & text preserved)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            child: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: _selectedCategory?.color.withValues(alpha: 0.18) ?? const Color(0xFFE2E8F0),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(_selectedCategory?.icon ?? Icons.category, color: _selectedCategory?.color ?? Colors.black, size: 16),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          // Category Selector Dropdown directly on gradient with "View All Breakdown" option
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'CATEGORY',
+                style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
+              ),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const StandaloneCategoryBreakdownScreen()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(6),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  child: Row(
                     children: [
+                      const Icon(Icons.pie_chart_rounded, size: 13, color: Color(0xFF1D4ED8)),
+                      const SizedBox(width: 4),
                       Text(
-                        'SELECTED CATEGORY',
-                        style: GoogleFonts.jetBrainsMono(fontSize: 9, fontWeight: FontWeight.w700, color: const Color(0xFF475569), letterSpacing: 0.5),
-                      ),
-                      Text(
-                        _selectedCategory?.name ?? 'General',
-                        style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                        'View All Breakdown',
+                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
                       ),
                     ],
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: () {
-                    _pageController.animateToPage(0, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                  },
-                  icon: const Icon(Icons.edit_rounded, size: 14, color: Color(0xFF1D4ED8)),
-                  label: Text('Edit', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8))),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
               ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedCategory?.id,
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 24),
+                hint: Row(
+                  children: [
+                    const Icon(Icons.category_outlined, color: Color(0xFF94A3B8), size: 18),
+                    const SizedBox(width: 8),
+                    Text('Select Category', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B))),
+                  ],
+                ),
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                selectedItemBuilder: (context) {
+                  return _categories.map((cat) {
+                    return Row(
+                      children: [
+                        Container(
+                          width: 26,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: cat.color.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(cat.icon, size: 15, color: cat.color),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            cat.name,
+                            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList();
+                },
+                items: [
+                  // 1. View All Breakdown Action Option
+                  DropdownMenuItem<String>(
+                    value: '__VIEW_ALL_BREAKDOWN__',
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEFF6FF),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFBFDBFE)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.pie_chart_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'View All (Expense Breakdown by Category)',
+                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF1D4ED8)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // 2. Category Items
+                  ..._categories.map((cat) {
+                    final isCurrent = _selectedCategory?.id == cat.id;
+                    return DropdownMenuItem<String>(
+                      value: cat.id,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: cat.color.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(cat.icon, size: 16, color: cat.color),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              cat.name,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                                color: isCurrent ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isCurrent)
+                            const Icon(Icons.check_circle_rounded, color: Color(0xFF1D4ED8), size: 18),
+                        ],
+                      ),
+                    );
+                  }),
+                ],
+                onChanged: (val) {
+                  if (val == '__VIEW_ALL_BREAKDOWN__') {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const StandaloneCategoryBreakdownScreen()),
+                    );
+                  } else if (val != null) {
+                    final found = _categories.cast<StandaloneExpenseCategory?>().firstWhere((c) => c?.id == val, orElse: () => null);
+                    if (found != null) {
+                      setState(() => _selectedCategory = found);
+                    }
+                  }
+                },
+              ),
             ),
           ),
           const SizedBox(height: 10),
@@ -1194,59 +1343,86 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
           ),
           const SizedBox(height: 10),
 
-          // Payment Mode Selector directly on gradient (Cash, Online, Bank, Cheque)
+          // Payment Mode Selector directly on gradient (Dropdown)
           Text(
             'PAYMENT MODE',
             style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
           ),
           const SizedBox(height: 5),
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            children: _paymentModes.map((mode) {
-              final isSelected = _paymentMode == mode;
-              String label = 'Cash';
-              IconData icon = Icons.payments_rounded;
-              if (mode == 'ONLINE') {
-                label = 'Online / UPI';
-                icon = Icons.account_balance_wallet_rounded;
-              } else if (mode == 'BANK_TRANSFER') {
-                label = 'Bank';
-                icon = Icons.account_balance_rounded;
-              } else if (mode == 'CHEQUE') {
-                label = 'Cheque';
-                icon = Icons.receipt_long_rounded;
-              }
-
-              return ChoiceChip(
-                avatar: Icon(
-                  icon,
-                  size: 15,
-                  color: isSelected ? Colors.white : const Color(0xFF475569),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFCBD5E1)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
                 ),
-                label: Text(
-                  label,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                    color: isSelected ? Colors.white : const Color(0xFF334155),
-                  ),
-                ),
-                selected: isSelected,
-                selectedColor: const Color(0xFF1E293B),
-                backgroundColor: Colors.white,
-                side: BorderSide(
-                  color: isSelected ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
-                  width: 1.2,
-                ),
-                elevation: isSelected ? 2 : 0,
-                shadowColor: Colors.black.withValues(alpha: 0.08),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                onSelected: (val) {
-                  if (val) setState(() => _paymentMode = mode);
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _paymentMode,
+                isExpanded: true,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 24),
+                dropdownColor: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                selectedItemBuilder: (context) {
+                  return _paymentModes.map((mode) {
+                    final info = _getPaymentModeInfo(mode);
+                    return Row(
+                      children: [
+                        Icon(info.icon, size: 18, color: info.color),
+                        const SizedBox(width: 10),
+                        Text(
+                          info.label,
+                          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
+                        ),
+                      ],
+                    );
+                  }).toList();
                 },
-              );
-            }).toList(),
+                items: _paymentModes.map((mode) {
+                  final isSelected = _paymentMode == mode;
+                  final info = _getPaymentModeInfo(mode);
+                  return DropdownMenuItem<String>(
+                    value: mode,
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: info.color.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(info.icon, size: 16, color: info.color),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            info.label,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              color: isSelected ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          const Icon(Icons.check_circle_rounded, color: Color(0xFF1D4ED8), size: 18),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _paymentMode = val);
+                },
+              ),
+            ),
           ),
           const SizedBox(height: 10),
 

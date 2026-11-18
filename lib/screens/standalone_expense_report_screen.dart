@@ -9,6 +9,8 @@ import '../services/printer_service.dart';
 import '../services/restaurant_api.dart';
 import '../services/standalone_expense_service.dart';
 import '../widgets/custom_page_header.dart';
+import 'standalone_category_breakdown_screen.dart';
+import 'standalone_itemized_transactions_screen.dart';
 
 class StandaloneExpenseReportScreen extends StatefulWidget {
   const StandaloneExpenseReportScreen({super.key});
@@ -966,6 +968,31 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
           },
           items: [
             DropdownMenuItem(
+              value: 'VIEW_ALL_BREAKDOWN',
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.pie_chart_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'View All Breakdown (EXPENSE BREAKDOWN BY CATEGORY)',
+                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF1D4ED8)),
+                  ],
+                ),
+              ),
+            ),
+            DropdownMenuItem(
               value: 'ALL',
               child: Row(
                 children: [
@@ -1018,7 +1045,17 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
             }),
           ],
           onChanged: (val) {
-            if (val != null) {
+            if (val == 'VIEW_ALL_BREAKDOWN') {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => StandaloneCategoryBreakdownScreen(
+                    initialStartDate: _startDate,
+                    initialEndDate: _endDate,
+                    initialPreset: _dateRangePreset,
+                  ),
+                ),
+              );
+            } else if (val != null) {
               setState(() => _selectedCategoryId = val);
               _loadReportData();
             }
@@ -1434,6 +1471,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
     final debit = _summary['debit'] ?? 0.0;
     final sortedEntries = _categoryBreakdown.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
+    final displayedEntries = sortedEntries.take(4).toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -1445,17 +1483,44 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'EXPENSE BREAKDOWN BY CATEGORY',
-            style: GoogleFonts.jetBrainsMono(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF555555),
-              letterSpacing: 0.5,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'EXPENSE BREAKDOWN BY CATEGORY',
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF555555),
+                  letterSpacing: 0.5,
+                ),
+              ),
+              if (sortedEntries.length > 4)
+                InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => StandaloneCategoryBreakdownScreen(
+                          initialStartDate: _startDate,
+                          initialEndDate: _endDate,
+                          initialPreset: _dateRangePreset,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'View All (${sortedEntries.length})',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1D4ED8),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
-          ...sortedEntries.map((e) {
+          ...displayedEntries.map((e) {
             final percentage = debit > 0 ? (e.value / debit) : 0.0;
             final pctStr = (percentage * 100).toStringAsFixed(1);
 
@@ -1485,6 +1550,44 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
               ),
             );
           }),
+          if (sortedEntries.length > 4 || sortedEntries.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            InkWell(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => StandaloneCategoryBreakdownScreen(
+                      initialStartDate: _startDate,
+                      initialEndDate: _endDate,
+                      initialPreset: _dateRangePreset,
+                    ),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.pie_chart_rounded, size: 15, color: Color(0xFF1D4ED8)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'View All Categories Breakdown (${sortedEntries.length})',
+                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF1D4ED8)),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1492,6 +1595,8 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
 
   /// 3. Transactions List Table
   Widget _buildTransactionsListCard() {
+    final displayedExpenses = _filteredExpenses.take(4).toList();
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -1537,14 +1642,14 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                 ),
               ),
             )
-          else
+          else ...[
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: _filteredExpenses.length,
+              itemCount: displayedExpenses.length,
               separatorBuilder: (_, __) => const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
               itemBuilder: (context, index) {
-                final exp = _filteredExpenses[index];
+                final exp = displayedExpenses[index];
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                   leading: CircleAvatar(
@@ -1607,6 +1712,49 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                 );
               },
             ),
+            if (_filteredExpenses.length > 4) ...[
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => StandaloneItemizedTransactionsScreen(
+                          initialStartDate: _startDate,
+                          initialEndDate: _endDate,
+                          initialPreset: _dateRangePreset,
+                          initialCategoryId: _selectedCategoryId,
+                          initialType: _selectedType,
+                        ),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF1D4ED8)),
+                        const SizedBox(width: 8),
+                        Text(
+                          'View All Transactions (${_filteredExpenses.length})',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8)),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF1D4ED8)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
