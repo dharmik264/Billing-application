@@ -463,7 +463,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
       appBar: CustomAppBar(
         title: 'Expense & Cashbook',
         subtitle: 'Daily Expenses & Cash Flow',
-        icon: Icons.account_balance_wallet_rounded,
+        showIcon: false,
         actions: [
           TextButton.icon(
             style: TextButton.styleFrom(
@@ -554,7 +554,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '➕ New Entry (2 Pages)',
+                        'New Entry (2 Pages)',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -588,7 +588,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '📖 Cashbook & Ledger',
+                        'Cashbook & Ledger',
                         style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -802,7 +802,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     ElevatedButton.icon(
                       onPressed: _showAddCategoryDialog,
                       icon: const Icon(Icons.add_rounded, size: 16),
-                      label: Text('+ New Category', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700)),
+                      label: Text('New Category', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1D4ED8),
                         foregroundColor: Colors.white,
@@ -854,6 +854,53 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                       ),
                       dropdownColor: Colors.white,
                       borderRadius: BorderRadius.circular(12),
+                      selectedItemBuilder: (BuildContext context) {
+                        return _categories.map((category) {
+                          return Row(
+                            children: [
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: category.color.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(category.icon, size: 16, color: category.color),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  category.name,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: category.isDefault ? const Color(0xFFF1F5F9) : const Color(0xFFEFF6FF),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: category.isDefault ? const Color(0xFFCBD5E1) : const Color(0xFFBFDBFE),
+                                  ),
+                                ),
+                                child: Text(
+                                  category.isDefault ? 'Default' : 'Custom',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: category.isDefault ? const Color(0xFF64748B) : const Color(0xFF1D4ED8),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList();
+                      },
                       items: _categories.map((category) {
                         final isItemCurrent = currentSelection?.id == category.id;
                         return DropdownMenuItem<StandaloneExpenseCategory>(
@@ -1001,7 +1048,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                               onPressed: _showAddCategoryDialog,
                               icon: const Icon(Icons.add_circle_outline, size: 14, color: Color(0xFF1D4ED8)),
                               label: Text(
-                                '+ Add New Category',
+                                'Add New Category',
                                 style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1D4ED8)),
                               ),
                               style: TextButton.styleFrom(
