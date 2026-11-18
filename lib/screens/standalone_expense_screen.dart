@@ -762,6 +762,11 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
   /// PAGE 1: CATEGORY SELECTION & ADD CATEGORY (NO CARD ENCLOSURE)
   /// --------------------------------------------------------------------------
   Widget _buildPage1CategorySelection() {
+    // Ensure currently selected category is valid within _categories list
+    final StandaloneExpenseCategory? currentSelection = _categories.any((c) => c.id == _selectedCategory?.id)
+        ? _categories.firstWhere((c) => c.id == _selectedCategory?.id)
+        : (_categories.isNotEmpty ? _categories.first : null);
+
     return Column(
       children: [
         Expanded(
@@ -788,7 +793,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Select a category for expense or cash entry',
+                          'Choose a category from the dropdown below',
                           style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
                         ),
                       ],
@@ -808,142 +813,208 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
 
-                // Responsive Grid of Categories directly on gradient
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final crossAxisCount = constraints.maxWidth > 500 ? 3 : 2;
-                    return GridView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _categories.length + 1,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 2.2,
+                // All Categories Single Dropdown Container
+                Text(
+                  'CATEGORY DROPDOWN',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF475569),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF93C5FD), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF1D4ED8).withValues(alpha: 0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
                       ),
-                      itemBuilder: (context, index) {
-                        // First item is Quick "+ Add Category" Tile
-                        if (index == 0) {
-                          return InkWell(
-                            onTap: _showAddCategoryDialog,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: const Color(0xFF93C5FD), width: 1.5),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF1D4ED8).withValues(alpha: 0.06),
-                                    blurRadius: 6,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 36,
-                                    height: 36,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFFEFF6FF),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.add_rounded, color: Color(0xFF1D4ED8), size: 22),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      '+ Add New\nCategory',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF1D4ED8),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-
-                        final category = _categories[index - 1];
-                        final isSelected = _selectedCategory?.id == category.id;
-
-                        return InkWell(
-                          onTap: () {
-                            setState(() => _selectedCategory = category);
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isSelected ? const Color(0xFF1D4ED8) : const Color(0xFFE2E8F0),
-                                width: isSelected ? 2.0 : 1.0,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: isSelected
-                                      ? const Color(0xFF1D4ED8).withValues(alpha: 0.15)
-                                      : Colors.black.withValues(alpha: 0.03),
-                                  blurRadius: isSelected ? 8 : 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<StandaloneExpenseCategory>(
+                      value: currentSelection,
+                      isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 26),
+                      hint: Row(
+                        children: [
+                          const Icon(Icons.category_outlined, color: Color(0xFF94A3B8), size: 20),
+                          const SizedBox(width: 10),
+                          Text('Select Category', style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B))),
+                        ],
+                      ),
+                      dropdownColor: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      items: _categories.map((category) {
+                        final isItemCurrent = currentSelection?.id == category.id;
+                        return DropdownMenuItem<StandaloneExpenseCategory>(
+                          value: category,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
                             child: Row(
                               children: [
                                 Container(
-                                  width: 36,
-                                  height: 36,
+                                  width: 32,
+                                  height: 32,
                                   decoration: BoxDecoration(
-                                    color: category.color.withValues(alpha: 0.14),
+                                    color: category.color.withValues(alpha: 0.15),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(category.icon, size: 20, color: category.color),
+                                  child: Icon(category.icon, size: 18, color: category.color),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 12),
                                 Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        category.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                                          color: isSelected ? const Color(0xFF1D4ED8) : const Color(0xFF1E293B),
-                                        ),
-                                      ),
-                                      Text(
-                                        category.isDefault ? 'Default' : 'Custom',
-                                        style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF64748B)),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    category.name,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      fontWeight: isItemCurrent ? FontWeight.w700 : FontWeight.w600,
+                                      color: isItemCurrent ? const Color(0xFF1D4ED8) : const Color(0xFF1E293B),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                if (isSelected)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: category.isDefault ? const Color(0xFFF1F5F9) : const Color(0xFFEFF6FF),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: category.isDefault ? const Color(0xFFCBD5E1) : const Color(0xFFBFDBFE),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    category.isDefault ? 'Default' : 'Custom',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: category.isDefault ? const Color(0xFF64748B) : const Color(0xFF1D4ED8),
+                                    ),
+                                  ),
+                                ),
+                                if (isItemCurrent) ...[
+                                  const SizedBox(width: 8),
                                   const Icon(Icons.check_circle_rounded, color: Color(0xFF1D4ED8), size: 18),
+                                ],
                               ],
                             ),
                           ),
                         );
+                      }).toList(),
+                      onChanged: (StandaloneExpenseCategory? newCat) {
+                        if (newCat != null) {
+                          setState(() => _selectedCategory = newCat);
+                        }
                       },
-                    );
-                  },
+                    ),
+                  ),
                 ),
+
+                const SizedBox(height: 18),
+
+                // Selected Category Preview Box directly on gradient
+                if (currentSelection != null)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFCBD5E1)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: currentSelection.color.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(currentSelection.icon, size: 26, color: currentSelection.color),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'SELECTED CATEGORY',
+                                    style: GoogleFonts.jetBrainsMono(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    currentSelection.name,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    currentSelection.isDefault ? 'Default Category' : 'Custom Category',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      color: const Color(0xFF64748B),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 24),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                        const SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${_categories.length} categories available in dropdown',
+                              style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B)),
+                            ),
+                            TextButton.icon(
+                              onPressed: _showAddCategoryDialog,
+                              icon: const Icon(Icons.add_circle_outline, size: 14, color: Color(0xFF1D4ED8)),
+                              label: Text(
+                                '+ Add New Category',
+                                style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF1D4ED8)),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
