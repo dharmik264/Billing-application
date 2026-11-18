@@ -34,7 +34,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
   // 1 = Cashbook & History (Today's summary & recent transactions)
   int _currentProcessStep = 0; // 0 = Category, 1 = Amount & Details
 
-  final List<String> _paymentModes = ['CASH', 'ONLINE', 'BANK_TRANSFER', 'CHEQUE'];
+  final List<String> _paymentModes = ['CASH', 'ONLINE'];
 
   @override
   void initState() {
@@ -1055,14 +1055,14 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              // Debit / Expense Button (Red)
+              // Debit Button (Red)
               Expanded(
                 child: InkWell(
                   onTap: () => setState(() => _selectedType = StandaloneExpenseType.debit),
                   borderRadius: BorderRadius.circular(10),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                     decoration: BoxDecoration(
                       color: _selectedType == StandaloneExpenseType.debit ? const Color(0xFFDC2626) : Colors.white,
                       borderRadius: BorderRadius.circular(10),
@@ -1080,37 +1080,40 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                         ),
                       ],
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.arrow_circle_up_rounded,
-                          size: 20,
-                          color: _selectedType == StandaloneExpenseType.debit ? Colors.white : const Color(0xFFDC2626),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'DEBIT / Expense (Outflow)',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_circle_up_rounded,
+                            size: 18,
                             color: _selectedType == StandaloneExpenseType.debit ? Colors.white : const Color(0xFFDC2626),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Text(
+                            'Debit (Outflow)',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: _selectedType == StandaloneExpenseType.debit ? Colors.white : const Color(0xFFDC2626),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 10),
-              // Credit / Income Button (Green)
+              // Credit Button (Green)
               Expanded(
                 child: InkWell(
                   onTap: () => setState(() => _selectedType = StandaloneExpenseType.credit),
                   borderRadius: BorderRadius.circular(10),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                     decoration: BoxDecoration(
                       color: _selectedType == StandaloneExpenseType.credit ? const Color(0xFF16A34A) : Colors.white,
                       borderRadius: BorderRadius.circular(10),
@@ -1128,24 +1131,27 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                         ),
                       ],
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.arrow_circle_down_rounded,
-                          size: 20,
-                          color: _selectedType == StandaloneExpenseType.credit ? Colors.white : const Color(0xFF16A34A),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'CREDIT / Income (Inflow)',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_circle_down_rounded,
+                            size: 18,
                             color: _selectedType == StandaloneExpenseType.credit ? Colors.white : const Color(0xFF16A34A),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Text(
+                            'Credit (Inflow)',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: _selectedType == StandaloneExpenseType.credit ? Colors.white : const Color(0xFF16A34A),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1199,41 +1205,50 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Payment Mode Selector directly on gradient
+          // Payment Mode Selector directly on gradient (Cash and Online/UPI only)
+          Text(
+            'PAYMENT MODE',
+            style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 8),
           Row(
-            children: [
-              Text('Mode:', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF475569))),
-              const SizedBox(width: 8),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _paymentModes.map((mode) {
-                      final isSelected = _paymentMode == mode;
-                      String label = 'Cash';
-                      if (mode == 'ONLINE') label = 'Online/UPI';
-                      if (mode == 'BANK_TRANSFER') label = 'Bank';
-                      if (mode == 'CHEQUE') label = 'Cheque';
+            children: _paymentModes.map((mode) {
+              final isSelected = _paymentMode == mode;
+              final label = mode == 'ONLINE' ? 'Online / UPI' : 'Cash';
+              final icon = mode == 'ONLINE' ? Icons.account_balance_wallet_rounded : Icons.payments_rounded;
 
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: ChoiceChip(
-                          label: Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500)),
-                          selected: isSelected,
-                          selectedColor: const Color(0xFF111111),
-                          labelStyle: TextStyle(color: isSelected ? Colors.white : const Color(0xFF334155)),
-                          backgroundColor: Colors.white,
-                          side: BorderSide(color: isSelected ? const Color(0xFF111111) : const Color(0xFFCBD5E1)),
-                          onSelected: (val) {
-                            if (val) setState(() => _paymentMode = mode);
-                          },
-                        ),
-                      );
-                    }).toList(),
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: ChoiceChip(
+                  avatar: Icon(
+                    icon,
+                    size: 16,
+                    color: isSelected ? Colors.white : const Color(0xFF475569),
                   ),
+                  label: Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      color: isSelected ? Colors.white : const Color(0xFF334155),
+                    ),
+                  ),
+                  selected: isSelected,
+                  selectedColor: const Color(0xFF1E293B),
+                  backgroundColor: Colors.white,
+                  side: BorderSide(
+                    color: isSelected ? const Color(0xFF1E293B) : const Color(0xFFCBD5E1),
+                    width: 1.2,
+                  ),
+                  elevation: isSelected ? 2 : 0,
+                  shadowColor: Colors.black.withValues(alpha: 0.08),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  onSelected: (val) {
+                    if (val) setState(() => _paymentMode = mode);
+                  },
                 ),
-              ),
-            ],
+              );
+            }).toList(),
           ),
           const SizedBox(height: 12),
 
