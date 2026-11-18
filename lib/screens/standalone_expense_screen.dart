@@ -626,30 +626,36 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Prompt directly on gradient
+                // Header Prompt directly on gradient with overflow protection
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'SELECT CATEGORY',
-                          style: GoogleFonts.jetBrainsMono(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1E293B),
-                            letterSpacing: 0.5,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'SELECT CATEGORY',
+                            style: GoogleFonts.jetBrainsMono(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF1E293B),
+                              letterSpacing: 0.5,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Choose a category from the dropdown below',
-                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
-                        ),
-                      ],
+                          const SizedBox(height: 2),
+                          Text(
+                            'Choose or add category',
+                            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
                     ),
-                    // Add Category Action Button
+                    const SizedBox(width: 8),
+                    // Add Category Action Button (Properly positioned & fitted)
                     ElevatedButton.icon(
                       onPressed: _showAddCategoryDialog,
                       icon: const Icon(Icons.add_rounded, size: 16),
@@ -664,19 +670,9 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
                 // All Categories Single Dropdown Container
-                Text(
-                  'CATEGORY DROPDOWN',
-                  style: GoogleFonts.jetBrainsMono(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF475569),
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 6),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
