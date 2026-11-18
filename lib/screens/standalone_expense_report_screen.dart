@@ -30,7 +30,15 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
 
   List<StandaloneExpenseCategory> _categories = [];
   List<StandaloneExpense> _filteredExpenses = [];
-  Map<String, double> _summary = {'credit': 0.0, 'debit': 0.0, 'net': 0.0};
+  Map<String, double> _summary = {
+    'credit': 0.0,
+    'debit': 0.0,
+    'net': 0.0,
+    'cashInflow': 0.0,
+    'cashOutflow': 0.0,
+    'onlineInflow': 0.0,
+    'onlineOutflow': 0.0,
+  };
   Map<String, double> _categoryBreakdown = {};
 
   bool _isLoading = true;
@@ -357,11 +365,27 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
 
     double credit = 0.0;
     double debit = 0.0;
+    double cashInflow = 0.0;
+    double cashOutflow = 0.0;
+    double onlineInflow = 0.0;
+    double onlineOutflow = 0.0;
+
     for (final exp in expenses) {
+      final isCash = exp.paymentMode.toUpperCase() == 'CASH';
       if (exp.isCredit) {
         credit += exp.amount;
+        if (isCash) {
+          cashInflow += exp.amount;
+        } else {
+          onlineInflow += exp.amount;
+        }
       } else {
         debit += exp.amount;
+        if (isCash) {
+          cashOutflow += exp.amount;
+        } else {
+          onlineOutflow += exp.amount;
+        }
       }
     }
 
@@ -375,6 +399,10 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
           'credit': credit,
           'debit': debit,
           'net': credit - debit,
+          'cashInflow': cashInflow,
+          'cashOutflow': cashOutflow,
+          'onlineInflow': onlineInflow,
+          'onlineOutflow': onlineOutflow,
         };
         _categoryBreakdown = breakdown;
         _isLoading = false;
@@ -410,6 +438,10 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
       final credit = _summary['credit'] ?? 0.0;
       final debit = _summary['debit'] ?? 0.0;
       final net = _summary['net'] ?? 0.0;
+      final cashInflow = _summary['cashInflow'] ?? 0.0;
+      final cashOutflow = _summary['cashOutflow'] ?? 0.0;
+      final onlineInflow = _summary['onlineInflow'] ?? 0.0;
+      final onlineOutflow = _summary['onlineOutflow'] ?? 0.0;
 
       PrinterService.instance.bluetooth
         ..printCustom(shopName.toUpperCase(), 2, 1)
@@ -417,8 +449,13 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
         ..printCustom('Period: $_dateRangeLabel', 1, 0)
         ..printCustom('Generated: ${DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now())}', 1, 0)
         ..printCustom('=' * 32, 1, 1)
-        ..printCustom('Total Credit (+): Rs.${credit.toStringAsFixed(2)}', 1, 0)
-        ..printCustom('Total Debit  (-): Rs.${debit.toStringAsFixed(2)}', 1, 0)
+        ..printCustom('Cash Inflow   (+): Rs.${cashInflow.toStringAsFixed(2)}', 1, 0)
+        ..printCustom('Cash Outflow  (-): Rs.${cashOutflow.toStringAsFixed(2)}', 1, 0)
+        ..printCustom('Online Inflow (+): Rs.${onlineInflow.toStringAsFixed(2)}', 1, 0)
+        ..printCustom('Online Outflow(-): Rs.${onlineOutflow.toStringAsFixed(2)}', 1, 0)
+        ..printCustom('-' * 32, 1, 1)
+        ..printCustom('Total Credit  (+): Rs.${credit.toStringAsFixed(2)}', 1, 0)
+        ..printCustom('Total Debit   (-): Rs.${debit.toStringAsFixed(2)}', 1, 0)
         ..printCustom('=' * 32, 1, 1)
         ..printCustom('NET CASH: Rs.${net.toStringAsFixed(2)}', 2, 0)
         ..printCustom('=' * 32, 1, 1);
@@ -455,9 +492,12 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
   Future<void> _exportPdfReport() async {
     final shop = RestaurantApi.instance.shopData;
     final shopName = shop?.name ?? 'Easy Bill Retail POS';
-    final credit = _summary['credit'] ?? 0.0;
     final debit = _summary['debit'] ?? 0.0;
     final net = _summary['net'] ?? 0.0;
+    final cashInflow = _summary['cashInflow'] ?? 0.0;
+    final cashOutflow = _summary['cashOutflow'] ?? 0.0;
+    final onlineInflow = _summary['onlineInflow'] ?? 0.0;
+    final onlineOutflow = _summary['onlineOutflow'] ?? 0.0;
 
     final pdf = pw.Document()
       ..addPage(
@@ -499,7 +539,7 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
               pw.Divider(thickness: 1.5, color: PdfColors.grey400),
               pw.SizedBox(height: 12),
 
-              // Financial Summary Block
+              // Financial Summary Block (Cash Inflow, Cash Outflow, Online Inflow, Online Outflow & Net)
               pw.Container(
                 padding: const pw.EdgeInsets.all(12),
                 decoration: pw.BoxDecoration(
@@ -507,33 +547,59 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
                   borderRadius: pw.BorderRadius.circular(6),
                   border: pw.Border.all(color: PdfColors.grey300),
                 ),
-                child: pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+                child: pw.Column(
                   children: [
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
                       children: [
-                        pw.Text('CREDIT (INFLOW)', style: const pw.TextStyle(fontSize: 10, color: PdfColors.green800)),
-                        pw.SizedBox(height: 4),
-                        pw.Text('+ Rs. ${credit.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 14, color: PdfColors.green800)),
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.center,
+                          children: [
+                            pw.Text('CASH INFLOW', style: const pw.TextStyle(fontSize: 9, color: PdfColors.green800)),
+                            pw.SizedBox(height: 3),
+                            pw.Text('+ Rs. ${cashInflow.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.green800)),
+                          ],
+                        ),
+                        pw.Container(height: 24, width: 1, color: PdfColors.grey300),
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.center,
+                          children: [
+                            pw.Text('CASH OUTFLOW', style: const pw.TextStyle(fontSize: 9, color: PdfColors.red800)),
+                            pw.SizedBox(height: 3),
+                            pw.Text('- Rs. ${cashOutflow.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.red800)),
+                          ],
+                        ),
+                        pw.Container(height: 24, width: 1, color: PdfColors.grey300),
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.center,
+                          children: [
+                            pw.Text('ONLINE INFLOW', style: const pw.TextStyle(fontSize: 9, color: PdfColors.teal800)),
+                            pw.SizedBox(height: 3),
+                            pw.Text('+ Rs. ${onlineInflow.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.teal800)),
+                          ],
+                        ),
+                        pw.Container(height: 24, width: 1, color: PdfColors.grey300),
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.center,
+                          children: [
+                            pw.Text('ONLINE OUTFLOW', style: const pw.TextStyle(fontSize: 9, color: PdfColors.orange800)),
+                            pw.SizedBox(height: 3),
+                            pw.Text('- Rs. ${onlineOutflow.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 12, color: PdfColors.orange800)),
+                          ],
+                        ),
                       ],
                     ),
-                    pw.Container(height: 30, width: 1, color: PdfColors.grey300),
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    pw.SizedBox(height: 8),
+                    pw.Divider(thickness: 0.8, color: PdfColors.grey300),
+                    pw.SizedBox(height: 4),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('DEBIT (OUTFLOW)', style: const pw.TextStyle(fontSize: 10, color: PdfColors.red800)),
-                        pw.SizedBox(height: 4),
-                        pw.Text('- Rs. ${debit.toStringAsFixed(2)}', style: const pw.TextStyle(fontSize: 14, color: PdfColors.red800)),
-                      ],
-                    ),
-                    pw.Container(height: 30, width: 1, color: PdfColors.grey300),
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.center,
-                      children: [
-                        pw.Text('NET CASH BALANCE', style: const pw.TextStyle(fontSize: 10, color: PdfColors.blueGrey900)),
-                        pw.SizedBox(height: 4),
-                        pw.Text('${net >= 0 ? '+' : ''} Rs. ${net.toStringAsFixed(2)}', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: net >= 0 ? PdfColors.green800 : PdfColors.red800)),
+                        pw.Text('TOTAL NET BALANCE:', style: const pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey900)),
+                        pw.Text(
+                          '${net >= 0 ? '+' : ''} Rs. ${net.toStringAsFixed(2)}',
+                          style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: net >= 0 ? PdfColors.green800 : PdfColors.red800),
+                        ),
                       ],
                     ),
                   ],
@@ -1114,112 +1180,252 @@ class _StandaloneExpenseReportScreenState extends State<StandaloneExpenseReportS
     );
   }
 
-  /// 1. Metric Summary Cards
+  /// 1. Metric Summary Cards (Cash Inflow, Cash Outflow, Online Inflow, Online Outflow & Net Balance)
   Widget _buildSummaryCards() {
-    final credit = _summary['credit'] ?? 0.0;
-    final debit = _summary['debit'] ?? 0.0;
+    final cashInflow = _summary['cashInflow'] ?? 0.0;
+    final cashOutflow = _summary['cashOutflow'] ?? 0.0;
+    final onlineInflow = _summary['onlineInflow'] ?? 0.0;
+    final onlineOutflow = _summary['onlineOutflow'] ?? 0.0;
     final net = _summary['net'] ?? 0.0;
-    final isSurplus = net >= 0;
+    final netCash = cashInflow - cashOutflow;
+    final netOnline = onlineInflow - onlineOutflow;
 
-    final creditCount = _filteredExpenses.where((e) => e.isCredit).length;
-    final debitCount = _filteredExpenses.where((e) => e.isDebit).length;
+    final cashInflowCount = _filteredExpenses.where((e) => e.isCredit && e.paymentMode.toUpperCase() == 'CASH').length;
+    final cashOutflowCount = _filteredExpenses.where((e) => e.isDebit && e.paymentMode.toUpperCase() == 'CASH').length;
+    final onlineInflowCount = _filteredExpenses.where((e) => e.isCredit && e.paymentMode.toUpperCase() != 'CASH').length;
+    final onlineOutflowCount = _filteredExpenses.where((e) => e.isDebit && e.paymentMode.toUpperCase() != 'CASH').length;
 
-    return Row(
+    return Column(
       children: [
-        // Credit Card
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFC8E6C9)),
+        // Row 1: Cash Inflow & Cash Outflow
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricCard(
+                title: 'Cash Inflow',
+                amount: cashInflow,
+                count: cashInflowCount,
+                isPositive: true,
+                icon: Icons.payments_rounded,
+                accentColor: const Color(0xFF15803D),
+                borderColor: const Color(0xFFBBF7D0),
+                badgeBgColor: const Color(0xFFDCFCE7),
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildMetricCard(
+                title: 'Cash Outflow',
+                amount: cashOutflow,
+                count: cashOutflowCount,
+                isPositive: false,
+                icon: Icons.payments_rounded,
+                accentColor: const Color(0xFFB91C1C),
+                borderColor: const Color(0xFFFECDD3),
+                badgeBgColor: const Color(0xFFFFE4E6),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Row 2: Online Inflow & Online Outflow
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricCard(
+                title: 'Online Inflow',
+                amount: onlineInflow,
+                count: onlineInflowCount,
+                isPositive: true,
+                icon: Icons.account_balance_wallet_rounded,
+                accentColor: const Color(0xFF0F766E),
+                borderColor: const Color(0xFF99F6E4),
+                badgeBgColor: const Color(0xFFCCFBF1),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _buildMetricCard(
+                title: 'Online Outflow',
+                amount: onlineOutflow,
+                count: onlineOutflowCount,
+                isPositive: false,
+                icon: Icons.account_balance_wallet_rounded,
+                accentColor: const Color(0xFFC2410C),
+                borderColor: const Color(0xFFFED7AA),
+                badgeBgColor: const Color(0xFFFFEDD5),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Row 3: Total Net Balance Card
+        _buildNetBalanceCard(net, netCash, netOnline),
+      ],
+    );
+  }
+
+  Widget _buildMetricCard({
+    required String title,
+    required double amount,
+    required int count,
+    required bool isPositive,
+    required IconData icon,
+    required Color accentColor,
+    required Color borderColor,
+    required Color badgeBgColor,
+  }) {
+    final prefix = isPositive ? '+ ' : '- ';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: borderColor, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
                   children: [
-                    Text('Credit (Inflow)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF2E7D32))),
-                    Text('$creditCount txns', style: GoogleFonts.inter(fontSize: 10, color: Colors.grey.shade600)),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: badgeBgColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, size: 13, color: accentColor),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: accentColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '+ \u20B9${credit.toStringAsFixed(2)}',
-                    style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: const Color(0xFF1B5E20)),
-                  ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$count txns',
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF64748B),
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '$prefix\u20B9${amount.toStringAsFixed(2)}',
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: accentColor,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        // Debit Card
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFFCDD2)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Debit (Outflow)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFC62828))),
-                    Text('$debitCount txns', style: GoogleFonts.inter(fontSize: 10, color: Colors.grey.shade600)),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '- \u20B9${debit.toStringAsFixed(2)}',
-                    style: GoogleFonts.inter(fontSize: 17, fontWeight: FontWeight.w800, color: const Color(0xFFB71C1C)),
-                  ),
-                ),
-              ],
-            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNetBalanceCard(double totalNet, double netCash, double netOnline) {
+    final isSurplus = totalNet >= 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
           ),
-        ),
-        const SizedBox(width: 8),
-        // Net Balance Card
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE5E5E5)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Net Balance', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF555555))),
-                const SizedBox(height: 6),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    '${isSurplus ? '+' : ''}\u20B9${net.toStringAsFixed(2)}',
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.account_balance_rounded, size: 16, color: Color(0xFF334155)),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Net Balance',
                     style: GoogleFonts.inter(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: isSurplus ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1E293B),
                     ),
                   ),
+                ],
+              ),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '${isSurplus ? '+' : ''}\u20B9${totalNet.toStringAsFixed(2)}',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: isSurplus ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Divider(height: 1, color: Colors.grey.shade200),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Cash Net: ${netCash >= 0 ? '+' : ''}\u20B9${netCash.toStringAsFixed(2)}',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: netCash >= 0 ? const Color(0xFF15803D) : const Color(0xFFB91C1C),
+                ),
+              ),
+              Text(
+                'Online Net: ${netOnline >= 0 ? '+' : ''}\u20B9${netOnline.toStringAsFixed(2)}',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: netOnline >= 0 ? const Color(0xFF0F766E) : const Color(0xFFC2410C),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
