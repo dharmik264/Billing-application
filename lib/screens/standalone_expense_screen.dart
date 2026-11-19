@@ -488,7 +488,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
         Expanded(
           child: PageView(
             controller: _pageController,
-            physics: const BouncingScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             onPageChanged: (idx) {
               setState(() => _currentProcessStep = idx);
             },
@@ -568,56 +568,48 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
             padding: EdgeInsets.symmetric(horizontal: 6),
             child: Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF94A3B8)),
           ),
-          // Step 2 Pill
+          // Step 2 Pill (Indicator only, does not navigate forward on tap)
           Expanded(
-            child: InkWell(
-              onTap: () {
-                if (_selectedCategory != null) {
-                  _pageController.animateToPage(1, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                }
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                decoration: BoxDecoration(
-                  color: _currentProcessStep == 1 ? Colors.white : Colors.white.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: _currentProcessStep == 1 ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1),
-                    width: _currentProcessStep == 1 ? 1.8 : 1.0,
-                  ),
-                  boxShadow: _currentProcessStep == 1
-                      ? [
-                          BoxShadow(
-                            color: const Color(0xFF1D4ED8).withValues(alpha: 0.12),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                      : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+              decoration: BoxDecoration(
+                color: _currentProcessStep == 1 ? Colors.white : Colors.white.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _currentProcessStep == 1 ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1),
+                  width: _currentProcessStep == 1 ? 1.8 : 1.0,
                 ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 10,
-                      backgroundColor: _currentProcessStep == 1 ? const Color(0xFF1D4ED8) : const Color(0xFF94A3B8),
-                      child: Text('2', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '2. Amount & Type',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: _currentProcessStep == 1 ? FontWeight.w700 : FontWeight.w500,
-                          color: _currentProcessStep == 1 ? const Color(0xFF111111) : const Color(0xFF64748B),
+                boxShadow: _currentProcessStep == 1
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF1D4ED8).withValues(alpha: 0.12),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                        overflow: TextOverflow.ellipsis,
+                      ]
+                    : null,
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 10,
+                    backgroundColor: _currentProcessStep == 1 ? const Color(0xFF1D4ED8) : const Color(0xFF94A3B8),
+                    child: Text('2', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '2. Amount & Type',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: _currentProcessStep == 1 ? FontWeight.w700 : FontWeight.w500,
+                        color: _currentProcessStep == 1 ? const Color(0xFF111111) : const Color(0xFF64748B),
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -672,23 +664,6 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // View Breakdown Action
-                    OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const StandaloneCategoryBreakdownScreen()),
-                        );
-                      },
-                      icon: const Icon(Icons.pie_chart_rounded, size: 15, color: Color(0xFF1D4ED8)),
-                      label: Text('Breakdown', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF1D4ED8))),
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFF93C5FD)),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
                     // Add Category Action Button (Properly positioned & fitted)
                     ElevatedButton.icon(
                       onPressed: _showAddCategoryDialog,
