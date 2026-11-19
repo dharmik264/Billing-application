@@ -663,7 +663,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Choose one category (single select)',
+                            'Tap a category to open & enter expense',
                             style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -745,7 +745,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // Single-Select Checkbox Category List
+                // Category List (tap any category to open)
                 if (filteredCategories.isEmpty)
                   Container(
                     width: double.infinity,
@@ -776,32 +776,34 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final category = filteredCategories[index];
-                      final isChecked = _selectedCategory?.id == category.id;
+                      final isSelected = _selectedCategory?.id == category.id;
 
                       return InkWell(
                         onTap: () {
                           setState(() {
-                            if (_selectedCategory?.id == category.id) {
-                              _selectedCategory = null;
-                            } else {
-                              _selectedCategory = category;
-                            }
+                            _selectedCategory = category;
                           });
+                          // Immediately open selected category's screen (Page 2)
+                          _pageController.animateToPage(
+                            1,
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeInOut,
+                          );
                         },
                         borderRadius: BorderRadius.circular(10),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 150),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: isChecked ? const Color(0xFFEFF6FF) : Colors.white,
+                            color: isSelected ? const Color(0xFFEFF6FF) : Colors.white,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: isChecked ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1),
-                              width: isChecked ? 1.8 : 1.0,
+                              color: isSelected ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1),
+                              width: isSelected ? 1.6 : 1.0,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: isChecked
+                                color: isSelected
                                     ? const Color(0xFF1D4ED8).withValues(alpha: 0.08)
                                     : Colors.black.withValues(alpha: 0.02),
                                 blurRadius: 4,
@@ -811,49 +813,30 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                           ),
                           child: Row(
                             children: [
-                              // Single-select Checkbox
-                              Checkbox(
-                                value: isChecked,
-                                activeColor: const Color(0xFF1D4ED8),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: VisualDensity.compact,
-                                onChanged: (bool? val) {
-                                  setState(() {
-                                    if (val == true) {
-                                      _selectedCategory = category;
-                                    } else {
-                                      if (_selectedCategory?.id == category.id) {
-                                        _selectedCategory = null;
-                                      }
-                                    }
-                                  });
-                                },
-                              ),
-                              const SizedBox(width: 8),
                               // Category Icon
                               Container(
-                                width: 34,
-                                height: 34,
+                                width: 36,
+                                height: 36,
                                 decoration: BoxDecoration(
                                   color: category.color.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(category.icon, size: 18, color: category.color),
+                                child: Icon(category.icon, size: 20, color: category.color),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                               // Category Name
                               Expanded(
                                 child: Text(
                                   category.name,
                                   style: GoogleFonts.inter(
                                     fontSize: 14,
-                                    fontWeight: isChecked ? FontWeight.w700 : FontWeight.w600,
-                                    color: isChecked ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
+                                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                                    color: isSelected ? const Color(0xFF1D4ED8) : const Color(0xFF0F172A),
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               // Default / Custom Tag
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
@@ -872,6 +855,13 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                                     color: category.isDefault ? const Color(0xFF64748B) : const Color(0xFF1D4ED8),
                                   ),
                                 ),
+                              ),
+                              const SizedBox(width: 10),
+                              // Chevron indicator showing tapping opens the category
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 13,
+                                color: Color(0xFF94A3B8),
                               ),
                             ],
                           ),
