@@ -343,369 +343,6 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
     );
   }
 
-  /// ── Customer Ledger-style Amount & Type Dialog ──────────────────
-  Future<void> _showAmountAndTypeDialog(StandaloneExpenseCategory category) async {
-    final amountCtrl = TextEditingController();
-    final noteCtrl = TextEditingController();
-    StandaloneExpenseType selectedType = _selectedType;
-    String paymentMode = _paymentMode;
-    DateTime selectedDate = _selectedDate;
-    String? validationError;
-    bool submitting = false;
-
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final activeColor = selectedType.color;
-
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              titlePadding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 14),
-              title: Row(
-                children: [
-                  Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: category.color.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(category.icon, size: 20, color: category.color),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          category.name,
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16, color: const Color(0xFF0F172A)),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          category.isDefault ? 'Default Category' : 'Custom Category',
-                          style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF64748B)),
-                    onPressed: submitting ? null : () => Navigator.pop(ctx),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1. Transaction Type Toggle (Debit / Credit)
-                    Text(
-                      'TRANSACTION TYPE',
-                      style: GoogleFonts.jetBrainsMono(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF334155), letterSpacing: 0.5),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        // Debit Button (Red)
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => setDialogState(() => selectedType = StandaloneExpenseType.debit),
-                            borderRadius: BorderRadius.circular(10),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                              decoration: BoxDecoration(
-                                color: selectedType == StandaloneExpenseType.debit ? const Color(0xFFDC2626) : Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: selectedType == StandaloneExpenseType.debit ? const Color(0xFFDC2626) : const Color(0xFFCBD5E1),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.arrow_upward_rounded,
-                                    size: 16,
-                                    color: selectedType == StandaloneExpenseType.debit ? Colors.white : const Color(0xFFDC2626),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Debit',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: selectedType == StandaloneExpenseType.debit ? Colors.white : const Color(0xFFDC2626),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        // Credit Button (Green)
-                        Expanded(
-                          child: InkWell(
-                            onTap: () => setDialogState(() => selectedType = StandaloneExpenseType.credit),
-                            borderRadius: BorderRadius.circular(10),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                              decoration: BoxDecoration(
-                                color: selectedType == StandaloneExpenseType.credit ? const Color(0xFF16A34A) : Colors.white,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: selectedType == StandaloneExpenseType.credit ? const Color(0xFF16A34A) : const Color(0xFFCBD5E1),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.arrow_downward_rounded,
-                                    size: 16,
-                                    color: selectedType == StandaloneExpenseType.credit ? Colors.white : const Color(0xFF16A34A),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Credit',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: selectedType == StandaloneExpenseType.credit ? Colors.white : const Color(0xFF16A34A),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-
-                    // 2. Amount Field
-                    Text(
-                      'Amount (₹)',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF334155)),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: amountCtrl,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      autofocus: true,
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF0F172A)),
-                      onChanged: (_) => setDialogState(() => validationError = null),
-                      decoration: InputDecoration(
-                        prefixText: '₹ ',
-                        prefixStyle: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: activeColor),
-                        hintText: '0',
-                        errorText: validationError,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: activeColor, width: 2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // 3. Payment Mode Dropdown
-                    Text(
-                      'Payment Mode',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF334155)),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFCBD5E1)),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: paymentMode,
-                          isExpanded: true,
-                          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF1D4ED8), size: 22),
-                          borderRadius: BorderRadius.circular(10),
-                          items: _paymentModes.map((mode) {
-                            final info = _getPaymentModeInfo(mode);
-                            return DropdownMenuItem<String>(
-                              value: mode,
-                              child: Row(
-                                children: [
-                                  Icon(info.icon, size: 16, color: info.color),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    info.label,
-                                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) setDialogState(() => paymentMode = val);
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // 4. Date Selection
-                    Text(
-                      'Date',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF334155)),
-                    ),
-                    const SizedBox(height: 6),
-                    InkWell(
-                      onTap: () async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: selectedDate,
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
-                        if (picked != null) {
-                          setDialogState(() => selectedDate = picked);
-                        }
-                      },
-                      borderRadius: BorderRadius.circular(10),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFCBD5E1)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF64748B)),
-                            const SizedBox(width: 8),
-                            Text(
-                              DateFormat('dd MMMM yyyy').format(selectedDate),
-                              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF0F172A)),
-                            ),
-                            const Spacer(),
-                            const Icon(Icons.arrow_drop_down, color: Color(0xFF64748B)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // 5. Note / Remark
-                    Text(
-                      'Note / Remark (Optional)',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13, color: const Color(0xFF334155)),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: noteCtrl,
-                      style: GoogleFonts.inter(fontSize: 14),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Paid to vendor, receipt #...',
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: submitting ? null : () => Navigator.pop(ctx),
-                  child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
-                ),
-                ElevatedButton(
-                  onPressed: submitting
-                      ? null
-                      : () async {
-                          final amt = double.tryParse(amountCtrl.text.trim());
-                          if (amt == null || amt <= 0) {
-                            setDialogState(() => validationError = 'Enter a valid amount greater than zero.');
-                            return;
-                          }
-                          setDialogState(() => submitting = true);
-                          final messenger = ScaffoldMessenger.of(context);
-                          final nav = Navigator.of(ctx);
-
-                          final formatter = DateFormat('yyyy-MM-dd');
-                          final expense = StandaloneExpense(
-                            id: 'exp_${DateTime.now().millisecondsSinceEpoch}',
-                            categoryId: category.id,
-                            categoryName: category.name,
-                            type: selectedType.value,
-                            amount: amt,
-                            paymentMode: paymentMode,
-                            note: noteCtrl.text.trim().isNotEmpty ? noteCtrl.text.trim() : null,
-                            expenseDate: formatter.format(selectedDate),
-                          );
-
-                          final ok = await _service.addExpense(expense);
-                          if (mounted) {
-                            if (ok) {
-                              nav.pop();
-                              final typeStr = selectedType == StandaloneExpenseType.credit ? 'Credit' : 'Debit';
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text('$typeStr entry of ₹${amt.toStringAsFixed(2)} saved under ${category.name}.'),
-                                  backgroundColor: activeColor,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  action: SnackBarAction(
-                                    label: 'View Report',
-                                    textColor: Colors.white,
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(builder: (_) => const StandaloneExpenseReportScreen()),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              );
-                            } else {
-                              setDialogState(() {
-                                submitting = false;
-                                validationError = 'Failed to save. Please try again.';
-                              });
-                            }
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: activeColor,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: submitting
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text(
-                          selectedType == StandaloneExpenseType.credit ? 'Save Credit' : 'Save Debit',
-                          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
-                        ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   Future<void> _saveTransaction() async {
     final amountText = _amountController.text.trim();
     final amount = double.tryParse(amountText);
@@ -1026,7 +663,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Tap a category to open & enter amount',
+                            'Tap a category to enter expense',
                             style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
@@ -1146,8 +783,12 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                           setState(() {
                             _selectedCategory = category;
                           });
-                          // Customer Ledger-style dialog entry
-                          _showAmountAndTypeDialog(category);
+                          // Immediately go straight to next page (Page 2: Amount & Type)
+                          _pageController.animateToPage(
+                            1,
+                            duration: const Duration(milliseconds: 280),
+                            curve: Curves.easeInOut,
+                          );
                         },
                         borderRadius: BorderRadius.circular(10),
                         child: AnimatedContainer(
@@ -1262,7 +903,11 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                   onPressed: _selectedCategory == null
                       ? null
                       : () {
-                          _showAmountAndTypeDialog(_selectedCategory!);
+                          _pageController.animateToPage(
+                            1,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
                         },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF111111),
@@ -1275,7 +920,7 @@ class _StandaloneExpenseScreenState extends State<StandaloneExpenseScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Enter Amount & Type',
+                        'Next: Enter Amount & Details',
                         style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(width: 8),
